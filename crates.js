@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["hotshot_query_service"];
