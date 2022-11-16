@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["availability",""]]};
+window.SIDEBAR_ITEMS = {"mod":[["availability",""],["status",""]]};
