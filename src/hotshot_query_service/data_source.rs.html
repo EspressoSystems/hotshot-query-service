@@ -12,6 +12,62 @@
 <span id="12">12</span>
 <span id="13">13</span>
 <span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -24,7 +80,63 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="attribute">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>QueryData;
+</span><span class="kw">use </span><span class="kw">crate</span>::availability::{
+    data_source::AvailabilityDataSource,
+    query_data::{BlockHash, BlockQueryData, LeafHash, LeafQueryData, TransactionHash},
+};
+<span class="kw">use </span>hotshot_types::traits::{node_implementation::NodeTypes, signature_key::EncodedPublicKey};
+
+<span class="kw">pub trait </span>ExtensibleDataSource {
+    <span class="kw">type </span>UserData;
+    <span class="kw">fn </span>user_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::UserData;
+    <span class="kw">fn </span>user_data_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::UserData;
+}
+
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>QueryData&lt;Types: NodeTypes, UserData&gt; {
+    user_data: UserData,
+    _marker: std::marker::PhantomData&lt;Types&gt;,
+}
+
+<span class="kw">impl</span>&lt;Types: NodeTypes, UserData&gt; ExtensibleDataSource <span class="kw">for </span>QueryData&lt;Types, UserData&gt; {
+    <span class="kw">type </span>UserData = UserData;
+
+    <span class="kw">fn </span>user_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::UserData {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.user_data
+    }
+
+    <span class="kw">fn </span>user_data_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::UserData {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.user_data
+    }
+}
+
+<span class="kw">impl</span>&lt;Types: NodeTypes, UserData&gt; AvailabilityDataSource&lt;Types&gt; <span class="kw">for </span>QueryData&lt;Types, UserData&gt; {
+    <span class="kw">type </span>LeafIterType&lt;<span class="lifetime">&#39;a</span>&gt; = std::vec::IntoIter&lt;<span class="prelude-ty">Option</span>&lt;LeafQueryData&lt;Types&gt;&gt;&gt; <span class="kw">where </span>UserData: <span class="lifetime">&#39;a</span>;
+    <span class="kw">type </span>BlockIterType&lt;<span class="lifetime">&#39;a</span>&gt; = std::vec::IntoIter&lt;<span class="prelude-ty">Option</span>&lt;BlockQueryData&lt;Types&gt;&gt;&gt; <span class="kw">where </span>UserData: <span class="lifetime">&#39;a</span>;
+
+    <span class="kw">fn </span>get_nth_leaf_iter(<span class="kw-2">&amp;</span><span class="self">self</span>, _n: usize) -&gt; <span class="self">Self</span>::LeafIterType&lt;<span class="lifetime">&#39;_</span>&gt; {
+        <span class="macro">unimplemented!</span>()
+    }
+
+    <span class="kw">fn </span>get_nth_block_iter(<span class="kw-2">&amp;</span><span class="self">self</span>, _n: usize) -&gt; <span class="self">Self</span>::BlockIterType&lt;<span class="lifetime">&#39;_</span>&gt; {
+        <span class="macro">unimplemented!</span>()
+    }
+
+    <span class="kw">fn </span>get_leaf_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, _hash: LeafHash&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
+        <span class="macro">unimplemented!</span>()
+    }
+
+    <span class="kw">fn </span>get_block_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, _hash: BlockHash&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
+        <span class="macro">unimplemented!</span>()
+    }
+
+    <span class="kw">fn </span>get_txn_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, _hash: TransactionHash&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;(u64, u64)&gt; {
+        <span class="macro">unimplemented!</span>()
+    }
+
+    <span class="kw">fn </span>get_block_ids_by_proposer_id(<span class="kw-2">&amp;</span><span class="self">self</span>, _id: EncodedPublicKey) -&gt; Vec&lt;u64&gt; {
+        <span class="macro">unimplemented!</span>()
+    }
+}
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hotshot_query_service" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

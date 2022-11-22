@@ -66,6 +66,13 @@
 <span id="66">66</span>
 <span id="67">67</span>
 <span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -80,10 +87,16 @@
 
 </span><span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
+<span class="kw">use </span>hotshot_types::traits::node_implementation::NodeTypes;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::Snafu;
 <span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>data_source;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>query_data;
+<span class="kw">pub use </span>data_source::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>query_data::<span class="kw-2">*</span>;
 
 <span class="attribute">#[derive(Args, Default)]
 </span><span class="kw">pub struct </span>Options {
@@ -104,9 +117,10 @@
     }
 }
 
-<span class="kw">pub fn </span>define_api&lt;State&gt;(options: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt;
+<span class="kw">pub fn </span>define_api&lt;State, Types: NodeTypes&gt;(options: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt;
 <span class="kw">where
     </span>State: <span class="lifetime">&#39;static </span>+ Send + Sync + ReadState,
+    &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + AvailabilityDataSource&lt;Types&gt;,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>api = <span class="kw">match </span><span class="kw-2">&amp;</span>options.api_path {
         <span class="prelude-val">Some</span>(path) =&gt; Api::&lt;State, Error&gt;::from_file(path)<span class="question-mark">?</span>,
@@ -126,12 +140,12 @@
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::data_source::QueryData;
+    <span class="kw">use crate</span>::{data_source::QueryData, testing::mocks::MockTypes};
     <span class="kw">use </span>async_std::sync::RwLock;
 
     <span class="attribute">#[test]
     </span><span class="kw">fn </span>instantiate_api() {
-        define_api::&lt;RwLock&lt;QueryData&gt;&gt;(<span class="kw-2">&amp;</span>Default::default()).unwrap();
+        define_api::&lt;RwLock&lt;QueryData&lt;MockTypes, ()&gt;&gt;, MockTypes&gt;(<span class="kw-2">&amp;</span>Default::default()).unwrap();
     }
 }
 </code></pre></div>

@@ -126,12 +126,12 @@
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::data_source::QueryData;
+    <span class="kw">use crate</span>::{data_source::QueryData, testing::mocks::MockTypes};
     <span class="kw">use </span>async_std::sync::RwLock;
 
     <span class="attribute">#[test]
     </span><span class="kw">fn </span>instantiate_api() {
-        define_api::&lt;RwLock&lt;QueryData&gt;&gt;(<span class="kw-2">&amp;</span>Default::default()).unwrap();
+        define_api::&lt;RwLock&lt;QueryData&lt;MockTypes, ()&gt;&gt;&gt;(<span class="kw-2">&amp;</span>Default::default()).unwrap();
     }
 }
 </code></pre></div>
