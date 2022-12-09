@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["Iter",""],["QueryData","Data used by the APIs provided in this crate, including persistent storage."]],"trait":[["UpdateDataSource","An extension trait for types which implement the update trait for each API module."]]};

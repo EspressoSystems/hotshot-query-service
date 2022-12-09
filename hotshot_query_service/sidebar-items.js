@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["availability",""],["status",""]]};
+window.SIDEBAR_ITEMS = {"enum":[["Error",""]],"fn":[["run_standalone_service","Run an instance of the HotShot Query service with no customization."]],"mod":[["availability",""],["data_source",""],["status",""]],"struct":[["Options",""]]};

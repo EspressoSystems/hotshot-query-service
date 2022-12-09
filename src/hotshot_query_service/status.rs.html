@@ -72,6 +72,72 @@
 <span id="72">72</span>
 <span id="73">73</span>
 <span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -84,7 +150,8 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use </span>clap::Args;
+</span><span class="kw">use </span><span class="kw">crate</span>::api::load_api;
+<span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::Snafu;
@@ -100,6 +167,17 @@
 </span><span class="kw">pub struct </span>Options {
     <span class="attribute">#[arg(long = <span class="string">&quot;status-api-path&quot;</span>, env = <span class="string">&quot;HOTSHOT_STATUS_API_PATH&quot;</span>)]
     </span><span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
+
+    <span class="doccomment">/// Additional API specification files to merge with `status-api-path`.
+    ///
+    /// These optional files may contain route definitions for application-specific routes that have
+    /// been added as extensions to the basic status API.
+    </span><span class="attribute">#[arg(
+        long = <span class="string">&quot;status-extension&quot;</span>,
+        env = <span class="string">&quot;HOTSHOT_STATUS_EXTENSIONS&quot;</span>,
+        value_delimiter = <span class="string">&#39;,&#39;
+    </span>)]
+    </span><span class="kw">pub </span>extensions: Vec&lt;PathBuf&gt;,
 }
 
 <span class="attribute">#[derive(Clone, Debug, From, Snafu, Deserialize, Serialize)]
@@ -120,17 +198,11 @@
     </span>State: <span class="lifetime">&#39;static </span>+ Send + Sync + ReadState,
     &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + StatusDataSource,
 {
-    <span class="kw">let </span><span class="kw-2">mut </span>api = <span class="kw">match </span><span class="kw-2">&amp;</span>options.api_path {
-        <span class="prelude-val">Some</span>(path) =&gt; Api::&lt;State, Error&gt;::from_file(path)<span class="question-mark">?</span>,
-        <span class="prelude-val">None </span>=&gt; {
-            <span class="kw">let </span>toml = toml::from_str(<span class="macro">include_str!</span>(<span class="string">&quot;../api/status.toml&quot;</span>)).map_err(|err| {
-                ApiError::CannotReadToml {
-                    reason: err.to_string(),
-                }
-            })<span class="question-mark">?</span>;
-            Api::&lt;State, Error&gt;::new(toml)<span class="question-mark">?
-        </span>}
-    };
+    <span class="kw">let </span><span class="kw-2">mut </span>api = load_api(
+        options.api_path.as_ref(),
+        <span class="macro">include_str!</span>(<span class="string">&quot;../api/status.toml&quot;</span>),
+        <span class="kw-2">&amp;</span>options.extensions,
+    )<span class="question-mark">?</span>;
     api.with_version(<span class="string">&quot;0.0.1&quot;</span>.parse().unwrap());
     <span class="prelude-val">Ok</span>(api)
 }
@@ -138,12 +210,72 @@
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use crate</span>::{data_source::QueryData, testing::mocks::MockTypes};
-    <span class="kw">use </span>async_std::sync::RwLock;
+    <span class="kw">use crate</span>::{data_source::QueryData, testing::mocks::MockTypes, Error};
+    <span class="kw">use </span>async_std::{sync::RwLock, task::spawn};
+    <span class="kw">use </span>futures::FutureExt;
+    <span class="kw">use </span>portpicker::pick_unused_port;
+    <span class="kw">use </span>std::fs;
+    <span class="kw">use </span>std::time::Duration;
+    <span class="kw">use </span>surf_disco::Client;
+    <span class="kw">use </span>tempdir::TempDir;
+    <span class="kw">use </span>tide_disco::App;
+    <span class="kw">use </span>toml::toml;
 
     <span class="attribute">#[test]
     </span><span class="kw">fn </span>instantiate_api() {
         define_api::&lt;RwLock&lt;QueryData&lt;MockTypes, ()&gt;&gt;&gt;(<span class="kw-2">&amp;</span>Default::default()).unwrap();
+    }
+
+    <span class="attribute">#[async_std::test]
+    </span><span class="kw">async fn </span>test_extensions() {
+        <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_status_extensions&quot;</span>).unwrap();
+        <span class="kw">let </span>query_data = QueryData::&lt;MockTypes, u64&gt;::create(dir.path(), <span class="number">0</span>).unwrap();
+
+        <span class="comment">// Create the API extensions specification.
+        </span><span class="kw">let </span>extensions_path = dir.path().join(<span class="string">&quot;extensions.toml&quot;</span>);
+        <span class="kw">let </span>extensions = <span class="macro">toml! </span>{
+            [route.post_ext]
+            PATH = [<span class="string">&quot;/ext/:val&quot;</span>]
+            METHOD = <span class="string">&quot;POST&quot;
+            &quot;:val&quot; </span>= <span class="string">&quot;Integer&quot;
+
+            </span>[route.get_ext]
+            PATH = [<span class="string">&quot;/ext&quot;</span>]
+            METHOD = <span class="string">&quot;GET&quot;
+        </span>};
+        fs::write(<span class="kw-2">&amp;</span>extensions_path, extensions.to_string().as_bytes()).unwrap();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>api = define_api::&lt;RwLock&lt;QueryData&lt;MockTypes, u64&gt;&gt;&gt;(<span class="kw-2">&amp;</span>Options {
+            extensions: <span class="macro">vec!</span>[extensions_path],
+            ..Default::default()
+        })
+        .unwrap();
+        api.get(<span class="string">&quot;get_ext&quot;</span>, |<span class="kw">_</span>, state| {
+            <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>state.as_ref()) }.boxed()
+        })
+        .unwrap()
+        .post(<span class="string">&quot;post_ext&quot;</span>, |req, state| {
+            <span class="kw">async move </span>{
+                <span class="kw-2">*</span>state.as_mut() = req.integer_param(<span class="string">&quot;val&quot;</span>)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(())
+            }
+            .boxed()
+        })
+        .unwrap();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(RwLock::new(query_data));
+        app.register_module(<span class="string">&quot;status&quot;</span>, api).unwrap();
+
+        <span class="kw">let </span>port = pick_unused_port().unwrap();
+        spawn(app.serve(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, port)));
+
+        <span class="kw">let </span>client =
+            Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}/status&quot;</span>, port).parse().unwrap());
+        <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
+
+        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
+        client.post::&lt;()&gt;(<span class="string">&quot;ext/42&quot;</span>).send().<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
     }
 }
 </code></pre></div>

@@ -69,6 +69,113 @@
 <span id="69">69</span>
 <span id="70">70</span>
 <span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -81,9 +188,14 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use </span>commit::Commitment;
-<span class="kw">use </span>hotshot::{data::Leaf, traits::Block};
-<span class="kw">use </span>hotshot_types::traits::node_implementation::NodeTypes;
+</span><span class="kw">use </span>bincode::Options;
+<span class="kw">use </span>commit::{Commitment, Committable};
+<span class="kw">use </span>hotshot::{
+    data::{Leaf, QuorumCertificate},
+    traits::Block,
+};
+<span class="kw">use </span>hotshot_types::traits::{node_implementation::NodeTypes, signature_key::EncodedPublicKey};
+<span class="kw">use </span>hotshot_utils::bincode::bincode_opts;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">pub type </span>LeafHash&lt;Types&gt; = Commitment&lt;Leaf&lt;Types&gt;&gt;;
@@ -94,22 +206,88 @@
 <span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(bound = <span class="string">&quot;&quot;</span>)]
 </span><span class="kw">pub struct </span>LeafQueryData&lt;Types: NodeTypes&gt; {
-    <span class="kw">pub </span>leaf: Leaf&lt;Types&gt;,
-    <span class="kw">pub </span>hash: LeafHash&lt;Types&gt;,
-    <span class="kw">pub </span>height: u64,
+    leaf: Leaf&lt;Types&gt;,
+    qc: QuorumCertificate&lt;Types&gt;,
+}
+
+<span class="kw">impl</span>&lt;Types: NodeTypes&gt; LeafQueryData&lt;Types&gt; {
+    <span class="kw">pub fn </span>new(leaf: Leaf&lt;Types&gt;, qc: QuorumCertificate&lt;Types&gt;) -&gt; <span class="self">Self </span>{
+        <span class="macro">assert_eq!</span>(qc.leaf_commitment, leaf.commit());
+        <span class="self">Self </span>{ leaf, qc }
+    }
+
+    <span class="kw">pub fn </span>leaf(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Leaf&lt;Types&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.leaf
+    }
+
+    <span class="kw">pub fn </span>qc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>QuorumCertificate&lt;Types&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.qc
+    }
+
+    <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.leaf.height
+    }
+
+    <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LeafHash&lt;Types&gt; {
+        <span class="self">self</span>.qc.leaf_commitment
+    }
+
+    <span class="kw">pub fn </span>block_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BlockHash&lt;Types&gt; {
+        <span class="self">self</span>.qc.block_commitment
+    }
+
+    <span class="kw">pub fn </span>proposer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>EncodedPublicKey {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.leaf.proposer_id
+    }
 }
 
 <span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(bound = <span class="string">&quot;&quot;</span>)]
 </span><span class="kw">pub struct </span>BlockQueryData&lt;Types: NodeTypes&gt; {
-    <span class="kw">pub </span>block: Types::BlockType,
-    <span class="kw">pub </span>hash: BlockHash&lt;Types&gt;,
-    <span class="kw">pub </span>height: u64,
-    <span class="kw">pub </span>size: u64,
-    <span class="kw">pub </span>txn_hashes: Vec&lt;TransactionHash&lt;Types&gt;&gt;,
+    block: Types::BlockType,
+    hash: BlockHash&lt;Types&gt;,
+    height: u64,
+    size: u64,
+    txn_hashes: Vec&lt;TransactionHash&lt;Types&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;Types: NodeTypes&gt; BlockQueryData&lt;Types&gt; {
+    <span class="kw">pub fn </span>new(leaf: Leaf&lt;Types&gt;, qc: QuorumCertificate&lt;Types&gt;) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>Types::BlockType: Serialize,
+    {
+        <span class="macro">assert_eq!</span>(qc.block_commitment, leaf.deltas.commit());
+        <span class="self">Self </span>{
+            hash: qc.block_commitment,
+            height: leaf.height,
+            size: bincode_opts()
+                .serialized_size(<span class="kw-2">&amp;</span>leaf.deltas)
+                .unwrap_or_default() <span class="kw">as </span>u64,
+            txn_hashes: leaf.deltas.contained_transactions().into_iter().collect(),
+            block: leaf.deltas,
+        }
+    }
+
+    <span class="kw">pub fn </span>block(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Types::BlockType {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.block
+    }
+
+    <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BlockHash&lt;Types&gt; {
+        <span class="self">self</span>.hash
+    }
+
+    <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.height
+    }
+
+    <span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.size
+    }
+
+    <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = TransactionHash&lt;Types&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="self">self</span>.txn_hashes.iter().copied()
+    }
+
     <span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.txn_hashes.len()
     }
@@ -132,13 +310,49 @@
     }
 }
 
+<span class="kw">impl</span>&lt;Types: NodeTypes&gt; IntoIterator <span class="kw">for </span>BlockQueryData&lt;Types&gt; {
+    <span class="kw">type </span>Item = TransactionHash&lt;Types&gt;;
+    <span class="kw">type </span>IntoIter = &lt;Vec&lt;<span class="self">Self</span>::Item&gt; <span class="kw">as </span>IntoIterator&gt;::IntoIter;
+
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter {
+        <span class="self">self</span>.txn_hashes.into_iter()
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Types: NodeTypes&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BlockQueryData&lt;Types&gt; {
+    <span class="kw">type </span>Item = TransactionHash&lt;Types&gt;;
+    <span class="kw">type </span>IntoIter = std::iter::Copied&lt;&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Vec&lt;<span class="self">Self</span>::Item&gt; <span class="kw">as </span>IntoIterator&gt;::IntoIter&gt;;
+
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter {
+        <span class="self">self</span>.txn_hashes.iter().copied()
+    }
+}
+
 <span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(bound = <span class="string">&quot;&quot;</span>)]
 </span><span class="kw">pub struct </span>TransactionQueryData&lt;Types: NodeTypes&gt; {
-    <span class="kw">pub </span>transaction: &lt;Types::BlockType <span class="kw">as </span>Block&gt;::Transaction,
-    <span class="kw">pub </span>height: u64,
-    <span class="kw">pub </span>index: u64,
-    <span class="kw">pub </span>hash: TransactionHash&lt;Types&gt;,
+    transaction: &lt;Types::BlockType <span class="kw">as </span>Block&gt;::Transaction,
+    height: u64,
+    index: u64,
+    hash: TransactionHash&lt;Types&gt;,
+}
+
+<span class="kw">impl</span>&lt;Types: NodeTypes&gt; TransactionQueryData&lt;Types&gt; {
+    <span class="kw">pub fn </span>transaction(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>&lt;Types::BlockType <span class="kw">as </span>Block&gt;::Transaction {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.transaction
+    }
+
+    <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.height
+    }
+
+    <span class="kw">pub fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.index
+    }
+
+    <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TransactionHash&lt;Types&gt; {
+        <span class="self">self</span>.hash
+    }
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hotshot_query_service" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

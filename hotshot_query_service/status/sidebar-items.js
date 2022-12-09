@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["Error",""]],"fn":[["define_api",""]],"struct":[["MempoolQueryData",""],["Options",""]],"trait":[["StatusDataSource",""]]};
+window.SIDEBAR_ITEMS = {"enum":[["Error",""]],"fn":[["define_api",""]],"struct":[["MempoolQueryData",""],["Options",""]],"trait":[["StatusDataSource",""],["UpdateStatusData",""]]};

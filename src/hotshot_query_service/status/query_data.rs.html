@@ -16,6 +16,7 @@
 <span id="16">16</span>
 <span id="17">17</span>
 <span id="18">18</span>
+<span id="19">19</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -30,9 +31,10 @@
 
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="attribute">#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+<span class="attribute">#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 </span><span class="kw">pub struct </span>MempoolQueryData {
     <span class="kw">pub </span>transaction_count: u64,
+    <span class="kw">pub </span>memory_footprint: u64,
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hotshot_query_service" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
