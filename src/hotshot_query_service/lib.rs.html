@@ -520,6 +520,26 @@
 <span id="520">520</span>
 <span id="521">521</span>
 <span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -919,6 +939,7 @@
     <span class="kw">use </span>async_std::{sync::RwLock, task::spawn};
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
     <span class="kw">use </span>futures::FutureExt;
+    <span class="kw">use </span>hotshot::types::{ed25519::Ed25519Pub, SignatureKey};
     <span class="kw">use </span>hotshot_types::traits::signature_key::EncodedPublicKey;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::time::Duration;
@@ -1040,6 +1061,25 @@
 
         client.post::&lt;()&gt;(<span class="string">&quot;mod/ext/42&quot;</span>).send().<span class="kw">await</span>.unwrap();
         <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;mod/ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
+
+        <span class="comment">// Check that we can still access the built-in modules.
+        </span><span class="macro">assert_eq!</span>(
+            client
+                .get::&lt;u64&gt;(<span class="string">&quot;status/latest_block_height&quot;</span>)
+                .send()
+                .<span class="kw">await
+                </span>.unwrap(),
+            <span class="number">0
+        </span>);
+        <span class="kw">let </span>(key, <span class="kw">_</span>) = Ed25519Pub::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(
+            client
+                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;availability/proposals/{}/count&quot;</span>, key.to_bytes()))
+                .send()
+                .<span class="kw">await
+                </span>.unwrap(),
+            <span class="number">0
+        </span>);
     }
 }
 </code></pre></div>
