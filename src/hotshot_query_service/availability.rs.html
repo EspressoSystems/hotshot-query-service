@@ -525,6 +525,73 @@
 <span id="525">525</span>
 <span id="526">526</span>
 <span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -540,7 +607,7 @@
 </span><span class="kw">use </span><span class="kw">crate</span>::api::load_api;
 <span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
-<span class="kw">use </span>futures::FutureExt;
+<span class="kw">use </span>futures::{FutureExt, StreamExt, TryFutureExt};
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeTypes;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::{OptionExt, Snafu};
@@ -640,6 +707,18 @@
         height: u64,
         index: u64,
     },
+    <span class="attribute">#[snafu(display(<span class="string">&quot;unable to open leaf stream at {}: {}&quot;</span>, height, reason))]
+    #[from(ignore)]
+    </span>LeafStream {
+        height: u64,
+        reason: String,
+    },
+    <span class="attribute">#[snafu(display(<span class="string">&quot;unable to open block stream at {}: {}&quot;</span>, height, reason))]
+    #[from(ignore)]
+    </span>BlockStream {
+        height: u64,
+        reason: String,
+    },
     Custom {
         message: String,
         status: StatusCode,
@@ -665,6 +744,7 @@
             | <span class="self">Self</span>::MissingBlock { .. }
             | <span class="self">Self</span>::UnknownTransactionHash { .. }
             | <span class="self">Self</span>::InvalidTransactionIndex { .. } =&gt; StatusCode::NotFound,
+            <span class="self">Self</span>::LeafStream { .. } | <span class="self">Self</span>::BlockStream { .. } =&gt; StatusCode::InternalServerError,
             <span class="self">Self</span>::Custom { status, .. } =&gt; <span class="kw-2">*</span>status,
         }
     }
@@ -702,6 +782,27 @@
             }
             .boxed()
         })<span class="question-mark">?
+        </span>.stream(<span class="string">&quot;streamleaves&quot;</span>, |req, state| {
+            <span class="kw">async move </span>{
+                <span class="kw">let </span>height = req.integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">?</span>;
+                state
+                    .read(|state| {
+                        <span class="kw">async move </span>{
+                            <span class="prelude-val">Ok</span>(state
+                                .subscribe_leaves(height)
+                                .map_err(|err| Error::LeafStream {
+                                    height: height <span class="kw">as </span>u64,
+                                    reason: err.to_string(),
+                                })<span class="question-mark">?
+                                </span>.map(<span class="prelude-val">Ok</span>))
+                        }
+                        .boxed()
+                    })
+                    .<span class="kw">await
+            </span>}
+            .try_flatten_stream()
+            .boxed()
+        })<span class="question-mark">?
         </span>.get(<span class="string">&quot;getblock&quot;</span>, |req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>height = <span class="kw">match </span>req.opt_integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">? </span>{
@@ -721,6 +822,27 @@
                     .context(InvalidBlockHeightSnafu { height })<span class="question-mark">?
                     </span>.context(MissingBlockSnafu { height })
             }
+            .boxed()
+        })<span class="question-mark">?
+        </span>.stream(<span class="string">&quot;streamblocks&quot;</span>, |req, state| {
+            <span class="kw">async move </span>{
+                <span class="kw">let </span>height = req.integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">?</span>;
+                state
+                    .read(|state| {
+                        <span class="kw">async move </span>{
+                            <span class="prelude-val">Ok</span>(state
+                                .subscribe_blocks(height)
+                                .map_err(|err| Error::BlockStream {
+                                    height: height <span class="kw">as </span>u64,
+                                    reason: err.to_string(),
+                                })<span class="question-mark">?
+                                </span>.map(<span class="prelude-val">Ok</span>))
+                        }
+                        .boxed()
+                    })
+                    .<span class="kw">await
+            </span>}
+            .try_flatten_stream()
             .boxed()
         })<span class="question-mark">?
         </span>.get(<span class="string">&quot;gettransaction&quot;</span>, |req, state| {
@@ -784,7 +906,6 @@
         testing::{
             consensus::MockNetwork,
             mocks::{MockTransaction, MockTypes},
-            sleep,
         },
         Error,
     };
@@ -963,24 +1084,37 @@
 
         <span class="comment">// Submit a few blocks and make sure each one gets reflected in the query service and
         // preserves the consistency of the data and indices.
-        </span><span class="kw">for </span>nonce <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
+        </span><span class="kw">let </span>leaves = client.socket(<span class="string">&quot;stream/leaves/0&quot;</span>).subscribe().<span class="kw">await</span>.unwrap();
+        <span class="kw">let </span>blocks = client.socket(<span class="string">&quot;stream/blocks/0&quot;</span>).subscribe().<span class="kw">await</span>.unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>leaf_blocks = leaves.zip(blocks).enumerate();
+        <span class="kw">for </span>nonce <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
             <span class="kw">let </span>txn = MockTransaction { nonce };
             <span class="kw">let </span>txn_hash = txn.commit();
             hotshot.submit_transaction(txn).<span class="kw">await</span>.unwrap();
-            <span class="kw">let </span>(height, blocks) = <span class="kw">loop </span>{
-                <span class="kw">let </span>(height, blocks) = get_non_empty_blocks(<span class="kw-2">&amp;</span>client).<span class="kw">await</span>;
-                <span class="kw">if </span>blocks.len() &lt; nonce <span class="kw">as </span>usize + <span class="number">1 </span>{
-                    <span class="macro">tracing::info!</span>(<span class="string">&quot;waiting for block {} to be finalized&quot;</span>, nonce);
-                    sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
-                } <span class="kw">else </span>{
-                    <span class="kw">break </span>(height, blocks);
+
+            <span class="comment">// Wait for the transaction to be finalized.
+            </span><span class="kw">let </span>(i, leaf, block) = <span class="kw">loop </span>{
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;waiting for block with transaction {}&quot;</span>, nonce);
+                <span class="kw">let </span>(i, (leaf, block)) = leaf_blocks.next().<span class="kw">await</span>.unwrap();
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;got block {}\nLeaf: {:?}\nBlock: {:?}&quot;</span>, i, leaf, block);
+                <span class="kw">let </span>leaf: LeafQueryData&lt;MockTypes&gt; = leaf.unwrap();
+                <span class="kw">let </span>block: BlockQueryData&lt;MockTypes&gt; = block.unwrap();
+                <span class="macro">assert_eq!</span>(leaf.height() <span class="kw">as </span>usize, i);
+                <span class="macro">assert_eq!</span>(leaf.block_hash(), block.hash());
+                <span class="kw">if </span>!block.is_empty() {
+                    <span class="kw">break </span>(i, leaf, block);
                 }
             };
+            <span class="macro">assert_eq!</span>(block.iter().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), <span class="macro">vec!</span>[txn_hash]);
             <span class="macro">assert_eq!</span>(
-                blocks[nonce <span class="kw">as </span>usize].<span class="number">1</span>.iter().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
-                <span class="macro">vec!</span>[txn_hash]
+                leaf,
+                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;leaf/{}&quot;</span>, i)).send().<span class="kw">await</span>.unwrap()
             );
-            validate(<span class="kw-2">&amp;</span>client, height).<span class="kw">await</span>;
+            <span class="macro">assert_eq!</span>(
+                block,
+                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;block/{}&quot;</span>, i)).send().<span class="kw">await</span>.unwrap()
+            );
+            validate(<span class="kw-2">&amp;</span>client, (i + <span class="number">1</span>) <span class="kw">as </span>u64).<span class="kw">await</span>;
         }
 
         network.shut_down().<span class="kw">await</span>;
@@ -1053,4 +1187,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hotshot_query_service" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0 (69f9c33d7 2022-12-12)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hotshot_query_service" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>
