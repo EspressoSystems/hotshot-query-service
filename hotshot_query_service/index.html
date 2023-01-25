@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The HotShot Query Service is a minimal, generic query service that can be integrated into any decentralized application running on the [hotshot] consensus layer. It provides all the features that HotShot itself expects of a query service (such as providing consensus-related data for catchup and synchronization) as well as some application-level features that deal only with consensus-related or application-agnostic data. In addition, the query service is provided as an extensible library, which makes it easy to add additional, application-specific features."><meta name="keywords" content="rust, rustlang, rust-lang, hotshot_query_service"><title>hotshot_query_service - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../normalize.css"><link rel="stylesheet" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../ayu.css" disabled><link rel="stylesheet" href="../dark.css" disabled><link rel="stylesheet" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../hotshot_query_service/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div></a><h2></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../hotshot_query_service/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div></a><h2 class="location"><a href="#">Crate hotshot_query_service</a></h2><div class="sidebar-elems"><ul class="block"><li class="version">Version 0.0.2</li><li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#functions">Functions</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1 class="fqn">Crate <a class="mod" href="#">hotshot_query_service</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="srclink" href="../src/hotshot_query_service/lib.rs.html#13-565">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The HotShot Query Service is a minimal, generic query service that can be integrated into any
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The HotShot Query Service is a minimal, generic query service that can be integrated into any decentralized application running on the [hotshot] consensus layer. It provides all the features that HotShot itself expects of a query service (such as providing consensus-related data for catchup and synchronization) as well as some application-level features that deal only with consensus-related or application-agnostic data. In addition, the query service is provided as an extensible library, which makes it easy to add additional, application-specific features."><meta name="keywords" content="rust, rustlang, rust-lang, hotshot_query_service"><title>hotshot_query_service - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../normalize.css"><link rel="stylesheet" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../ayu.css" disabled><link rel="stylesheet" href="../dark.css" disabled><link rel="stylesheet" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script defer src="../crates.js"></script><script defer src="../main.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../hotshot_query_service/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div></a><h2></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../hotshot_query_service/index.html"><div class="logo-container"><img class="rust-logo" src="../rust-logo.svg" alt="logo"></div></a><h2 class="location"><a href="#">Crate hotshot_query_service</a></h2><div class="sidebar-elems"><ul class="block"><li class="version">Version 0.0.3</li><li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1 class="fqn">Crate <a class="mod" href="#">hotshot_query_service</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="srclink" href="../src/hotshot_query_service/lib.rs.html#13-607">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The HotShot Query Service is a minimal, generic query service that can be integrated into any
 decentralized application running on the [hotshot] consensus layer. It provides all the features
 that HotShot itself expects of a query service (such as providing consensus-related data for
 catchup and synchronization) as well as some application-level features that deal only with
@@ -13,13 +13,15 @@ extensible library, which makes it easy to add additional, application-specific 
 
 <span class="kw">use </span>async_std::{sync::{Arc, RwLock}, task::spawn};
 <span class="kw">use </span>hotshot::HotShot;
+<span class="kw">use </span>hotshot_types::traits::state::ValidatingConsensus;
 <span class="kw">use </span>tide_disco::App;
 
 <span class="comment">// Create or open query data.
-</span><span class="kw">let </span>query_data = QueryData::create(storage_path, ()).map_err(Error::internal)<span class="question-mark">?</span>;
+</span><span class="kw">let </span>query_data = QueryData::&lt;AppTypes, AppNodeImpl, ()&gt;::create(storage_path, ())
+    .map_err(Error::internal)<span class="question-mark">?</span>;
 
 <span class="comment">// Create hotshot, giving it a handle to the status metrics.
-</span><span class="kw">let </span><span class="kw-2">mut </span>hotshot = HotShot::&lt;AppTypes, AppNodeImpl&gt;::init(
+</span><span class="kw">let </span><span class="kw-2">mut </span>hotshot = HotShot::&lt;ValidatingConsensus, AppTypes, AppNodeImpl&gt;::init(
     query_data.metrics(),
     <span class="comment">// Other fields omitted
 </span>).<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
@@ -88,10 +90,10 @@ adding a UTXO index, it might look like this:</p>
     </span>utxo_index: HashMap&lt;u64, (u64, u64, u64)&gt;,
 }
 
-<span class="kw">type </span>AvailabilityState = QueryData&lt;AppTypes, AppQueryData&gt;;</code></pre></div>
-<p><code>QueryData&lt;Types, UserData&gt;</code> implements <code>AsRef&lt;UserData&gt;</code> and <code>AsMut&lt;UserData&gt;</code>, so you can now
-modify the default availablity API with the addition of a new endpoint that accesses
-<code>AppQueryData</code> like so:</p>
+<span class="kw">type </span>AvailabilityState = QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt;;</code></pre></div>
+<p><code>QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt;</code> implements <code>AsRef&lt;AppQueryData&gt;</code> and
+<code>AsMut&lt;AppQueryData&gt;</code>, so you can now modify the default availablity API with the addition of a
+new endpoint that accesses <code>AppQueryData</code> like so:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[derive(Default)]
 </span><span class="kw">fn </span>define_app_specific_availability_api&lt;State&gt;(
@@ -102,7 +104,7 @@ modify the default availablity API with the addition of a new endpoint that acce
     &lt;State <span class="kw">as </span>ReadState&gt;::State:
         Send +
         Sync +
-        AvailabilityDataSource&lt;AppTypes&gt; +
+        AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt; +
         AsRef&lt;AppQueryData&gt;,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>api = availability::define_api(options)<span class="question-mark">?</span>;
@@ -159,23 +161,29 @@ custom state type that includes state for other modules, you will need to implem
 for your custom type. The basic pattern looks like:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">struct </span>AppState {
-    hotshot_qs: QueryData&lt;AppTypes, AppQueryData&gt;,
+    hotshot_qs: QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt;,
     <span class="comment">// additional state for other modules
 </span>}
 
 <span class="comment">// Implement data source trait for availability API.
-</span><span class="kw">impl </span>AvailabilityDataSource&lt;AppTypes&gt; <span class="kw">for </span>AppState {
-    <span class="kw">type </span>Error = &lt;QueryData&lt;AppTypes, AppQueryData&gt; <span class="kw">as </span>AvailabilityDataSource&lt;AppTypes&gt;&gt;::Error;
+</span><span class="kw">impl </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt; <span class="kw">for </span>AppState {
+    <span class="kw">type </span>Error =
+        &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as
+            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::Error;
 
     <span class="kw">type </span>LeafIterType&lt;<span class="lifetime">&#39;a</span>&gt; =
-        &lt;QueryData&lt;AppTypes, AppQueryData&gt; <span class="kw">as </span>AvailabilityDataSource&lt;AppTypes&gt;&gt;::LeafIterType&lt;<span class="lifetime">&#39;a</span>&gt;;
+        &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as
+            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::LeafIterType&lt;<span class="lifetime">&#39;a</span>&gt;;
     <span class="kw">type </span>BlockIterType&lt;<span class="lifetime">&#39;a</span>&gt; =
-        &lt;QueryData&lt;AppTypes, AppQueryData&gt; <span class="kw">as </span>AvailabilityDataSource&lt;AppTypes&gt;&gt;::BlockIterType&lt;<span class="lifetime">&#39;a</span>&gt;;
+        &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as
+            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::BlockIterType&lt;<span class="lifetime">&#39;a</span>&gt;;
 
     <span class="kw">type </span>LeafStreamType =
-        &lt;QueryData&lt;AppTypes, AppQueryData&gt; <span class="kw">as </span>AvailabilityDataSource&lt;AppTypes&gt;&gt;::LeafStreamType;
+        &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as
+            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::LeafStreamType;
     <span class="kw">type </span>BlockStreamType =
-        &lt;QueryData&lt;AppTypes, AppQueryData&gt; <span class="kw">as </span>AvailabilityDataSource&lt;AppTypes&gt;&gt;::BlockStreamType;
+        &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as
+            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::BlockStreamType;
 
     <span class="kw">fn </span>get_nth_leaf_iter(<span class="kw-2">&amp;</span><span class="self">self</span>, n: usize) -&gt; <span class="self">Self</span>::LeafIterType&lt;<span class="lifetime">&#39;_</span>&gt; {
         <span class="self">self</span>.hotshot_qs.get_nth_leaf_iter(n)
@@ -186,7 +194,7 @@ for your custom type. The basic pattern looks like:</p>
 
 <span class="comment">// Implement data source trait for status API.
 </span><span class="kw">impl </span>StatusDataSource <span class="kw">for </span>AppState {
-    <span class="kw">type </span>Error = &lt;QueryData&lt;AppTypes, AppQueryData&gt; <span class="kw">as </span>StatusDataSource&gt;::Error;
+    <span class="kw">type </span>Error = &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as </span>StatusDataSource&gt;::Error;
 
     <span class="kw">fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize, <span class="self">Self</span>::Error&gt; {
         <span class="self">self</span>.hotshot_qs.block_height()
@@ -222,7 +230,7 @@ manage the <a href="atomic_store::AtomicStore">AtomicStore</a> for you, so you m
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">struct </span>AppState {
     <span class="comment">// Top-level storage coordinator
     </span>store: AtomicStore,
-    hotshot_qs: QueryData&lt;AppTypes, AppQueryData&gt;,
+    hotshot_qs: QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt;,
     <span class="comment">// additional state for other modules
 </span>}
 
@@ -259,4 +267,4 @@ manage the <a href="atomic_store::AtomicStore">AtomicStore</a> for you, so you m
 
     <span class="prelude-val">Ok</span>(app)
 }</code></pre></div>
-</div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="availability/index.html" title="hotshot_query_service::availability mod">availability</a></div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="data_source/index.html" title="hotshot_query_service::data_source mod">data_source</a></div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="status/index.html" title="hotshot_query_service::status mod">status</a></div></div></div><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Options.html" title="hotshot_query_service::Options struct">Options</a></div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Error.html" title="hotshot_query_service::Error enum">Error</a></div></div></div><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.run_standalone_service.html" title="hotshot_query_service::run_standalone_service fn">run_standalone_service</a></div><div class="item-right docblock-short">Run an instance of the HotShot Query service with no customization.</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="hotshot_query_service" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>
+</div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="availability/index.html" title="hotshot_query_service::availability mod">availability</a></div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="data_source/index.html" title="hotshot_query_service::data_source mod">data_source</a></div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="status/index.html" title="hotshot_query_service::status mod">status</a></div></div></div><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Options.html" title="hotshot_query_service::Options struct">Options</a></div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Error.html" title="hotshot_query_service::Error enum">Error</a></div></div></div><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.run_standalone_service.html" title="hotshot_query_service::run_standalone_service fn">run_standalone_service</a></div><div class="item-right docblock-short">Run an instance of the HotShot Query service with no customization.</div></div></div><h2 id="types" class="small-section-header"><a href="#types">Type Definitions</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.Leaf.html" title="hotshot_query_service::Leaf type">Leaf</a></div><div class="item-right docblock-short">Leaf type appended to a chain by consensus.</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.QuorumCertificate.html" title="hotshot_query_service::QuorumCertificate type">QuorumCertificate</a></div><div class="item-right docblock-short">Certificates used by consensus to justify leaves.</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="hotshot_query_service" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>

@@ -532,6 +532,11 @@
 <span id="532">532</span>
 <span id="533">533</span>
 <span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
 </pre><pre class="rust"><code><span class="attribute">#![allow(dead_code)]
 
 </span><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
@@ -918,10 +923,13 @@
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::testing::setup_test;
     <span class="kw">use </span>metrics::Metrics;
 
     <span class="attribute">#[test]
     </span><span class="kw">fn </span>test_prometheus_metrics() {
+        setup_test();
+
         <span class="kw">let </span>metrics = PrometheusMetrics::default();
 
         <span class="comment">// Register one metric of each type.
@@ -977,6 +985,8 @@
 
     <span class="attribute">#[test]
     </span><span class="kw">fn </span>test_namespace() {
+        setup_test();
+
         <span class="kw">let </span>metrics = PrometheusMetrics::default();
         <span class="kw">let </span>subgroup1 = metrics.subgroup(<span class="string">&quot;subgroup1&quot;</span>.into());
         <span class="kw">let </span>subgroup2 = subgroup1.subgroup(<span class="string">&quot;subgroup2&quot;</span>.into());

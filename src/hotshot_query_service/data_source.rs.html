@@ -559,6 +559,31 @@
 <span id="559">559</span>
 <span id="560">560</span>
 <span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -586,7 +611,9 @@
 <span class="kw">use </span>atomic_store::{AtomicStore, AtomicStoreLoader, PersistenceError};
 <span class="kw">use </span>futures::stream::BoxStream;
 <span class="kw">use </span>hotshot_types::traits::{
-    metrics::Metrics, node_implementation::NodeTypes, signature_key::EncodedPublicKey,
+    metrics::Metrics,
+    node_implementation::{NodeImplementation, NodeType},
+    signature_key::EncodedPublicKey,
 };
 <span class="kw">use </span>snafu::Snafu;
 <span class="kw">use </span>std::collections::HashMap;
@@ -625,21 +652,20 @@
 /// [AtomicStore::commit_version] alternate with calls to [QueryData::commit_version] or
 /// [QueryData::skip_version].
 </span><span class="attribute">#[derive(custom_debug::Debug)]
-</span><span class="kw">pub struct </span>QueryData&lt;Types: NodeTypes, UserData&gt; {
-    index_by_leaf_hash: HashMap&lt;LeafHash&lt;Types&gt;, u64&gt;,
+</span><span class="kw">pub struct </span>QueryData&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; {
+    index_by_leaf_hash: HashMap&lt;LeafHash&lt;Types, I&gt;, u64&gt;,
     index_by_block_hash: HashMap&lt;BlockHash&lt;Types&gt;, u64&gt;,
     index_by_txn_hash: HashMap&lt;TransactionHash&lt;Types&gt;, (u64, u64)&gt;,
     index_by_proposer_id: HashMap&lt;EncodedPublicKey, Vec&lt;u64&gt;&gt;,
     <span class="attribute">#[debug(skip)]
     </span>top_storage: <span class="prelude-ty">Option</span>&lt;AtomicStore&gt;,
-    leaf_storage: LedgerLog&lt;LeafQueryData&lt;Types&gt;&gt;,
+    leaf_storage: LedgerLog&lt;LeafQueryData&lt;Types, I&gt;&gt;,
     block_storage: LedgerLog&lt;BlockQueryData&lt;Types&gt;&gt;,
     metrics: PrometheusMetrics,
     user_data: UserData,
-    _marker: std::marker::PhantomData&lt;Types&gt;,
 }
 
-<span class="kw">impl</span>&lt;Types: NodeTypes, UserData&gt; QueryData&lt;Types, UserData&gt; {
+<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; QueryData&lt;Types, I, UserData&gt; {
     <span class="doccomment">/// Create a new [QueryData] with storage at `path`.
     ///
     /// If there is already data at `path`, it will be archived.
@@ -686,7 +712,6 @@
             block_storage: LedgerLog::create(loader, <span class="string">&quot;blocks&quot;</span>, CACHED_BLOCKS_COUNT)<span class="question-mark">?</span>,
             metrics: Default::default(),
             user_data,
-            _marker: Default::default(),
         })
     }
 
@@ -703,7 +728,7 @@
         user_data: UserData,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt; {
         <span class="kw">let </span>leaf_storage =
-            LedgerLog::&lt;LeafQueryData&lt;Types&gt;&gt;::open(loader, <span class="string">&quot;leaves&quot;</span>, CACHED_LEAVES_COUNT)<span class="question-mark">?</span>;
+            LedgerLog::&lt;LeafQueryData&lt;Types, I&gt;&gt;::open(loader, <span class="string">&quot;leaves&quot;</span>, CACHED_LEAVES_COUNT)<span class="question-mark">?</span>;
         <span class="kw">let </span>block_storage =
             LedgerLog::&lt;BlockQueryData&lt;Types&gt;&gt;::open(loader, <span class="string">&quot;blocks&quot;</span>, CACHED_BLOCKS_COUNT)<span class="question-mark">?</span>;
 
@@ -714,7 +739,7 @@
             .flatten()
             .map(|leaf| {
                 index_by_proposer_id
-                    .entry(leaf.proposer().clone())
+                    .entry(leaf.proposer())
                     .or_insert_with(Vec::new)
                     .push(leaf.height());
                 index_by_block_hash.insert(leaf.block_hash(), leaf.height());
@@ -743,7 +768,6 @@
             top_storage: <span class="prelude-val">None</span>,
             metrics: Default::default(),
             user_data,
-            _marker: Default::default(),
         })
     }
 
@@ -787,13 +811,17 @@
     }
 }
 
-<span class="kw">impl</span>&lt;Types: NodeTypes, UserData&gt; AsRef&lt;UserData&gt; <span class="kw">for </span>QueryData&lt;Types, UserData&gt; {
+<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; AsRef&lt;UserData&gt;
+    <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
+{
     <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>UserData {
         <span class="kw-2">&amp;</span><span class="self">self</span>.user_data
     }
 }
 
-<span class="kw">impl</span>&lt;Types: NodeTypes, UserData&gt; AsMut&lt;UserData&gt; <span class="kw">for </span>QueryData&lt;Types, UserData&gt; {
+<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; AsMut&lt;UserData&gt;
+    <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
+{
     <span class="kw">fn </span>as_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>UserData {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.user_data
     }
@@ -803,13 +831,15 @@
 #[snafu(display(<span class="string">&quot;unable to open stream&quot;</span>))]
 </span><span class="kw">pub struct </span>StreamError;
 
-<span class="kw">impl</span>&lt;Types: NodeTypes, UserData&gt; AvailabilityDataSource&lt;Types&gt; <span class="kw">for </span>QueryData&lt;Types, UserData&gt; {
+<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; AvailabilityDataSource&lt;Types, I&gt;
+    <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
+{
     <span class="kw">type </span>Error = StreamError;
 
-    <span class="kw">type </span>LeafIterType&lt;<span class="lifetime">&#39;a</span>&gt; = Skip&lt;Iter&lt;<span class="lifetime">&#39;a</span>, LeafQueryData&lt;Types&gt;&gt;&gt; <span class="kw">where </span>UserData: <span class="lifetime">&#39;a</span>;
+    <span class="kw">type </span>LeafIterType&lt;<span class="lifetime">&#39;a</span>&gt; = Skip&lt;Iter&lt;<span class="lifetime">&#39;a</span>, LeafQueryData&lt;Types, I&gt;&gt;&gt; <span class="kw">where </span>UserData: <span class="lifetime">&#39;a</span>;
     <span class="kw">type </span>BlockIterType&lt;<span class="lifetime">&#39;a</span>&gt; = Skip&lt;Iter&lt;<span class="lifetime">&#39;a</span>, BlockQueryData&lt;Types&gt;&gt;&gt; <span class="kw">where </span>UserData: <span class="lifetime">&#39;a</span>;
 
-    <span class="kw">type </span>LeafStreamType = BoxStream&lt;<span class="lifetime">&#39;static</span>, LeafQueryData&lt;Types&gt;&gt;;
+    <span class="kw">type </span>LeafStreamType = BoxStream&lt;<span class="lifetime">&#39;static</span>, LeafQueryData&lt;Types, I&gt;&gt;;
     <span class="kw">type </span>BlockStreamType = BoxStream&lt;<span class="lifetime">&#39;static</span>, BlockQueryData&lt;Types&gt;&gt;;
 
     <span class="kw">fn </span>get_nth_leaf_iter(<span class="kw-2">&amp;</span><span class="self">self</span>, n: usize) -&gt; <span class="self">Self</span>::LeafIterType&lt;<span class="lifetime">&#39;_</span>&gt; {
@@ -820,7 +850,7 @@
         <span class="self">self</span>.block_storage.iter().skip(n)
     }
 
-    <span class="kw">fn </span>get_leaf_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: LeafHash&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
+    <span class="kw">fn </span>get_leaf_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: LeafHash&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
         <span class="self">self</span>.index_by_leaf_hash.get(<span class="kw-2">&amp;</span>hash).cloned()
     }
 
@@ -848,17 +878,19 @@
     }
 }
 
-<span class="kw">impl</span>&lt;Types: NodeTypes, UserData&gt; UpdateAvailabilityData&lt;Types&gt; <span class="kw">for </span>QueryData&lt;Types, UserData&gt; {
+<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; UpdateAvailabilityData&lt;Types, I&gt;
+    <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
+{
     <span class="kw">type </span>Error = PersistenceError;
 
-    <span class="kw">fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+    <span class="kw">fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="self">self</span>.leaf_storage
             .insert(leaf.height() <span class="kw">as </span>usize, leaf.clone())<span class="question-mark">?</span>;
         <span class="self">self</span>.index_by_leaf_hash.insert(leaf.hash(), leaf.height());
         <span class="self">self</span>.index_by_block_hash
             .insert(leaf.block_hash(), leaf.height());
         <span class="self">self</span>.index_by_proposer_id
-            .entry(leaf.proposer().clone())
+            .entry(leaf.proposer())
             .or_insert_with(Vec::new)
             .push(leaf.height());
         <span class="prelude-val">Ok</span>(())
@@ -876,13 +908,15 @@
 }
 
 <span class="doccomment">/// Metric-related functions.
-</span><span class="kw">impl</span>&lt;Types: NodeTypes, UserData&gt; QueryData&lt;Types, UserData&gt; {
+</span><span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; QueryData&lt;Types, I, UserData&gt; {
     <span class="kw">fn </span>consensus_metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;PrometheusMetrics, MetricsError&gt; {
         <span class="self">self</span>.metrics.get_subgroup([<span class="string">&quot;consensus&quot;</span>])
     }
 }
 
-<span class="kw">impl</span>&lt;Types: NodeTypes, UserData&gt; StatusDataSource <span class="kw">for </span>QueryData&lt;Types, UserData&gt; {
+<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; StatusDataSource
+    <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
+{
     <span class="kw">type </span>Error = MetricsError;
 
     <span class="kw">fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize, <span class="self">Self</span>::Error&gt; {
@@ -913,7 +947,9 @@
     }
 }
 
-<span class="kw">impl</span>&lt;Types: NodeTypes, UserData&gt; UpdateStatusData <span class="kw">for </span>QueryData&lt;Types, UserData&gt; {
+<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; UpdateStatusData
+    <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
+{
     <span class="kw">fn </span>metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Metrics&gt; {
         Box::new(<span class="self">self</span>.metrics.clone())
     }
@@ -924,10 +960,9 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::testing::{
         consensus::MockNetwork,
-        mocks::{MockTransaction, MockTypes},
-        sleep,
+        mocks::{MockNodeImpl, MockTransaction, MockTypes},
+        setup_test, sleep,
     };
-    <span class="kw">use </span>async_compatibility_layer::logging::{setup_backtrace, setup_logging};
     <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>bincode::Options;
     <span class="kw">use </span>commit::Committable;
@@ -937,8 +972,11 @@
     <span class="kw">use </span>std::time::Duration;
 
     <span class="kw">async fn </span>get_non_empty_blocks&lt;UserData&gt;(
-        qd: <span class="kw-2">&amp;</span>RwLock&lt;QueryData&lt;MockTypes, UserData&gt;&gt;,
-    ) -&gt; Vec&lt;(LeafQueryData&lt;MockTypes&gt;, BlockQueryData&lt;MockTypes&gt;)&gt; {
+        qd: <span class="kw-2">&amp;</span>RwLock&lt;QueryData&lt;MockTypes, MockNodeImpl, UserData&gt;&gt;,
+    ) -&gt; Vec&lt;(
+        LeafQueryData&lt;MockTypes, MockNodeImpl&gt;,
+        BlockQueryData&lt;MockTypes&gt;,
+    )&gt; {
         <span class="kw">let </span>qd = qd.read().<span class="kw">await</span>;
         qd.get_nth_leaf_iter(<span class="number">0</span>)
             .zip(qd.get_nth_block_iter(<span class="number">0</span>))
@@ -949,7 +987,7 @@
             .collect()
     }
 
-    <span class="kw">async fn </span>validate&lt;UserData&gt;(qd: <span class="kw-2">&amp;</span>RwLock&lt;QueryData&lt;MockTypes, UserData&gt;&gt;) {
+    <span class="kw">async fn </span>validate&lt;UserData&gt;(qd: <span class="kw-2">&amp;</span>RwLock&lt;QueryData&lt;MockTypes, MockNodeImpl, UserData&gt;&gt;) {
         <span class="kw">let </span>qd = qd.read().<span class="kw">await</span>;
 
         <span class="comment">// Check the consistency of every block/leaf pair.
@@ -959,7 +997,7 @@
             <span class="macro">assert_eq!</span>(leaf.hash(), leaf.leaf().commit());
             <span class="macro">assert_eq!</span>(qd.get_leaf_index_by_hash(leaf.hash()).unwrap(), i <span class="kw">as </span>u64);
             <span class="macro">assert!</span>(qd
-                .get_block_ids_by_proposer_id(leaf.proposer())
+                .get_block_ids_by_proposer_id(<span class="kw-2">&amp;</span>leaf.proposer())
                 .contains(<span class="kw-2">&amp;</span>(i <span class="kw">as </span>u64)));
 
             <span class="kw">let </span><span class="prelude-val">Some</span>(<span class="prelude-val">Some</span>(block)) = qd.get_nth_block_iter(i).next() <span class="kw">else </span>{ <span class="kw">continue</span>; };
@@ -984,13 +1022,13 @@
         // ID.
         </span><span class="kw">for </span>proposer <span class="kw">in </span>qd
             .get_nth_leaf_iter(<span class="number">0</span>)
-            .filter_map(|opt_leaf| opt_leaf.map(|leaf| leaf.proposer().clone()))
+            .filter_map(|opt_leaf| opt_leaf.map(|leaf| leaf.proposer()))
             .collect::&lt;HashSet&lt;<span class="kw">_</span>&gt;&gt;()
         {
             <span class="kw">for </span>leaf_id <span class="kw">in </span>qd.get_block_ids_by_proposer_id(<span class="kw-2">&amp;</span>proposer) {
                 <span class="macro">assert_eq!</span>(
                     proposer,
-                    <span class="kw-2">*</span>qd.get_nth_leaf_iter(leaf_id <span class="kw">as </span>usize)
+                    qd.get_nth_leaf_iter(leaf_id <span class="kw">as </span>usize)
                         .next()
                         .unwrap()
                         .unwrap()
@@ -1002,8 +1040,7 @@
 
     <span class="attribute">#[async_std::test]
     </span><span class="kw">async fn </span>test_update() {
-        setup_logging();
-        setup_backtrace();
+        setup_test();
 
         <span class="kw">let </span>network = MockNetwork::init(()).<span class="kw">await</span>;
         <span class="kw">let </span>hotshot = network.handle();
@@ -1046,8 +1083,7 @@
 
     <span class="attribute">#[async_std::test]
     </span><span class="kw">async fn </span>test_metrics() {
-        setup_logging();
-        setup_backtrace();
+        setup_test();
 
         <span class="kw">let </span>network = MockNetwork::init(()).<span class="kw">await</span>;
         <span class="kw">let </span>hotshot = network.handle();
@@ -1064,7 +1100,21 @@
         <span class="comment">// Submit a transaction, and check that it is reflected in the mempool.
         </span><span class="kw">let </span>txn = MockTransaction { nonce: <span class="number">0 </span>};
         hotshot.submit_transaction(txn.clone()).<span class="kw">await</span>.unwrap();
-        sleep(Duration::from_secs(<span class="number">2</span>)).<span class="kw">await</span>;
+        <span class="kw">loop </span>{
+            <span class="kw">let </span>mempool = { qd.read().<span class="kw">await</span>.mempool_info().unwrap() };
+            <span class="kw">let </span>expected = MempoolQueryData {
+                transaction_count: <span class="number">1</span>,
+                memory_footprint: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>txn).unwrap(),
+            };
+            <span class="kw">if </span>mempool == expected {
+                <span class="kw">break</span>;
+            }
+            <span class="macro">tracing::info!</span>(
+                <span class="string">&quot;waiting for mempool to reflect transaction (currently {:?})&quot;</span>,
+                mempool
+            );
+            sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
+        }
         {
             <span class="macro">assert_eq!</span>(
                 qd.read().<span class="kw">await</span>.mempool_info().unwrap(),
@@ -1077,7 +1127,7 @@
 
         <span class="comment">// Submitting the same transaction should not affect the mempool.
         </span>hotshot.submit_transaction(txn.clone()).<span class="kw">await</span>.unwrap();
-        sleep(Duration::from_secs(<span class="number">2</span>)).<span class="kw">await</span>;
+        sleep(Duration::from_secs(<span class="number">3</span>)).<span class="kw">await</span>;
         {
             <span class="macro">assert_eq!</span>(
                 qd.read().<span class="kw">await</span>.mempool_info().unwrap(),

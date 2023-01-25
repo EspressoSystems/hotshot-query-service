@@ -592,6 +592,15 @@
 <span id="592">592</span>
 <span id="593">593</span>
 <span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -608,7 +617,7 @@
 <span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::{FutureExt, StreamExt, TryFutureExt};
-<span class="kw">use </span>hotshot_types::traits::node_implementation::NodeTypes;
+<span class="kw">use </span>hotshot_types::traits::node_implementation::{NodeImplementation, NodeType};
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::{OptionExt, Snafu};
 <span class="kw">use </span>std::fmt::Display;
@@ -750,10 +759,12 @@
     }
 }
 
-<span class="kw">pub fn </span>define_api&lt;State, Types: NodeTypes&gt;(options: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt;
+<span class="kw">pub fn </span>define_api&lt;State, Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt;(
+    options: <span class="kw-2">&amp;</span>Options,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt;
 <span class="kw">where
     </span>State: <span class="lifetime">&#39;static </span>+ Send + Sync + ReadState,
-    &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + AvailabilityDataSource&lt;Types&gt;,
+    &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + AvailabilityDataSource&lt;Types, I&gt;,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error&gt;(
         options.api_path.as_ref(),
@@ -905,11 +916,11 @@
         data_source::QueryData,
         testing::{
             consensus::MockNetwork,
-            mocks::{MockTransaction, MockTypes},
+            mocks::{MockNodeImpl, MockTransaction, MockTypes},
+            setup_test,
         },
         Error,
     };
-    <span class="kw">use </span>async_compatibility_layer::logging::{setup_backtrace, setup_logging};
     <span class="kw">use </span>async_std::{sync::RwLock, task::spawn};
     <span class="kw">use </span>commit::Committable;
     <span class="kw">use </span>futures::FutureExt;
@@ -927,7 +938,10 @@
         client: <span class="kw-2">&amp;</span>Client&lt;Error&gt;,
     ) -&gt; (
         u64,
-        Vec&lt;(LeafQueryData&lt;MockTypes&gt;, BlockQueryData&lt;MockTypes&gt;)&gt;,
+        Vec&lt;(
+            LeafQueryData&lt;MockTypes, MockNodeImpl&gt;,
+            BlockQueryData&lt;MockTypes&gt;,
+        )&gt;,
     ) {
         <span class="kw">let </span><span class="kw-2">mut </span>blocks = <span class="macro">vec!</span>[];
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>.. {
@@ -962,7 +976,7 @@
         <span class="comment">// Check the consistency of every block/leaf pair.
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..height {
             <span class="comment">// Check that looking up the leaf various ways returns the correct leaf.
-            </span><span class="kw">let </span>leaf: LeafQueryData&lt;MockTypes&gt; =
+            </span><span class="kw">let </span>leaf: LeafQueryData&lt;MockTypes, MockNodeImpl&gt; =
                 client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;leaf/{}&quot;</span>, i)).send().<span class="kw">await</span>.unwrap();
             <span class="macro">assert_eq!</span>(leaf.height(), i);
             <span class="macro">assert_eq!</span>(
@@ -989,7 +1003,7 @@
             );
 
             <span class="comment">// Check that this block is included as a proposal by the proposer listed in the leaf.
-            </span><span class="kw">let </span>proposals: Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt; = client
+            </span><span class="kw">let </span>proposals: Vec&lt;LeafQueryData&lt;MockTypes, MockNodeImpl&gt;&gt; = client
                 .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}&quot;</span>, leaf.proposer()))
                 .send()
                 .<span class="kw">await
@@ -1009,7 +1023,7 @@
             // include new empty blocks committed since we started checking.
             </span><span class="macro">assert_eq!</span>(
                 client
-                    .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes, MockNodeImpl&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;proposals/{}/limit/1&quot;</span>,
                         leaf.proposer()
                     ))
@@ -1021,7 +1035,7 @@
             </span>);
             <span class="macro">assert_eq!</span>(
                 client
-                    .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes, MockNodeImpl&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;proposals/{}/limit/0&quot;</span>,
                         leaf.proposer()
                     ))
@@ -1058,8 +1072,7 @@
 
     <span class="attribute">#[async_std::test]
     </span><span class="kw">async fn </span>test_api() {
-        setup_logging();
-        setup_backtrace();
+        setup_test();
 
         <span class="comment">// Create the consensus network.
         </span><span class="kw">let </span>network = MockNetwork::init(()).<span class="kw">await</span>;
@@ -1097,7 +1110,7 @@
                 <span class="macro">tracing::info!</span>(<span class="string">&quot;waiting for block with transaction {}&quot;</span>, nonce);
                 <span class="kw">let </span>(i, (leaf, block)) = leaf_blocks.next().<span class="kw">await</span>.unwrap();
                 <span class="macro">tracing::info!</span>(<span class="string">&quot;got block {}\nLeaf: {:?}\nBlock: {:?}&quot;</span>, i, leaf, block);
-                <span class="kw">let </span>leaf: LeafQueryData&lt;MockTypes&gt; = leaf.unwrap();
+                <span class="kw">let </span>leaf: LeafQueryData&lt;MockTypes, MockNodeImpl&gt; = leaf.unwrap();
                 <span class="kw">let </span>block: BlockQueryData&lt;MockTypes&gt; = block.unwrap();
                 <span class="macro">assert_eq!</span>(leaf.height() <span class="kw">as </span>usize, i);
                 <span class="macro">assert_eq!</span>(leaf.block_hash(), block.hash());
@@ -1122,8 +1135,10 @@
 
     <span class="attribute">#[async_std::test]
     </span><span class="kw">async fn </span>test_extensions() {
+        setup_test();
+
         <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_availability_extensions&quot;</span>).unwrap();
-        <span class="kw">let </span>query_data = QueryData::&lt;MockTypes, u64&gt;::create(dir.path(), <span class="number">0</span>).unwrap();
+        <span class="kw">let </span>query_data = QueryData::&lt;MockTypes, MockNodeImpl, u64&gt;::create(dir.path(), <span class="number">0</span>).unwrap();
 
         <span class="comment">// Create the API extensions specification.
         </span><span class="kw">let </span>extensions_path = dir.path().join(<span class="string">&quot;extensions.toml&quot;</span>);
@@ -1139,11 +1154,14 @@
         </span>};
         fs::write(<span class="kw-2">&amp;</span>extensions_path, extensions.to_string().as_bytes()).unwrap();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>api = define_api::&lt;RwLock&lt;QueryData&lt;MockTypes, u64&gt;&gt;, MockTypes&gt;(<span class="kw-2">&amp;</span>Options {
-            extensions: <span class="macro">vec!</span>[extensions_path],
-            ..Default::default()
-        })
-        .unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>api =
+            define_api::&lt;RwLock&lt;QueryData&lt;MockTypes, MockNodeImpl, u64&gt;&gt;, MockTypes, MockNodeImpl&gt;(
+                <span class="kw-2">&amp;</span>Options {
+                    extensions: <span class="macro">vec!</span>[extensions_path],
+                    ..Default::default()
+                },
+            )
+            .unwrap();
         api.get(<span class="string">&quot;get_ext&quot;</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>state.as_ref()) }.boxed()
         })

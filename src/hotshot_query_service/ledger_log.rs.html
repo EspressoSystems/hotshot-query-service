@@ -457,6 +457,11 @@
 <span id="457">457</span>
 <span id="458">458</span>
 <span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -746,12 +751,14 @@
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span>async_compatibility_layer::logging::{setup_backtrace, setup_logging};
+    <span class="kw">use </span><span class="kw">crate</span>::testing::setup_test;
     <span class="kw">use </span>atomic_store::AtomicStore;
     <span class="kw">use </span>tempdir::TempDir;
 
     <span class="attribute">#[async_std::test]
     </span><span class="kw">async fn </span>test_ledger_log_creation() {
+        setup_test();
+
         <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_ledger_log&quot;</span>).unwrap();
 
         <span class="comment">// Create and populuate a log.
@@ -780,6 +787,8 @@
 
     <span class="attribute">#[async_std::test]
     </span><span class="kw">async fn </span>test_ledger_log_insert() {
+        setup_test();
+
         <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_ledger_log&quot;</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">&quot;test_ledger_log&quot;</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>log = LedgerLog::&lt;u64&gt;::create(<span class="kw-2">&amp;mut </span>loader, <span class="string">&quot;ledger&quot;</span>, <span class="number">3</span>).unwrap();
@@ -819,6 +828,8 @@
 
     <span class="attribute">#[async_std::test]
     </span><span class="kw">async fn </span>test_ledger_log_iter() {
+        setup_test();
+
         <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_ledger_log&quot;</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">&quot;test_ledger_log&quot;</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>log = LedgerLog::&lt;u64&gt;::create(<span class="kw-2">&amp;mut </span>loader, <span class="string">&quot;ledger&quot;</span>, <span class="number">3</span>).unwrap();
@@ -845,8 +856,7 @@
 
     <span class="attribute">#[async_std::test]
     </span><span class="kw">async fn </span>test_ledger_log_subscribe() {
-        setup_logging();
-        setup_backtrace();
+        setup_test();
 
         <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_ledger_log&quot;</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">&quot;test_ledger_log&quot;</span>).unwrap();

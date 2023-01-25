@@ -176,6 +176,13 @@
 <span id="176">176</span>
 <span id="177">177</span>
 <span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -188,62 +195,67 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use </span>bincode::Options;
+</span><span class="kw">use crate</span>::{Leaf, QuorumCertificate};
+<span class="kw">use </span>bincode::Options;
 <span class="kw">use </span>commit::{Commitment, Committable};
-<span class="kw">use </span>hotshot::{
-    data::{Leaf, QuorumCertificate},
-    traits::Block,
+<span class="kw">use </span>hotshot_types::{
+    data::LeafType,
+    traits::{
+        election::SignedCertificate,
+        node_implementation::{NodeImplementation, NodeType},
+        signature_key::EncodedPublicKey,
+        Block,
+    },
 };
-<span class="kw">use </span>hotshot_types::traits::{node_implementation::NodeTypes, signature_key::EncodedPublicKey};
 <span class="kw">use </span>hotshot_utils::bincode::bincode_opts;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="kw">pub type </span>LeafHash&lt;Types&gt; = Commitment&lt;Leaf&lt;Types&gt;&gt;;
-<span class="kw">pub type </span>BlockHash&lt;Types&gt; = Commitment&lt;&lt;Types <span class="kw">as </span>NodeTypes&gt;::BlockType&gt;;
+<span class="kw">pub type </span>LeafHash&lt;Types, I&gt; = Commitment&lt;Leaf&lt;Types, I&gt;&gt;;
+<span class="kw">pub type </span>BlockHash&lt;Types&gt; = Commitment&lt;&lt;Types <span class="kw">as </span>NodeType&gt;::BlockType&gt;;
 <span class="kw">pub type </span>TransactionHash&lt;Types&gt; =
-    Commitment&lt;&lt;&lt;Types <span class="kw">as </span>NodeTypes&gt;::BlockType <span class="kw">as </span>Block&gt;::Transaction&gt;;
+    Commitment&lt;&lt;&lt;Types <span class="kw">as </span>NodeType&gt;::BlockType <span class="kw">as </span>Block&gt;::Transaction&gt;;
 
-<span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+<span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(bound = <span class="string">&quot;&quot;</span>)]
-</span><span class="kw">pub struct </span>LeafQueryData&lt;Types: NodeTypes&gt; {
-    leaf: Leaf&lt;Types&gt;,
-    qc: QuorumCertificate&lt;Types&gt;,
+</span><span class="kw">pub struct </span>LeafQueryData&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; {
+    leaf: Leaf&lt;Types, I&gt;,
+    qc: QuorumCertificate&lt;Types, I&gt;,
 }
 
-<span class="kw">impl</span>&lt;Types: NodeTypes&gt; LeafQueryData&lt;Types&gt; {
-    <span class="kw">pub fn </span>new(leaf: Leaf&lt;Types&gt;, qc: QuorumCertificate&lt;Types&gt;) -&gt; <span class="self">Self </span>{
-        <span class="macro">assert_eq!</span>(qc.leaf_commitment, leaf.commit());
+<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; LeafQueryData&lt;Types, I&gt; {
+    <span class="kw">pub fn </span>new(leaf: Leaf&lt;Types, I&gt;, qc: QuorumCertificate&lt;Types, I&gt;) -&gt; <span class="self">Self </span>{
+        <span class="macro">assert_eq!</span>(qc.leaf_commitment(), leaf.commit());
         <span class="self">Self </span>{ leaf, qc }
     }
 
-    <span class="kw">pub fn </span>leaf(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Leaf&lt;Types&gt; {
+    <span class="kw">pub fn </span>leaf(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Leaf&lt;Types, I&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.leaf
     }
 
-    <span class="kw">pub fn </span>qc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>QuorumCertificate&lt;Types&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.qc
+    <span class="kw">pub fn </span>qc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QuorumCertificate&lt;Types, I&gt; {
+        <span class="self">self</span>.leaf.get_justify_qc()
     }
 
     <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        <span class="self">self</span>.leaf.height
+        <span class="self">self</span>.leaf.get_height()
     }
 
-    <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LeafHash&lt;Types&gt; {
-        <span class="self">self</span>.qc.leaf_commitment
+    <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LeafHash&lt;Types, I&gt; {
+        <span class="self">self</span>.leaf.commit()
     }
 
     <span class="kw">pub fn </span>block_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BlockHash&lt;Types&gt; {
-        <span class="self">self</span>.qc.block_commitment
+        <span class="self">self</span>.leaf.get_deltas().commit()
     }
 
-    <span class="kw">pub fn </span>proposer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>EncodedPublicKey {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.leaf.proposer_id
+    <span class="kw">pub fn </span>proposer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; EncodedPublicKey {
+        <span class="self">self</span>.leaf.get_proposer_id()
     }
 }
 
 <span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(bound = <span class="string">&quot;&quot;</span>)]
-</span><span class="kw">pub struct </span>BlockQueryData&lt;Types: NodeTypes&gt; {
+</span><span class="kw">pub struct </span>BlockQueryData&lt;Types: NodeType&gt; {
     block: Types::BlockType,
     hash: BlockHash&lt;Types&gt;,
     height: u64,
@@ -251,20 +263,22 @@
     txn_hashes: Vec&lt;TransactionHash&lt;Types&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;Types: NodeTypes&gt; BlockQueryData&lt;Types&gt; {
-    <span class="kw">pub fn </span>new(leaf: Leaf&lt;Types&gt;, qc: QuorumCertificate&lt;Types&gt;) -&gt; <span class="self">Self
+<span class="kw">impl</span>&lt;Types: NodeType&gt; BlockQueryData&lt;Types&gt; {
+    <span class="kw">pub fn </span>new&lt;I: NodeImplementation&lt;Types&gt;&gt;(
+        leaf: Leaf&lt;Types, I&gt;,
+        qc: QuorumCertificate&lt;Types, I&gt;,
+    ) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>Types::BlockType: Serialize,
     {
-        <span class="macro">assert_eq!</span>(qc.block_commitment, leaf.deltas.commit());
+        <span class="macro">assert_eq!</span>(qc.leaf_commitment(), leaf.commit());
+        <span class="kw">let </span>block = leaf.get_deltas();
         <span class="self">Self </span>{
-            hash: qc.block_commitment,
-            height: leaf.height,
-            size: bincode_opts()
-                .serialized_size(<span class="kw-2">&amp;</span>leaf.deltas)
-                .unwrap_or_default(),
-            txn_hashes: leaf.deltas.contained_transactions().into_iter().collect(),
-            block: leaf.deltas,
+            hash: block.commit(),
+            height: leaf.get_height(),
+            size: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>block).unwrap_or_default(),
+            txn_hashes: block.contained_transactions().into_iter().collect(),
+            block,
         }
     }
 
@@ -310,7 +324,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;Types: NodeTypes&gt; IntoIterator <span class="kw">for </span>BlockQueryData&lt;Types&gt; {
+<span class="kw">impl</span>&lt;Types: NodeType&gt; IntoIterator <span class="kw">for </span>BlockQueryData&lt;Types&gt; {
     <span class="kw">type </span>Item = TransactionHash&lt;Types&gt;;
     <span class="kw">type </span>IntoIter = &lt;Vec&lt;<span class="self">Self</span>::Item&gt; <span class="kw">as </span>IntoIterator&gt;::IntoIter;
 
@@ -319,7 +333,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Types: NodeTypes&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BlockQueryData&lt;Types&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Types: NodeType&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BlockQueryData&lt;Types&gt; {
     <span class="kw">type </span>Item = TransactionHash&lt;Types&gt;;
     <span class="kw">type </span>IntoIter = std::iter::Copied&lt;&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Vec&lt;<span class="self">Self</span>::Item&gt; <span class="kw">as </span>IntoIterator&gt;::IntoIter&gt;;
 
@@ -330,14 +344,14 @@
 
 <span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(bound = <span class="string">&quot;&quot;</span>)]
-</span><span class="kw">pub struct </span>TransactionQueryData&lt;Types: NodeTypes&gt; {
+</span><span class="kw">pub struct </span>TransactionQueryData&lt;Types: NodeType&gt; {
     transaction: &lt;Types::BlockType <span class="kw">as </span>Block&gt;::Transaction,
     height: u64,
     index: u64,
     hash: TransactionHash&lt;Types&gt;,
 }
 
-<span class="kw">impl</span>&lt;Types: NodeTypes&gt; TransactionQueryData&lt;Types&gt; {
+<span class="kw">impl</span>&lt;Types: NodeType&gt; TransactionQueryData&lt;Types&gt; {
     <span class="kw">pub fn </span>transaction(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>&lt;Types::BlockType <span class="kw">as </span>Block&gt;::Transaction {
         <span class="kw-2">&amp;</span><span class="self">self</span>.transaction
     }
