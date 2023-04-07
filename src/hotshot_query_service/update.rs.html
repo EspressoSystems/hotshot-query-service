@@ -108,6 +108,15 @@
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
 <a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -211,8 +220,17 @@
                     .try_resolve()
                     .expect(<span class="string">&quot;block was not available at moment leaf was sequenced&quot;</span>);
 
-                <span class="self">self</span>.insert_leaf(LeafQueryData::new(leaf.clone(), qc.clone()))<span class="question-mark">?</span>;
-                <span class="self">self</span>.insert_block(BlockQueryData::new::&lt;I&gt;(leaf.clone(), qc.clone(), block))<span class="question-mark">?</span>;
+                <span class="comment">// `LeafQueryData::new` only fails if `qc` does not reference `leaf`. We have just
+                // gotten `leaf` and `qc` directly from a consensus `Decide` event, so they are
+                // guaranteed to correspond, and this should never panic.
+                </span><span class="self">self</span>.insert_leaf(
+                    LeafQueryData::new(leaf.clone(), qc.clone()).expect(<span class="string">&quot;inconsistent leaf&quot;</span>),
+                )<span class="question-mark">?</span>;
+                <span class="comment">// For the same reason, this will not panic either.
+                </span><span class="self">self</span>.insert_block(
+                    BlockQueryData::new::&lt;I&gt;(leaf.clone(), qc.clone(), block)
+                        .expect(<span class="string">&quot;inconsistent block&quot;</span>),
+                )<span class="question-mark">?</span>;
             }
         }
         <span class="prelude-val">Ok</span>(())
