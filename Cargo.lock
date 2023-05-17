@@ -2547,7 +2547,7 @@ dependencies = [
  "surf-disco 0.4.0",
  "tempdir",
  "tide-disco 0.4.0",
- "toml 0.5.11",
+ "toml 0.7.3",
  "tracing",
 ]
 
