@@ -13,7 +13,7 @@ extensible library, which makes it easy to add additional, application-specific 
 
 <span class="kw">use </span>async_std::{sync::{Arc, RwLock}, task::spawn};
 <span class="kw">use </span>hotshot::HotShot;
-<span class="kw">use </span>hotshot_types::traits::state::ValidatingConsensus;
+<span class="kw">use </span>hotshot_types::traits::consensus_type::validating_consensus::ValidatingConsensus;
 <span class="kw">use </span>tide_disco::App;
 
 <span class="comment">// Create or open query data.
