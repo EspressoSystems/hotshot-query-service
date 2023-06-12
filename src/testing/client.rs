@@ -1,5 +1,3 @@
-#![cfg(any(test, feature = "testing"))]
-
 // Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -11,25 +9,21 @@
 // General Public License for more details.
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see <https://www.gnu.org/licenses/>.
-use async_compatibility_layer::logging::{setup_backtrace, setup_logging};
-use std::time::Duration;
 
-pub mod client;
-pub mod consensus;
-pub mod mocks;
+use surf_disco::StatusCode;
 
-pub async fn sleep(dur: Duration) {
-    // For some reason, `async_std::task::sleep` doesn't work on the GitHub Windows runners (it
-    // hangs forever). `spin_sleep::sleep` works fine.
-    async_std::task::spawn_blocking(move || spin_sleep::sleep(dur)).await;
-}
+use crate::Error;
 
-pub fn setup_test() {
-    setup_logging();
-    setup_backtrace();
+impl surf_disco::Error for Error {
+    fn catch_all(status: StatusCode, message: String) -> Self {
+        Self::Custom { status, message }
+    }
 
-    #[cfg(all(feature = "backtrace-on-stack-overflow", not(windows)))]
-    unsafe {
-        backtrace_on_stack_overflow::enable();
+    fn status(&self) -> StatusCode {
+        match self {
+            Self::Availability { source } => source.status(),
+            Self::Status { source } => source.status(),
+            Self::Custom { status, .. } => *status,
+        }
     }
 }
