@@ -14,7 +14,6 @@
 use async_compatibility_layer::logging::{setup_backtrace, setup_logging};
 use std::time::Duration;
 
-pub mod client;
 pub mod consensus;
 pub mod mocks;
 
