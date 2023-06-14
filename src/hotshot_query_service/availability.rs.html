@@ -601,6 +601,24 @@
 <a href="#601" id="601">601</a>
 <a href="#602" id="602">602</a>
 <a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -613,7 +631,7 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use </span><span class="kw">crate</span>::api::load_api;
+</span><span class="kw">use crate</span>::{api::load_api, Block};
 <span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::{FutureExt, StreamExt, TryFutureExt};
@@ -765,6 +783,7 @@
 <span class="kw">where
     </span>State: <span class="lifetime">&#39;static </span>+ Send + Sync + ReadState,
     &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + AvailabilityDataSource&lt;Types, I&gt;,
+    Block&lt;Types&gt;: QueryableBlock,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error&gt;(
         options.api_path.as_ref(),
@@ -827,11 +846,7 @@
                             })<span class="question-mark">?
                     </span>}
                 };
-                state
-                    .get_nth_block_iter(height <span class="kw">as </span>usize)
-                    .next()
-                    .context(InvalidBlockHeightSnafu { height })<span class="question-mark">?
-                    </span>.context(MissingBlockSnafu { height })
+                get_block(state, height)
             }
             .boxed()
         })<span class="question-mark">?
@@ -858,22 +873,31 @@
         })<span class="question-mark">?
         </span>.get(<span class="string">&quot;gettransaction&quot;</span>, |req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>(height, index) =
-                    <span class="kw">match </span>req.opt_blob_param(<span class="string">&quot;hash&quot;</span>)<span class="question-mark">? </span>{
-                        <span class="prelude-val">Some</span>(hash) =&gt; state.get_txn_index_by_hash(hash).context(
+                <span class="kw">let </span>(block, index) = <span class="kw">match </span>req.opt_blob_param(<span class="string">&quot;hash&quot;</span>)<span class="question-mark">? </span>{
+                    <span class="prelude-val">Some</span>(hash) =&gt; {
+                        <span class="kw">let </span>(height, index) = state.get_txn_index_by_hash(hash).context(
                             UnknownTransactionHashSnafu {
                                 hash: hash.to_string(),
                             },
-                        )<span class="question-mark">?</span>,
-                        <span class="prelude-val">None </span>=&gt; (req.integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">?</span>, req.integer_param(<span class="string">&quot;index&quot;</span>)<span class="question-mark">?</span>),
-                    };
-                state
-                    .get_nth_block_iter(height <span class="kw">as </span>usize)
-                    .next()
-                    .context(InvalidBlockHeightSnafu { height })<span class="question-mark">?
-                    </span>.context(MissingBlockSnafu { height })<span class="question-mark">?
-                    </span>.transaction(index <span class="kw">as </span>usize)
-                    .context(InvalidTransactionIndexSnafu { height, index })
+                        )<span class="question-mark">?</span>;
+                        <span class="kw">let </span>block = get_block(state, height)<span class="question-mark">?</span>;
+                        (block, index)
+                    }
+                    <span class="prelude-val">None </span>=&gt; {
+                        <span class="kw">let </span>height = req.integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>block = get_block(state, height)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>i = req.integer_param(<span class="string">&quot;index&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>index = block.block().nth(i).context(InvalidTransactionIndexSnafu {
+                            height,
+                            index: i <span class="kw">as </span>u64,
+                        })<span class="question-mark">?</span>;
+                        (block, index)
+                    }
+                };
+                <span class="prelude-val">Ok</span>(block
+                    .transaction(<span class="kw-2">&amp;</span>index)
+                    <span class="comment">// The computation of `index` above should ensure that it is a valid index.
+                    </span>.unwrap())
             }
             .boxed()
         })<span class="question-mark">?
@@ -907,6 +931,20 @@
             .boxed()
         })<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(api)
+}
+
+<span class="kw">fn </span>get_block&lt;State, Types, I&gt;(state: <span class="kw-2">&amp;</span>State, height: u64) -&gt; <span class="prelude-ty">Result</span>&lt;BlockQueryData&lt;Types&gt;, Error&gt;
+<span class="kw">where
+    </span>State: AvailabilityDataSource&lt;Types, I&gt;,
+    Block&lt;Types&gt;: QueryableBlock,
+    Types: NodeType,
+    I: NodeImplementation&lt;Types&gt;,
+{
+    state
+        .get_nth_block_iter(height <span class="kw">as </span>usize)
+        .next()
+        .context(InvalidBlockHeightSnafu { height })<span class="question-mark">?
+        </span>.context(MissingBlockSnafu { height })
 }
 
 <span class="attr">#[cfg(test)]
@@ -1048,26 +1086,26 @@
 
             <span class="comment">// Check that looking up each transaction in the block various ways returns the correct
             // transaction.
-            // TODO enable this test when HotShot supports getting transaction data from blocks.
-            // for (j, txn_hash) in block.iter().enumerate() {
-            //     let txn: TransactionQueryData&lt;MockTypes&gt; = client
-            //         .get(&amp;format!(&quot;transaction/{}/{}&quot;, i, j))
-            //         .send()
-            //         .await
-            //         .unwrap();
-            //     assert_eq!(txn.height(), i);
-            //     assert_eq!(txn.index(), j as u64);
-            //     assert_eq!(txn.hash(), txn_hash);
-            //     assert_eq!(
-            //         txn,
-            //         client
-            //             .get(&amp;format!(&quot;transaction/hash/{}&quot;, txn_hash))
-            //             .send()
-            //             .await
-            //             .unwrap()
-            //     );
-            // }
-        </span>}
+            </span><span class="kw">for </span>(j, txn_from_block) <span class="kw">in </span>block.block().iter().enumerate() {
+                <span class="kw">let </span>txn: TransactionQueryData&lt;MockTypes&gt; = client
+                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;transaction/{}/{}&quot;</span>, i, j))
+                    .send()
+                    .<span class="kw">await
+                    </span>.unwrap();
+                <span class="macro">assert_eq!</span>(txn.height(), i);
+                <span class="macro">assert_eq!</span>(txn.block_hash(), block.hash());
+                <span class="macro">assert_eq!</span>(txn.hash(), txn_from_block.commit());
+                <span class="macro">assert_eq!</span>(txn.transaction(), txn_from_block);
+                <span class="macro">assert_eq!</span>(
+                    txn,
+                    client
+                        .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;transaction/hash/{}&quot;</span>, txn_from_block.commit()))
+                        .send()
+                        .<span class="kw">await
+                        </span>.unwrap()
+                );
+            }
+        }
     }
 
     <span class="attr">#[async_std::test]
@@ -1102,7 +1140,6 @@
         <span class="kw">let </span><span class="kw-2">mut </span>leaf_blocks = leaves.zip(blocks).enumerate();
         <span class="kw">for </span>nonce <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
             <span class="kw">let </span>txn = MockTransaction { nonce };
-            <span class="kw">let </span>txn_hash = txn.commit();
             hotshot.submit_transaction(txn).<span class="kw">await</span>.unwrap();
 
             <span class="comment">// Wait for the transaction to be finalized.
@@ -1118,7 +1155,6 @@
                     <span class="kw">break </span>(i, leaf, block);
                 }
             };
-            <span class="macro">assert_eq!</span>(block.iter().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), <span class="macro">vec!</span>[txn_hash]);
             <span class="macro">assert_eq!</span>(
                 leaf,
                 client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;leaf/{}&quot;</span>, i)).send().<span class="kw">await</span>.unwrap()

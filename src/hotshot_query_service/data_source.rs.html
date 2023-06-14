@@ -594,6 +594,33 @@
 <a href="#594" id="594">594</a>
 <a href="#595" id="595">595</a>
 <a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -609,7 +636,10 @@
 </span><span class="kw">use crate</span>::{
     availability::{
         data_source::{AvailabilityDataSource, UpdateAvailabilityData},
-        query_data::{BlockHash, BlockQueryData, LeafHash, LeafQueryData, TransactionHash},
+        query_data::{
+            BlockHash, BlockQueryData, LeafHash, LeafQueryData, QueryableBlock, TransactionHash,
+            TransactionIndex,
+        },
     },
     ledger_log::LedgerLog,
     metrics::{MetricsError, PrometheusMetrics},
@@ -620,6 +650,7 @@
     Block, Deltas, Resolvable,
 };
 <span class="kw">use </span>atomic_store::{AtomicStore, AtomicStoreLoader, PersistenceError};
+<span class="kw">use </span>commit::Committable;
 <span class="kw">use </span>futures::stream::BoxStream;
 <span class="kw">use </span>hotshot_types::traits::{
     metrics::Metrics,
@@ -663,10 +694,13 @@
 /// [AtomicStore::commit_version] alternate with calls to [QueryData::commit_version] or
 /// [QueryData::skip_version].
 </span><span class="attr">#[derive(custom_debug::Debug)]
-</span><span class="kw">pub struct </span>QueryData&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; {
+</span><span class="kw">pub struct </span>QueryData&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt;
+<span class="kw">where
+    </span>Block&lt;Types&gt;: QueryableBlock,
+{
     index_by_leaf_hash: HashMap&lt;LeafHash&lt;Types, I&gt;, u64&gt;,
     index_by_block_hash: HashMap&lt;BlockHash&lt;Types&gt;, u64&gt;,
-    index_by_txn_hash: HashMap&lt;TransactionHash&lt;Types&gt;, (u64, u64)&gt;,
+    index_by_txn_hash: HashMap&lt;TransactionHash&lt;Types&gt;, (u64, TransactionIndex&lt;Types&gt;)&gt;,
     index_by_proposer_id: HashMap&lt;EncodedPublicKey, Vec&lt;u64&gt;&gt;,
     <span class="attr">#[debug(skip)]
     </span>top_storage: <span class="prelude-ty">Option</span>&lt;AtomicStore&gt;,
@@ -676,7 +710,10 @@
     user_data: UserData,
 }
 
-<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; QueryData&lt;Types, I, UserData&gt; {
+<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; QueryData&lt;Types, I, UserData&gt;
+<span class="kw">where
+    </span>Block&lt;Types&gt;: QueryableBlock,
+{
     <span class="doccomment">/// Create a new [QueryData] with storage at `path`.
     ///
     /// If there is already data at `path`, it will be archived.
@@ -769,9 +806,10 @@
             .flat_map(|block| {
                 <span class="kw">let </span>height = block.height();
                 block
-                    .into_iter()
+                    .block()
                     .enumerate()
-                    .map(<span class="kw">move </span>|(txn_id, txn_hash)| (txn_hash, (height, txn_id <span class="kw">as </span>u64)))
+                    .map(<span class="kw">move </span>|(txn_ix, txn)| (txn.commit(), (height, txn_ix)))
+                    .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
             })
             .collect();
 
@@ -830,6 +868,8 @@
 
 <span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; AsRef&lt;UserData&gt;
     <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
+<span class="kw">where
+    </span>Block&lt;Types&gt;: QueryableBlock,
 {
     <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>UserData {
         <span class="kw-2">&amp;</span><span class="self">self</span>.user_data
@@ -838,6 +878,8 @@
 
 <span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; AsMut&lt;UserData&gt;
     <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
+<span class="kw">where
+    </span>Block&lt;Types&gt;: QueryableBlock,
 {
     <span class="kw">fn </span>as_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>UserData {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.user_data
@@ -850,6 +892,8 @@
 
 <span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; AvailabilityDataSource&lt;Types, I&gt;
     <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
+<span class="kw">where
+    </span>Block&lt;Types&gt;: QueryableBlock,
 {
     <span class="kw">type </span>Error = StreamError;
 
@@ -875,7 +919,10 @@
         <span class="self">self</span>.index_by_block_hash.get(<span class="kw-2">&amp;</span>hash).cloned()
     }
 
-    <span class="kw">fn </span>get_txn_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: TransactionHash&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;(u64, u64)&gt; {
+    <span class="kw">fn </span>get_txn_index_by_hash(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        hash: TransactionHash&lt;Types&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(u64, TransactionIndex&lt;Types&gt;)&gt; {
         <span class="self">self</span>.index_by_txn_hash.get(<span class="kw-2">&amp;</span>hash).cloned()
     }
 
@@ -897,6 +944,8 @@
 
 <span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; UpdateAvailabilityData&lt;Types, I&gt;
     <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
+<span class="kw">where
+    </span>Block&lt;Types&gt;: QueryableBlock,
 {
     <span class="kw">type </span>Error = PersistenceError;
 
@@ -919,16 +968,19 @@
     <span class="kw">fn </span>insert_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: BlockQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="self">self</span>.block_storage
             .insert(block.height() <span class="kw">as </span>usize, block.clone())<span class="question-mark">?</span>;
-        <span class="kw">for </span>(txn_id, txn_hash) <span class="kw">in </span>block.iter().enumerate() {
+        <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.block().enumerate() {
             <span class="self">self</span>.index_by_txn_hash
-                .insert(txn_hash, (block.height(), txn_id <span class="kw">as </span>u64));
+                .insert(txn.commit(), (block.height(), txn_ix));
         }
         <span class="prelude-val">Ok</span>(())
     }
 }
 
 <span class="doccomment">/// Metric-related functions.
-</span><span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; QueryData&lt;Types, I, UserData&gt; {
+</span><span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; QueryData&lt;Types, I, UserData&gt;
+<span class="kw">where
+    </span>Block&lt;Types&gt;: QueryableBlock,
+{
     <span class="kw">fn </span>consensus_metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;PrometheusMetrics, MetricsError&gt; {
         <span class="self">self</span>.metrics.get_subgroup([<span class="string">&quot;consensus&quot;</span>])
     }
@@ -936,6 +988,8 @@
 
 <span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; StatusDataSource
     <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
+<span class="kw">where
+    </span>Block&lt;Types&gt;: QueryableBlock,
 {
     <span class="kw">type </span>Error = MetricsError;
 
@@ -969,6 +1023,8 @@
 
 <span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; UpdateStatusData
     <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
+<span class="kw">where
+    </span>Block&lt;Types&gt;: QueryableBlock,
 {
     <span class="kw">fn </span>metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Metrics&gt; {
         Box::new(<span class="self">self</span>.metrics.clone())
@@ -1030,10 +1086,10 @@
             );
             <span class="macro">assert_eq!</span>(qd.get_block_index_by_hash(block.hash()).unwrap(), i <span class="kw">as </span>u64);
 
-            <span class="kw">for </span>(j, txn_hash) <span class="kw">in </span>block.iter().enumerate() {
+            <span class="kw">for </span>(j, txn) <span class="kw">in </span>block.block().iter().enumerate() {
                 <span class="macro">assert_eq!</span>(
-                    qd.get_txn_index_by_hash(txn_hash).unwrap(),
-                    (i <span class="kw">as </span>u64, j <span class="kw">as </span>u64),
+                    qd.get_txn_index_by_hash(txn.commit()).unwrap(),
+                    (i <span class="kw">as </span>u64, j),
                 );
             }
         }
@@ -1074,7 +1130,6 @@
         </span><span class="kw">let </span><span class="kw-2">mut </span>blocks = { qd.read().<span class="kw">await</span>.subscribe_blocks(<span class="number">0</span>).unwrap().enumerate() };
         <span class="kw">for </span>nonce <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
             <span class="kw">let </span>txn = MockTransaction { nonce };
-            <span class="kw">let </span>txn_hash = txn.commit();
             hotshot.submit_transaction(txn).<span class="kw">await</span>.unwrap();
 
             <span class="comment">// Wait for the transaction to be finalized.
@@ -1085,7 +1140,6 @@
                 }
             };
 
-            <span class="macro">assert_eq!</span>(block.iter().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), <span class="macro">vec!</span>[txn_hash]);
             <span class="macro">assert_eq!</span>(
                 qd.read()
                     .<span class="kw">await

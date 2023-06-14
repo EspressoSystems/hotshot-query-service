@@ -51,6 +51,18 @@
 <a href="#51" id="51">51</a>
 <a href="#52" id="52">52</a>
 <a href="#53" id="53">53</a>
+<a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -63,7 +75,10 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use </span><span class="kw">super</span>::query_data::{BlockHash, BlockQueryData, LeafHash, LeafQueryData, TransactionHash};
+</span><span class="kw">use </span><span class="kw">super</span>::query_data::{
+    BlockHash, BlockQueryData, LeafHash, LeafQueryData, QueryableBlock, TransactionHash,
+    TransactionIndex,
+};
 <span class="kw">use crate</span>::{Block, Deltas, Resolvable};
 <span class="kw">use </span>futures::stream::Stream;
 <span class="kw">use </span>hotshot_types::traits::{
@@ -73,7 +88,10 @@
 <span class="kw">use </span>std::error::Error;
 <span class="kw">use </span>std::fmt::Debug;
 
-<span class="kw">pub trait </span>AvailabilityDataSource&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; {
+<span class="kw">pub trait </span>AvailabilityDataSource&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt;
+<span class="kw">where
+    </span>Block&lt;Types&gt;: QueryableBlock,
+{
     <span class="kw">type </span>Error: Error + Debug;
 
     <span class="kw">type </span>LeafIterType&lt;<span class="lifetime">&#39;a</span>&gt;: <span class="lifetime">&#39;a </span>+ Iterator&lt;Item = <span class="prelude-ty">Option</span>&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt;
@@ -90,14 +108,20 @@
     <span class="kw">fn </span>get_nth_block_iter(<span class="kw-2">&amp;</span><span class="self">self</span>, n: usize) -&gt; <span class="self">Self</span>::BlockIterType&lt;<span class="lifetime">&#39;_</span>&gt;;
     <span class="kw">fn </span>get_leaf_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: LeafHash&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt;;
     <span class="kw">fn </span>get_block_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: BlockHash&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt;;
-    <span class="kw">fn </span>get_txn_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: TransactionHash&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;(u64, u64)&gt;;
+    <span class="kw">fn </span>get_txn_index_by_hash(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        hash: TransactionHash&lt;Types&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(u64, TransactionIndex&lt;Types&gt;)&gt;;
     <span class="kw">fn </span>get_block_ids_by_proposer_id(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>EncodedPublicKey) -&gt; Vec&lt;u64&gt;;
 
     <span class="kw">fn </span>subscribe_leaves(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::LeafStreamType, <span class="self">Self</span>::Error&gt;;
     <span class="kw">fn </span>subscribe_blocks(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::BlockStreamType, <span class="self">Self</span>::Error&gt;;
 }
 
-<span class="kw">pub trait </span>UpdateAvailabilityData&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; {
+<span class="kw">pub trait </span>UpdateAvailabilityData&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt;
+<span class="kw">where
+    </span>Block&lt;Types&gt;: QueryableBlock,
+{
     <span class="kw">type </span>Error: Error + Debug;
     <span class="kw">fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
     <span class="kw">where
