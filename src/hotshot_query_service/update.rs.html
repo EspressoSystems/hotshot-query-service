@@ -156,7 +156,7 @@
 /// If a type implements both [UpdateAvailabilityData] and [UpdateStatusData], then it can be fully
 /// kept up to date through two interfaces:
 /// * [metrics](UpdateDataSource::metrics), to get a handle for populating the status metrics, which
-///   should be used when initializing a [HotShotHandle](hotshot::types::HotShotHandle)
+///   should be used when initializing a [SystemContextHandle](hotshot::types::SystemContextHandle)
 /// * [update](UpdateDataSource::update), to update the query state when a new HotShot event is
 ///   emitted
 </span><span class="kw">pub trait </span>UpdateDataSource&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; {
@@ -165,7 +165,7 @@
     <span class="doccomment">/// Get a handle for populating status metrics.
     ///
     /// This function should be called before creating a
-    /// [HotShotHandle](hotshot::types::HotShotHandle), and the resulting [Metrics] handle should be
+    /// [SystemContextHandle](hotshot::types::SystemContextHandle), and the resulting [Metrics] handle should be
     /// passed to HotShot, which will update it.
     </span><span class="kw">fn </span>metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Metrics&gt;;
 
