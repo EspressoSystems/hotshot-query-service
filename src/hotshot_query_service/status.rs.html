@@ -272,10 +272,6 @@
 <a href="#272" id="272">272</a>
 <a href="#273" id="273">273</a>
 <a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
-<a href="#278" id="278">278</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -317,7 +313,7 @@
         env = <span class="string">&quot;HOTSHOT_STATUS_EXTENSIONS&quot;</span>,
         value_delimiter = <span class="string">&#39;,&#39;
     </span>)]
-    </span><span class="kw">pub </span>extensions: Vec&lt;PathBuf&gt;,
+    </span><span class="kw">pub </span>extensions: Vec&lt;toml::Value&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug, From, Snafu, Deserialize, Serialize)]
@@ -349,7 +345,7 @@
     <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error&gt;(
         options.api_path.as_ref(),
         <span class="macro">include_str!</span>(<span class="string">&quot;../api/status.toml&quot;</span>),
-        <span class="kw-2">&amp;</span>options.extensions,
+        options.extensions.clone(),
     )<span class="question-mark">?</span>;
     api.with_version(<span class="string">&quot;0.0.1&quot;</span>.parse().unwrap())
         .get(<span class="string">&quot;latest_block_height&quot;</span>, |<span class="kw">_</span>, state| {
@@ -384,7 +380,6 @@
     <span class="kw">use </span>futures::FutureExt;
     <span class="kw">use </span>hotshot_utils::bincode::bincode_opts;
     <span class="kw">use </span>portpicker::pick_unused_port;
-    <span class="kw">use </span>std::fs;
     <span class="kw">use </span>std::time::Duration;
     <span class="kw">use </span>surf_disco::Client;
     <span class="kw">use </span>tempdir::TempDir;
@@ -497,8 +492,6 @@
         <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_status_extensions&quot;</span>).unwrap();
         <span class="kw">let </span>query_data = QueryData::&lt;MockTypes, MockNodeImpl, u64&gt;::create(dir.path(), <span class="number">0</span>).unwrap();
 
-        <span class="comment">// Create the API extensions specification.
-        </span><span class="kw">let </span>extensions_path = dir.path().join(<span class="string">&quot;extensions.toml&quot;</span>);
         <span class="kw">let </span>extensions = <span class="macro">toml! </span>{
             [route.post_ext]
             PATH = [<span class="string">&quot;/ext/:val&quot;</span>]
@@ -509,10 +502,9 @@
             PATH = [<span class="string">&quot;/ext&quot;</span>]
             METHOD = <span class="string">&quot;GET&quot;
         </span>};
-        fs::write(<span class="kw-2">&amp;</span>extensions_path, extensions.to_string().as_bytes()).unwrap();
 
         <span class="kw">let </span><span class="kw-2">mut </span>api = define_api::&lt;RwLock&lt;QueryData&lt;MockTypes, MockNodeImpl, u64&gt;&gt;&gt;(<span class="kw-2">&amp;</span>Options {
-            extensions: <span class="macro">vec!</span>[extensions_path],
+            extensions: <span class="macro">vec!</span>[extensions],
             ..Default::default()
         })
         .unwrap();

@@ -619,6 +619,24 @@
 <a href="#619" id="619">619</a>
 <a href="#620" id="620">620</a>
 <a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -661,7 +679,7 @@
         env = <span class="string">&quot;HOTSHOT_AVAILABILITY_EXTENSIONS&quot;</span>,
         value_delimiter = <span class="string">&#39;,&#39;
     </span>)]
-    </span><span class="kw">pub </span>extensions: Vec&lt;PathBuf&gt;,
+    </span><span class="kw">pub </span>extensions: Vec&lt;toml::Value&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug, From, Snafu, Deserialize, Serialize)]
@@ -788,7 +806,7 @@
     <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error&gt;(
         options.api_path.as_ref(),
         <span class="macro">include_str!</span>(<span class="string">&quot;../api/availability.toml&quot;</span>),
-        <span class="kw-2">&amp;</span>options.extensions,
+        options.extensions.clone(),
     )<span class="question-mark">?</span>;
     api.with_version(<span class="string">&quot;0.0.1&quot;</span>.parse().unwrap())
         .get(<span class="string">&quot;getleaf&quot;</span>, |req, state| {
@@ -825,6 +843,27 @@
                                     reason: err.to_string(),
                                 })<span class="question-mark">?
                                 </span>.map(<span class="prelude-val">Ok</span>))
+                        }
+                        .boxed()
+                    })
+                    .<span class="kw">await
+            </span>}
+            .try_flatten_stream()
+            .boxed()
+        })<span class="question-mark">?
+        </span>.stream(<span class="string">&quot;streamblockheaders&quot;</span>, |req, state| {
+            <span class="kw">async move </span>{
+                <span class="kw">let </span>height = req.integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">?</span>;
+                state
+                    .read(|state| {
+                        <span class="kw">async move </span>{
+                            <span class="prelude-val">Ok</span>(state
+                                .subscribe_blocks(height)
+                                .map_err(|err| Error::LeafStream {
+                                    height: height <span class="kw">as </span>u64,
+                                    reason: err.to_string(),
+                                })<span class="question-mark">?
+                                </span>.map(|block| <span class="prelude-val">Ok</span>(block.header())))
                         }
                         .boxed()
                     })
@@ -964,7 +1003,6 @@
     <span class="kw">use </span>futures::FutureExt;
     <span class="kw">use </span>hotshot::types::{ed25519::Ed25519Pub, SignatureKey};
     <span class="kw">use </span>portpicker::pick_unused_port;
-    <span class="kw">use </span>std::fs;
     <span class="kw">use </span>std::time::Duration;
     <span class="kw">use </span>surf_disco::Client;
     <span class="kw">use </span>tempdir::TempDir;
@@ -1177,8 +1215,7 @@
         <span class="kw">let </span>query_data = QueryData::&lt;MockTypes, MockNodeImpl, u64&gt;::create(dir.path(), <span class="number">0</span>).unwrap();
 
         <span class="comment">// Create the API extensions specification.
-        </span><span class="kw">let </span>extensions_path = dir.path().join(<span class="string">&quot;extensions.toml&quot;</span>);
-        <span class="kw">let </span>extensions = <span class="macro">toml! </span>{
+        </span><span class="kw">let </span>extensions = <span class="macro">toml! </span>{
             [route.post_ext]
             PATH = [<span class="string">&quot;/ext/:val&quot;</span>]
             METHOD = <span class="string">&quot;POST&quot;
@@ -1188,12 +1225,11 @@
             PATH = [<span class="string">&quot;/ext&quot;</span>]
             METHOD = <span class="string">&quot;GET&quot;
         </span>};
-        fs::write(<span class="kw-2">&amp;</span>extensions_path, extensions.to_string().as_bytes()).unwrap();
 
         <span class="kw">let </span><span class="kw-2">mut </span>api =
             define_api::&lt;RwLock&lt;QueryData&lt;MockTypes, MockNodeImpl, u64&gt;&gt;, MockTypes, MockNodeImpl&gt;(
                 <span class="kw-2">&amp;</span>Options {
-                    extensions: <span class="macro">vec!</span>[extensions_path],
+                    extensions: <span class="macro">vec!</span>[extensions],
                     ..Default::default()
                 },
             )
