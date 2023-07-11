@@ -393,8 +393,6 @@
 <a href="#393" id="393">393</a>
 <a href="#394" id="394">394</a>
 <a href="#395" id="395">395</a>
-<a href="#396" id="396">396</a>
-<a href="#397" id="397">397</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -788,8 +786,6 @@
 }
 
 <span class="kw">fn </span>parse_timestamp(ns: i128) -&gt; Timestamp {
-    <span class="kw">let </span>s = (ns / <span class="number">1000000000</span>) <span class="kw">as </span>i64;
-    <span class="kw">let </span>ns = (ns % <span class="number">1000000000</span>) <span class="kw">as </span>i64;
-    Timestamp::from_unix_timestamp(s).unwrap() + time::Duration::nanoseconds(ns)
+    Timestamp::from_unix_timestamp_nanos(ns).expect(<span class="string">&quot;HotShot timestamp out of range&quot;</span>)
 }
 </code></pre></div></section></main></body></html>
