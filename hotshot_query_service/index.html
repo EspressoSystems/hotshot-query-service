@@ -12,7 +12,7 @@ extensible library, which makes it easy to add additional, application-specific 
 };
 
 <span class="kw">use </span>async_std::{sync::{Arc, RwLock}, task::spawn};
-<span class="kw">use </span>hotshot::SystemContext;
+<span class="kw">use </span>hotshot::HotShot;
 <span class="kw">use </span>hotshot_types::traits::consensus_type::validating_consensus::ValidatingConsensus;
 <span class="kw">use </span>tide_disco::App;
 
@@ -21,7 +21,7 @@ extensible library, which makes it easy to add additional, application-specific 
     .map_err(Error::internal)<span class="question-mark">?</span>;
 
 <span class="comment">// Create hotshot, giving it a handle to the status metrics.
-</span><span class="kw">let </span><span class="kw-2">mut </span>hotshot = SystemContext::&lt;ValidatingConsensus, AppTypes, AppNodeImpl&gt;::init(
+</span><span class="kw">let </span><span class="kw-2">mut </span>hotshot = HotShot::&lt;ValidatingConsensus, AppTypes, AppNodeImpl&gt;::init(
     query_data.metrics(),
     <span class="comment">// Other fields omitted
 </span>).<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
@@ -241,7 +241,7 @@ manage the <a href="atomic_store::AtomicStore">AtomicStore</a> for you, so you m
 
 <span class="kw">fn </span>init_server(
     storage_path: <span class="kw-2">&amp;</span>Path,
-    <span class="kw-2">mut </span>hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl&gt;,
+    <span class="kw-2">mut </span>hotshot: HotShotHandle&lt;AppTypes, AppNodeImpl&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;App&lt;Arc&lt;RwLock&lt;AppState&gt;&gt;, Error&gt;, Error&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(storage_path, <span class="string">&quot;my_app&quot;</span>) <span class="comment">// or `open`
         </span>.map_err(Error::internal)<span class="question-mark">?</span>;
