@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source.rs`."><title>data_source.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0 (8ede3aae2 2023-07-12)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../hotshot_query_service/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source.rs`."><title>data_source.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.1 (eb26296b5 2023-08-03)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../hotshot_query_service/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -621,6 +621,39 @@
 <a href="#621" id="621">621</a>
 <a href="#622" id="622">622</a>
 <a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -658,7 +691,8 @@
     signature_key::EncodedPublicKey,
 };
 <span class="kw">use </span>snafu::Snafu;
-<span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::collections::hash_map::{Entry, HashMap};
+<span class="kw">use </span>std::hash::Hash;
 <span class="kw">use </span>std::iter::Skip;
 <span class="kw">use </span>std::path::Path;
 
@@ -796,22 +830,18 @@
                     .entry(leaf.proposer())
                     .or_insert_with(Vec::new)
                     .push(leaf.height());
-                index_by_block_hash.insert(leaf.block_hash(), leaf.height());
+                update_index_by_hash(<span class="kw-2">&amp;mut </span>index_by_block_hash, leaf.block_hash(), leaf.height());
                 (leaf.hash(), leaf.height())
             })
             .collect();
-        <span class="kw">let </span>index_by_txn_hash = block_storage
-            .iter()
-            .flatten()
-            .flat_map(|block| {
-                <span class="kw">let </span>height = block.height();
-                block
-                    .block()
-                    .enumerate()
-                    .map(<span class="kw">move </span>|(txn_ix, txn)| (txn.commit(), (height, txn_ix)))
-                    .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
-            })
-            .collect();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>index_by_txn_hash = HashMap::new();
+        <span class="kw">for </span>block <span class="kw">in </span>block_storage.iter().flatten() {
+            <span class="kw">let </span>height = block.height();
+            <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.block().enumerate() {
+                update_index_by_hash(<span class="kw-2">&amp;mut </span>index_by_txn_hash, txn.commit(), (height, txn_ix));
+            }
+        }
 
         <span class="prelude-val">Ok</span>(QueryData {
             index_by_leaf_hash,
@@ -956,8 +986,11 @@
         <span class="self">self</span>.leaf_storage
             .insert(leaf.height() <span class="kw">as </span>usize, leaf.clone())<span class="question-mark">?</span>;
         <span class="self">self</span>.index_by_leaf_hash.insert(leaf.hash(), leaf.height());
-        <span class="self">self</span>.index_by_block_hash
-            .insert(leaf.block_hash(), leaf.height());
+        update_index_by_hash(
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.index_by_block_hash,
+            leaf.block_hash(),
+            leaf.height(),
+        );
         <span class="self">self</span>.index_by_proposer_id
             .entry(leaf.proposer())
             .or_insert_with(Vec::new)
@@ -969,10 +1002,31 @@
         <span class="self">self</span>.block_storage
             .insert(block.height() <span class="kw">as </span>usize, block.clone())<span class="question-mark">?</span>;
         <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.block().enumerate() {
-            <span class="self">self</span>.index_by_txn_hash
-                .insert(txn.commit(), (block.height(), txn_ix));
+            update_index_by_hash(
+                <span class="kw-2">&amp;mut </span><span class="self">self</span>.index_by_txn_hash,
+                txn.commit(),
+                (block.height(), txn_ix),
+            );
         }
         <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="doccomment">/// Update an index mapping hashes of objects to their positions in the ledger.
+///
+/// This function will insert the mapping from `hash` to `pos` into `index`, _unless_ there is
+/// already an entry for `hash` at an earlier position in the ledger.
+</span><span class="kw">fn </span>update_index_by_hash&lt;H: Eq + Hash, P: Ord&gt;(index: <span class="kw-2">&amp;mut </span>HashMap&lt;H, P&gt;, hash: H, pos: P) {
+    <span class="kw">match </span>index.entry(hash) {
+        Entry::Occupied(<span class="kw-2">mut </span>e) =&gt; {
+            <span class="kw">if </span><span class="kw-2">&amp;</span>pos &lt; e.get() {
+                <span class="comment">// Overwrite the existing entry if the new object was sequenced first.
+                </span>e.insert(pos);
+            }
+        }
+        Entry::Vacant(e) =&gt; {
+            e.insert(pos);
+        }
     }
 }
 
@@ -1066,8 +1120,11 @@
     <span class="kw">async fn </span>validate&lt;UserData&gt;(qd: <span class="kw-2">&amp;</span>RwLock&lt;QueryData&lt;MockTypes, MockNodeImpl, UserData&gt;&gt;) {
         <span class="kw">let </span>qd = qd.read().<span class="kw">await</span>;
 
-        <span class="comment">// Check the consistency of every block/leaf pair.
-        </span><span class="kw">for </span>(i, leaf) <span class="kw">in </span>qd.get_nth_leaf_iter(<span class="number">0</span>).enumerate() {
+        <span class="comment">// Check the consistency of every block/leaf pair. Keep track of blocks and transactions
+        // we&#39;ve seen so we can detect duplicates.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>seen_blocks = HashMap::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>seen_transactions = HashMap::new();
+        <span class="kw">for </span>(i, leaf) <span class="kw">in </span>qd.get_nth_leaf_iter(<span class="number">0</span>).enumerate() {
             <span class="kw">let </span><span class="prelude-val">Some</span>(leaf) = leaf <span class="kw">else </span>{ <span class="kw">continue</span>; };
             <span class="macro">assert_eq!</span>(leaf.height(), i <span class="kw">as </span>u64);
             <span class="macro">assert_eq!</span>(leaf.hash(), leaf.leaf().commit());
@@ -1084,13 +1141,20 @@
                 block.size(),
                 bincode_opts().serialized_size(block.block()).unwrap()
             );
-            <span class="macro">assert_eq!</span>(qd.get_block_index_by_hash(block.hash()).unwrap(), i <span class="kw">as </span>u64);
+
+            <span class="comment">// We should be able to look up the block by hash unless it is a duplicate. For
+            // duplicate blocks, this function returns the index of the first duplicate.
+            </span><span class="kw">let </span>ix = seen_blocks.entry(block.hash()).or_insert(i <span class="kw">as </span>u64);
+            <span class="macro">assert_eq!</span>(qd.get_block_index_by_hash(block.hash()).unwrap(), <span class="kw-2">*</span>ix);
 
             <span class="kw">for </span>(j, txn) <span class="kw">in </span>block.block().iter().enumerate() {
-                <span class="macro">assert_eq!</span>(
-                    qd.get_txn_index_by_hash(txn.commit()).unwrap(),
-                    (i <span class="kw">as </span>u64, j),
-                );
+                <span class="comment">// We should be able to look up the transaction by hash unless it is a duplicate.
+                // For duplicate transactions, this function returns the index of the first
+                // duplicate.
+                </span><span class="kw">let </span>ix = seen_transactions
+                    .entry(txn.commit())
+                    .or_insert((i <span class="kw">as </span>u64, j));
+                <span class="macro">assert_eq!</span>(qd.get_txn_index_by_hash(txn.commit()).unwrap(), <span class="kw-2">*</span>ix);
             }
         }
 
@@ -1118,7 +1182,7 @@
     </span><span class="kw">async fn </span>test_update() {
         setup_test();
 
-        <span class="kw">let </span>network = MockNetwork::init(()).<span class="kw">await</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>network = MockNetwork::init(()).<span class="kw">await</span>;
         <span class="kw">let </span>hotshot = network.handle();
         <span class="kw">let </span>qd = network.query_data();
 
@@ -1134,10 +1198,12 @@
 
             <span class="comment">// Wait for the transaction to be finalized.
             </span><span class="kw">let </span>(i, block) = <span class="kw">loop </span>{
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;waiting for block {nonce}&quot;</span>);
                 <span class="kw">let </span>(i, block) = blocks.next().<span class="kw">await</span>.unwrap();
                 <span class="kw">if </span>!block.is_empty() {
                     <span class="kw">break </span>(i, block);
                 }
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;block {i} is empty&quot;</span>);
             };
 
             <span class="macro">assert_eq!</span>(
@@ -1159,7 +1225,7 @@
     </span><span class="kw">async fn </span>test_metrics() {
         setup_test();
 
-        <span class="kw">let </span>network = MockNetwork::init(()).<span class="kw">await</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>network = MockNetwork::init(()).<span class="kw">await</span>;
         <span class="kw">let </span>hotshot = network.handle();
         <span class="kw">let </span>qd = network.query_data();
 
