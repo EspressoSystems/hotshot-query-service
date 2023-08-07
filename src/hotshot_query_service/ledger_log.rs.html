@@ -464,6 +464,17 @@
 <a href="#464" id="464">464</a>
 <a href="#465" id="465">465</a>
 <a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -493,6 +504,11 @@
     cache_size: usize,
     cache: VecDeque&lt;<span class="prelude-ty">Option</span>&lt;T&gt;&gt;,
     store: AppendLog&lt;BincodeLoadStore&lt;<span class="prelude-ty">Option</span>&lt;T&gt;&gt;&gt;,
+    <span class="comment">// Keep track of the number of appended objects which have not yet been committed. We need this
+    // to detect when we are inserting at the end of the log or in the middle, as the two casese are
+    // handled differently and `self.store.iter().len()` does not update until a new version is
+    // committed.
+    </span>pending_inserts: usize,
 
     <span class="comment">// Send handle for a channel where we stream resource.
     </span>stream: BroadcastSender&lt;T&gt;,
@@ -520,6 +536,7 @@
                 file_pattern,
                 <span class="number">1u64 </span>&lt;&lt; <span class="number">20</span>, <span class="comment">// 1 MB
             </span>)<span class="question-mark">?</span>,
+            pending_inserts: <span class="number">0</span>,
             stream: channel().<span class="number">0</span>,
             stream_pos: <span class="number">0</span>,
         })
@@ -576,6 +593,7 @@
             cache_size,
             cache,
             store,
+            pending_inserts: <span class="number">0</span>,
             stream: channel().<span class="number">0</span>,
             stream_pos,
         })
@@ -592,6 +610,7 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>store_resource(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: <span class="prelude-ty">Option</span>&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), PersistenceError&gt; {
         <span class="self">self</span>.store.store_resource(<span class="kw-2">&amp;</span>resource)<span class="question-mark">?</span>;
+        <span class="self">self</span>.pending_inserts += <span class="number">1</span>;
         <span class="kw">if </span><span class="self">self</span>.cache.len() &gt;= <span class="self">self</span>.cache_size {
             <span class="self">self</span>.cache.pop_front();
             <span class="self">self</span>.cache_start += <span class="number">1</span>;
@@ -606,7 +625,7 @@
     {
         <span class="comment">// If there are missing objects between what we currently have and `object`, pad with
         // placeholders.
-        </span><span class="kw">let </span>len = <span class="self">self</span>.store.iter().len();
+        </span><span class="kw">let </span>len = <span class="self">self</span>.store.iter().len() + <span class="self">self</span>.pending_inserts;
         <span class="kw">let </span>target_len = std::cmp::max(index, len);
         <span class="kw">for </span>i <span class="kw">in </span>len..target_len {
             <span class="macro">tracing::debug!</span>(<span class="string">&quot;storing placeholders for position {}/{target_len}&quot;</span>, len + i);
@@ -639,6 +658,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>commit_version(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), PersistenceError&gt; {
         <span class="macro">tracing::debug!</span>(<span class="string">&quot;committing new version of LedgerLog&quot;</span>);
         <span class="self">self</span>.store.commit_version()<span class="question-mark">?</span>;
+        <span class="self">self</span>.pending_inserts = <span class="number">0</span>;
 
         <span class="comment">// Broadcast any newly-appended objects which extend the in-order available prefix.
         </span><span class="kw">let </span><span class="kw-2">mut </span>i = <span class="self">self</span>.stream_pos;
@@ -659,7 +679,9 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>revert_version(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), PersistenceError&gt; {
-        <span class="self">self</span>.store.revert_version()
+        <span class="self">self</span>.store.revert_version()<span class="question-mark">?</span>;
+        <span class="self">self</span>.pending_inserts = <span class="number">0</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
