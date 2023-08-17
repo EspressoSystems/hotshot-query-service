@@ -1255,7 +1255,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>api =
             define_api::&lt;RwLock&lt;QueryData&lt;MockTypes, MockNodeImpl, u64&gt;&gt;, MockTypes, MockNodeImpl&gt;(
                 <span class="kw-2">&amp;</span>Options {
-                    extensions: <span class="macro">vec!</span>[extensions],
+                    extensions: <span class="macro">vec!</span>[extensions.into()],
                     ..Default::default()
                 },
             )
