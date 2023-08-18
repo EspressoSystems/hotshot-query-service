@@ -2488,7 +2488,7 @@ dependencies = [
 [[package]]
 name = "hotshot"
 version = "0.3.3"
-source = "git+https://github.com/EspressoSystems/HotShot.git#258ef6e8c664a0540d28745dfb1edc0f37665044"
+source = "git+https://github.com/EspressoSystems/HotShot.git#bbec871fea8357a7aa728b5ae646361e63328bff"
 dependencies = [
  "ark-bls12-381 0.3.0",
  "ark-ec 0.3.0",
@@ -2539,7 +2539,7 @@ dependencies = [
 [[package]]
 name = "hotshot-consensus"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git#258ef6e8c664a0540d28745dfb1edc0f37665044"
+source = "git+https://github.com/EspressoSystems/HotShot.git#bbec871fea8357a7aa728b5ae646361e63328bff"
 dependencies = [
  "async-compatibility-layer",
  "async-lock",
@@ -2561,7 +2561,7 @@ dependencies = [
 [[package]]
 name = "hotshot-orchestrator"
 version = "0.1.1"
-source = "git+https://github.com/EspressoSystems/HotShot.git#258ef6e8c664a0540d28745dfb1edc0f37665044"
+source = "git+https://github.com/EspressoSystems/HotShot.git#bbec871fea8357a7aa728b5ae646361e63328bff"
 dependencies = [
  "async-compatibility-layer",
  "async-lock",
@@ -2655,7 +2655,7 @@ dependencies = [
 [[package]]
 name = "hotshot-task"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git#258ef6e8c664a0540d28745dfb1edc0f37665044"
+source = "git+https://github.com/EspressoSystems/HotShot.git#bbec871fea8357a7aa728b5ae646361e63328bff"
 dependencies = [
  "async-compatibility-layer",
  "async-lock",
@@ -2674,7 +2674,7 @@ dependencies = [
 [[package]]
 name = "hotshot-task-impls"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git#258ef6e8c664a0540d28745dfb1edc0f37665044"
+source = "git+https://github.com/EspressoSystems/HotShot.git#bbec871fea8357a7aa728b5ae646361e63328bff"
 dependencies = [
  "async-compatibility-layer",
  "async-lock",
@@ -2703,7 +2703,7 @@ dependencies = [
 [[package]]
 name = "hotshot-types"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git#258ef6e8c664a0540d28745dfb1edc0f37665044"
+source = "git+https://github.com/EspressoSystems/HotShot.git#bbec871fea8357a7aa728b5ae646361e63328bff"
 dependencies = [
  "arbitrary",
  "ark-serialize 0.3.0",
@@ -2743,7 +2743,7 @@ dependencies = [
 [[package]]
 name = "hotshot-utils"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git#258ef6e8c664a0540d28745dfb1edc0f37665044"
+source = "git+https://github.com/EspressoSystems/HotShot.git#bbec871fea8357a7aa728b5ae646361e63328bff"
 dependencies = [
  "bincode",
 ]
@@ -2751,7 +2751,7 @@ dependencies = [
 [[package]]
 name = "hotshot-web-server"
 version = "0.1.1"
-source = "git+https://github.com/EspressoSystems/HotShot.git#258ef6e8c664a0540d28745dfb1edc0f37665044"
+source = "git+https://github.com/EspressoSystems/HotShot.git#bbec871fea8357a7aa728b5ae646361e63328bff"
 dependencies = [
  "ark-bls12-381 0.3.0",
  "async-compatibility-layer",
@@ -3593,7 +3593,7 @@ dependencies = [
 [[package]]
 name = "libp2p-networking"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git#258ef6e8c664a0540d28745dfb1edc0f37665044"
+source = "git+https://github.com/EspressoSystems/HotShot.git#bbec871fea8357a7aa728b5ae646361e63328bff"
 dependencies = [
  "async-compatibility-layer",
  "async-lock",
@@ -5421,9 +5421,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.103"
+version = "1.0.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d03b412469450d4404fe8499a268edd7f8b79fecb074b0d812ad64ca21f4031b"
+checksum = "693151e1ac27563d6dbcec9dee9fbd5da8539b20fa14ad3752b2e6d363ace360"
 dependencies = [
  "itoa 1.0.9",
  "ryu",
@@ -6001,7 +6001,7 @@ dependencies = [
 [[package]]
 name = "surf-disco"
 version = "0.4.1"
-source = "git+https://github.com/EspressoSystems/surf-disco.git?branch=main#d0a89cbb29df7eaa3ce0d656ebf68cb1e0ce4091"
+source = "git+https://github.com/EspressoSystems/surf-disco.git?branch=main#edcfa5532bca5f619e87129f801690b56d8d080e"
 dependencies = [
  "async-std",
  "async-tungstenite 0.15.0",
@@ -6012,7 +6012,7 @@ dependencies = [
  "serde",
  "serde_json",
  "surf",
- "tide-disco 0.4.1 (git+https://github.com/EspressoSystems/tide-disco.git?tag=v0.4.1)",
+ "tide-disco 0.4.1 (git+https://github.com/EspressoSystems/tide-disco.git?tag=v0.4.2)",
 ]
 
 [[package]]
