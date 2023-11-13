@@ -656,6 +656,120 @@
 <a href="#656" id="656">656</a>
 <a href="#657" id="657">657</a>
 <a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
+<a href="#684" id="684">684</a>
+<a href="#685" id="685">685</a>
+<a href="#686" id="686">686</a>
+<a href="#687" id="687">687</a>
+<a href="#688" id="688">688</a>
+<a href="#689" id="689">689</a>
+<a href="#690" id="690">690</a>
+<a href="#691" id="691">691</a>
+<a href="#692" id="692">692</a>
+<a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -670,7 +784,10 @@
 
 </span><span class="kw">use crate</span>::{
     availability::{
-        data_source::{AvailabilityDataSource, UpdateAvailabilityData},
+        data_source::{
+            AvailabilityDataSource, BlockId, LeafId, MissingSnafu, NotFoundSnafu, QueryResult,
+            ResourceId, UpdateAvailabilityData,
+        },
         query_data::{
             BlockHash, BlockQueryData, LeafHash, LeafQueryData, QueryableBlock, TransactionHash,
             TransactionIndex,
@@ -684,18 +801,20 @@
     },
     Block, Deltas, Resolvable,
 };
+<span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>atomic_store::{AtomicStore, AtomicStoreLoader, PersistenceError};
 <span class="kw">use </span>commit::Committable;
-<span class="kw">use </span>futures::stream::BoxStream;
+<span class="kw">use </span>futures::stream::{<span class="self">self</span>, BoxStream, Stream, StreamExt, TryStreamExt};
 <span class="kw">use </span>hotshot_types::traits::{
     metrics::Metrics,
     node_implementation::{NodeImplementation, NodeType},
     signature_key::EncodedPublicKey,
 };
-<span class="kw">use </span>snafu::Snafu;
+<span class="kw">use </span>serde::{de::DeserializeOwned, Serialize};
+<span class="kw">use </span>snafu::OptionExt;
 <span class="kw">use </span>std::collections::hash_map::{Entry, HashMap};
 <span class="kw">use </span>std::hash::Hash;
-<span class="kw">use </span>std::iter::Skip;
+<span class="kw">use </span>std::ops::{Bound, RangeBounds};
 <span class="kw">use </span>std::path::Path;
 
 <span class="kw">pub use </span><span class="kw">crate</span>::ledger_log::Iter;
@@ -918,70 +1037,169 @@
     }
 }
 
-<span class="attr">#[derive(Clone, Copy, Debug, Snafu)]
-#[snafu(display(<span class="string">&quot;unable to open stream&quot;</span>))]
-</span><span class="kw">pub struct </span>StreamError;
+<span class="kw">async fn </span>range_stream&lt;T&gt;(
+    <span class="kw-2">mut </span>iter: Iter&lt;<span class="lifetime">&#39;_</span>, T&gt;,
+    range: <span class="kw">impl </span>RangeBounds&lt;usize&gt;,
+) -&gt; <span class="kw">impl </span><span class="lifetime">&#39;_ </span>+ Stream&lt;Item = QueryResult&lt;T&gt;&gt;
+<span class="kw">where
+    </span>T: Clone + Serialize + DeserializeOwned + Sync,
+{
+    <span class="kw">let </span>start = range.start_bound().cloned();
+    <span class="kw">let </span>end = range.end_bound().cloned();
 
-<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; AvailabilityDataSource&lt;Types, I&gt;
+    <span class="comment">// Advance the underlying iterator to the start of the range.
+    </span><span class="kw">let </span>pos = <span class="kw">match </span>start {
+        Bound::Included(n) =&gt; {
+            <span class="kw">if </span>n &gt; <span class="number">0 </span>{
+                iter.nth(n - <span class="number">1</span>);
+            }
+            n
+        }
+        Bound::Excluded(n) =&gt; {
+            iter.nth(n);
+            n + <span class="number">1
+        </span>}
+        Bound::Unbounded =&gt; <span class="number">0</span>,
+    };
+
+    stream::unfold((iter, end, pos), |(<span class="kw-2">mut </span>iter, end, pos)| <span class="kw">async move </span>{
+        <span class="comment">// Check if we have reached the end of the range.
+        </span><span class="kw">let </span>reached_end = <span class="kw">match </span>end {
+            Bound::Included(n) =&gt; pos &gt; n,
+            Bound::Excluded(n) =&gt; pos &gt;= n,
+            Bound::Unbounded =&gt; <span class="bool-val">false</span>,
+        };
+        <span class="kw">if </span>reached_end {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
+        }
+        <span class="kw">let </span>opt = iter.next()<span class="question-mark">?</span>;
+        <span class="prelude-val">Some</span>((opt.context(MissingSnafu), (iter, end, pos + <span class="number">1</span>)))
+    })
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; AvailabilityDataSource&lt;Types, I&gt;
     <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
 <span class="kw">where
     </span>Block&lt;Types&gt;: QueryableBlock,
+    UserData: Send + Sync,
 {
-    <span class="kw">type </span>Error = StreamError;
+    <span class="kw">type </span>LeafStream = BoxStream&lt;<span class="lifetime">&#39;static</span>, LeafQueryData&lt;Types, I&gt;&gt;;
+    <span class="kw">type </span>BlockStream = BoxStream&lt;<span class="lifetime">&#39;static</span>, BlockQueryData&lt;Types&gt;&gt;;
 
-    <span class="kw">type </span>LeafIterType&lt;<span class="lifetime">&#39;a</span>&gt; = Skip&lt;Iter&lt;<span class="lifetime">&#39;a</span>, LeafQueryData&lt;Types, I&gt;&gt;&gt; <span class="kw">where </span>UserData: <span class="lifetime">&#39;a</span>;
-    <span class="kw">type </span>BlockIterType&lt;<span class="lifetime">&#39;a</span>&gt; = Skip&lt;Iter&lt;<span class="lifetime">&#39;a</span>, BlockQueryData&lt;Types&gt;&gt;&gt; <span class="kw">where </span>UserData: <span class="lifetime">&#39;a</span>;
+    <span class="kw">type </span>LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt; = BoxStream&lt;<span class="lifetime">&#39;a</span>, QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
+        R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>BlockRange&lt;<span class="lifetime">&#39;a</span>, R&gt; = BoxStream&lt;<span class="lifetime">&#39;a</span>, QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
+        R: RangeBounds&lt;usize&gt; + Send;
 
-    <span class="kw">type </span>LeafStreamType = BoxStream&lt;<span class="lifetime">&#39;static</span>, LeafQueryData&lt;Types, I&gt;&gt;;
-    <span class="kw">type </span>BlockStreamType = BoxStream&lt;<span class="lifetime">&#39;static</span>, BlockQueryData&lt;Types&gt;&gt;;
-
-    <span class="kw">fn </span>get_nth_leaf_iter(<span class="kw-2">&amp;</span><span class="self">self</span>, n: usize) -&gt; <span class="self">Self</span>::LeafIterType&lt;<span class="lifetime">&#39;_</span>&gt; {
-        <span class="self">self</span>.leaf_storage.iter().skip(n)
+    <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;LeafId&lt;Types, I&gt;&gt; + Send + Sync,
+    {
+        <span class="kw">let </span>n = <span class="kw">match </span>id.into() {
+            ResourceId::Number(n) =&gt; n,
+            ResourceId::Hash(h) =&gt; {
+                <span class="kw-2">*</span><span class="self">self</span>.index_by_leaf_hash.get(<span class="kw-2">&amp;</span>h).context(NotFoundSnafu)<span class="question-mark">? </span><span class="kw">as </span>usize
+            }
+        };
+        <span class="self">self</span>.leaf_storage
+            .iter()
+            .nth(n)
+            .context(NotFoundSnafu)<span class="question-mark">?
+            </span>.context(MissingSnafu)
     }
 
-    <span class="kw">fn </span>get_nth_block_iter(<span class="kw-2">&amp;</span><span class="self">self</span>, n: usize) -&gt; <span class="self">Self</span>::BlockIterType&lt;<span class="lifetime">&#39;_</span>&gt; {
-        <span class="self">self</span>.block_storage.iter().skip(n)
+    <span class="kw">async fn </span>get_block&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
+    {
+        <span class="kw">let </span>n = <span class="kw">match </span>id.into() {
+            ResourceId::Number(n) =&gt; n,
+            ResourceId::Hash(h) =&gt; {
+                <span class="kw-2">*</span><span class="self">self</span>.index_by_block_hash.get(<span class="kw-2">&amp;</span>h).context(NotFoundSnafu)<span class="question-mark">? </span><span class="kw">as </span>usize
+            }
+        };
+        <span class="self">self</span>.block_storage
+            .iter()
+            .nth(n)
+            .context(NotFoundSnafu)<span class="question-mark">?
+            </span>.context(MissingSnafu)
     }
 
-    <span class="kw">fn </span>get_leaf_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: LeafHash&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
-        <span class="self">self</span>.index_by_leaf_hash.get(<span class="kw-2">&amp;</span>hash).cloned()
+    <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; QueryResult&lt;<span class="self">Self</span>::LeafRange&lt;<span class="lifetime">&#39;_</span>, R&gt;&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send,
+    {
+        <span class="prelude-val">Ok</span>(range_stream(<span class="self">self</span>.leaf_storage.iter(), range).<span class="kw">await</span>.boxed())
     }
 
-    <span class="kw">fn </span>get_block_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: BlockHash&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
-        <span class="self">self</span>.index_by_block_hash.get(<span class="kw-2">&amp;</span>hash).cloned()
+    <span class="kw">async fn </span>get_block_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; QueryResult&lt;<span class="self">Self</span>::BlockRange&lt;<span class="lifetime">&#39;_</span>, R&gt;&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send,
+    {
+        <span class="prelude-val">Ok</span>(range_stream(<span class="self">self</span>.block_storage.iter(), range).<span class="kw">await</span>.boxed())
     }
 
-    <span class="kw">fn </span>get_txn_index_by_hash(
+    <span class="kw">async fn </span>get_block_with_transaction(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hash: TransactionHash&lt;Types&gt;,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;(u64, TransactionIndex&lt;Types&gt;)&gt; {
-        <span class="self">self</span>.index_by_txn_hash.get(<span class="kw-2">&amp;</span>hash).cloned()
+    ) -&gt; QueryResult&lt;(BlockQueryData&lt;Types&gt;, TransactionIndex&lt;Types&gt;)&gt; {
+        <span class="kw">let </span>(height, ix) = <span class="self">self</span>.index_by_txn_hash.get(<span class="kw-2">&amp;</span>hash).context(NotFoundSnafu)<span class="question-mark">?</span>;
+        <span class="kw">let </span>block = <span class="self">self</span>.get_block(<span class="kw-2">*</span>height <span class="kw">as </span>usize).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((block, ix.clone()))
     }
 
-    <span class="kw">fn </span>get_block_ids_by_proposer_id(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>EncodedPublicKey) -&gt; Vec&lt;u64&gt; {
-        <span class="self">self</span>.index_by_proposer_id
+    <span class="kw">async fn </span>get_proposals(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        id: <span class="kw-2">&amp;</span>EncodedPublicKey,
+        limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt; {
+        <span class="kw">let </span>all_ids = <span class="self">self
+            </span>.index_by_proposer_id
             .get(id)
             .cloned()
-            .unwrap_or_default()
+            .unwrap_or_default();
+        <span class="kw">let </span>start_from = <span class="kw">match </span>limit {
+            <span class="prelude-val">Some</span>(count) =&gt; all_ids.len().saturating_sub(count),
+            <span class="prelude-val">None </span>=&gt; <span class="number">0</span>,
+        };
+        stream::iter(all_ids)
+            .skip(start_from)
+            .then(|height| <span class="self">self</span>.get_leaf(height <span class="kw">as </span>usize))
+            .try_collect()
+            .<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>EncodedPublicKey) -&gt; QueryResult&lt;usize&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self</span>.index_by_proposer_id.get(id) {
+            <span class="prelude-val">Some</span>(ids) =&gt; ids.len(),
+            <span class="prelude-val">None </span>=&gt; <span class="number">0</span>,
+        })
     }
 
-    <span class="kw">fn </span>subscribe_leaves(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::LeafStreamType, <span class="self">Self</span>::Error&gt; {
-        <span class="self">self</span>.leaf_storage.subscribe(height).ok_or(StreamError)
+    <span class="kw">async fn </span>subscribe_leaves(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; QueryResult&lt;<span class="self">Self</span>::LeafStream&gt; {
+        <span class="self">self</span>.leaf_storage.subscribe(height).context(MissingSnafu)
     }
 
-    <span class="kw">fn </span>subscribe_blocks(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::BlockStreamType, <span class="self">Self</span>::Error&gt; {
-        <span class="self">self</span>.block_storage.subscribe(height).ok_or(StreamError)
+    <span class="kw">async fn </span>subscribe_blocks(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; QueryResult&lt;<span class="self">Self</span>::BlockStream&gt; {
+        <span class="self">self</span>.block_storage.subscribe(height).context(MissingSnafu)
     }
 }
 
-<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; UpdateAvailabilityData&lt;Types, I&gt;
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; UpdateAvailabilityData&lt;Types, I&gt;
     <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
 <span class="kw">where
     </span>Block&lt;Types&gt;: QueryableBlock,
+    UserData: Send,
 {
     <span class="kw">type </span>Error = PersistenceError;
 
-    <span class="kw">fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
+    <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
     <span class="kw">where
         </span>Deltas&lt;Types, I&gt;: Resolvable&lt;Block&lt;Types&gt;&gt;,
     {
@@ -1000,7 +1218,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>insert_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: BlockQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+    <span class="kw">async fn </span>insert_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: BlockQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="self">self</span>.block_storage
             .insert(block.height() <span class="kw">as </span>usize, block.clone())<span class="question-mark">?</span>;
         <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.block().enumerate() {
@@ -1042,18 +1260,20 @@
     }
 }
 
-<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; StatusDataSource
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, UserData&gt; StatusDataSource
     <span class="kw">for </span>QueryData&lt;Types, I, UserData&gt;
 <span class="kw">where
     </span>Block&lt;Types&gt;: QueryableBlock,
+    UserData: Sync,
 {
     <span class="kw">type </span>Error = MetricsError;
 
-    <span class="kw">fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize, <span class="self">Self</span>::Error&gt; {
+    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize, <span class="self">Self</span>::Error&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.leaf_storage.iter().len())
     }
 
-    <span class="kw">fn </span>mempool_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;MempoolQueryData, <span class="self">Self</span>::Error&gt; {
+    <span class="kw">async fn </span>mempool_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;MempoolQueryData, <span class="self">Self</span>::Error&gt; {
         <span class="prelude-val">Ok</span>(MempoolQueryData {
             transaction_count: <span class="self">self
                 </span>.consensus_metrics()<span class="question-mark">?
@@ -1066,13 +1286,13 @@
         })
     }
 
-    <span class="kw">fn </span>success_rate(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;f64, <span class="self">Self</span>::Error&gt; {
+    <span class="kw">async fn </span>success_rate(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;f64, <span class="self">Self</span>::Error&gt; {
         <span class="kw">let </span>total_views = <span class="self">self</span>.consensus_metrics()<span class="question-mark">?</span>.get_gauge(<span class="string">&quot;current_view&quot;</span>)<span class="question-mark">?</span>.get() <span class="kw">as </span>f64;
         <span class="comment">// By definition, a successful view is any which committed a block.
-        </span><span class="prelude-val">Ok</span>(<span class="self">self</span>.block_height()<span class="question-mark">? </span><span class="kw">as </span>f64 / total_views)
+        </span><span class="prelude-val">Ok</span>(<span class="self">self</span>.block_height().<span class="kw">await</span><span class="question-mark">? </span><span class="kw">as </span>f64 / total_views)
     }
 
-    <span class="kw">fn </span>export_metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String, <span class="self">Self</span>::Error&gt; {
+    <span class="kw">async fn </span>export_metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;String, <span class="self">Self</span>::Error&gt; {
         <span class="self">self</span>.metrics.prometheus()
     }
 }
@@ -1097,47 +1317,57 @@
     };
     <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>bincode::Options;
-    <span class="kw">use </span>commit::Committable;
     <span class="kw">use </span>futures::StreamExt;
     <span class="kw">use </span>hotshot_utils::bincode::bincode_opts;
     <span class="kw">use </span>std::collections::HashSet;
     <span class="kw">use </span>std::time::Duration;
 
-    <span class="kw">async fn </span>get_non_empty_blocks&lt;UserData&gt;(
+    <span class="kw">async fn </span>get_non_empty_blocks&lt;UserData: Send + Sync&gt;(
         qd: <span class="kw-2">&amp;</span>RwLock&lt;QueryData&lt;MockTypes, MockNodeImpl, UserData&gt;&gt;,
     ) -&gt; Vec&lt;(
         LeafQueryData&lt;MockTypes, MockNodeImpl&gt;,
         BlockQueryData&lt;MockTypes&gt;,
     )&gt; {
         <span class="kw">let </span>qd = qd.read().<span class="kw">await</span>;
-        qd.get_nth_leaf_iter(<span class="number">0</span>)
-            .zip(qd.get_nth_block_iter(<span class="number">0</span>))
-            .filter_map(|entry| <span class="kw">match </span>entry {
-                (<span class="prelude-val">Some</span>(leaf), <span class="prelude-val">Some</span>(block)) <span class="kw">if </span>!block.is_empty() =&gt; <span class="prelude-val">Some</span>((leaf, block)),
-                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        qd.get_leaf_range(..)
+            .<span class="kw">await
+            </span>.unwrap()
+            .zip(qd.get_block_range(..).<span class="kw">await</span>.unwrap())
+            .filter_map(|entry| <span class="kw">async move </span>{
+                <span class="kw">match </span>entry {
+                    (<span class="prelude-val">Ok</span>(leaf), <span class="prelude-val">Ok</span>(block)) <span class="kw">if </span>!block.is_empty() =&gt; <span class="prelude-val">Some</span>((leaf, block)),
+                    <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+                }
             })
             .collect()
-    }
+            .<span class="kw">await
+    </span>}
 
-    <span class="kw">async fn </span>validate&lt;UserData&gt;(qd: <span class="kw-2">&amp;</span>RwLock&lt;QueryData&lt;MockTypes, MockNodeImpl, UserData&gt;&gt;) {
+    <span class="kw">async fn </span>validate&lt;UserData: Send + Sync&gt;(
+        qd: <span class="kw-2">&amp;</span>RwLock&lt;QueryData&lt;MockTypes, MockNodeImpl, UserData&gt;&gt;,
+    ) {
         <span class="kw">let </span>qd = qd.read().<span class="kw">await</span>;
 
         <span class="comment">// Check the consistency of every block/leaf pair. Keep track of blocks and transactions
         // we&#39;ve seen so we can detect duplicates.
         </span><span class="kw">let </span><span class="kw-2">mut </span>seen_blocks = HashMap::new();
         <span class="kw">let </span><span class="kw-2">mut </span>seen_transactions = HashMap::new();
-        <span class="kw">for </span>(i, leaf) <span class="kw">in </span>qd.get_nth_leaf_iter(<span class="number">0</span>).enumerate() {
-            <span class="kw">let </span><span class="prelude-val">Some</span>(leaf) = leaf <span class="kw">else </span>{
-                <span class="kw">continue</span>;
-            };
+        <span class="kw">let </span><span class="kw-2">mut </span>leaves = qd.get_leaf_range(..).<span class="kw">await</span>.unwrap().enumerate();
+        <span class="kw">while let </span><span class="prelude-val">Some</span>((i, leaf)) = leaves.next().<span class="kw">await </span>{
+            <span class="kw">let </span>leaf = leaf.unwrap();
             <span class="macro">assert_eq!</span>(leaf.height(), i <span class="kw">as </span>u64);
             <span class="macro">assert_eq!</span>(leaf.hash(), leaf.leaf().commit());
-            <span class="macro">assert_eq!</span>(qd.get_leaf_index_by_hash(leaf.hash()).unwrap(), i <span class="kw">as </span>u64);
-            <span class="macro">assert!</span>(qd
-                .get_block_ids_by_proposer_id(<span class="kw-2">&amp;</span>leaf.proposer())
-                .contains(<span class="kw-2">&amp;</span>(i <span class="kw">as </span>u64)));
 
-            <span class="kw">let </span><span class="prelude-val">Some</span>(<span class="prelude-val">Some</span>(block)) = qd.get_nth_block_iter(i).next() <span class="kw">else </span>{
+            <span class="comment">// Check indices.
+            </span><span class="macro">assert_eq!</span>(leaf, qd.get_leaf(i).<span class="kw">await</span>.unwrap());
+            <span class="macro">assert_eq!</span>(leaf, qd.get_leaf(leaf.hash()).<span class="kw">await</span>.unwrap());
+            <span class="macro">assert!</span>(qd
+                .get_proposals(<span class="kw-2">&amp;</span>leaf.proposer(), <span class="prelude-val">None</span>)
+                .<span class="kw">await
+                </span>.unwrap()
+                .contains(<span class="kw-2">&amp;</span>leaf));
+
+            <span class="kw">let </span><span class="prelude-val">Ok</span>(block) = qd.get_block(i).<span class="kw">await else </span>{
                 <span class="kw">continue</span>;
             };
             <span class="macro">assert_eq!</span>(leaf.block_hash(), block.hash());
@@ -1148,10 +1378,12 @@
                 bincode_opts().serialized_size(block.block()).unwrap()
             );
 
+            <span class="comment">// Check indices.
+            </span><span class="macro">assert_eq!</span>(block, qd.get_block(i).<span class="kw">await</span>.unwrap());
             <span class="comment">// We should be able to look up the block by hash unless it is a duplicate. For
             // duplicate blocks, this function returns the index of the first duplicate.
             </span><span class="kw">let </span>ix = seen_blocks.entry(block.hash()).or_insert(i <span class="kw">as </span>u64);
-            <span class="macro">assert_eq!</span>(qd.get_block_index_by_hash(block.hash()).unwrap(), <span class="kw-2">*</span>ix);
+            <span class="macro">assert_eq!</span>(qd.get_block(block.hash()).<span class="kw">await</span>.unwrap().height(), <span class="kw-2">*</span>ix);
 
             <span class="kw">for </span>(j, txn) <span class="kw">in </span>block.block().iter().enumerate() {
                 <span class="comment">// We should be able to look up the transaction by hash unless it is a duplicate.
@@ -1160,26 +1392,23 @@
                 </span><span class="kw">let </span>ix = seen_transactions
                     .entry(txn.commit())
                     .or_insert((i <span class="kw">as </span>u64, j));
-                <span class="macro">assert_eq!</span>(qd.get_txn_index_by_hash(txn.commit()).unwrap(), <span class="kw-2">*</span>ix);
+                <span class="kw">let </span>(block, pos) = qd.get_block_with_transaction(txn.commit()).<span class="kw">await</span>.unwrap();
+                <span class="macro">assert_eq!</span>((block.height(), pos), <span class="kw-2">*</span>ix);
             }
         }
 
         <span class="comment">// Check that the proposer ID of every leaf indexed by a given proposer ID is that proposer
         // ID.
         </span><span class="kw">for </span>proposer <span class="kw">in </span>qd
-            .get_nth_leaf_iter(<span class="number">0</span>)
-            .filter_map(|opt_leaf| opt_leaf.map(|leaf| leaf.proposer()))
+            .get_leaf_range(..)
+            .<span class="kw">await
+            </span>.unwrap()
+            .filter_map(|res| <span class="kw">async move </span>{ res.ok().map(|leaf| leaf.proposer()) })
             .collect::&lt;HashSet&lt;<span class="kw">_</span>&gt;&gt;()
-        {
-            <span class="kw">for </span>leaf_id <span class="kw">in </span>qd.get_block_ids_by_proposer_id(<span class="kw-2">&amp;</span>proposer) {
-                <span class="macro">assert_eq!</span>(
-                    proposer,
-                    qd.get_nth_leaf_iter(leaf_id <span class="kw">as </span>usize)
-                        .next()
-                        .unwrap()
-                        .unwrap()
-                        .proposer()
-                );
+            .<span class="kw">await
+        </span>{
+            <span class="kw">for </span>leaf <span class="kw">in </span>qd.get_proposals(<span class="kw-2">&amp;</span>proposer, <span class="prelude-val">None</span>).<span class="kw">await</span>.unwrap() {
+                <span class="macro">assert_eq!</span>(proposer, leaf.proposer());
             }
         }
     }
@@ -1196,7 +1425,14 @@
 
         <span class="comment">// Submit a few blocks and make sure each one gets reflected in the query service and
         // preserves the consistency of the data and indices.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>blocks = { qd.read().<span class="kw">await</span>.subscribe_blocks(<span class="number">0</span>).unwrap().enumerate() };
+        </span><span class="kw">let </span><span class="kw-2">mut </span>blocks = {
+            qd.read()
+                .<span class="kw">await
+                </span>.subscribe_blocks(<span class="number">0</span>)
+                .<span class="kw">await
+                </span>.unwrap()
+                .enumerate()
+        };
         <span class="kw">for </span>nonce <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
             <span class="kw">let </span>txn = MockTransaction { nonce };
             network.submit_transaction(txn).<span class="kw">await</span>;
@@ -1211,15 +1447,7 @@
                 <span class="macro">tracing::info!</span>(<span class="string">&quot;block {i} is empty&quot;</span>);
             };
 
-            <span class="macro">assert_eq!</span>(
-                qd.read()
-                    .<span class="kw">await
-                    </span>.get_nth_block_iter(i)
-                    .next()
-                    .unwrap()
-                    .unwrap(),
-                block
-            );
+            <span class="macro">assert_eq!</span>(qd.read().<span class="kw">await</span>.get_block(i).<span class="kw">await</span>.unwrap(), block);
             validate(<span class="kw-2">&amp;</span>qd).<span class="kw">await</span>;
         }
 
@@ -1236,16 +1464,16 @@
         {
             <span class="comment">// With consensus paused, check that the success rate returns NaN (since the block
             // height, the numerator, and view number, the denominator, are both 0).
-            </span><span class="macro">assert!</span>(qd.read().<span class="kw">await</span>.success_rate().unwrap().is_nan());
+            </span><span class="macro">assert!</span>(qd.read().<span class="kw">await</span>.success_rate().<span class="kw">await</span>.unwrap().is_nan());
             <span class="comment">// Check that block height is initially zero.
-            </span><span class="macro">assert_eq!</span>(qd.read().<span class="kw">await</span>.block_height().unwrap(), <span class="number">0</span>);
+            </span><span class="macro">assert_eq!</span>(qd.read().<span class="kw">await</span>.block_height().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
         }
 
         <span class="comment">// Submit a transaction, and check that it is reflected in the mempool.
         </span><span class="kw">let </span>txn = MockTransaction { nonce: <span class="number">0 </span>};
         network.submit_transaction(txn.clone()).<span class="kw">await</span>;
         <span class="kw">loop </span>{
-            <span class="kw">let </span>mempool = { qd.read().<span class="kw">await</span>.mempool_info().unwrap() };
+            <span class="kw">let </span>mempool = { qd.read().<span class="kw">await</span>.mempool_info().<span class="kw">await</span>.unwrap() };
             <span class="kw">let </span>expected = MempoolQueryData {
                 transaction_count: <span class="number">1</span>,
                 memory_footprint: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>txn).unwrap(),
@@ -1261,7 +1489,7 @@
         }
         {
             <span class="macro">assert_eq!</span>(
-                qd.read().<span class="kw">await</span>.mempool_info().unwrap(),
+                qd.read().<span class="kw">await</span>.mempool_info().<span class="kw">await</span>.unwrap(),
                 MempoolQueryData {
                     transaction_count: <span class="number">1</span>,
                     memory_footprint: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>txn).unwrap(),
@@ -1274,7 +1502,7 @@
         sleep(Duration::from_secs(<span class="number">3</span>)).<span class="kw">await</span>;
         {
             <span class="macro">assert_eq!</span>(
-                qd.read().<span class="kw">await</span>.mempool_info().unwrap(),
+                qd.read().<span class="kw">await</span>.mempool_info().<span class="kw">await</span>.unwrap(),
                 MempoolQueryData {
                     transaction_count: <span class="number">1</span>,
                     memory_footprint: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>txn).unwrap(),
@@ -1283,7 +1511,7 @@
         }
 
         <span class="comment">// Start consensus and wait for the transaction to be finalized.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>blocks = { qd.read().<span class="kw">await</span>.subscribe_blocks(<span class="number">0</span>).unwrap() };
+        </span><span class="kw">let </span><span class="kw-2">mut </span>blocks = { qd.read().<span class="kw">await</span>.subscribe_blocks(<span class="number">0</span>).<span class="kw">await</span>.unwrap() };
         network.start().<span class="kw">await</span>;
         <span class="kw">loop </span>{
             <span class="kw">if </span>!blocks.next().<span class="kw">await</span>.unwrap().is_empty() {
@@ -1298,14 +1526,14 @@
             // check that block height is at least 2, because we know that the genesis block and our
             // transaction&#39;s block have both been committed, but we can&#39;t know how many empty blocks
             // were committed.
-            </span><span class="macro">assert!</span>(qd.read().<span class="kw">await</span>.success_rate().unwrap() &gt; <span class="number">0.0</span>);
-            <span class="macro">assert!</span>(qd.read().<span class="kw">await</span>.block_height().unwrap() &gt;= <span class="number">2</span>);
+            </span><span class="macro">assert!</span>(qd.read().<span class="kw">await</span>.success_rate().<span class="kw">await</span>.unwrap() &gt; <span class="number">0.0</span>);
+            <span class="macro">assert!</span>(qd.read().<span class="kw">await</span>.block_height().<span class="kw">await</span>.unwrap() &gt;= <span class="number">2</span>);
         }
 
         {
             <span class="comment">// Check that the transaction is no longer reflected in the mempool.
             </span><span class="macro">assert_eq!</span>(
-                qd.read().<span class="kw">await</span>.mempool_info().unwrap(),
+                qd.read().<span class="kw">await</span>.mempool_info().<span class="kw">await</span>.unwrap(),
                 MempoolQueryData {
                     transaction_count: <span class="number">0</span>,
                     memory_footprint: <span class="number">0</span>,

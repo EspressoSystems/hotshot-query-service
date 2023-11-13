@@ -63,6 +63,81 @@
 <a href="#63" id="63">63</a>
 <a href="#64" id="64">64</a>
 <a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -76,56 +151,131 @@
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
 </span><span class="kw">use </span><span class="kw">super</span>::query_data::{
-    BlockHash, BlockQueryData, LeafHash, LeafQueryData, QueryableBlock, TransactionHash,
-    TransactionIndex,
+    BlockQueryData, LeafQueryData, QueryableBlock, TransactionHash, TransactionIndex,
 };
-<span class="kw">use crate</span>::{Block, Deltas, Resolvable};
+<span class="kw">use crate</span>::{Block, Deltas, Leaf, Resolvable};
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>commit::{Commitment, Committable};
+<span class="kw">use </span>derivative::Derivative;
+<span class="kw">use </span>derive_more::{Display, From};
 <span class="kw">use </span>futures::stream::Stream;
 <span class="kw">use </span>hotshot_types::traits::{
     node_implementation::{NodeImplementation, NodeType},
     signature_key::EncodedPublicKey,
 };
+<span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>snafu::Snafu;
+<span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::error::Error;
 <span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::ops::RangeBounds;
 
-<span class="kw">pub trait </span>AvailabilityDataSource&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt;
-<span class="kw">where
-    </span>Block&lt;Types&gt;: QueryableBlock,
-{
-    <span class="kw">type </span>Error: Error + Debug;
-
-    <span class="kw">type </span>LeafIterType&lt;<span class="lifetime">&#39;a</span>&gt;: <span class="lifetime">&#39;a </span>+ Iterator&lt;Item = <span class="prelude-ty">Option</span>&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt;
-    <span class="kw">where
-        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>;
-    <span class="kw">type </span>BlockIterType&lt;<span class="lifetime">&#39;a</span>&gt;: <span class="lifetime">&#39;a </span>+ Iterator&lt;Item = <span class="prelude-ty">Option</span>&lt;BlockQueryData&lt;Types&gt;&gt;&gt;
-    <span class="kw">where
-        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>;
-
-    <span class="kw">type </span>LeafStreamType: Stream&lt;Item = LeafQueryData&lt;Types, I&gt;&gt; + Send;
-    <span class="kw">type </span>BlockStreamType: Stream&lt;Item = BlockQueryData&lt;Types&gt;&gt; + Send;
-
-    <span class="kw">fn </span>get_nth_leaf_iter(<span class="kw-2">&amp;</span><span class="self">self</span>, n: usize) -&gt; <span class="self">Self</span>::LeafIterType&lt;<span class="lifetime">&#39;_</span>&gt;;
-    <span class="kw">fn </span>get_nth_block_iter(<span class="kw-2">&amp;</span><span class="self">self</span>, n: usize) -&gt; <span class="self">Self</span>::BlockIterType&lt;<span class="lifetime">&#39;_</span>&gt;;
-    <span class="kw">fn </span>get_leaf_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: LeafHash&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt;;
-    <span class="kw">fn </span>get_block_index_by_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: BlockHash&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt;;
-    <span class="kw">fn </span>get_txn_index_by_hash(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        hash: TransactionHash&lt;Types&gt;,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;(u64, TransactionIndex&lt;Types&gt;)&gt;;
-    <span class="kw">fn </span>get_block_ids_by_proposer_id(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>EncodedPublicKey) -&gt; Vec&lt;u64&gt;;
-
-    <span class="kw">fn </span>subscribe_leaves(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::LeafStreamType, <span class="self">Self</span>::Error&gt;;
-    <span class="kw">fn </span>subscribe_blocks(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::BlockStreamType, <span class="self">Self</span>::Error&gt;;
+<span class="attr">#[derive(Derivative, From, Display)]
+#[derivative(Ord = <span class="string">&quot;feature_allow_slow_enum&quot;</span>)]
+#[derivative(
+    Copy(bound = <span class="string">&quot;&quot;</span>),
+    Debug(bound = <span class="string">&quot;&quot;</span>),
+    PartialEq(bound = <span class="string">&quot;&quot;</span>),
+    Eq(bound = <span class="string">&quot;&quot;</span>),
+    Ord(bound = <span class="string">&quot;&quot;</span>),
+    Hash(bound = <span class="string">&quot;&quot;</span>)
+)]
+</span><span class="kw">pub enum </span>ResourceId&lt;T: Committable&gt; {
+    <span class="attr">#[display(fmt = <span class="string">&quot;{_0}&quot;</span>)]
+    </span>Number(usize),
+    <span class="attr">#[display(fmt = <span class="string">&quot;{_0}&quot;</span>)]
+    </span>Hash(Commitment&lt;T&gt;),
 }
 
-<span class="kw">pub trait </span>UpdateAvailabilityData&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt;
+<span class="kw">impl</span>&lt;T: Committable&gt; Clone <span class="kw">for </span>ResourceId&lt;T&gt; {
+    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="kw-2">*</span><span class="self">self
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;T: Committable&gt; PartialOrd <span class="kw">for </span>ResourceId&lt;T&gt; {
+    <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Ordering&gt; {
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.cmp(other))
+    }
+}
+
+<span class="kw">pub type </span>BlockId&lt;Types&gt; = ResourceId&lt;Block&lt;Types&gt;&gt;;
+<span class="kw">pub type </span>LeafId&lt;Types, I&gt; = ResourceId&lt;Leaf&lt;Types, I&gt;&gt;;
+
+<span class="attr">#[derive(Clone, Debug, Snafu, Deserialize, Serialize)]
+#[snafu(visibility(<span class="kw">pub</span>))]
+</span><span class="kw">pub enum </span>QueryError {
+    <span class="doccomment">/// The requested resource does not exist or is not known to this query service.
+    </span>NotFound,
+    <span class="doccomment">/// The requested resource exists but is not currently available.
+    ///
+    /// In most cases a missing resource can be recovered from DA.
+    </span>Missing,
+    <span class="doccomment">/// There was an error while trying to fetch the requested resource.
+    </span><span class="attr">#[snafu(display(<span class="string">&quot;Failed to fetch requested resource: {message}&quot;</span>))]
+    </span>Error { message: String },
+}
+
+<span class="kw">pub type </span>QueryResult&lt;T&gt; = <span class="prelude-ty">Result</span>&lt;T, QueryError&gt;;
+
+<span class="attr">#[async_trait]
+</span><span class="kw">pub trait </span>AvailabilityDataSource&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt;
+<span class="kw">where
+    </span>Block&lt;Types&gt;: QueryableBlock,
+{
+    <span class="kw">type </span>LeafStream: Stream&lt;Item = LeafQueryData&lt;Types, I&gt;&gt; + Send;
+    <span class="kw">type </span>BlockStream: Stream&lt;Item = BlockQueryData&lt;Types&gt;&gt; + Send;
+
+    <span class="kw">type </span>LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt;: <span class="lifetime">&#39;a </span>+ Stream&lt;Item = QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
+        R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>BlockRange&lt;<span class="lifetime">&#39;a</span>, R&gt;: <span class="lifetime">&#39;a </span>+ Stream&lt;Item = QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
+        R: RangeBounds&lt;usize&gt; + Send;
+
+    <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;LeafId&lt;Types, I&gt;&gt; + Send + Sync;
+    <span class="kw">async fn </span>get_block&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync;
+
+    <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; QueryResult&lt;<span class="self">Self</span>::LeafRange&lt;<span class="lifetime">&#39;_</span>, R&gt;&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">async fn </span>get_block_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; QueryResult&lt;<span class="self">Self</span>::BlockRange&lt;<span class="lifetime">&#39;_</span>, R&gt;&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send;
+
+    <span class="doccomment">/// Returns the block containing a transaction with the given `hash` and the transaction&#39;s
+    /// position in the block.
+    </span><span class="kw">async fn </span>get_block_with_transaction(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        hash: TransactionHash&lt;Types&gt;,
+    ) -&gt; QueryResult&lt;(BlockQueryData&lt;Types&gt;, TransactionIndex&lt;Types&gt;)&gt;;
+
+    <span class="kw">async fn </span>get_proposals(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        proposer: <span class="kw-2">&amp;</span>EncodedPublicKey,
+        limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt;;
+    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>EncodedPublicKey) -&gt; QueryResult&lt;usize&gt;;
+
+    <span class="kw">async fn </span>subscribe_leaves(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; QueryResult&lt;<span class="self">Self</span>::LeafStream&gt;;
+    <span class="kw">async fn </span>subscribe_blocks(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; QueryResult&lt;<span class="self">Self</span>::BlockStream&gt;;
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">pub trait </span>UpdateAvailabilityData&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt;
 <span class="kw">where
     </span>Block&lt;Types&gt;: QueryableBlock,
 {
     <span class="kw">type </span>Error: Error + Debug;
-    <span class="kw">fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
+    <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
     <span class="kw">where
         </span>Deltas&lt;Types, I&gt;: Resolvable&lt;Block&lt;Types&gt;&gt;;
-    <span class="kw">fn </span>insert_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: BlockQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
+    <span class="kw">async fn </span>insert_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: BlockQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
 }
 </code></pre></div></section></main></body></html>

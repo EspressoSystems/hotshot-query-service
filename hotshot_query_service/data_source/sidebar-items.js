@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Iter","QueryData","StreamError"],"trait":["UpdateDataSource"]};
+window.SIDEBAR_ITEMS = {"struct":["Iter","QueryData"],"trait":["UpdateDataSource"]};

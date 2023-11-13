@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The HotShot Query Service is a minimal, generic query service that can be integrated into any decentralized application running on the hotshot consensus layer. It provides all the features that HotShot itself expects of a query service (such as providing consensus-related data for catchup and synchronization) as well as some application-level features that deal only with consensus-related or application-agnostic data. In addition, the query service is provided as an extensible library, which makes it easy to add additional, application-specific features."><title>hotshot_query_service - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../hotshot_query_service/index.html"><img class="rust-logo" src="../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../hotshot_query_service/index.html"><img class="rust-logo" src="../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">Crate hotshot_query_service</a></h2><div class="sidebar-elems"><ul class="block"><li class="version">Version 0.0.7</li><li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#reexports">Re-exports</a></li><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">hotshot_query_service</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../src/hotshot_query_service/lib.rs.html#13-637">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The HotShot Query Service is a minimal, generic query service that can be integrated into any
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The HotShot Query Service is a minimal, generic query service that can be integrated into any decentralized application running on the hotshot consensus layer. It provides all the features that HotShot itself expects of a query service (such as providing consensus-related data for catchup and synchronization) as well as some application-level features that deal only with consensus-related or application-agnostic data. In addition, the query service is provided as an extensible library, which makes it easy to add additional, application-specific features."><title>hotshot_query_service - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../hotshot_query_service/index.html"><img class="rust-logo" src="../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../hotshot_query_service/index.html"><img class="rust-logo" src="../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">Crate hotshot_query_service</a></h2><div class="sidebar-elems"><ul class="block"><li class="version">Version 0.0.7</li><li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#reexports">Re-exports</a></li><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">hotshot_query_service</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../src/hotshot_query_service/lib.rs.html#13-684">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The HotShot Query Service is a minimal, generic query service that can be integrated into any
 decentralized application running on the [hotshot] consensus layer. It provides all the features
 that HotShot itself expects of a query service (such as providing consensus-related data for
 catchup and synchronization) as well as some application-level features that deal only with
@@ -124,7 +124,10 @@ new endpoint that accesses <code>AppQueryData</code> like so:</p>
                 message: <span class="macro">format!</span>(<span class="string">&quot;no such UTXO {}&quot;</span>, utxo_index),
                 status: StatusCode::NotFound,
             })<span class="question-mark">?</span>;
-        <span class="kw">let </span>block = state.get_nth_block_iter(block_index).next().unwrap().unwrap();
+        <span class="kw">let </span>block = state
+            .get_block(block_index)
+            .<span class="kw">await
+            </span>.context(QueryBlockSnafu { resource: block_index.to_string() })<span class="question-mark">?</span>;
         <span class="kw">let </span>txn = block.transaction(<span class="kw-2">&amp;</span>txn_index).unwrap();
         <span class="kw">let </span>utxo = <span class="comment">// Application-specific logic to extract a UTXO from a transaction.
         </span><span class="prelude-val">Ok</span>(utxo)
@@ -172,39 +175,46 @@ for your custom type. The basic pattern looks like:</p>
 </span>}
 
 <span class="comment">// Implement data source trait for availability API.
+</span><span class="attr">#[async_trait]
 </span><span class="kw">impl </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt; <span class="kw">for </span>AppState {
-    <span class="kw">type </span>Error =
+    <span class="kw">type </span>LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt; =
         &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as
-            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::Error;
+            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
+        R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>BlockRange&lt;<span class="lifetime">&#39;a</span>, R&gt; =
+        &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as
+            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::BlockRange&lt;<span class="lifetime">&#39;a</span>, R&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
+        R: RangeBounds&lt;usize&gt; + Send;
 
-    <span class="kw">type </span>LeafIterType&lt;<span class="lifetime">&#39;a</span>&gt; =
+    <span class="kw">type </span>LeafStream =
         &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as
-            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::LeafIterType&lt;<span class="lifetime">&#39;a</span>&gt;;
-    <span class="kw">type </span>BlockIterType&lt;<span class="lifetime">&#39;a</span>&gt; =
+            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::LeafStream;
+    <span class="kw">type </span>BlockStream =
         &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as
-            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::BlockIterType&lt;<span class="lifetime">&#39;a</span>&gt;;
+            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::BlockStream;
 
-    <span class="kw">type </span>LeafStreamType =
-        &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as
-            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::LeafStreamType;
-    <span class="kw">type </span>BlockStreamType =
-        &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as
-            </span>AvailabilityDataSource&lt;AppTypes, AppNodeImpl&gt;&gt;::BlockStreamType;
-
-    <span class="kw">fn </span>get_nth_leaf_iter(<span class="kw-2">&amp;</span><span class="self">self</span>, n: usize) -&gt; <span class="self">Self</span>::LeafIterType&lt;<span class="lifetime">&#39;_</span>&gt; {
-        <span class="self">self</span>.hotshot_qs.get_nth_leaf_iter(n)
-    }
+    <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;LeafQueryData&lt;AppTypes, AppNodeImpl&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;LeafId&lt;AppTypes, AppNodeImpl&gt;&gt; + Send + Sync,
+    {
+        <span class="self">self</span>.hotshot_qs.get_leaf(id).<span class="kw">await
+    </span>}
 
     <span class="comment">// etc
 </span>}
 
 <span class="comment">// Implement data source trait for status API.
+</span><span class="attr">#[async_trait]
 </span><span class="kw">impl </span>StatusDataSource <span class="kw">for </span>AppState {
     <span class="kw">type </span>Error = &lt;QueryData&lt;AppTypes, AppNodeImpl, AppQueryData&gt; <span class="kw">as </span>StatusDataSource&gt;::Error;
 
-    <span class="kw">fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize, <span class="self">Self</span>::Error&gt; {
-        <span class="self">self</span>.hotshot_qs.block_height()
-    }
+    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize, <span class="self">Self</span>::Error&gt; {
+        <span class="self">self</span>.hotshot_qs.block_height().<span class="kw">await
+    </span>}
 
     <span class="comment">// etc
 </span>}
@@ -263,7 +273,7 @@ manage the <a href="atomic_store::AtomicStore">AtomicStore</a> for you, so you m
         <span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.get_event_stream(Default::default()).<span class="kw">await</span>.<span class="number">0</span>;
         <span class="kw">while let </span><span class="prelude-val">Some</span>(event) = events.next().<span class="kw">await </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>state = state.write().<span class="kw">await</span>;
-            state.hotshot_qs.update(<span class="kw-2">&amp;</span>event).unwrap();
+            state.hotshot_qs.update(<span class="kw-2">&amp;</span>event).<span class="kw">await</span>.unwrap();
             <span class="comment">// Update other modules&#39; states based on `event`.
 
             </span>state.hotshot_qs.commit_version().<span class="kw">await</span>.unwrap();
