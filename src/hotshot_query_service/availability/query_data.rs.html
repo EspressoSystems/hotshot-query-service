@@ -499,7 +499,7 @@
     <span class="doccomment">/// Enumerate the transactions in the block with their indices.
     </span><span class="kw">fn </span>enumerate(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-    ) -&gt; Box&lt;<span class="kw">dyn </span><span class="lifetime">&#39;_ </span>+ Iterator&lt;Item = (<span class="self">Self</span>::TransactionIndex, <span class="kw-2">&amp;</span><span class="self">Self</span>::Transaction)&gt;&gt; {
+    ) -&gt; Box&lt;<span class="kw">dyn </span><span class="lifetime">&#39;_ </span>+ Iterator&lt;Item = (<span class="self">Self</span>::TransactionIndex, <span class="self">Self</span>::Transaction)&gt;&gt; {
         Box::new(<span class="self">self</span>.iter().map(|ix| {
             <span class="comment">// `self.transaction` should always return `Some` if we are using an index which was
             // yielded by `self.iter`.
@@ -512,10 +512,10 @@
     </span><span class="kw">fn </span>transaction_with_proof(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         index: <span class="kw-2">&amp;</span><span class="self">Self</span>::TransactionIndex,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="self">Self</span>::Transaction, <span class="self">Self</span>::InclusionProof)&gt;;
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="self">Self</span>::Transaction, <span class="self">Self</span>::InclusionProof)&gt;;
 
     <span class="doccomment">/// Get a transaction by its block-specific index.
-    </span><span class="kw">fn </span>transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, index: <span class="kw-2">&amp;</span><span class="self">Self</span>::TransactionIndex) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Transaction&gt; {
+    </span><span class="kw">fn </span>transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, index: <span class="kw-2">&amp;</span><span class="self">Self</span>::TransactionIndex) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Transaction&gt; {
         <span class="prelude-val">Some</span>(<span class="self">self</span>.transaction_with_proof(index)<span class="question-mark">?</span>.<span class="number">0</span>)
     }
 
@@ -530,7 +530,7 @@
     }
 
     <span class="doccomment">/// Get the `nth` transaction.
-    </span><span class="kw">fn </span>nth_transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, n: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Transaction&gt; {
+    </span><span class="kw">fn </span>nth_transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, n: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Transaction&gt; {
         <span class="self">self</span>.transaction(<span class="kw-2">&amp;</span><span class="self">self</span>.nth(n)<span class="question-mark">?</span>)
     }
 
@@ -538,7 +538,7 @@
     </span><span class="kw">fn </span>nth_transaction_with_proof(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         n: usize,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="self">Self</span>::Transaction, <span class="self">Self</span>::InclusionProof)&gt; {
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="self">Self</span>::Transaction, <span class="self">Self</span>::InclusionProof)&gt; {
         <span class="self">self</span>.transaction_with_proof(<span class="kw-2">&amp;</span><span class="self">self</span>.nth(n)<span class="question-mark">?</span>)
     }
 
@@ -557,7 +557,7 @@
     </span><span class="kw">fn </span>transaction_by_hash(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hash: Commitment&lt;<span class="self">Self</span>::Transaction&gt;,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Transaction&gt; {
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Transaction&gt; {
         <span class="self">self</span>.transaction(<span class="kw-2">&amp;</span><span class="self">self</span>.by_hash(hash)<span class="question-mark">?</span>)
     }
 
@@ -565,7 +565,7 @@
     </span><span class="kw">fn </span>transaction_by_hash_with_proof(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hash: Commitment&lt;<span class="self">Self</span>::Transaction&gt;,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="self">Self</span>::Transaction, <span class="self">Self</span>::InclusionProof)&gt; {
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="self">Self</span>::Transaction, <span class="self">Self</span>::InclusionProof)&gt; {
         <span class="self">self</span>.transaction_with_proof(<span class="kw-2">&amp;</span><span class="self">self</span>.by_hash(hash)<span class="question-mark">?</span>)
     }
 }
