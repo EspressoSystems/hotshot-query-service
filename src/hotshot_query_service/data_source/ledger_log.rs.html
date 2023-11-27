@@ -475,6 +475,8 @@
 <a href="#475" id="475">475</a>
 <a href="#476" id="476">476</a>
 <a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -486,6 +488,8 @@
 // General Public License for more details.
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
+
+</span><span class="attr">#![cfg(feature = <span class="string">&quot;file-system-data-source&quot;</span>)]
 
 </span><span class="kw">use </span>async_compatibility_layer::async_primitives::broadcast::{channel, BroadcastSender};
 <span class="kw">use </span>atomic_store::{

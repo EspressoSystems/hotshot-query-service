@@ -614,6 +614,7 @@
 <a href="#614" id="614">614</a>
 <a href="#615" id="615">615</a>
 <a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -644,7 +645,8 @@
 //! # async fn doc(storage_path: &amp;std::path::Path) -&gt; Result&lt;(), hotshot_query_service::Error&gt; {
 //! use hotshot_query_service::{
 //!     availability,
-//!     data_source::{FileSystemDataSource, UpdateDataSource},
+//!     data_source::{FileSystemDataSource, UpdateDataSource, VersionedDataSource},
+//!     status::UpdateStatusData,
 //!     status, Error
 //! };
 //!
@@ -654,7 +656,7 @@
 //! use tide_disco::App;
 //!
 //! // Create or open a data source.
-//! let data_source = FileSystemDataSource::&lt;AppTypes, AppNodeImpl, ()&gt;::create(storage_path, ())
+//! let data_source = FileSystemDataSource::&lt;AppTypes, AppNodeImpl&gt;::create(storage_path)
 //!     .map_err(Error::internal)?;
 //!
 //! // Create hotshot, giving it a handle to the status metrics.
@@ -690,7 +692,7 @@
 //!
 //!     // Update the query data based on this event.
 //!     data_source.update(&amp;event);
-//!     data_source.commit_version().await.map_err(Error::internal)?;
+//!     data_source.commit().await.map_err(Error::internal)?;
 //! }
 //! # Ok(())
 //! # }
@@ -708,7 +710,7 @@
 //! # fn doc(storage_path: &amp;Path, options: &amp;Options, hotshot: SystemContextHandle&lt;MockTypes, MockNodeImpl&gt;) -&gt; Result&lt;(), Error&gt; {
 //! use hotshot_query_service::run_standalone_service;
 //!
-//! let data_source = FileSystemDataSource::create(storage_path, ()).map_err(Error::internal)?;
+//! let data_source = FileSystemDataSource::create(storage_path).map_err(Error::internal)?;
 //! spawn(run_standalone_service(options, data_source, hotshot));
 //! # Ok(())
 //! # }
@@ -1150,7 +1152,7 @@
     </span><span class="kw">async fn </span>test_composition() {
         <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_composition&quot;</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">&quot;test_composition&quot;</span>).unwrap();
-        <span class="kw">let </span>hotshot_qs = MockDataSource::create_with_store(<span class="kw-2">&amp;mut </span>loader, ()).unwrap();
+        <span class="kw">let </span>hotshot_qs = MockDataSource::create_with_store(<span class="kw-2">&amp;mut </span>loader).unwrap();
         <span class="kw">let </span>module_state =
             RollingLog::create(<span class="kw-2">&amp;mut </span>loader, Default::default(), <span class="string">&quot;module_state&quot;</span>, <span class="number">1024</span>).unwrap();
         <span class="kw">let </span>state = CompositeState {

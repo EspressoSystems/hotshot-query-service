@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["fs"],"trait":["UpdateDataSource"]};
+window.SIDEBAR_ITEMS = {"mod":["sql"],"struct":["ExtensibleDataSource","FileSystemDataSource"],"trait":["UpdateDataSource","VersionedDataSource"]};

@@ -333,6 +333,17 @@
 <a href="#333" id="333">333</a>
 <a href="#334" id="334">334</a>
 <a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -352,15 +363,26 @@
 //! the persistence layer, which we call a _data source_. This module provides the following
 //! concrete persistence implementations:
 //! * [`FileSystemDataSource`]
+//! * [`SqlDataSource`]
 //!
 //! The user can choose which data source to use when initializing the query service.
+//!
+//! We also provide combinators for modularly adding functionality to existing data sources:
+//! * [`ExtensibleDataSource`]
+//!
 
-</span><span class="kw">pub mod </span>fs;
+</span><span class="kw">mod </span>extension;
+<span class="kw">mod </span>fs;
 <span class="kw">mod </span>ledger_log;
+<span class="kw">pub mod </span>sql;
 <span class="kw">mod </span>update;
 
-<span class="kw">pub use </span>fs::FileSystemDataSource;
-<span class="kw">pub use </span>update::UpdateDataSource;
+<span class="kw">pub use </span>extension::ExtensibleDataSource;
+<span class="attr">#[cfg(feature = <span class="string">&quot;file-system-data-source&quot;</span>)]
+</span><span class="kw">pub use </span>fs::FileSystemDataSource;
+<span class="attr">#[cfg(feature = <span class="string">&quot;sql-data-source&quot;</span>)]
+</span><span class="kw">pub use </span>sql::SqlDataSource;
+<span class="kw">pub use </span>update::{UpdateDataSource, VersionedDataSource};
 
 <span class="doccomment">/// Generic tests we can instantiate for all the data sources.
 </span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;testing&quot;</span>))]

@@ -279,6 +279,9 @@
 <a href="#279" id="279">279</a>
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -374,7 +377,7 @@
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
-        data_source::FileSystemDataSource,
+        data_source::{ExtensibleDataSource, FileSystemDataSource},
         testing::{
             consensus::{MockDataSource, MockNetwork},
             mocks::{MockNodeImpl, MockTransaction, MockTypes},
@@ -502,8 +505,10 @@
         setup_test();
 
         <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_status_extensions&quot;</span>).unwrap();
-        <span class="kw">let </span>data_source =
-            FileSystemDataSource::&lt;MockTypes, MockNodeImpl, u64&gt;::create(dir.path(), <span class="number">0</span>).unwrap();
+        <span class="kw">let </span>data_source = ExtensibleDataSource::new(
+            FileSystemDataSource::&lt;MockTypes, MockNodeImpl&gt;::create(dir.path()).unwrap(),
+            <span class="number">0</span>,
+        );
 
         <span class="kw">let </span>extensions = <span class="macro">toml! </span>{
             [route.post_ext]
@@ -516,12 +521,13 @@
             METHOD = <span class="string">&quot;GET&quot;
         </span>};
 
-        <span class="kw">let </span><span class="kw-2">mut </span>api =
-            define_api::&lt;RwLock&lt;FileSystemDataSource&lt;MockTypes, MockNodeImpl, u64&gt;&gt;&gt;(<span class="kw-2">&amp;</span>Options {
-                extensions: <span class="macro">vec!</span>[extensions.into()],
-                ..Default::default()
-            })
-            .unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>api = define_api::&lt;
+            RwLock&lt;ExtensibleDataSource&lt;FileSystemDataSource&lt;MockTypes, MockNodeImpl&gt;, u64&gt;&gt;,
+        &gt;(<span class="kw-2">&amp;</span>Options {
+            extensions: <span class="macro">vec!</span>[extensions.into()],
+            ..Default::default()
+        })
+        .unwrap();
         api.get(<span class="string">&quot;get_ext&quot;</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>state.as_ref()) }.boxed()
         })

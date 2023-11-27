@@ -590,6 +590,8 @@
 <a href="#590" id="590">590</a>
 <a href="#591" id="591">591</a>
 <a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -878,7 +880,7 @@
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
-        data_source::FileSystemDataSource,
+        data_source::{ExtensibleDataSource, FileSystemDataSource},
         testing::{
             consensus::{MockDataSource, MockNetwork},
             mocks::{MockNodeImpl, MockTransaction, MockTypes},
@@ -1116,8 +1118,10 @@
         setup_test();
 
         <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_availability_extensions&quot;</span>).unwrap();
-        <span class="kw">let </span>data_source =
-            FileSystemDataSource::&lt;MockTypes, MockNodeImpl, u64&gt;::create(dir.path(), <span class="number">0</span>).unwrap();
+        <span class="kw">let </span>data_source = ExtensibleDataSource::new(
+            FileSystemDataSource::&lt;MockTypes, MockNodeImpl&gt;::create(dir.path()).unwrap(),
+            <span class="number">0</span>,
+        );
 
         <span class="comment">// Create the API extensions specification.
         </span><span class="kw">let </span>extensions = <span class="macro">toml! </span>{
@@ -1132,7 +1136,7 @@
         </span>};
 
         <span class="kw">let </span><span class="kw-2">mut </span>api = define_api::&lt;
-            RwLock&lt;FileSystemDataSource&lt;MockTypes, MockNodeImpl, u64&gt;&gt;,
+            RwLock&lt;ExtensibleDataSource&lt;FileSystemDataSource&lt;MockTypes, MockNodeImpl&gt;, u64&gt;&gt;,
             MockTypes,
             MockNodeImpl,
         &gt;(<span class="kw-2">&amp;</span>Options {
