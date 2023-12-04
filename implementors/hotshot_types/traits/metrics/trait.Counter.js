@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"hotshot_query_service":[["impl Counter for <a class=\"struct\" href=\"hotshot_query_service/metrics/struct.Counter.html\" title=\"struct hotshot_query_service::metrics::Counter\">Counter</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

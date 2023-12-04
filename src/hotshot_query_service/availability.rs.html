@@ -592,6 +592,23 @@
 <a href="#592" id="592">592</a>
 <a href="#593" id="593">593</a>
 <a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -604,7 +621,7 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use crate</span>::{api::load_api, Block};
+</span><span class="kw">use crate</span>::{api::load_api, Block, QueryError};
 <span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::{FutureExt, StreamExt, TryFutureExt};
@@ -652,11 +669,21 @@
         source: QueryError,
         resource: String,
     },
+    <span class="attr">#[snafu(display(<span class="string">&quot;error streaming leaves: {source}&quot;</span>))]
+    #[from(ignore)]
+    </span>StreamLeaf {
+        source: QueryError,
+    },
     <span class="attr">#[snafu(display(<span class="string">&quot;error fetching block {resource}: {source}&quot;</span>))]
     #[from(ignore)]
     </span>QueryBlock {
         source: QueryError,
         resource: String,
+    },
+    <span class="attr">#[snafu(display(<span class="string">&quot;error streaming blocks: {source}&quot;</span>))]
+    #[from(ignore)]
+    </span>StreamBlock {
+        source: QueryError,
     },
     <span class="attr">#[snafu(display(<span class="string">&quot;error fetching transaction {resource}: {source}&quot;</span>))]
     #[from(ignore)]
@@ -706,12 +733,11 @@
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Request { .. } =&gt; StatusCode::BadRequest,
             <span class="self">Self</span>::QueryLeaf { source, .. }
+            | <span class="self">Self</span>::StreamLeaf { source, .. }
             | <span class="self">Self</span>::QueryBlock { source, .. }
+            | <span class="self">Self</span>::StreamBlock { source, .. }
             | <span class="self">Self</span>::QueryTransaction { source, .. }
-            | <span class="self">Self</span>::QueryProposals { source, .. } =&gt; <span class="kw">match </span>source {
-                QueryError::NotFound | QueryError::Missing =&gt; StatusCode::NotFound,
-                QueryError::Error { .. } =&gt; StatusCode::InternalServerError,
-            },
+            | <span class="self">Self</span>::QueryProposals { source, .. } =&gt; source.status(),
             <span class="self">Self</span>::InvalidTransactionIndex { .. } =&gt; StatusCode::NotFound,
             <span class="self">Self</span>::LeafStream { .. } | <span class="self">Self</span>::BlockStream { .. } =&gt; StatusCode::InternalServerError,
             <span class="self">Self</span>::Custom { status, .. } =&gt; <span class="kw-2">*</span>status,
@@ -780,7 +806,7 @@
                                     height: height <span class="kw">as </span>u64,
                                     reason: err.to_string(),
                                 })<span class="question-mark">?
-                                </span>.map(|block| <span class="prelude-val">Ok</span>(block.header())))
+                                </span>.map(|block| <span class="prelude-val">Ok</span>(block.context(StreamBlockSnafu)<span class="question-mark">?</span>.header())))
                         }
                         .boxed()
                     })
@@ -886,7 +912,7 @@
             mocks::{MockNodeImpl, MockTransaction, MockTypes},
             setup_test,
         },
-        Error,
+        Error, QueryResult,
     };
     <span class="kw">use </span>async_std::{sync::RwLock, task::spawn};
     <span class="kw">use </span>commit::Committable;
@@ -1079,8 +1105,16 @@
 
         <span class="comment">// Submit a few blocks and make sure each one gets reflected in the query service and
         // preserves the consistency of the data and indices.
-        </span><span class="kw">let </span>leaves = client.socket(<span class="string">&quot;stream/leaves/0&quot;</span>).subscribe().<span class="kw">await</span>.unwrap();
-        <span class="kw">let </span>blocks = client.socket(<span class="string">&quot;stream/blocks/0&quot;</span>).subscribe().<span class="kw">await</span>.unwrap();
+        </span><span class="kw">let </span>leaves = client
+            .socket(<span class="string">&quot;stream/leaves/0&quot;</span>)
+            .subscribe::&lt;QueryResult&lt;LeafQueryData&lt;MockTypes, MockNodeImpl&gt;&gt;&gt;()
+            .<span class="kw">await
+            </span>.unwrap();
+        <span class="kw">let </span>blocks = client
+            .socket(<span class="string">&quot;stream/blocks/0&quot;</span>)
+            .subscribe::&lt;QueryResult&lt;BlockQueryData&lt;MockTypes&gt;&gt;&gt;()
+            .<span class="kw">await
+            </span>.unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>leaf_blocks = leaves.zip(blocks).enumerate();
         <span class="kw">for </span>nonce <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
             <span class="kw">let </span>txn = MockTransaction { nonce };
@@ -1091,8 +1125,8 @@
                 <span class="macro">tracing::info!</span>(<span class="string">&quot;waiting for block with transaction {}&quot;</span>, nonce);
                 <span class="kw">let </span>(i, (leaf, block)) = leaf_blocks.next().<span class="kw">await</span>.unwrap();
                 <span class="macro">tracing::info!</span>(<span class="string">&quot;got block {}\nLeaf: {:?}\nBlock: {:?}&quot;</span>, i, leaf, block);
-                <span class="kw">let </span>leaf: LeafQueryData&lt;MockTypes, MockNodeImpl&gt; = leaf.unwrap();
-                <span class="kw">let </span>block: BlockQueryData&lt;MockTypes&gt; = block.unwrap();
+                <span class="kw">let </span>leaf = leaf.unwrap().unwrap();
+                <span class="kw">let </span>block = block.unwrap().unwrap();
                 <span class="macro">assert_eq!</span>(leaf.height() <span class="kw">as </span>usize, i);
                 <span class="macro">assert_eq!</span>(leaf.block_hash(), block.hash());
                 <span class="kw">if </span>!block.is_empty() {

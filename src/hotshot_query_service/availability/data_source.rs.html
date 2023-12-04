@@ -120,24 +120,6 @@
 <a href="#120" id="120">120</a>
 <a href="#121" id="121">121</a>
 <a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -153,7 +135,7 @@
 </span><span class="kw">use </span><span class="kw">super</span>::query_data::{
     BlockQueryData, LeafQueryData, QueryableBlock, TransactionHash, TransactionIndex,
 };
-<span class="kw">use crate</span>::{Block, Deltas, Leaf, Resolvable};
+<span class="kw">use crate</span>::{Block, Deltas, Leaf, QueryResult, Resolvable};
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>commit::{Commitment, Committable};
 <span class="kw">use </span>derivative::Derivative;
@@ -163,8 +145,6 @@
     node_implementation::{NodeImplementation, NodeType},
     signature_key::EncodedPublicKey,
 };
-<span class="kw">use </span>serde::{Deserialize, Serialize};
-<span class="kw">use </span>snafu::Snafu;
 <span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::error::Error;
 <span class="kw">use </span>std::fmt::Debug;
@@ -202,29 +182,13 @@
 <span class="kw">pub type </span>BlockId&lt;Types&gt; = ResourceId&lt;Block&lt;Types&gt;&gt;;
 <span class="kw">pub type </span>LeafId&lt;Types, I&gt; = ResourceId&lt;Leaf&lt;Types, I&gt;&gt;;
 
-<span class="attr">#[derive(Clone, Debug, Snafu, Deserialize, Serialize)]
-#[snafu(visibility(<span class="kw">pub</span>))]
-</span><span class="kw">pub enum </span>QueryError {
-    <span class="doccomment">/// The requested resource does not exist or is not known to this query service.
-    </span>NotFound,
-    <span class="doccomment">/// The requested resource exists but is not currently available.
-    ///
-    /// In most cases a missing resource can be recovered from DA.
-    </span>Missing,
-    <span class="doccomment">/// There was an error while trying to fetch the requested resource.
-    </span><span class="attr">#[snafu(display(<span class="string">&quot;Failed to fetch requested resource: {message}&quot;</span>))]
-    </span>Error { message: String },
-}
-
-<span class="kw">pub type </span>QueryResult&lt;T&gt; = <span class="prelude-ty">Result</span>&lt;T, QueryError&gt;;
-
 <span class="attr">#[async_trait]
 </span><span class="kw">pub trait </span>AvailabilityDataSource&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt;
 <span class="kw">where
     </span>Block&lt;Types&gt;: QueryableBlock,
 {
-    <span class="kw">type </span>LeafStream: Stream&lt;Item = LeafQueryData&lt;Types, I&gt;&gt; + Unpin + Send;
-    <span class="kw">type </span>BlockStream: Stream&lt;Item = BlockQueryData&lt;Types&gt;&gt; + Unpin + Send;
+    <span class="kw">type </span>LeafStream: Stream&lt;Item = QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt; + Unpin + Send;
+    <span class="kw">type </span>BlockStream: Stream&lt;Item = QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;&gt; + Unpin + Send;
 
     <span class="kw">type </span>LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt;: <span class="lifetime">&#39;a </span>+ Stream&lt;Item = QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt; + Unpin
     <span class="kw">where
@@ -272,7 +236,7 @@
 <span class="kw">where
     </span>Block&lt;Types&gt;: QueryableBlock,
 {
-    <span class="kw">type </span>Error: Error + Debug;
+    <span class="kw">type </span>Error: Error + Debug + Send + Sync + <span class="lifetime">&#39;static</span>;
     <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
     <span class="kw">where
         </span>Deltas&lt;Types, I&gt;: Resolvable&lt;Block&lt;Types&gt;&gt;;

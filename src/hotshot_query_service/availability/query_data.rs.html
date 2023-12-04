@@ -408,6 +408,12 @@
 <a href="#408" id="408">408</a>
 <a href="#409" id="409">409</a>
 <a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -573,8 +579,8 @@
 <span class="attr">#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(bound = <span class="string">&quot;&quot;</span>)]
 </span><span class="kw">pub struct </span>LeafQueryData&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; {
-    leaf: Leaf&lt;Types, I&gt;,
-    qc: QuorumCertificate&lt;Types, I&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) leaf: Leaf&lt;Types, I&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) qc: QuorumCertificate&lt;Types, I&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug, Snafu)]
@@ -607,8 +613,8 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.leaf
     }
 
-    <span class="kw">pub fn </span>qc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QuorumCertificate&lt;Types, I&gt; {
-        <span class="self">self</span>.leaf.get_justify_qc()
+    <span class="kw">pub fn </span>qc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>QuorumCertificate&lt;Types, I&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.qc
     }
 
     <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
@@ -641,11 +647,11 @@
 <span class="kw">where
     </span>Block&lt;Types&gt;: QueryableBlock,
 {
-    block: Block&lt;Types&gt;,
-    hash: BlockHash&lt;Types&gt;,
-    height: u64,
-    timestamp: i128,
-    size: u64,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) block: Block&lt;Types&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) hash: BlockHash&lt;Types&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) height: u64,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) timestamp: i128,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) size: u64,
 }
 
 <span class="attr">#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -706,7 +712,7 @@
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             hash: block.commit(),
             height: leaf_height(<span class="kw-2">&amp;</span>leaf),
-            timestamp: leaf.get_timestamp(),
+            timestamp: round_timestamp(leaf.get_timestamp()),
             size: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>block).unwrap_or_default(),
             block,
         })
@@ -811,6 +817,12 @@
 <span class="kw">fn </span>parse_timestamp(ns: i128) -&gt; Timestamp {
     Timestamp::from_unix_timestamp_nanos(ns).expect(<span class="string">&quot;HotShot timestamp out of range&quot;</span>)
 }
+
+<span class="kw">fn </span>round_timestamp(ns: i128) -&gt; i128 {
+    <span class="comment">// HotShot gives us the timestamp with nanosecond precision, which is far more than necessary
+    // and can&#39;t be stored accurately in Postgres. Round down to microsecond precision.
+    </span>(ns / <span class="number">1000</span>) * <span class="number">1000
+</span>}
 
 <span class="kw">fn </span>leaf_height&lt;L: LeafType&gt;(leaf: <span class="kw-2">&amp;</span>L) -&gt; u64 {
     <span class="comment">// HotShot generates a genesis leaf with height 0, but we don&#39;t see it in the event stream.

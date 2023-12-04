@@ -129,6 +129,19 @@
 <a href="#129" id="129">129</a>
 <a href="#130" id="130">130</a>
 <a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -161,8 +174,9 @@
 ///
 /// If a type implements both [UpdateAvailabilityData] and [UpdateStatusData], then it can be fully
 /// kept up to date through two interfaces:
-/// * [metrics](UpdateStatusData::metrics), to get a handle for populating the status metrics, which
-///   should be used when initializing a [SystemContextHandle](hotshot::types::SystemContextHandle)
+/// * [populate_metrics](UpdateStatusData::populate_metrics), to get a handle for populating the
+///   status metrics, which should be used when initializing a
+///   [SystemContextHandle](hotshot::types::SystemContextHandle)
 /// * [update](Self::update), to update the query state when a new HotShot event is emitted
 </span><span class="attr">#[async_trait]
 </span><span class="kw">pub trait </span>UpdateDataSource&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt;:
@@ -244,9 +258,21 @@
 }
 
 <span class="doccomment">/// A data source with an atomic transaction-based synchronization interface.
+///
+/// Any changes made to a versioned data source are initially visible when queried through that same
+/// data source object only. They are not immediately written back to storage, which means that a
+/// new data source object opened against the same persistent storage will not reflect the changes.
+/// In particular, this means that if the process restarts and reopens its storage, uncommitted
+/// changes will be lost.
+///
+/// The methods provided by this trait can be used to write such pending changes back to persistent
+/// storage ([commit](Self::commit)) so that they become visible to other clients of the same
+/// underlying storage, and are saved if the process restarts. It also allows pending changes to be
+/// rolled back ([revert](Self::revert)) so that they are never written back to storage and are no
+/// longer reflected even through the data source object which was used to make the changes.
 </span><span class="attr">#[async_trait]
 </span><span class="kw">pub trait </span>VersionedDataSource {
-    <span class="kw">type </span>Error: Error + Debug;
+    <span class="kw">type </span>Error: Error + Debug + Send + Sync + <span class="lifetime">&#39;static</span>;
 
     <span class="doccomment">/// Atomically commit to all outstanding modifications to the data.
     ///

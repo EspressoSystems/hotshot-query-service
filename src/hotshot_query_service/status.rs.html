@@ -282,6 +282,13 @@
 <a href="#282" id="282">282</a>
 <a href="#283" id="283">283</a>
 <a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -495,7 +502,14 @@
             <span class="macro">tracing::info!</span>(<span class="string">&quot;waiting for block height to update&quot;</span>);
             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
         }
-        <span class="macro">assert!</span>(client.get::&lt;f64&gt;(<span class="string">&quot;success_rate&quot;</span>).send().<span class="kw">await</span>.unwrap() &gt; <span class="number">0.0</span>);
+        <span class="kw">let </span>success_rate = client.get::&lt;f64&gt;(<span class="string">&quot;success_rate&quot;</span>).send().<span class="kw">await</span>.unwrap();
+        <span class="comment">// If metrics are populating correctly, we should get a finite number. If not, we might get
+        // NaN or infinity due to division by 0.
+        // TODO re-enable this check once HotShot is populating view metrics again
+        //      https://github.com/EspressoSystems/HotShot/issues/2066
+        // assert!(success_rate.is_finite(), &quot;{success_rate}&quot;);
+        // We know at least some views have been successful, since we finalized a block.
+        </span><span class="macro">assert!</span>(success_rate &gt; <span class="number">0.0</span>, <span class="string">&quot;{success_rate}&quot;</span>);
 
         network.shut_down().<span class="kw">await</span>;
     }

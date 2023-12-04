@@ -477,6 +477,14 @@
 <a href="#477" id="477">477</a>
 <a href="#478" id="478">478</a>
 <a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -684,6 +692,12 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>revert_version(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), PersistenceError&gt; {
         <span class="self">self</span>.store.revert_version()<span class="question-mark">?</span>;
+
+        <span class="comment">// Remove objects which were inserted in cache but not committed to storage.
+        </span><span class="kw">for _ in </span><span class="number">0</span>..<span class="self">self</span>.pending_inserts {
+            <span class="self">self</span>.cache.pop_back();
+        }
+
         <span class="self">self</span>.pending_inserts = <span class="number">0</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -745,8 +759,10 @@
     }
 
     <span class="kw">fn </span>size_hint(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (usize, <span class="prelude-ty">Option</span>&lt;usize&gt;) {
-        <span class="kw">let </span>remaining = <span class="self">self</span>.store.len();
-        (remaining, <span class="prelude-val">Some</span>(remaining))
+        <span class="comment">// Include objects in cache that haven&#39;t necessarily been committed to storage yet. This is
+        // consistent with `nth`, which will yield such objects.
+        </span><span class="kw">let </span>len = (<span class="self">self</span>.cache_start + <span class="self">self</span>.cache.len()).saturating_sub(<span class="self">self</span>.index);
+        (len, <span class="prelude-val">Some</span>(len))
     }
 
     <span class="kw">fn </span>nth(<span class="kw-2">&amp;mut </span><span class="self">self</span>, n: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
@@ -772,8 +788,8 @@
     }
 
     <span class="kw">fn </span>count(<span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.store.len()
-    }
+        <span class="self">self</span>.size_hint().<span class="number">0
+    </span>}
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T: Serialize + DeserializeOwned + Clone&gt; ExactSizeIterator <span class="kw">for </span>Iter&lt;<span class="lifetime">&#39;a</span>, T&gt; {}
