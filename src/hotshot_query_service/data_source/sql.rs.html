@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/sql.rs`."><title>sql.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0 (79e9716c9 2023-11-13)" data-channel="1.74.0" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hotshot_query_service/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/sql.rs`."><title>sql.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.1 (a28077b28 2023-12-04)" data-channel="1.74.1" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hotshot_query_service/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1494,6 +1494,21 @@
 <a href="#1494" id="1494">1494</a>
 <a href="#1495" id="1495">1495</a>
 <a href="#1496" id="1496">1496</a>
+<a href="#1497" id="1497">1497</a>
+<a href="#1498" id="1498">1498</a>
+<a href="#1499" id="1499">1499</a>
+<a href="#1500" id="1500">1500</a>
+<a href="#1501" id="1501">1501</a>
+<a href="#1502" id="1502">1502</a>
+<a href="#1503" id="1503">1503</a>
+<a href="#1504" id="1504">1504</a>
+<a href="#1505" id="1505">1505</a>
+<a href="#1506" id="1506">1506</a>
+<a href="#1507" id="1507">1507</a>
+<a href="#1508" id="1508">1508</a>
+<a href="#1509" id="1509">1509</a>
+<a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1511,13 +1526,12 @@
 </span><span class="kw">use super</span>::{buffered_channel::BufferedChannel, VersionedDataSource};
 <span class="kw">use crate</span>::{
     availability::{
-        AvailabilityDataSource, BlockId, BlockQueryData, LeafId, LeafQueryData, ResourceId,
-        TransactionHash, TransactionIndex, UpdateAvailabilityData,
+        AvailabilityDataSource, BlockId, BlockQueryData, LeafId, LeafQueryData, QueryablePayload,
+        ResourceId, TransactionHash, TransactionIndex, UpdateAvailabilityData,
     },
     metrics::PrometheusMetrics,
     status::StatusDataSource,
-    Block, Deltas, Leaf, MissingSnafu, NotFoundSnafu, QueryError, QueryResult, QueryableBlock,
-    QuorumCertificate, Resolvable,
+    Header, Leaf, MissingSnafu, NotFoundSnafu, Payload, QueryError, QueryResult,
 };
 <span class="kw">use </span>async_std::{net::ToSocketAddrs, task::spawn};
 <span class="kw">use </span>async_trait::async_trait;
@@ -1529,9 +1543,13 @@
     task::{Context, Poll},
     AsyncRead, AsyncWrite,
 };
-<span class="kw">use </span>hotshot_types::traits::{
-    node_implementation::{NodeImplementation, NodeType},
-    signature_key::EncodedPublicKey,
+<span class="kw">use </span>hotshot_types::{
+    simple_certificate::QuorumCertificate,
+    traits::{
+        block_contents::{BlockHeader, BlockPayload},
+        node_implementation::NodeType,
+        signature_key::EncodedPublicKey,
+    },
 };
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>snafu::OptionExt;
@@ -1539,7 +1557,6 @@
     ops::{Bound, RangeBounds},
     pin::Pin,
 };
-<span class="kw">use </span>time::OffsetDateTime;
 <span class="kw">use </span>tokio_postgres::{
     types::{BorrowToSql, ToSql},
     Client, NoTls, Row, RowStream, ToStatement,
@@ -1744,11 +1761,10 @@
     </span>}
 
     <span class="doccomment">/// Connect to the database with this config.
-    </span><span class="kw">pub async fn </span>connect&lt;Types, I&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;SqlDataSource&lt;Types, I&gt;, Error&gt;
+    </span><span class="kw">pub async fn </span>connect&lt;Types&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;SqlDataSource&lt;Types&gt;, Error&gt;
     <span class="kw">where
         </span>Types: NodeType,
-        I: NodeImplementation&lt;Types&gt;,
-        Block&lt;Types&gt;: QueryableBlock,
+        Payload&lt;Types&gt;: QueryablePayload,
     {
         SqlDataSource::connect(<span class="self">self</span>).<span class="kw">await
     </span>}
@@ -1881,13 +1897,11 @@
 /// # use hotshot_query_service::data_source::{
 /// #   sql::{Config, Error}, ExtensibleDataSource, SqlDataSource,
 /// # };
-/// # use hotshot_query_service::testing::mocks::{
-/// #   MockNodeImpl as AppNodeImpl, MockTypes as AppTypes,
-/// # };
+/// # use hotshot_query_service::testing::mocks::MockTypes as AppTypes;
 /// # async fn doc(config: Config) -&gt; Result&lt;(), Error&gt; {
 /// type AppState = &amp;&#39;static str;
 ///
-/// let data_source: ExtensibleDataSource&lt;SqlDataSource&lt;AppTypes, AppNodeImpl&gt;, AppState&gt; =
+/// let data_source: ExtensibleDataSource&lt;SqlDataSource&lt;AppTypes&gt;, AppState&gt; =
 ///     ExtensibleDataSource::new(SqlDataSource::connect(config).await?, &quot;app state&quot;);
 /// # Ok(())
 /// # }
@@ -1939,7 +1953,7 @@
 /// # };
 /// # use tide_disco::App;
 /// struct AppState {
-///     hotshot_qs: SqlDataSource&lt;AppTypes, AppNodeImpl&gt;,
+///     hotshot_qs: SqlDataSource&lt;AppTypes&gt;,
 ///     // additional state for other modules
 /// }
 ///
@@ -1963,7 +1977,7 @@
 ///         let mut events = hotshot.get_event_stream(Default::default()).await.0;
 ///         while let Some(event) = events.next().await {
 ///             let mut state = state.write().await;
-///             UpdateDataSource::&lt;AppTypes, AppNodeImpl&gt;::update(&amp;mut state.hotshot_qs, &amp;event)
+///             UpdateDataSource::&lt;AppTypes&gt;::update(&amp;mut state.hotshot_qs, &amp;event)
 ///                 .await
 ///                 .unwrap();
 ///             // Update other modules&#39; states based on `event`. Use `hotshot_qs` to include
@@ -1979,25 +1993,22 @@
 /// }
 /// ```
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>SqlDataSource&lt;Types, I&gt;
+</span><span class="kw">pub struct </span>SqlDataSource&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    I: NodeImplementation&lt;Types&gt;,
-    Block&lt;Types&gt;: QueryableBlock,
 {
     client: Client,
     tx_in_progress: bool,
-    leaf_stream: BufferedChannel&lt;LeafQueryData&lt;Types, I&gt;&gt;,
+    leaf_stream: BufferedChannel&lt;LeafQueryData&lt;Types&gt;&gt;,
     block_stream: BufferedChannel&lt;BlockQueryData&lt;Types&gt;&gt;,
     metrics: PrometheusMetrics,
     kill: <span class="prelude-ty">Option</span>&lt;oneshot::Sender&lt;()&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;Types, I&gt; SqlDataSource&lt;Types, I&gt;
+<span class="kw">impl</span>&lt;Types&gt; SqlDataSource&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    I: NodeImplementation&lt;Types&gt;,
-    Block&lt;Types&gt;: QueryableBlock,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="doccomment">/// Connect to a remote database.
     </span><span class="kw">pub async fn </span>connect(<span class="kw-2">mut </span>config: Config) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
@@ -2062,16 +2073,36 @@
             }
         }
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>ds = <span class="self">Self </span>{
             client,
             tx_in_progress: <span class="bool-val">false</span>,
             kill: <span class="prelude-val">Some</span>(kill),
             leaf_stream: BufferedChannel::init(),
             block_stream: BufferedChannel::init(),
             metrics: Default::default(),
-        })
+        };
+
+        <span class="comment">// HotShot doesn&#39;t emit an event for the genesis block, so we need to manually ensure it is
+        // present.
+        </span>ds.insert_genesis().<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(ds)
     }
 
+    <span class="kw">async fn </span>insert_genesis(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="kw">if </span><span class="self">self</span>.block_height().<span class="kw">await</span><span class="question-mark">? </span>== <span class="number">0 </span>{
+            <span class="self">self</span>.insert_leaf(LeafQueryData::genesis()).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="self">self</span>.insert_block(BlockQueryData::genesis()).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="self">self</span>.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">impl</span>&lt;Types&gt; SqlDataSource&lt;Types&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+{
     <span class="doccomment">/// Query the underlying SQL database.
     </span><span class="kw">pub async fn </span>query&lt;T, P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T, params: P) -&gt; <span class="prelude-ty">Result</span>&lt;RowStream, Error&gt;
     <span class="kw">where
@@ -2103,11 +2134,9 @@
     }
 }
 
-<span class="kw">impl</span>&lt;Types, I&gt; Drop <span class="kw">for </span>SqlDataSource&lt;Types, I&gt;
+<span class="kw">impl</span>&lt;Types&gt; Drop <span class="kw">for </span>SqlDataSource&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    I: NodeImplementation&lt;Types&gt;,
-    Block&lt;Types&gt;: QueryableBlock,
 {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(kill) = <span class="self">self</span>.kill.take() {
@@ -2118,11 +2147,9 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types, I&gt; VersionedDataSource <span class="kw">for </span>SqlDataSource&lt;Types, I&gt;
+</span><span class="kw">impl</span>&lt;Types&gt; VersionedDataSource <span class="kw">for </span>SqlDataSource&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    I: NodeImplementation&lt;Types&gt;,
-    Block&lt;Types&gt;: QueryableBlock,
 {
     <span class="kw">type </span>Error = postgres::error::Error;
 
@@ -2161,16 +2188,15 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types, I&gt; AvailabilityDataSource&lt;Types, I&gt; <span class="kw">for </span>SqlDataSource&lt;Types, I&gt;
+</span><span class="kw">impl</span>&lt;Types&gt; AvailabilityDataSource&lt;Types&gt; <span class="kw">for </span>SqlDataSource&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    I: NodeImplementation&lt;Types&gt;,
-    Block&lt;Types&gt;: QueryableBlock,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
-    <span class="kw">type </span>LeafStream = BoxStream&lt;<span class="lifetime">&#39;static</span>, QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt;;
+    <span class="kw">type </span>LeafStream = BoxStream&lt;<span class="lifetime">&#39;static</span>, QueryResult&lt;LeafQueryData&lt;Types&gt;&gt;&gt;;
     <span class="kw">type </span>BlockStream = BoxStream&lt;<span class="lifetime">&#39;static</span>, QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;&gt;;
 
-    <span class="kw">type </span>LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt; = BoxStream&lt;<span class="lifetime">&#39;static</span>, QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt;
+    <span class="kw">type </span>LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt; = BoxStream&lt;<span class="lifetime">&#39;static</span>, QueryResult&lt;LeafQueryData&lt;Types&gt;&gt;&gt;
     <span class="kw">where
         </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
         R: RangeBounds&lt;usize&gt; + Send;
@@ -2179,9 +2205,9 @@
         </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
         R: RangeBounds&lt;usize&gt; + Send;
 
-    <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;
+    <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt;
     <span class="kw">where
-        </span>ID: Into&lt;LeafId&lt;Types, I&gt;&gt; + Send + Sync,
+        </span>ID: Into&lt;LeafId&lt;Types&gt;&gt; + Send + Sync,
     {
         <span class="kw">let </span>(where_clause, param): (<span class="kw-2">&amp;</span>str, Box&lt;<span class="kw">dyn </span>ToSql + Send + Sync&gt;) = <span class="kw">match </span>id.into() {
             ResourceId::Number(n) =&gt; (<span class="string">&quot;height = $1&quot;</span>, Box::new(n <span class="kw">as </span>i64)),
@@ -2324,7 +2350,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         proposer: <span class="kw-2">&amp;</span>EncodedPublicKey,
         limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt; {
+    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>query = <span class="string">&quot;SELECT leaf, qc FROM leaf WHERE proposer = $1&quot;</span>.to_owned();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(limit) = limit {
             <span class="comment">// If there is a limit on the number of leaves to return, we want to return the most
@@ -2387,31 +2413,28 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types, I&gt; UpdateAvailabilityData&lt;Types, I&gt; <span class="kw">for </span>SqlDataSource&lt;Types, I&gt;
+</span><span class="kw">impl</span>&lt;Types&gt; UpdateAvailabilityData&lt;Types&gt; <span class="kw">for </span>SqlDataSource&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    I: NodeImplementation&lt;Types&gt;,
-    Block&lt;Types&gt;: QueryableBlock,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">type </span>Error = QueryError;
 
-    <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
-    <span class="kw">where
-        </span>Deltas&lt;Types, I&gt;: Resolvable&lt;Block&lt;Types&gt;&gt;,
-    {
+    <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>stmts: Vec&lt;(String, Vec&lt;Box&lt;<span class="kw">dyn </span>ToSql + Send + Sync&gt;&gt;)&gt; = <span class="macro">vec!</span>[];
 
         <span class="comment">// While we don&#39;t necessarily have the full block for this leaf yet, we can initialize the
         // header table with block metadata taken from the leaf.
-        </span>stmts.push((
-            <span class="string">&quot;INSERT INTO header (height, hash, timestamp, data) VALUES ($1, $2, $3, $4)&quot;</span>.into(),
+        </span><span class="kw">let </span>header_json =
+            serde_json::to_value(<span class="kw-2">&amp;</span>leaf.leaf().block_header).map_err(|err| QueryError::Error {
+                message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize header: {err}&quot;</span>),
+            })<span class="question-mark">?</span>;
+        stmts.push((
+            <span class="string">&quot;INSERT INTO header (height, hash, data) VALUES ($1, $2, $3)&quot;</span>.into(),
             <span class="macro">vec!</span>[
                 Box::new(leaf.height() <span class="kw">as </span>i64),
                 Box::new(leaf.block_hash().to_string()),
-                Box::new(leaf.timestamp()),
-                <span class="comment">// TODO populate the application-specific header fields once HotShot supports
-                // application-specific block headers.
-                </span>Box::new(serde_json::Value::from(<span class="string">&quot;dummy header&quot;</span>)),
+                Box::new(header_json),
             ],
         ));
 
@@ -2464,9 +2487,13 @@
 
         <span class="comment">// The header and payload tables should already have been initialized when we inserted the
         // corresponding leaf. All we have to do is add the payload itself and its size.
-        </span><span class="kw">let </span>payload = bincode::serialize(block.block()).map_err(|err| QueryError::Error {
-            message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize block: {err}&quot;</span>),
-        })<span class="question-mark">?</span>;
+        </span><span class="kw">let </span>payload = block
+            .payload
+            .encode()
+            .map_err(|err| QueryError::Error {
+                message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize block: {err}&quot;</span>),
+            })<span class="question-mark">?
+            </span>.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         stmts.push((
             <span class="string">&quot;UPDATE payload SET (data, size) = ($1, $2) WHERE height = $3&quot;</span>.into(),
             <span class="macro">vec!</span>[
@@ -2479,7 +2506,7 @@
         <span class="comment">// Index the transactions in the block.
         </span><span class="kw">let </span><span class="kw-2">mut </span>values = <span class="macro">vec!</span>[];
         <span class="kw">let </span><span class="kw-2">mut </span>params: Vec&lt;Box&lt;<span class="kw">dyn </span>ToSql + Send + Sync&gt;&gt; = <span class="macro">vec!</span>[];
-        <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.block().enumerate() {
+        <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.payload().enumerate() {
             <span class="kw">let </span>txn_ix = serde_json::to_value(<span class="kw-2">&amp;</span>txn_ix).map_err(|err| QueryError::Error {
                 message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize transaction index: {err}&quot;</span>),
             })<span class="question-mark">?</span>;
@@ -2518,11 +2545,9 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types, I&gt; StatusDataSource <span class="kw">for </span>SqlDataSource&lt;Types, I&gt;
+</span><span class="kw">impl</span>&lt;Types&gt; StatusDataSource <span class="kw">for </span>SqlDataSource&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    I: NodeImplementation&lt;Types&gt;,
-    Block&lt;Types&gt;: QueryableBlock,
 {
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="kw">let </span>query = <span class="string">&quot;SELECT max(height) FROM header&quot;</span>;
@@ -2614,22 +2639,21 @@
     }
 }
 
-<span class="kw">fn </span>parse_leaf&lt;Types, I&gt;(row: Row) -&gt; QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;
+<span class="kw">fn </span>parse_leaf&lt;Types&gt;(row: Row) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    I: NodeImplementation&lt;Types&gt;,
 {
     <span class="kw">let </span>leaf = row.try_get(<span class="string">&quot;leaf&quot;</span>).map_err(|err| QueryError::Error {
         message: <span class="macro">format!</span>(<span class="string">&quot;error extracting leaf from query results: {err}&quot;</span>),
     })<span class="question-mark">?</span>;
-    <span class="kw">let </span>leaf: Leaf&lt;Types, I&gt; = serde_json::from_value(leaf).map_err(|err| QueryError::Error {
+    <span class="kw">let </span>leaf: Leaf&lt;Types&gt; = serde_json::from_value(leaf).map_err(|err| QueryError::Error {
         message: <span class="macro">format!</span>(<span class="string">&quot;malformed leaf: {err}&quot;</span>),
     })<span class="question-mark">?</span>;
 
     <span class="kw">let </span>qc = row.try_get(<span class="string">&quot;qc&quot;</span>).map_err(|err| QueryError::Error {
         message: <span class="macro">format!</span>(<span class="string">&quot;error extracting QC from query results: {err}&quot;</span>),
     })<span class="question-mark">?</span>;
-    <span class="kw">let </span>qc: QuorumCertificate&lt;Types, I&gt; =
+    <span class="kw">let </span>qc: QuorumCertificate&lt;Types&gt; =
         serde_json::from_value(qc).map_err(|err| QueryError::Error {
             message: <span class="macro">format!</span>(<span class="string">&quot;malformed QC: {err}&quot;</span>),
         })<span class="question-mark">?</span>;
@@ -2637,12 +2661,12 @@
     <span class="prelude-val">Ok</span>(LeafQueryData { leaf, qc })
 }
 
-<span class="kw">const </span>BLOCK_COLUMNS: <span class="kw-2">&amp;</span>str = <span class="string">&quot;h.hash AS hash, h.height AS height, h.timestamp AS timestamp, p.size AS payload_size, p.data AS payload_data&quot;</span>;
+<span class="kw">const </span>BLOCK_COLUMNS: <span class="kw-2">&amp;</span>str =
+    <span class="string">&quot;h.hash AS hash, h.data AS header_data, p.size AS payload_size, p.data AS payload_data&quot;</span>;
 
 <span class="kw">fn </span>parse_block&lt;Types&gt;(row: Row) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Block&lt;Types&gt;: QueryableBlock,
 {
     <span class="comment">// First, check if we have the payload for this block yet.
     </span><span class="kw">let </span>size: <span class="prelude-ty">Option</span>&lt;i32&gt; = row
@@ -2650,18 +2674,27 @@
         .map_err(|err| QueryError::Error {
             message: <span class="macro">format!</span>(<span class="string">&quot;error extracting payload size from query results: {err}&quot;</span>),
         })<span class="question-mark">?</span>;
-    <span class="kw">let </span>data: <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; = row
-        .try_get(<span class="string">&quot;payload_data&quot;</span>)
-        .map_err(|err| QueryError::Error {
-            message: <span class="macro">format!</span>(<span class="string">&quot;error extracting payload data from query results: {err}&quot;</span>),
-        })<span class="question-mark">?</span>;
-    <span class="kw">let </span>(size, data) = size.zip(data).context(MissingSnafu)<span class="question-mark">?</span>;
+    <span class="kw">let </span>payload_data: <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; =
+        row.try_get(<span class="string">&quot;payload_data&quot;</span>)
+            .map_err(|err| QueryError::Error {
+                message: <span class="macro">format!</span>(<span class="string">&quot;error extracting payload data from query results: {err}&quot;</span>),
+            })<span class="question-mark">?</span>;
+    <span class="kw">let </span>(size, payload_data) = size.zip(payload_data).context(MissingSnafu)<span class="question-mark">?</span>;
     <span class="kw">let </span>size = size <span class="kw">as </span>u64;
 
-    <span class="comment">// Reconstruct the full block.
-    </span><span class="kw">let </span>block = bincode::deserialize(<span class="kw-2">&amp;</span>data).map_err(|err| QueryError::Error {
-        message: <span class="macro">format!</span>(<span class="string">&quot;malformed payload data: {err}&quot;</span>),
-    })<span class="question-mark">?</span>;
+    <span class="comment">// Reconstruct the full header.
+    </span><span class="kw">let </span>header_data = row
+        .try_get(<span class="string">&quot;header_data&quot;</span>)
+        .map_err(|err| QueryError::Error {
+            message: <span class="macro">format!</span>(<span class="string">&quot;error extracting header data from query results: {err}&quot;</span>),
+        })<span class="question-mark">?</span>;
+    <span class="kw">let </span>header: Header&lt;Types&gt; =
+        serde_json::from_value(header_data).map_err(|err| QueryError::Error {
+            message: <span class="macro">format!</span>(<span class="string">&quot;malformed header: {err}&quot;</span>),
+        })<span class="question-mark">?</span>;
+
+    <span class="comment">// Reconstruct the full block payload.
+    </span><span class="kw">let </span>payload = Payload::&lt;Types&gt;::from_bytes(payload_data.into_iter(), header.metadata());
 
     <span class="comment">// Reconstruct the query data by adding metadata.
     </span><span class="kw">let </span>hash: String = row.try_get(<span class="string">&quot;hash&quot;</span>).map_err(|err| QueryError::Error {
@@ -2670,21 +2703,12 @@
     <span class="kw">let </span>hash = hash.parse().map_err(|err| QueryError::Error {
         message: <span class="macro">format!</span>(<span class="string">&quot;malformed block hash: {err}&quot;</span>),
     })<span class="question-mark">?</span>;
-    <span class="kw">let </span>height: i64 = row.try_get(<span class="string">&quot;height&quot;</span>).map_err(|err| QueryError::Error {
-        message: <span class="macro">format!</span>(<span class="string">&quot;error extracting block height from query results: {err}&quot;</span>),
-    })<span class="question-mark">?</span>;
-    <span class="kw">let </span>height = height <span class="kw">as </span>u64;
-    <span class="kw">let </span>timestamp: OffsetDateTime = row.try_get(<span class="string">&quot;timestamp&quot;</span>).map_err(|err| QueryError::Error {
-        message: <span class="macro">format!</span>(<span class="string">&quot;error extracting block height from query results: {err}&quot;</span>),
-    })<span class="question-mark">?</span>;
-    <span class="kw">let </span>timestamp = timestamp.unix_timestamp_nanos();
 
     <span class="prelude-val">Ok</span>(BlockQueryData {
-        block,
+        header,
+        payload,
         size,
         hash,
-        height,
-        timestamp,
     })
 }
 
@@ -2801,10 +2825,14 @@
 </span><span class="attr">#[cfg(all(any(test, feature = <span class="string">&quot;testing&quot;</span>), not(target_os = <span class="string">&quot;windows&quot;</span>)))]
 </span><span class="kw">pub mod </span>testing {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::testing::{
-        mocks::{MockNodeImpl, MockTypes, TestableDataSource},
-        sleep,
+    <span class="kw">use crate</span>::{
+        data_source::UpdateDataSource,
+        testing::{
+            mocks::{DataSourceLifeCycle, MockTypes},
+            sleep,
+        },
     };
+    <span class="kw">use </span>hotshot::types::Event;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::{
         process::{Command, Stdio},
@@ -2896,7 +2924,7 @@
     }
 
     <span class="attr">#[async_trait]
-    </span><span class="kw">impl </span>TestableDataSource <span class="kw">for </span>SqlDataSource&lt;MockTypes, MockNodeImpl&gt; {
+    </span><span class="kw">impl </span>DataSourceLifeCycle <span class="kw">for </span>SqlDataSource&lt;MockTypes&gt; {
         <span class="kw">type </span>Storage = TmpDb;
 
         <span class="kw">async fn </span>create(_node_id: usize) -&gt; <span class="self">Self</span>::Storage {
@@ -2912,31 +2940,33 @@
                 .<span class="kw">await
                 </span>.unwrap()
         }
+
+        <span class="kw">async fn </span>handle_event(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;MockTypes&gt;) {
+            <span class="self">self</span>.update(event).<span class="kw">await</span>.unwrap();
+            <span class="self">self</span>.commit().<span class="kw">await</span>.unwrap();
+        }
     }
 }
 
 <span class="comment">// These tests run the `postgres` Docker image, which doesn&#39;t work on Windows.
 </span><span class="attr">#[cfg(all(test, not(target_os = <span class="string">&quot;windows&quot;</span>)))]
 </span><span class="kw">mod </span>generic_test {
-    <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::data_source_tests;
+    <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::{availability_tests, status_tests};
     <span class="kw">use </span><span class="kw">super</span>::SqlDataSource;
-    <span class="kw">use </span><span class="kw">crate</span>::testing::mocks::{MockNodeImpl, MockTypes};
+    <span class="kw">use </span><span class="kw">crate</span>::testing::mocks::MockTypes;
 
     <span class="comment">// For some reason this is the only way to import the macro defined in another module of this
     // crate.
     </span><span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
-    <span class="macro">instantiate_data_source_tests!</span>(SqlDataSource&lt;MockTypes, MockNodeImpl&gt;);
+    <span class="macro">instantiate_data_source_tests!</span>(SqlDataSource&lt;MockTypes&gt;);
 }
 
 <span class="comment">// These tests run the `postgres` Docker image, which doesn&#39;t work on Windows.
 </span><span class="attr">#[cfg(all(test, not(target_os = <span class="string">&quot;windows&quot;</span>)))]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::{testing::TmpDb, <span class="kw-2">*</span>};
-    <span class="kw">use </span><span class="kw">crate</span>::testing::{
-        mocks::{MockNodeImpl, MockTypes},
-        setup_test,
-    };
+    <span class="kw">use </span><span class="kw">crate</span>::testing::{mocks::MockTypes, setup_test};
 
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_migrations() {
@@ -2954,7 +2984,7 @@
             <span class="kw">if </span>!migrations {
                 cfg = cfg.no_migrations();
             }
-            <span class="kw">let </span>client: SqlDataSource&lt;MockTypes, MockNodeImpl&gt; = cfg.connect().<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let </span>client: SqlDataSource&lt;MockTypes&gt; = cfg.connect().<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>::&lt;<span class="kw">_</span>, Error&gt;(client)
         };
 

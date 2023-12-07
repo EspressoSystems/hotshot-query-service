@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/availability/query_data.rs`."><title>query_data.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0 (79e9716c9 2023-11-13)" data-channel="1.74.0" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hotshot_query_service/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/availability/query_data.rs`."><title>query_data.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.1 (a28077b28 2023-12-04)" data-channel="1.74.1" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hotshot_query_service/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -379,41 +379,6 @@
 <a href="#379" id="379">379</a>
 <a href="#380" id="380">380</a>
 <a href="#381" id="381">381</a>
-<a href="#382" id="382">382</a>
-<a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
-<a href="#392" id="392">392</a>
-<a href="#393" id="393">393</a>
-<a href="#394" id="394">394</a>
-<a href="#395" id="395">395</a>
-<a href="#396" id="396">396</a>
-<a href="#397" id="397">397</a>
-<a href="#398" id="398">398</a>
-<a href="#399" id="399">399</a>
-<a href="#400" id="400">400</a>
-<a href="#401" id="401">401</a>
-<a href="#402" id="402">402</a>
-<a href="#403" id="403">403</a>
-<a href="#404" id="404">404</a>
-<a href="#405" id="405">405</a>
-<a href="#406" id="406">406</a>
-<a href="#407" id="407">407</a>
-<a href="#408" id="408">408</a>
-<a href="#409" id="409">409</a>
-<a href="#410" id="410">410</a>
-<a href="#411" id="411">411</a>
-<a href="#412" id="412">412</a>
-<a href="#413" id="413">413</a>
-<a href="#414" id="414">414</a>
-<a href="#415" id="415">415</a>
-<a href="#416" id="416">416</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -426,32 +391,35 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use crate</span>::{Block, Deltas, Leaf, QuorumCertificate, Resolvable, Transaction};
-<span class="kw">use </span>bincode::Options;
+</span><span class="kw">use crate</span>::{Header, Payload, Transaction};
 <span class="kw">use </span>commit::{Commitment, Committable};
 <span class="kw">use </span>hotshot_types::{
-    data::LeafType,
+    data::Leaf,
+    simple_certificate::QuorumCertificate,
     traits::{
         <span class="self">self</span>,
-        election::SignedCertificate,
-        node_implementation::{NodeImplementation, NodeType},
+        block_contents::{BlockHeader, BlockPayload},
+        node_implementation::NodeType,
         signature_key::EncodedPublicKey,
     },
 };
-<span class="kw">use </span>hotshot_utils::bincode::bincode_opts;
 <span class="kw">use </span>serde::{de::DeserializeOwned, Deserialize, Serialize};
 <span class="kw">use </span>snafu::{ensure, Snafu};
 <span class="kw">use </span>std::fmt::Debug;
 
-<span class="kw">pub type </span>LeafHash&lt;Types, I&gt; = Commitment&lt;Leaf&lt;Types, I&gt;&gt;;
-<span class="kw">pub type </span>BlockHash&lt;Types&gt; = Commitment&lt;Block&lt;Types&gt;&gt;;
+<span class="kw">pub type </span>LeafHash&lt;Types&gt; = Commitment&lt;Leaf&lt;Types&gt;&gt;;
+<span class="doccomment">/// A block hash is the hash of the block header.
+///
+/// A block consists of a header and a payload. But the header itself contains a commitment to the
+/// payload, so we can commit to the entire block simply by hashing the header.
+</span><span class="kw">pub type </span>BlockHash&lt;Types&gt; = Commitment&lt;Header&lt;Types&gt;&gt;;
 <span class="kw">pub type </span>TransactionHash&lt;Types&gt; = Commitment&lt;Transaction&lt;Types&gt;&gt;;
-<span class="kw">pub type </span>TransactionIndex&lt;Types&gt; = &lt;Block&lt;Types&gt; <span class="kw">as </span>QueryableBlock&gt;::TransactionIndex;
-<span class="kw">pub type </span>TransactionInclusionProof&lt;Types&gt; = &lt;Block&lt;Types&gt; <span class="kw">as </span>QueryableBlock&gt;::InclusionProof;
+<span class="kw">pub type </span>TransactionIndex&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>QueryablePayload&gt;::TransactionIndex;
+<span class="kw">pub type </span>TransactionInclusionProof&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>QueryablePayload&gt;::InclusionProof;
 
 <span class="kw">pub type </span>Timestamp = time::OffsetDateTime;
 
-<span class="doccomment">/// A block whose contents (e.g. individual transactions) can be examined.
+<span class="doccomment">/// A block payload whose contents (e.g. individual transactions) can be examined.
 ///
 /// Note to implementors: this trait has only a few required methods. The provided methods, for
 /// querying transactions in various ways, are implemented in terms of the required
@@ -459,7 +427,7 @@
 /// the default implementations may be inefficient (e.g. performing an O(n) search, or computing an
 /// unnecessary inclusion proof). It is good practice to override these default implementations if
 /// your block type supports more efficient implementations (e.g. sublinear indexing by hash).
-</span><span class="kw">pub trait </span>QueryableBlock: traits::Block {
+</span><span class="kw">pub trait </span>QueryablePayload: traits::BlockPayload {
     <span class="doccomment">/// An index which can be used to efficiently retrieve a transaction for the block.
     ///
     /// This is left abstract so that different block implementations can index transactions
@@ -578,19 +546,19 @@
 
 <span class="attr">#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(bound = <span class="string">&quot;&quot;</span>)]
-</span><span class="kw">pub struct </span>LeafQueryData&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) leaf: Leaf&lt;Types, I&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) qc: QuorumCertificate&lt;Types, I&gt;,
+</span><span class="kw">pub struct </span>LeafQueryData&lt;Types: NodeType&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) leaf: Leaf&lt;Types&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) qc: QuorumCertificate&lt;Types&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug, Snafu)]
-#[snafu(display(<span class="string">&quot;QC references leaf {}, but expected {}&quot;</span>, qc.leaf_commitment(), leaf.commit()))]
-</span><span class="kw">pub struct </span>InconsistentLeafError&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; {
-    <span class="kw">pub </span>leaf: Leaf&lt;Types, I&gt;,
-    <span class="kw">pub </span>qc: QuorumCertificate&lt;Types, I&gt;,
+#[snafu(display(<span class="string">&quot;QC references leaf {qc_leaf}, but expected {leaf}&quot;</span>))]
+</span><span class="kw">pub struct </span>InconsistentLeafError&lt;Types: NodeType&gt; {
+    <span class="kw">pub </span>leaf: LeafHash&lt;Types&gt;,
+    <span class="kw">pub </span>qc_leaf: LeafHash&lt;Types&gt;,
 }
 
-<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; LeafQueryData&lt;Types, I&gt; {
+<span class="kw">impl</span>&lt;Types: NodeType&gt; LeafQueryData&lt;Types&gt; {
     <span class="doccomment">/// Collect information about a [`Leaf`].
     ///
     /// Returns a new [`LeafQueryData`] object populated from `leaf` and `qc`.
@@ -599,41 +567,44 @@
     ///
     /// Fails with an [`InconsistentLeafError`] if `qc` does not reference `leaf`.
     </span><span class="kw">pub fn </span>new(
-        leaf: Leaf&lt;Types, I&gt;,
-        qc: QuorumCertificate&lt;Types, I&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, InconsistentLeafError&lt;Types, I&gt;&gt; {
+        leaf: Leaf&lt;Types&gt;,
+        qc: QuorumCertificate&lt;Types&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, InconsistentLeafError&lt;Types&gt;&gt; {
         <span class="macro">ensure!</span>(
-            qc.leaf_commitment() == leaf.commit(),
-            InconsistentLeafSnafu { leaf, qc }
+            qc.data.leaf_commit == leaf.commit(),
+            InconsistentLeafSnafu {
+                leaf: leaf.commit(),
+                qc_leaf: qc.data.leaf_commit
+            }
         );
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ leaf, qc })
     }
 
-    <span class="kw">pub fn </span>leaf(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Leaf&lt;Types, I&gt; {
+    <span class="kw">pub fn </span>genesis() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            leaf: Leaf::genesis(),
+            qc: QuorumCertificate::genesis(),
+        }
+    }
+
+    <span class="kw">pub fn </span>leaf(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Leaf&lt;Types&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.leaf
     }
 
-    <span class="kw">pub fn </span>qc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>QuorumCertificate&lt;Types, I&gt; {
+    <span class="kw">pub fn </span>qc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>QuorumCertificate&lt;Types&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.qc
     }
 
     <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        leaf_height(<span class="kw-2">&amp;</span><span class="self">self</span>.leaf)
+        <span class="self">self</span>.leaf.block_header.block_number()
     }
 
-    <span class="kw">pub fn </span>timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Timestamp {
-        parse_timestamp(<span class="self">self</span>.leaf.get_timestamp())
-    }
-
-    <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LeafHash&lt;Types, I&gt; {
+    <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LeafHash&lt;Types&gt; {
         <span class="self">self</span>.leaf.commit()
     }
 
-    <span class="kw">pub fn </span>block_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BlockHash&lt;Types&gt;
-    <span class="kw">where
-        </span>Deltas&lt;Types, I&gt;: Resolvable&lt;Block&lt;Types&gt;&gt;,
-    {
-        <span class="self">self</span>.leaf.get_deltas().commitment()
+    <span class="kw">pub fn </span>block_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BlockHash&lt;Types&gt; {
+        <span class="self">self</span>.leaf.block_header.commit()
     }
 
     <span class="kw">pub fn </span>proposer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; EncodedPublicKey {
@@ -643,83 +614,69 @@
 
 <span class="attr">#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(bound = <span class="string">&quot;&quot;</span>)]
-</span><span class="kw">pub struct </span>BlockQueryData&lt;Types: NodeType&gt;
-<span class="kw">where
-    </span>Block&lt;Types&gt;: QueryableBlock,
-{
-    <span class="kw">pub</span>(<span class="kw">crate</span>) block: Block&lt;Types&gt;,
+</span><span class="kw">pub struct </span>BlockQueryData&lt;Types: NodeType&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) header: Header&lt;Types&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) payload: Payload&lt;Types&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) hash: BlockHash&lt;Types&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) height: u64,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) timestamp: i128,
     <span class="kw">pub</span>(<span class="kw">crate</span>) size: u64,
 }
 
-<span class="attr">#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(bound = <span class="string">&quot;&quot;</span>)]
-</span><span class="kw">pub struct </span>BlockHeaderQueryData&lt;Types: NodeType&gt; {
-    hash: BlockHash&lt;Types&gt;,
-    height: u64,
-    size: u64,
-}
-
-<span class="attr">#[derive(Clone, Debug, Snafu)]
-</span><span class="kw">pub enum </span>InconsistentBlockError&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt;
-<span class="kw">where
-    </span>Deltas&lt;Types, I&gt;: Resolvable&lt;Block&lt;Types&gt;&gt;,
-    Block&lt;Types&gt;: Serialize,
-{
-    <span class="attr">#[snafu(display(<span class="string">&quot;QC references leaf {}, but expected {}&quot;</span>, qc.leaf_commitment(), leaf.commit()))]
-    </span>InconsistentQc {
-        qc: QuorumCertificate&lt;Types, I&gt;,
-        leaf: Leaf&lt;Types, I&gt;,
-    },
-    <span class="attr">#[snafu(display(<span class="string">&quot;Leaf {} references block {}, but expected {}&quot;</span>,
-        leaf.commit(), block.commit(), leaf.get_deltas().commitment()))]
-    </span>InconsistentBlock {
-        leaf: Leaf&lt;Types, I&gt;,
-        block: Block&lt;Types&gt;,
-    },
-}
-
-<span class="kw">impl</span>&lt;Types: NodeType&gt; BlockQueryData&lt;Types&gt;
-<span class="kw">where
-    </span>Block&lt;Types&gt;: QueryableBlock,
-{
-    <span class="doccomment">/// Collect information about a [`Block`].
+<span class="kw">impl</span>&lt;Types: NodeType&gt; BlockQueryData&lt;Types&gt; {
+    <span class="doccomment">/// Collect information about a block.
     ///
-    /// Returns a new [`BlockQueryData`] object populated from `leaf`, `qc`, and `block`.
+    /// Returns a new [`BlockQueryData`] object populated from `leaf`, `qc`, and `payload`.
     ///
     /// # Errors
     ///
-    /// Fails with an [`InconsistentBlockError`] if `qc`, `leaf`, and `block` do not all correspond
-    /// to the same block.
-    </span><span class="kw">pub fn </span>new&lt;I: NodeImplementation&lt;Types&gt;&gt;(
-        leaf: Leaf&lt;Types, I&gt;,
-        qc: QuorumCertificate&lt;Types, I&gt;,
-        block: Block&lt;Types&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, InconsistentBlockError&lt;Types, I&gt;&gt;
-    <span class="kw">where
-        </span>Deltas&lt;Types, I&gt;: Resolvable&lt;Block&lt;Types&gt;&gt;,
-    {
+    /// Fails with an [`InconsistentLeafError`] if `qc` and `leaf` do not correspond to the same
+    /// block. If `payload` does not correspond to the same block as `leaf`, the behavior is
+    /// unspecified. In debug builds, the call may panic. However, this consistency check is quite
+    /// expensive, and may be omitted in optimized builds. The responsibility of ensuring
+    /// consistency between `leaf` and `payload` ultimately falls on the caller.
+    </span><span class="kw">pub fn </span>new(
+        leaf: Leaf&lt;Types&gt;,
+        qc: QuorumCertificate&lt;Types&gt;,
+        payload: Payload&lt;Types&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, InconsistentLeafError&lt;Types&gt;&gt; {
         <span class="macro">ensure!</span>(
-            qc.leaf_commitment() == leaf.commit(),
-            InconsistentQcSnafu { qc, leaf }
+            qc.data.leaf_commit == leaf.commit(),
+            InconsistentLeafSnafu {
+                leaf: leaf.commit(),
+                qc_leaf: qc.data.leaf_commit
+            },
         );
-        <span class="macro">ensure!</span>(
-            leaf.get_deltas().commitment() == block.commit(),
-            InconsistentBlockSnafu { leaf, block }
+        <span class="macro">debug_assert!</span>(
+            leaf.block_header.payload_commitment()
+                == hotshot_types::traits::block_contents::vid_commitment(
+                    <span class="kw-2">&amp;</span>payload.encode().unwrap().collect()
+                )
         );
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            hash: block.commit(),
-            height: leaf_height(<span class="kw-2">&amp;</span>leaf),
-            timestamp: round_timestamp(leaf.get_timestamp()),
-            size: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>block).unwrap_or_default(),
-            block,
+            hash: leaf.block_header.commit(),
+            header: leaf.block_header,
+            size: payload_size::&lt;Types&gt;(<span class="kw-2">&amp;</span>payload),
+            payload,
         })
     }
 
-    <span class="kw">pub fn </span>block(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Types::BlockType {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.block
+    <span class="kw">pub fn </span>genesis() -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>(header, payload, <span class="kw">_</span>) = Types::BlockHeader::genesis();
+        <span class="kw">let </span>size = payload_size::&lt;Types&gt;(<span class="kw-2">&amp;</span>payload);
+        <span class="kw">let </span>hash = header.commit();
+        <span class="self">Self </span>{
+            header,
+            payload,
+            hash,
+            size,
+        }
+    }
+
+    <span class="kw">pub fn </span>header(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Header&lt;Types&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.header
+    }
+
+    <span class="kw">pub fn </span>payload(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Payload&lt;Types&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.payload
     }
 
     <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BlockHash&lt;Types&gt; {
@@ -727,35 +684,32 @@
     }
 
     <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        <span class="self">self</span>.height
-    }
-
-    <span class="kw">pub fn </span>timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Timestamp {
-        parse_timestamp(<span class="self">self</span>.timestamp)
+        <span class="self">self</span>.header.block_number()
     }
 
     <span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
         <span class="self">self</span>.size
     }
 
-    <span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.block().len()
+    <span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize
+    <span class="kw">where
+        </span>Payload&lt;Types&gt;: QueryablePayload,
+    {
+        <span class="self">self</span>.payload.len()
     }
 
-    <span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool
+    <span class="kw">where
+        </span>Payload&lt;Types&gt;: QueryablePayload,
+    {
         <span class="self">self</span>.len() == <span class="number">0
     </span>}
 
-    <span class="kw">pub fn </span>header(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BlockHeaderQueryData&lt;Types&gt; {
-        BlockHeaderQueryData {
-            hash: <span class="self">self</span>.hash,
-            height: <span class="self">self</span>.height,
-            size: <span class="self">self</span>.size,
-        }
-    }
-
-    <span class="kw">pub fn </span>transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, i: <span class="kw-2">&amp;</span>TransactionIndex&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;TransactionQueryData&lt;Types&gt;&gt; {
-        <span class="kw">let </span>(transaction, proof) = <span class="self">self</span>.block.transaction_with_proof(i)<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, i: <span class="kw-2">&amp;</span>TransactionIndex&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;TransactionQueryData&lt;Types&gt;&gt;
+    <span class="kw">where
+        </span>Payload&lt;Types&gt;: QueryablePayload,
+    {
+        <span class="kw">let </span>(transaction, proof) = <span class="self">self</span>.payload.transaction_with_proof(i)<span class="question-mark">?</span>;
         <span class="prelude-val">Some</span>(TransactionQueryData {
             transaction: transaction.clone(),
             block_hash: <span class="self">self</span>.hash(),
@@ -766,25 +720,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;Types: NodeType&gt; BlockHeaderQueryData&lt;Types&gt; {
-    <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BlockHash&lt;Types&gt; {
-        <span class="self">self</span>.hash
-    }
-
-    <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        <span class="self">self</span>.height
-    }
-
-    <span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        <span class="self">self</span>.size
-    }
-}
-
 <span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(bound = <span class="string">&quot;&quot;</span>)]
 </span><span class="kw">pub struct </span>TransactionQueryData&lt;Types: NodeType&gt;
 <span class="kw">where
-    </span>Block&lt;Types&gt;: QueryableBlock,
+    </span>Payload&lt;Types&gt;: QueryablePayload,
 {
     transaction: Transaction&lt;Types&gt;,
     block_hash: BlockHash&lt;Types&gt;,
@@ -795,7 +735,7 @@
 
 <span class="kw">impl</span>&lt;Types: NodeType&gt; TransactionQueryData&lt;Types&gt;
 <span class="kw">where
-    </span>Block&lt;Types&gt;: QueryableBlock,
+    </span>Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">pub fn </span>transaction(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Transaction&lt;Types&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.transaction
@@ -814,20 +754,10 @@
     }
 }
 
-<span class="kw">fn </span>parse_timestamp(ns: i128) -&gt; Timestamp {
-    Timestamp::from_unix_timestamp_nanos(ns).expect(<span class="string">&quot;HotShot timestamp out of range&quot;</span>)
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>payload_size&lt;Types: NodeType&gt;(payload: <span class="kw-2">&amp;</span>Payload&lt;Types&gt;) -&gt; u64 {
+    <span class="kw">match </span>payload.encode() {
+        <span class="prelude-val">Ok</span>(iter) =&gt; iter.count() <span class="kw">as </span>u64,
+        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="number">0</span>,
+    }
 }
-
-<span class="kw">fn </span>round_timestamp(ns: i128) -&gt; i128 {
-    <span class="comment">// HotShot gives us the timestamp with nanosecond precision, which is far more than necessary
-    // and can&#39;t be stored accurately in Postgres. Round down to microsecond precision.
-    </span>(ns / <span class="number">1000</span>) * <span class="number">1000
-</span>}
-
-<span class="kw">fn </span>leaf_height&lt;L: LeafType&gt;(leaf: <span class="kw-2">&amp;</span>L) -&gt; u64 {
-    <span class="comment">// HotShot generates a genesis leaf with height 0, but we don&#39;t see it in the event stream.
-    // Therefore, the first leaf we see has height 1. But to clients, the first leaf should have
-    // height 0, since there is nothing before it, so we adjust the height here.
-    </span>leaf.get_height() - <span class="number">1
-</span>}
 </code></pre></div></section></main></body></html>

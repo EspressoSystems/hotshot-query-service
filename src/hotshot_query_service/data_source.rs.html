@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source.rs`."><title>data_source.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0 (79e9716c9 2023-11-13)" data-channel="1.74.0" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../hotshot_query_service/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source.rs`."><title>data_source.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.1 (a28077b28 2023-12-04)" data-channel="1.74.1" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../hotshot_query_service/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -457,6 +457,24 @@
 <a href="#457" id="457">457</a>
 <a href="#458" id="458">458</a>
 <a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -477,6 +495,7 @@
 //! concrete persistence implementations:
 //! * [`FileSystemDataSource`]
 //! * [`SqlDataSource`]
+//! * [`MetricsDataSource`]
 //!
 //! The user can choose which data source to use when initializing the query service.
 //!
@@ -488,53 +507,45 @@
 <span class="kw">mod </span>extension;
 <span class="kw">mod </span>fs;
 <span class="kw">mod </span>ledger_log;
+<span class="kw">mod </span>metrics;
 <span class="kw">pub mod </span>sql;
 <span class="kw">mod </span>update;
 
 <span class="kw">pub use </span>extension::ExtensibleDataSource;
 <span class="attr">#[cfg(feature = <span class="string">&quot;file-system-data-source&quot;</span>)]
 </span><span class="kw">pub use </span>fs::FileSystemDataSource;
+<span class="attr">#[cfg(feature = <span class="string">&quot;metrics-data-source&quot;</span>)]
+</span><span class="kw">pub use </span>metrics::MetricsDataSource;
 <span class="attr">#[cfg(feature = <span class="string">&quot;sql-data-source&quot;</span>)]
 </span><span class="kw">pub use </span>sql::SqlDataSource;
 <span class="kw">pub use </span>update::{UpdateDataSource, VersionedDataSource};
 
-<span class="doccomment">/// Generic tests we can instantiate for all the data sources.
+<span class="doccomment">/// Generic tests we can instantiate for all the availability data sources.
 </span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;testing&quot;</span>))]
 #[espresso_macros::generic_tests]
-</span><span class="kw">pub mod </span>data_source_tests {
+</span><span class="kw">pub mod </span>availability_tests {
     <span class="kw">use crate</span>::{
-        availability::{BlockQueryData, LeafQueryData},
-        status::MempoolQueryData,
+        availability::{payload_size, BlockQueryData, LeafQueryData, QueryablePayload},
         testing::{
             consensus::MockNetwork,
-            mocks::{
-                MockBlock, MockNodeImpl, MockState, MockTransaction, MockTypes, TestableDataSource,
-            },
-            setup_test, sleep,
+            mocks::{mock_transaction, MockPayload, MockTypes, TestableDataSource},
+            setup_test,
         },
-        Leaf, QueryError, QuorumCertificate,
+        Leaf, QueryError,
     };
     <span class="kw">use </span>async_std::sync::RwLock;
-    <span class="kw">use </span>bincode::Options;
     <span class="kw">use </span>commit::Committable;
     <span class="kw">use </span>futures::{StreamExt, TryStreamExt};
-    <span class="kw">use </span>hotshot_types::{
-        data::{LeafType, ViewNumber},
-        traits::{election::SignedCertificate, state::ConsensusTime, Block, State},
-    };
-    <span class="kw">use </span>hotshot_utils::bincode::bincode_opts;
+    <span class="kw">use </span>hotshot_types::simple_certificate::QuorumCertificate;
     <span class="kw">use </span>std::collections::{HashMap, HashSet};
     <span class="kw">use </span>std::ops::{Bound, RangeBounds};
-    <span class="kw">use </span>std::time::Duration;
 
     <span class="kw">async fn </span>get_non_empty_blocks(
         ds: <span class="kw-2">&amp;</span>RwLock&lt;<span class="kw">impl </span>TestableDataSource&gt;,
-    ) -&gt; Vec&lt;(
-        LeafQueryData&lt;MockTypes, MockNodeImpl&gt;,
-        BlockQueryData&lt;MockTypes&gt;,
-    )&gt; {
+    ) -&gt; Vec&lt;(LeafQueryData&lt;MockTypes&gt;, BlockQueryData&lt;MockTypes&gt;)&gt; {
         <span class="kw">let </span>ds = ds.read().<span class="kw">await</span>;
-        ds.get_leaf_range(..)
+        <span class="comment">// Ignore the genesis block (start from height 1).
+        </span>ds.get_leaf_range(<span class="number">1</span>..)
             .<span class="kw">await
             </span>.unwrap()
             .zip(ds.get_block_range(..).<span class="kw">await</span>.unwrap())
@@ -577,11 +588,8 @@
             };
             <span class="macro">assert_eq!</span>(leaf.block_hash(), block.hash());
             <span class="macro">assert_eq!</span>(block.height(), i <span class="kw">as </span>u64);
-            <span class="macro">assert_eq!</span>(block.hash(), block.block().commit());
-            <span class="macro">assert_eq!</span>(
-                block.size(),
-                bincode_opts().serialized_size(block.block()).unwrap()
-            );
+            <span class="macro">assert_eq!</span>(block.hash(), block.header().commit());
+            <span class="macro">assert_eq!</span>(block.size(), payload_size::&lt;MockTypes&gt;(block.payload()));
 
             <span class="comment">// Check indices.
             </span><span class="macro">assert_eq!</span>(block, ds.get_block(i).<span class="kw">await</span>.unwrap());
@@ -590,7 +598,7 @@
             </span><span class="kw">let </span>ix = seen_blocks.entry(block.hash()).or_insert(i <span class="kw">as </span>u64);
             <span class="macro">assert_eq!</span>(ds.get_block(block.hash()).<span class="kw">await</span>.unwrap().height(), <span class="kw-2">*</span>ix);
 
-            <span class="kw">for </span>(j, txn) <span class="kw">in </span>block.block().iter().enumerate() {
+            <span class="kw">for </span>(j, txn) <span class="kw">in </span>block.payload().enumerate() {
                 <span class="comment">// We should be able to look up the transaction by hash unless it is a duplicate.
                 // For duplicate transactions, this function returns the index of the first
                 // duplicate.
@@ -659,7 +667,7 @@
                 .enumerate()
         };
         <span class="kw">for </span>nonce <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
-            <span class="kw">let </span>txn = MockTransaction { nonce };
+            <span class="kw">let </span>txn = mock_transaction(<span class="macro">vec!</span>[nonce]);
             network.submit_transaction(txn).<span class="kw">await</span>;
 
             <span class="comment">// Wait for the transaction to be finalized.
@@ -716,98 +724,6 @@
         }
 
         network.shut_down().<span class="kw">await</span>;
-    }
-
-    <span class="attr">#[async_std::test]
-    </span><span class="kw">pub async fn </span>test_metrics&lt;D: TestableDataSource&gt;() {
-        setup_test();
-
-        <span class="kw">let </span><span class="kw-2">mut </span>network = MockNetwork::&lt;D&gt;::init().<span class="kw">await</span>;
-        <span class="kw">let </span>ds = network.data_source();
-
-        {
-            <span class="comment">// With consensus paused, check that the success rate returns NaN (since the block
-            // height, the numerator, and view number, the denominator, are both 0).
-            </span><span class="macro">assert!</span>(ds.read().<span class="kw">await</span>.success_rate().<span class="kw">await</span>.unwrap().is_nan());
-            <span class="comment">// Check that block height is initially zero.
-            </span><span class="macro">assert_eq!</span>(ds.read().<span class="kw">await</span>.block_height().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
-        }
-
-        <span class="comment">// Submit a transaction, and check that it is reflected in the mempool.
-        </span><span class="kw">let </span>txn = MockTransaction { nonce: <span class="number">0 </span>};
-        network.submit_transaction(txn.clone()).<span class="kw">await</span>;
-        <span class="kw">loop </span>{
-            <span class="kw">let </span>mempool = { ds.read().<span class="kw">await</span>.mempool_info().<span class="kw">await</span>.unwrap() };
-            <span class="kw">let </span>expected = MempoolQueryData {
-                transaction_count: <span class="number">1</span>,
-                memory_footprint: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>txn).unwrap(),
-            };
-            <span class="kw">if </span>mempool == expected {
-                <span class="kw">break</span>;
-            }
-            <span class="macro">tracing::info!</span>(
-                <span class="string">&quot;waiting for mempool to reflect transaction (currently {:?})&quot;</span>,
-                mempool
-            );
-            sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
-        }
-        {
-            <span class="macro">assert_eq!</span>(
-                ds.read().<span class="kw">await</span>.mempool_info().<span class="kw">await</span>.unwrap(),
-                MempoolQueryData {
-                    transaction_count: <span class="number">1</span>,
-                    memory_footprint: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>txn).unwrap(),
-                }
-            );
-        }
-
-        <span class="comment">// Submitting the same transaction should not affect the mempool.
-        </span>network.submit_transaction(txn.clone()).<span class="kw">await</span>;
-        sleep(Duration::from_secs(<span class="number">3</span>)).<span class="kw">await</span>;
-        {
-            <span class="macro">assert_eq!</span>(
-                ds.read().<span class="kw">await</span>.mempool_info().<span class="kw">await</span>.unwrap(),
-                MempoolQueryData {
-                    transaction_count: <span class="number">1</span>,
-                    memory_footprint: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>txn).unwrap(),
-                }
-            );
-        }
-
-        <span class="comment">// Start consensus and wait for the transaction to be finalized.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>blocks = { ds.read().<span class="kw">await</span>.subscribe_blocks(<span class="number">0</span>).<span class="kw">await</span>.unwrap() };
-        network.start().<span class="kw">await</span>;
-        <span class="kw">loop </span>{
-            <span class="kw">if </span>!blocks.next().<span class="kw">await</span>.unwrap().unwrap().is_empty() {
-                <span class="kw">break</span>;
-            }
-        }
-
-        {
-            <span class="comment">// Check that block height and success rate have been updated. Note that we can only
-            // check if success rate is positive. We don&#39;t know exactly what it is because we can&#39;t
-            // know how many views have elapsed without race conditions. Similarly, we can only
-            // check that block height is at least 2, because we know that the genesis block and our
-            // transaction&#39;s block have both been committed, but we can&#39;t know how many empty blocks
-            // were committed.
-            </span><span class="kw">let </span>success_rate = ds.read().<span class="kw">await</span>.success_rate().<span class="kw">await</span>.unwrap();
-            <span class="comment">// TODO re-enable this check once HotShot is populating view metrics again
-            //      https://github.com/EspressoSystems/HotShot/issues/2066
-            // assert!(success_rate.is_finite(), &quot;{success_rate}&quot;);
-            </span><span class="macro">assert!</span>(success_rate &gt; <span class="number">0.0</span>, <span class="string">&quot;{success_rate}&quot;</span>);
-            <span class="macro">assert!</span>(ds.read().<span class="kw">await</span>.block_height().<span class="kw">await</span>.unwrap() &gt;= <span class="number">2</span>);
-        }
-
-        {
-            <span class="comment">// Check that the transaction is no longer reflected in the mempool.
-            </span><span class="macro">assert_eq!</span>(
-                ds.read().<span class="kw">await</span>.mempool_info().<span class="kw">await</span>.unwrap(),
-                MempoolQueryData {
-                    transaction_count: <span class="number">0</span>,
-                    memory_footprint: <span class="number">0</span>,
-                }
-            );
-        }
     }
 
     <span class="attr">#[async_std::test]
@@ -884,36 +800,156 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Mock up some consensus data.
-        </span><span class="kw">let </span>block = MockBlock::new();
-        <span class="kw">let </span>time = ViewNumber::genesis();
-        <span class="kw">let </span>state = MockState::default().append(<span class="kw-2">&amp;</span>block, <span class="kw-2">&amp;</span>time).unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>qc = QuorumCertificate::&lt;MockTypes, MockNodeImpl&gt;::genesis();
-        <span class="kw">let </span><span class="kw-2">mut </span>leaf = Leaf::&lt;MockTypes, MockNodeImpl&gt;::new(time, qc.clone(), block.clone(), state);
-        leaf.set_height(<span class="number">1</span>);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>qc = QuorumCertificate::&lt;MockTypes&gt;::genesis();
+        <span class="kw">let </span><span class="kw-2">mut </span>leaf = Leaf::&lt;MockTypes&gt;::genesis();
+        <span class="comment">// Increment the block number, to distinguish this block from the genesis block, which
+        // already exists.
+        </span>leaf.block_header.block_number += <span class="number">1</span>;
+        qc.data.leaf_commit = leaf.commit();
 
-        qc.leaf_commitment = leaf.commit();
-        <span class="kw">let </span>block = BlockQueryData::new::&lt;MockNodeImpl&gt;(leaf.clone(), qc.clone(), block).unwrap();
+        <span class="kw">let </span>block = BlockQueryData::new(leaf.clone(), qc.clone(), MockPayload::genesis()).unwrap();
         <span class="kw">let </span>leaf = LeafQueryData::new(leaf, qc).unwrap();
 
         <span class="comment">// Insert, but do not commit, some data and check that we can read it back.
         </span>ds.insert_leaf(leaf.clone()).<span class="kw">await</span>.unwrap();
         ds.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
 
-        <span class="macro">assert_eq!</span>(ds.block_height().<span class="kw">await</span>.unwrap(), <span class="number">1</span>);
-        <span class="macro">assert_eq!</span>(leaf, ds.get_leaf(<span class="number">0</span>).<span class="kw">await</span>.unwrap());
-        <span class="macro">assert_eq!</span>(block, ds.get_block(<span class="number">0</span>).<span class="kw">await</span>.unwrap());
+        <span class="macro">assert_eq!</span>(ds.block_height().<span class="kw">await</span>.unwrap(), <span class="number">2</span>);
+        <span class="macro">assert_eq!</span>(leaf, ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.unwrap());
+        <span class="macro">assert_eq!</span>(block, ds.get_block(<span class="number">1</span>).<span class="kw">await</span>.unwrap());
 
         <span class="comment">// Revert the changes.
         </span>ds.revert().<span class="kw">await</span>;
-        <span class="macro">assert_eq!</span>(ds.block_height().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(ds.block_height().<span class="kw">await</span>.unwrap(), <span class="number">1</span>);
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            ds.get_leaf(<span class="number">0</span>).<span class="kw">await</span>.unwrap_err(),
+            ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.unwrap_err(),
             QueryError::NotFound
         ));
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            ds.get_block(<span class="number">0</span>).<span class="kw">await</span>.unwrap_err(),
+            ds.get_block(<span class="number">1</span>).<span class="kw">await</span>.unwrap_err(),
             QueryError::NotFound
         ));
     }
+}
+
+<span class="doccomment">/// Generic tests we can instantiate for all the status data sources.
+</span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;testing&quot;</span>))]
+#[espresso_macros::generic_tests]
+</span><span class="kw">pub mod </span>status_tests {
+    <span class="kw">use crate</span>::{
+        status::{MempoolQueryData, StatusDataSource},
+        testing::{
+            consensus::MockNetwork,
+            mocks::{mock_transaction, DataSourceLifeCycle},
+            setup_test, sleep,
+        },
+    };
+    <span class="kw">use </span>bincode::Options;
+    <span class="kw">use </span>hotshot_utils::bincode::bincode_opts;
+    <span class="kw">use </span>std::time::Duration;
+
+    <span class="attr">#[async_std::test]
+    </span><span class="kw">pub async fn </span>test_metrics&lt;D: DataSourceLifeCycle + StatusDataSource&gt;() {
+        setup_test();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>network = MockNetwork::&lt;D&gt;::init().<span class="kw">await</span>;
+        <span class="kw">let </span>ds = network.data_source();
+
+        {
+            <span class="kw">let </span>ds = ds.read().<span class="kw">await</span>;
+            <span class="comment">// Check that block height is initially one (for the genesis block).
+            </span><span class="macro">assert_eq!</span>(ds.block_height().<span class="kw">await</span>.unwrap(), <span class="number">1</span>);
+            <span class="comment">// With consensus paused, check that the success rate returns infinity (since the block
+            // height, the numerator, is 1, and the view number, the denominator, is 0).
+            </span><span class="macro">assert_eq!</span>(ds.success_rate().<span class="kw">await</span>.unwrap(), f64::INFINITY);
+        }
+
+        <span class="comment">// Submit a transaction, and check that it is reflected in the mempool.
+        </span><span class="kw">let </span>txn = mock_transaction(<span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
+        network.submit_transaction(txn.clone()).<span class="kw">await</span>;
+        <span class="kw">loop </span>{
+            <span class="kw">let </span>mempool = { ds.read().<span class="kw">await</span>.mempool_info().<span class="kw">await</span>.unwrap() };
+            <span class="kw">let </span>expected = MempoolQueryData {
+                transaction_count: <span class="number">1</span>,
+                memory_footprint: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>txn).unwrap(),
+            };
+            <span class="kw">if </span>mempool == expected {
+                <span class="kw">break</span>;
+            }
+            <span class="macro">tracing::info!</span>(
+                <span class="string">&quot;waiting for mempool to reflect transaction (currently {:?})&quot;</span>,
+                mempool
+            );
+            sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
+        }
+        {
+            <span class="macro">assert_eq!</span>(
+                ds.read().<span class="kw">await</span>.mempool_info().<span class="kw">await</span>.unwrap(),
+                MempoolQueryData {
+                    transaction_count: <span class="number">1</span>,
+                    memory_footprint: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>txn).unwrap(),
+                }
+            );
+        }
+
+        <span class="comment">// Submitting the same transaction should not affect the mempool.
+        </span>network.submit_transaction(txn.clone()).<span class="kw">await</span>;
+        sleep(Duration::from_secs(<span class="number">3</span>)).<span class="kw">await</span>;
+        {
+            <span class="macro">assert_eq!</span>(
+                ds.read().<span class="kw">await</span>.mempool_info().<span class="kw">await</span>.unwrap(),
+                MempoolQueryData {
+                    transaction_count: <span class="number">1</span>,
+                    memory_footprint: bincode_opts().serialized_size(<span class="kw-2">&amp;</span>txn).unwrap(),
+                }
+            );
+        }
+
+        <span class="comment">// Start consensus and wait for the transaction to be finalized.
+        </span>network.start().<span class="kw">await</span>;
+        <span class="comment">// First wait for the transaction to be taken out of the mempool.
+        </span><span class="kw">let </span>block_height = <span class="kw">loop </span>{
+            <span class="kw">let </span>ds = ds.read().<span class="kw">await</span>;
+            <span class="kw">if </span>ds.mempool_info().<span class="kw">await</span>.unwrap().transaction_count == <span class="number">0 </span>{
+                <span class="kw">break </span>ds.block_height().<span class="kw">await</span>.unwrap();
+            }
+            sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
+        };
+        <span class="comment">// Now wait for at least one block to be finalized.
+        </span><span class="kw">loop </span>{
+            <span class="kw">if </span>ds.read().<span class="kw">await</span>.block_height().<span class="kw">await</span>.unwrap() &gt; block_height {
+                <span class="kw">break</span>;
+            }
+            sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
+        }
+
+        {
+            <span class="comment">// Check that the success rate has been updated. Note that we can only check if success
+            // rate is positive. We don&#39;t know exactly what it is because we can&#39;t know how many
+            // views have elapsed without race conditions.
+            </span><span class="kw">let </span>success_rate = ds.read().<span class="kw">await</span>.success_rate().<span class="kw">await</span>.unwrap();
+            <span class="macro">assert!</span>(success_rate.is_finite(), <span class="string">&quot;{success_rate}&quot;</span>);
+            <span class="macro">assert!</span>(success_rate &gt; <span class="number">0.0</span>, <span class="string">&quot;{success_rate}&quot;</span>);
+        }
+
+        {
+            <span class="comment">// Check that the transaction is no longer reflected in the mempool.
+            </span><span class="macro">assert_eq!</span>(
+                ds.read().<span class="kw">await</span>.mempool_info().<span class="kw">await</span>.unwrap(),
+                MempoolQueryData {
+                    transaction_count: <span class="number">0</span>,
+                    memory_footprint: <span class="number">0</span>,
+                }
+            );
+        }
+    }
+}
+
+<span class="attr">#[macro_export]
+</span><span class="macro">macro_rules! </span>instantiate_data_source_tests {
+    (<span class="macro-nonterminal">$t</span>:ty) =&gt; {
+        <span class="macro">instantiate_availability_tests!</span>(<span class="macro-nonterminal">$t</span>);
+        <span class="macro">instantiate_status_tests!</span>(<span class="macro-nonterminal">$t</span>);
+    };
 }
 </code></pre></div></section></main></body></html>

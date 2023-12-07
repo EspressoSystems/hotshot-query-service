@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/availability.rs`."><title>availability.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0 (79e9716c9 2023-11-13)" data-channel="1.74.0" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../hotshot_query_service/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/availability.rs`."><title>availability.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.1 (a28077b28 2023-12-04)" data-channel="1.74.1" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../hotshot_query_service/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -607,8 +607,6 @@
 <a href="#607" id="607">607</a>
 <a href="#608" id="608">608</a>
 <a href="#609" id="609">609</a>
-<a href="#610" id="610">610</a>
-<a href="#611" id="611">611</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -621,14 +619,11 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use crate</span>::{api::load_api, Block, QueryError};
+</span><span class="kw">use crate</span>::{api::load_api, Payload, QueryError};
 <span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::{FutureExt, StreamExt, TryFutureExt};
-<span class="kw">use </span>hotshot_types::traits::{
-    node_implementation::{NodeImplementation, NodeType},
-    signature_key::EncodedPublicKey,
-};
+<span class="kw">use </span>hotshot_types::traits::{node_implementation::NodeType, signature_key::EncodedPublicKey};
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::{OptionExt, ResultExt, Snafu};
 <span class="kw">use </span>std::fmt::Display;
@@ -745,13 +740,11 @@
     }
 }
 
-<span class="kw">pub fn </span>define_api&lt;State, Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt;(
-    options: <span class="kw-2">&amp;</span>Options,
-) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt;
+<span class="kw">pub fn </span>define_api&lt;State, Types: NodeType&gt;(options: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt;
 <span class="kw">where
     </span>State: <span class="lifetime">&#39;static </span>+ Send + Sync + ReadState,
-    &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + AvailabilityDataSource&lt;Types, I&gt;,
-    Block&lt;Types&gt;: QueryableBlock,
+    &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + AvailabilityDataSource&lt;Types&gt;,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error&gt;(
         options.api_path.as_ref(),
@@ -806,7 +799,7 @@
                                     height: height <span class="kw">as </span>u64,
                                     reason: err.to_string(),
                                 })<span class="question-mark">?
-                                </span>.map(|block| <span class="prelude-val">Ok</span>(block.context(StreamBlockSnafu)<span class="question-mark">?</span>.header())))
+                                </span>.map(|block| <span class="prelude-val">Ok</span>(block.context(StreamBlockSnafu)<span class="question-mark">?</span>.header().clone())))
                         }
                         .boxed()
                     })
@@ -864,10 +857,14 @@
                             resource: id.to_string(),
                         })<span class="question-mark">?</span>;
                         <span class="kw">let </span>i = req.integer_param(<span class="string">&quot;index&quot;</span>)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>index = block.block().nth(i).context(InvalidTransactionIndexSnafu {
-                            height: height <span class="kw">as </span>u64,
-                            index: i <span class="kw">as </span>u64,
-                        })<span class="question-mark">?</span>;
+                        <span class="kw">let </span>index =
+                            block
+                                .payload()
+                                .nth(i)
+                                .context(InvalidTransactionIndexSnafu {
+                                    height: height <span class="kw">as </span>u64,
+                                    index: i <span class="kw">as </span>u64,
+                                })<span class="question-mark">?</span>;
                         (block, index)
                     }
                 };
@@ -909,7 +906,7 @@
         data_source::{ExtensibleDataSource, FileSystemDataSource},
         testing::{
             consensus::{MockDataSource, MockNetwork},
-            mocks::{MockNodeImpl, MockTransaction, MockTypes},
+            mocks::{mock_transaction, MockTypes},
             setup_test,
         },
         Error, QueryResult,
@@ -918,7 +915,7 @@
     <span class="kw">use </span>commit::Committable;
     <span class="kw">use </span>futures::FutureExt;
     <span class="kw">use </span>hotshot::types::SignatureKey;
-    <span class="kw">use </span>hotshot_signature_key::bn254::BN254Pub;
+    <span class="kw">use </span>hotshot_signature_key::bn254::BLSPubKey;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::collections::HashSet;
     <span class="kw">use </span>std::time::Duration;
@@ -932,13 +929,11 @@
         client: <span class="kw-2">&amp;</span>Client&lt;Error&gt;,
     ) -&gt; (
         u64,
-        Vec&lt;(
-            LeafQueryData&lt;MockTypes, MockNodeImpl&gt;,
-            BlockQueryData&lt;MockTypes&gt;,
-        )&gt;,
+        Vec&lt;(LeafQueryData&lt;MockTypes&gt;, BlockQueryData&lt;MockTypes&gt;)&gt;,
     ) {
         <span class="kw">let </span><span class="kw-2">mut </span>blocks = <span class="macro">vec!</span>[];
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>.. {
+        <span class="comment">// Ignore the genesis block (start from height 1).
+        </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>.. {
             <span class="kw">match </span>client
                 .get::&lt;BlockQueryData&lt;MockTypes&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;block/{}&quot;</span>, i))
                 .send()
@@ -975,7 +970,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>seen_txns = HashSet::new();
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..height {
             <span class="comment">// Check that looking up the leaf various ways returns the correct leaf.
-            </span><span class="kw">let </span>leaf: LeafQueryData&lt;MockTypes, MockNodeImpl&gt; =
+            </span><span class="kw">let </span>leaf: LeafQueryData&lt;MockTypes&gt; =
                 client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;leaf/{}&quot;</span>, i)).send().<span class="kw">await</span>.unwrap();
             <span class="macro">assert_eq!</span>(leaf.height(), i);
             <span class="macro">assert_eq!</span>(
@@ -1007,7 +1002,7 @@
             }
 
             <span class="comment">// Check that this block is included as a proposal by the proposer listed in the leaf.
-            </span><span class="kw">let </span>proposals: Vec&lt;LeafQueryData&lt;MockTypes, MockNodeImpl&gt;&gt; = client
+            </span><span class="kw">let </span>proposals: Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt; = client
                 .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}&quot;</span>, leaf.proposer()))
                 .send()
                 .<span class="kw">await
@@ -1027,7 +1022,7 @@
             // include new empty blocks committed since we started checking.
             </span><span class="macro">assert_eq!</span>(
                 client
-                    .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes, MockNodeImpl&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;proposals/{}/limit/1&quot;</span>,
                         leaf.proposer()
                     ))
@@ -1039,7 +1034,7 @@
             </span>);
             <span class="macro">assert_eq!</span>(
                 client
-                    .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes, MockNodeImpl&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;proposals/{}/limit/0&quot;</span>,
                         leaf.proposer()
                     ))
@@ -1052,7 +1047,7 @@
 
             <span class="comment">// Check that looking up each transaction in the block various ways returns the correct
             // transaction.
-            </span><span class="kw">for </span>(j, txn_from_block) <span class="kw">in </span>block.block().iter().enumerate() {
+            </span><span class="kw">for </span>(j, txn_from_block) <span class="kw">in </span>block.payload().enumerate() {
                 <span class="kw">let </span>txn: TransactionQueryData&lt;MockTypes&gt; = client
                     .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;transaction/{}/{}&quot;</span>, i, j))
                     .send()
@@ -1061,7 +1056,7 @@
                 <span class="macro">assert_eq!</span>(txn.height(), i);
                 <span class="macro">assert_eq!</span>(txn.block_hash(), block.hash());
                 <span class="macro">assert_eq!</span>(txn.hash(), txn_from_block.commit());
-                <span class="macro">assert_eq!</span>(txn.transaction(), txn_from_block);
+                <span class="macro">assert_eq!</span>(txn.transaction(), <span class="kw-2">&amp;</span>txn_from_block);
                 <span class="comment">// We should be able to look up the transaction by hash as long as it&#39;s not a
                 // duplicate. For duplicate transactions, this endpoint only returns the first one.
                 </span><span class="kw">if </span>!seen_txns.contains(<span class="kw-2">&amp;</span>txn.hash()) {
@@ -1107,7 +1102,7 @@
         // preserves the consistency of the data and indices.
         </span><span class="kw">let </span>leaves = client
             .socket(<span class="string">&quot;stream/leaves/0&quot;</span>)
-            .subscribe::&lt;QueryResult&lt;LeafQueryData&lt;MockTypes, MockNodeImpl&gt;&gt;&gt;()
+            .subscribe::&lt;QueryResult&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;()
             .<span class="kw">await
             </span>.unwrap();
         <span class="kw">let </span>blocks = client
@@ -1117,7 +1112,7 @@
             </span>.unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>leaf_blocks = leaves.zip(blocks).enumerate();
         <span class="kw">for </span>nonce <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
-            <span class="kw">let </span>txn = MockTransaction { nonce };
+            <span class="kw">let </span>txn = mock_transaction(<span class="macro">vec!</span>[nonce]);
             network.submit_transaction(txn).<span class="kw">await</span>;
 
             <span class="comment">// Wait for the transaction to be finalized.
@@ -1153,7 +1148,9 @@
 
         <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_availability_extensions&quot;</span>).unwrap();
         <span class="kw">let </span>data_source = ExtensibleDataSource::new(
-            FileSystemDataSource::&lt;MockTypes, MockNodeImpl&gt;::create(dir.path()).unwrap(),
+            FileSystemDataSource::&lt;MockTypes&gt;::create(dir.path())
+                .<span class="kw">await
+                </span>.unwrap(),
             <span class="number">0</span>,
         );
 
@@ -1170,9 +1167,8 @@
         </span>};
 
         <span class="kw">let </span><span class="kw-2">mut </span>api = define_api::&lt;
-            RwLock&lt;ExtensibleDataSource&lt;FileSystemDataSource&lt;MockTypes, MockNodeImpl&gt;, u64&gt;&gt;,
+            RwLock&lt;ExtensibleDataSource&lt;FileSystemDataSource&lt;MockTypes&gt;, u64&gt;&gt;,
             MockTypes,
-            MockNodeImpl,
         &gt;(<span class="kw-2">&amp;</span>Options {
             extensions: <span class="macro">vec!</span>[extensions.into()],
             ..Default::default()
@@ -1209,7 +1205,7 @@
         <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
 
         <span class="comment">// Ensure we can still access the built-in functionality.
-        </span><span class="kw">let </span>(key, <span class="kw">_</span>) = BN254Pub::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], <span class="number">0</span>);
+        </span><span class="kw">let </span>(key, <span class="kw">_</span>) = BLSPubKey::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], <span class="number">0</span>);
         <span class="macro">assert_eq!</span>(
             client
                 .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}/count&quot;</span>, key.to_bytes()))

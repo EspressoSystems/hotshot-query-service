@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/fs.rs`."><title>fs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0 (79e9716c9 2023-11-13)" data-channel="1.74.0" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hotshot_query_service/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/fs.rs`."><title>fs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.1 (a28077b28 2023-12-04)" data-channel="1.74.1" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hotshot_query_service/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -604,6 +604,27 @@
 <a href="#604" id="604">604</a>
 <a href="#605" id="605">605</a>
 <a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -628,22 +649,19 @@
             AvailabilityDataSource, BlockId, LeafId, ResourceId, UpdateAvailabilityData,
         },
         query_data::{
-            BlockHash, BlockQueryData, LeafHash, LeafQueryData, QueryableBlock, TransactionHash,
+            BlockHash, BlockQueryData, LeafHash, LeafQueryData, QueryablePayload, TransactionHash,
             TransactionIndex,
         },
     },
     metrics::PrometheusMetrics,
     status::data_source::StatusDataSource,
-    Block, Deltas, MissingSnafu, NotFoundSnafu, QueryResult, Resolvable,
+    MissingSnafu, NotFoundSnafu, Payload, QueryResult,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>atomic_store::{AtomicStore, AtomicStoreLoader, PersistenceError};
 <span class="kw">use </span>commit::Committable;
 <span class="kw">use </span>futures::stream::{<span class="self">self</span>, BoxStream, Stream, StreamExt, TryStreamExt};
-<span class="kw">use </span>hotshot_types::traits::{
-    node_implementation::{NodeImplementation, NodeType},
-    signature_key::EncodedPublicKey,
-};
+<span class="kw">use </span>hotshot_types::traits::{node_implementation::NodeType, signature_key::EncodedPublicKey};
 <span class="kw">use </span>serde::{de::DeserializeOwned, Serialize};
 <span class="kw">use </span>snafu::OptionExt;
 <span class="kw">use </span>std::collections::hash_map::{Entry, HashMap};
@@ -675,15 +693,13 @@
 /// ```
 /// # use atomic_store::PersistenceError;
 /// # use hotshot_query_service::data_source::{ExtensibleDataSource, FileSystemDataSource};
-/// # use hotshot_query_service::testing::mocks::{
-/// #   MockNodeImpl as AppNodeImpl, MockTypes as AppTypes,
-/// # };
+/// # use hotshot_query_service::testing::mocks::MockTypes as AppTypes;
 /// # use std::path::Path;
-/// # fn doc(storage_path: &amp;Path) -&gt; Result&lt;(), PersistenceError&gt; {
+/// # async fn doc(storage_path: &amp;Path) -&gt; Result&lt;(), PersistenceError&gt; {
 /// type AppState = &amp;&#39;static str;
 ///
-/// let data_source: ExtensibleDataSource&lt;FileSystemDataSource&lt;AppTypes, AppNodeImpl&gt;, AppState&gt; =
-///     ExtensibleDataSource::new(FileSystemDataSource::create(storage_path)?, &quot;app state&quot;);
+/// let data_source: ExtensibleDataSource&lt;FileSystemDataSource&lt;AppTypes&gt;, AppState&gt; =
+///     ExtensibleDataSource::new(FileSystemDataSource::create(storage_path).await?, &quot;app state&quot;);
 /// # Ok(())
 /// # }
 /// ```
@@ -734,17 +750,18 @@
 /// struct AppState {
 ///     // Top-level storage coordinator
 ///     store: AtomicStore,
-///     hotshot_qs: FileSystemDataSource&lt;AppTypes, AppNodeImpl&gt;,
+///     hotshot_qs: FileSystemDataSource&lt;AppTypes&gt;,
 ///     // additional state for other modules
 /// }
 ///
-/// fn init_server(
+/// async fn init_server(
 ///     storage_path: &amp;Path,
 ///     mut hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl&gt;,
 /// ) -&gt; Result&lt;App&lt;Arc&lt;RwLock&lt;AppState&gt;&gt;, Error&gt;, Error&gt; {
 ///     let mut loader = AtomicStoreLoader::create(storage_path, &quot;my_app&quot;) // or `open`
 ///         .map_err(Error::internal)?;
 ///     let hotshot_qs = FileSystemDataSource::create_with_store(&amp;mut loader)
+///         .await
 ///         .map_err(Error::internal)?;
 ///     // Initialize storage for other modules using the same loader.
 ///
@@ -774,33 +791,33 @@
 /// }
 /// ```
 </span><span class="attr">#[derive(custom_debug::Debug)]
-</span><span class="kw">pub struct </span>FileSystemDataSource&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt;
+</span><span class="kw">pub struct </span>FileSystemDataSource&lt;Types: NodeType&gt;
 <span class="kw">where
-    </span>Block&lt;Types&gt;: QueryableBlock,
+    </span>Payload&lt;Types&gt;: QueryablePayload,
 {
-    index_by_leaf_hash: HashMap&lt;LeafHash&lt;Types, I&gt;, u64&gt;,
+    index_by_leaf_hash: HashMap&lt;LeafHash&lt;Types&gt;, u64&gt;,
     index_by_block_hash: HashMap&lt;BlockHash&lt;Types&gt;, u64&gt;,
     index_by_txn_hash: HashMap&lt;TransactionHash&lt;Types&gt;, (u64, TransactionIndex&lt;Types&gt;)&gt;,
     index_by_proposer_id: HashMap&lt;EncodedPublicKey, Vec&lt;u64&gt;&gt;,
     <span class="attr">#[debug(skip)]
     </span>top_storage: <span class="prelude-ty">Option</span>&lt;AtomicStore&gt;,
-    leaf_storage: LedgerLog&lt;LeafQueryData&lt;Types, I&gt;&gt;,
+    leaf_storage: LedgerLog&lt;LeafQueryData&lt;Types&gt;&gt;,
     block_storage: LedgerLog&lt;BlockQueryData&lt;Types&gt;&gt;,
     metrics: PrometheusMetrics,
 }
 
-<span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; FileSystemDataSource&lt;Types, I&gt;
+<span class="kw">impl</span>&lt;Types: NodeType&gt; FileSystemDataSource&lt;Types&gt;
 <span class="kw">where
-    </span>Block&lt;Types&gt;: QueryableBlock,
+    </span>Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="doccomment">/// Create a new [FileSystemDataSource] with storage at `path`.
     ///
     /// If there is already data at `path`, it will be archived.
     ///
     /// The [FileSystemDataSource] will manage its own persistence synchronization.
-    </span><span class="kw">pub fn </span>create(path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt; {
+    </span><span class="kw">pub async fn </span>create(path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(path, <span class="string">&quot;hotshot_data_source&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>data_source = <span class="self">Self</span>::create_with_store(<span class="kw-2">&amp;mut </span>loader)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>data_source = <span class="self">Self</span>::create_with_store(<span class="kw-2">&amp;mut </span>loader).<span class="kw">await</span><span class="question-mark">?</span>;
         data_source.top_storage = <span class="prelude-val">Some</span>(AtomicStore::open(loader)<span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(data_source)
     }
@@ -810,12 +827,9 @@
     /// If there is no data at `path`, a new store will be created.
     ///
     /// The [FileSystemDataSource] will manage its own persistence synchronization.
-    </span><span class="kw">pub fn </span>open(path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt;
-    <span class="kw">where
-        </span>Deltas&lt;Types, I&gt;: Resolvable&lt;Block&lt;Types&gt;&gt;,
-    {
+    </span><span class="kw">pub async fn </span>open(path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::load(path, <span class="string">&quot;hotshot_data_source&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>data_source = <span class="self">Self</span>::open_with_store(<span class="kw-2">&amp;mut </span>loader)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>data_source = <span class="self">Self</span>::open_with_store(<span class="kw-2">&amp;mut </span>loader).<span class="kw">await</span><span class="question-mark">?</span>;
         data_source.top_storage = <span class="prelude-val">Some</span>(AtomicStore::open(loader)<span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(data_source)
     }
@@ -828,8 +842,10 @@
     /// The [FileSystemDataSource] will register its persistent data structures with `loader`. The
     /// caller is responsible for creating an [AtomicStore] from `loader` and managing
     /// synchronization of the store.
-    </span><span class="kw">pub fn </span>create_with_store(loader: <span class="kw-2">&amp;mut </span>AtomicStoreLoader) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+    </span><span class="kw">pub async fn </span>create_with_store(
+        loader: <span class="kw-2">&amp;mut </span>AtomicStoreLoader,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>ds = <span class="self">Self </span>{
             index_by_leaf_hash: Default::default(),
             index_by_block_hash: Default::default(),
             index_by_txn_hash: Default::default(),
@@ -838,7 +854,13 @@
             leaf_storage: LedgerLog::create(loader, <span class="string">&quot;leaves&quot;</span>, CACHED_LEAVES_COUNT)<span class="question-mark">?</span>,
             block_storage: LedgerLog::create(loader, <span class="string">&quot;blocks&quot;</span>, CACHED_BLOCKS_COUNT)<span class="question-mark">?</span>,
             metrics: Default::default(),
-        })
+        };
+
+        <span class="comment">// HotShot doesn&#39;t emit an event for the genesis block, so we need to manually ensure it is
+        // present.
+        </span>ds.insert_genesis().<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(ds)
     }
 
     <span class="doccomment">/// Open an existing [FileSystemDataSource] using a persistent storage loader.
@@ -849,12 +871,9 @@
     /// The [FileSystemDataSource] will register its persistent data structures with `loader`. The
     /// caller is responsible for creating an [AtomicStore] from `loader` and managing
     /// synchronization of the store.
-    </span><span class="kw">pub fn </span>open_with_store(loader: <span class="kw-2">&amp;mut </span>AtomicStoreLoader) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt;
-    <span class="kw">where
-        </span>Deltas&lt;Types, I&gt;: Resolvable&lt;Block&lt;Types&gt;&gt;,
-    {
+    </span><span class="kw">pub async fn </span>open_with_store(loader: <span class="kw-2">&amp;mut </span>AtomicStoreLoader) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt; {
         <span class="kw">let </span>leaf_storage =
-            LedgerLog::&lt;LeafQueryData&lt;Types, I&gt;&gt;::open(loader, <span class="string">&quot;leaves&quot;</span>, CACHED_LEAVES_COUNT)<span class="question-mark">?</span>;
+            LedgerLog::&lt;LeafQueryData&lt;Types&gt;&gt;::open(loader, <span class="string">&quot;leaves&quot;</span>, CACHED_LEAVES_COUNT)<span class="question-mark">?</span>;
         <span class="kw">let </span>block_storage =
             LedgerLog::&lt;BlockQueryData&lt;Types&gt;&gt;::open(loader, <span class="string">&quot;blocks&quot;</span>, CACHED_BLOCKS_COUNT)<span class="question-mark">?</span>;
 
@@ -876,12 +895,12 @@
         <span class="kw">let </span><span class="kw-2">mut </span>index_by_txn_hash = HashMap::new();
         <span class="kw">for </span>block <span class="kw">in </span>block_storage.iter().flatten() {
             <span class="kw">let </span>height = block.height();
-            <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.block().enumerate() {
+            <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.payload().enumerate() {
                 update_index_by_hash(<span class="kw-2">&amp;mut </span>index_by_txn_hash, txn.commit(), (height, txn_ix));
             }
         }
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>ds = <span class="self">Self </span>{
             index_by_leaf_hash,
             index_by_block_hash,
             index_by_txn_hash,
@@ -890,7 +909,13 @@
             block_storage,
             top_storage: <span class="prelude-val">None</span>,
             metrics: Default::default(),
-        })
+        };
+
+        <span class="comment">// HotShot doesn&#39;t emit an event for the genesis block, so we need to manually ensure it is
+        // present.
+        </span>ds.insert_genesis().<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(ds)
     }
 
     <span class="doccomment">/// Advance the version of the persistent store without committing changes to persistent state.
@@ -909,13 +934,27 @@
         }
         <span class="prelude-val">Ok</span>(())
     }
+
+    <span class="kw">async fn </span>insert_genesis(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), PersistenceError&gt; {
+        <span class="kw">let </span>block_height =
+            <span class="self">self</span>.block_height()
+                .<span class="kw">await
+                </span>.map_err(|err| PersistenceError::OtherLoad {
+                    inner: Box::new(err),
+                })<span class="question-mark">?</span>;
+        <span class="kw">if </span>block_height == <span class="number">0 </span>{
+            <span class="self">self</span>.insert_leaf(LeafQueryData::genesis()).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="self">self</span>.insert_block(BlockQueryData::genesis()).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="self">self</span>.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; VersionedDataSource
-    <span class="kw">for </span>FileSystemDataSource&lt;Types, I&gt;
+</span><span class="kw">impl</span>&lt;Types: NodeType&gt; VersionedDataSource <span class="kw">for </span>FileSystemDataSource&lt;Types&gt;
 <span class="kw">where
-    </span>Block&lt;Types&gt;: QueryableBlock,
+    </span>Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">type </span>Error = PersistenceError;
 
@@ -983,15 +1022,14 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; AvailabilityDataSource&lt;Types, I&gt;
-    <span class="kw">for </span>FileSystemDataSource&lt;Types, I&gt;
+</span><span class="kw">impl</span>&lt;Types: NodeType&gt; AvailabilityDataSource&lt;Types&gt; <span class="kw">for </span>FileSystemDataSource&lt;Types&gt;
 <span class="kw">where
-    </span>Block&lt;Types&gt;: QueryableBlock,
+    </span>Payload&lt;Types&gt;: QueryablePayload,
 {
-    <span class="kw">type </span>LeafStream = BoxStream&lt;<span class="lifetime">&#39;static</span>, QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt;;
+    <span class="kw">type </span>LeafStream = BoxStream&lt;<span class="lifetime">&#39;static</span>, QueryResult&lt;LeafQueryData&lt;Types&gt;&gt;&gt;;
     <span class="kw">type </span>BlockStream = BoxStream&lt;<span class="lifetime">&#39;static</span>, QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;&gt;;
 
-    <span class="kw">type </span>LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt; = BoxStream&lt;<span class="lifetime">&#39;a</span>, QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt;
+    <span class="kw">type </span>LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt; = BoxStream&lt;<span class="lifetime">&#39;a</span>, QueryResult&lt;LeafQueryData&lt;Types&gt;&gt;&gt;
     <span class="kw">where
         </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
         R: RangeBounds&lt;usize&gt; + Send;
@@ -1000,9 +1038,9 @@
         </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
         R: RangeBounds&lt;usize&gt; + Send;
 
-    <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;LeafQueryData&lt;Types, I&gt;&gt;
+    <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt;
     <span class="kw">where
-        </span>ID: Into&lt;LeafId&lt;Types, I&gt;&gt; + Send + Sync,
+        </span>ID: Into&lt;LeafId&lt;Types&gt;&gt; + Send + Sync,
     {
         <span class="kw">let </span>n = <span class="kw">match </span>id.into() {
             ResourceId::Number(n) =&gt; n,
@@ -1061,7 +1099,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         id: <span class="kw-2">&amp;</span>EncodedPublicKey,
         limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types, I&gt;&gt;&gt; {
+    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt; {
         <span class="kw">let </span>all_ids = <span class="self">self
             </span>.index_by_proposer_id
             .get(id)
@@ -1105,17 +1143,13 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; UpdateAvailabilityData&lt;Types, I&gt;
-    <span class="kw">for </span>FileSystemDataSource&lt;Types, I&gt;
+</span><span class="kw">impl</span>&lt;Types: NodeType&gt; UpdateAvailabilityData&lt;Types&gt; <span class="kw">for </span>FileSystemDataSource&lt;Types&gt;
 <span class="kw">where
-    </span>Block&lt;Types&gt;: QueryableBlock,
+    </span>Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">type </span>Error = PersistenceError;
 
-    <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types, I&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
-    <span class="kw">where
-        </span>Deltas&lt;Types, I&gt;: Resolvable&lt;Block&lt;Types&gt;&gt;,
-    {
+    <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="self">self</span>.leaf_storage
             .insert(leaf.height() <span class="kw">as </span>usize, leaf.clone())<span class="question-mark">?</span>;
         <span class="self">self</span>.index_by_leaf_hash.insert(leaf.hash(), leaf.height());
@@ -1134,7 +1168,7 @@
     <span class="kw">async fn </span>insert_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: BlockQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="self">self</span>.block_storage
             .insert(block.height() <span class="kw">as </span>usize, block.clone())<span class="question-mark">?</span>;
-        <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.block().enumerate() {
+        <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.payload().enumerate() {
             update_index_by_hash(
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.index_by_txn_hash,
                 txn.commit(),
@@ -1164,10 +1198,9 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;&gt; StatusDataSource
-    <span class="kw">for </span>FileSystemDataSource&lt;Types, I&gt;
+</span><span class="kw">impl</span>&lt;Types: NodeType&gt; StatusDataSource <span class="kw">for </span>FileSystemDataSource&lt;Types&gt;
 <span class="kw">where
-    </span>Block&lt;Types&gt;: QueryableBlock,
+    </span>Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.leaf_storage.iter().len())
@@ -1181,11 +1214,15 @@
 <span class="attr">#[cfg(any(test, feature = <span class="string">&quot;testing&quot;</span>))]
 </span><span class="kw">mod </span>impl_testable_data_source {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::testing::mocks::{MockNodeImpl, MockTypes, TestableDataSource};
+    <span class="kw">use crate</span>::{
+        data_source::UpdateDataSource,
+        testing::mocks::{DataSourceLifeCycle, MockTypes},
+    };
+    <span class="kw">use </span>hotshot::types::Event;
     <span class="kw">use </span>tempdir::TempDir;
 
     <span class="attr">#[async_trait]
-    </span><span class="kw">impl </span>TestableDataSource <span class="kw">for </span>FileSystemDataSource&lt;MockTypes, MockNodeImpl&gt; {
+    </span><span class="kw">impl </span>DataSourceLifeCycle <span class="kw">for </span>FileSystemDataSource&lt;MockTypes&gt; {
         <span class="kw">type </span>Storage = TempDir;
 
         <span class="kw">async fn </span>create(node_id: usize) -&gt; <span class="self">Self</span>::Storage {
@@ -1193,21 +1230,26 @@
         }
 
         <span class="kw">async fn </span>connect(storage: <span class="kw-2">&amp;</span><span class="self">Self</span>::Storage) -&gt; <span class="self">Self </span>{
-            <span class="self">Self</span>::open(storage.path()).unwrap()
+            <span class="self">Self</span>::open(storage.path()).<span class="kw">await</span>.unwrap()
+        }
+
+        <span class="kw">async fn </span>handle_event(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;MockTypes&gt;) {
+            <span class="self">self</span>.update(event).<span class="kw">await</span>.unwrap();
+            <span class="self">self</span>.commit().<span class="kw">await</span>.unwrap();
         }
     }
 }
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
-    <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::data_source_tests;
+    <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::{availability_tests, status_tests};
     <span class="kw">use </span><span class="kw">super</span>::FileSystemDataSource;
-    <span class="kw">use </span><span class="kw">crate</span>::testing::mocks::{MockNodeImpl, MockTypes};
+    <span class="kw">use </span><span class="kw">crate</span>::testing::mocks::MockTypes;
 
     <span class="comment">// For some reason this is the only way to import the macro defined in another module of this
     // crate.
     </span><span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
-    <span class="macro">instantiate_data_source_tests!</span>(FileSystemDataSource&lt;MockTypes, MockNodeImpl&gt;);
+    <span class="macro">instantiate_data_source_tests!</span>(FileSystemDataSource&lt;MockTypes&gt;);
 }
 </code></pre></div></section></main></body></html>
