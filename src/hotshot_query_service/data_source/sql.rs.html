@@ -1505,10 +1505,6 @@
 <a href="#1505" id="1505">1505</a>
 <a href="#1506" id="1506">1506</a>
 <a href="#1507" id="1507">1507</a>
-<a href="#1508" id="1508">1508</a>
-<a href="#1509" id="1509">1509</a>
-<a href="#1510" id="1510">1510</a>
-<a href="#1511" id="1511">1511</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -2233,15 +2229,11 @@
             ResourceId::Number(n) =&gt; (<span class="string">&quot;h.height = $1&quot;</span>, Box::new(n <span class="kw">as </span>i64)),
             ResourceId::Hash(h) =&gt; (<span class="string">&quot;h.hash = $1&quot;</span>, Box::new(h.to_string())),
         };
-        <span class="comment">// ORDER BY h.height ASC ensures that if there are duplicate blocks, we return the first one.
-        // TODO this ordering should be unnecessary once we eliminate duplicate blocks:
-        // https://github.com/EspressoSystems/hotshot-query-service/issues/284
-        </span><span class="kw">let </span>query = <span class="macro">format!</span>(
+        <span class="kw">let </span>query = <span class="macro">format!</span>(
             <span class="string">&quot;SELECT {BLOCK_COLUMNS}
               FROM header AS h
               JOIN payload AS p ON h.height = p.height
               WHERE {where_clause}
-              ORDER BY h.height ASC
               LIMIT 1&quot;
         </span>);
         <span class="kw">let </span>row = <span class="self">self

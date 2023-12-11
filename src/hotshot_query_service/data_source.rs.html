@@ -469,12 +469,6 @@
 <a href="#469" id="469">469</a>
 <a href="#470" id="470">470</a>
 <a href="#471" id="471">471</a>
-<a href="#472" id="472">472</a>
-<a href="#473" id="473">473</a>
-<a href="#474" id="474">474</a>
-<a href="#475" id="475">475</a>
-<a href="#476" id="476">476</a>
-<a href="#477" id="477">477</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -562,12 +556,9 @@
     <span class="kw">async fn </span>validate(ds: <span class="kw-2">&amp;</span>RwLock&lt;<span class="kw">impl </span>TestableDataSource&gt;) {
         <span class="kw">let </span>ds = ds.read().<span class="kw">await</span>;
 
-        <span class="comment">// Check the consistency of every block/leaf pair. Keep track of blocks and transactions
-        // we&#39;ve seen so we can detect duplicates.
-        // TODO eliminate duplicate blocks:
-        // https://github.com/EspressoSystems/hotshot-query-service/issues/284
-        </span><span class="kw">let </span><span class="kw-2">mut </span>seen_blocks = HashMap::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>seen_transactions = HashMap::new();
+        <span class="comment">// Check the consistency of every block/leaf pair. Keep track of transactions we&#39;ve seen so
+        // we can detect duplicates.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>seen_transactions = HashMap::new();
         <span class="kw">let </span><span class="kw-2">mut </span>leaves = ds.get_leaf_range(..).<span class="kw">await</span>.unwrap().enumerate();
         <span class="kw">while let </span><span class="prelude-val">Some</span>((i, leaf)) = leaves.next().<span class="kw">await </span>{
             <span class="kw">let </span>leaf = leaf.unwrap();
@@ -593,10 +584,7 @@
 
             <span class="comment">// Check indices.
             </span><span class="macro">assert_eq!</span>(block, ds.get_block(i).<span class="kw">await</span>.unwrap());
-            <span class="comment">// We should be able to look up the block by hash unless it is a duplicate. For
-            // duplicate blocks, this function returns the index of the first duplicate.
-            </span><span class="kw">let </span>ix = seen_blocks.entry(block.hash()).or_insert(i <span class="kw">as </span>u64);
-            <span class="macro">assert_eq!</span>(ds.get_block(block.hash()).<span class="kw">await</span>.unwrap().height(), <span class="kw-2">*</span>ix);
+            <span class="macro">assert_eq!</span>(ds.get_block(block.hash()).<span class="kw">await</span>.unwrap().height(), i <span class="kw">as </span>u64);
 
             <span class="kw">for </span>(j, txn) <span class="kw">in </span>block.payload().enumerate() {
                 <span class="comment">// We should be able to look up the transaction by hash unless it is a duplicate.
