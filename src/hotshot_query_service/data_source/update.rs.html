@@ -114,6 +114,11 @@
 <a href="#114" id="114">114</a>
 <a href="#115" id="115">115</a>
 <a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -131,7 +136,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::status::UpdateStatusData;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>hotshot::types::{Event, EventType};
-<span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
+<span class="kw">use </span>hotshot_types::traits::{block_contents::BlockHeader, node_implementation::NodeType};
 <span class="kw">use </span>std::error::Error;
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::iter::once;
@@ -194,6 +199,11 @@
                             .expect(<span class="string">&quot;inconsistent block&quot;</span>),
                     )
                     .<span class="kw">await</span><span class="question-mark">?</span>;
+                } <span class="kw">else </span>{
+                    <span class="macro">tracing::info!</span>(
+                        <span class="string">&quot;block {} not available at decide&quot;</span>,
+                        leaf.block_header.block_number()
+                    );
                 }
             }
         }
