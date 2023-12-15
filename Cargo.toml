@@ -93,5 +93,5 @@ espresso-macros = { git = "https://github.com/EspressoSystems/espresso-macros.gi
 portpicker = "0.1"
 rand = "0.8"
 spin_sleep = "1.1"
-surf-disco = { git = "https://github.com/EspressoSystems/surf-disco.git", tag = "v0.4.3" }
+surf-disco = { git = "https://github.com/EspressoSystems/surf-disco.git", tag = "v0.4.4" }
 tempdir = "0.3"
