@@ -71,11 +71,6 @@
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
-<a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
-<a href="#78" id="78">78</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -131,11 +126,6 @@
             </span>.get() <span class="kw">as </span>f64;
         <span class="comment">// By definition, a successful view is any which committed a block.
         </span><span class="prelude-val">Ok</span>(<span class="self">self</span>.block_height().<span class="kw">await</span><span class="question-mark">? </span><span class="kw">as </span>f64 / total_views)
-    }
-
-    <span class="doccomment">/// Export all available metrics in the Prometheus text format.
-    </span><span class="kw">async fn </span>export_metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;String&gt; {
-        <span class="self">self</span>.metrics().prometheus().map_err(metrics_err)
     }
 }
 

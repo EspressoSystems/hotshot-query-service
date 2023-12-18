@@ -290,6 +290,10 @@
 <a href="#290" id="290">290</a>
 <a href="#291" id="291">291</a>
 <a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -308,6 +312,7 @@
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::Snafu;
+<span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
@@ -375,8 +380,8 @@
         </span>.get(<span class="string">&quot;success_rate&quot;</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async </span>{ state.success_rate().<span class="kw">await</span>.map_err(internal) }.boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">&quot;metrics&quot;</span>, |<span class="kw">_</span>, state| {
-            <span class="kw">async </span>{ state.export_metrics().<span class="kw">await</span>.map_err(internal) }.boxed()
+        </span>.metrics(<span class="string">&quot;metrics&quot;</span>, |<span class="kw">_</span>, state| {
+            <span class="kw">async </span>{ <span class="prelude-val">Ok</span>(Cow::Borrowed(state.metrics())) }.boxed()
         })<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(api)
 }
@@ -398,10 +403,11 @@
     <span class="kw">use </span>futures::FutureExt;
     <span class="kw">use </span>hotshot_utils::bincode::bincode_opts;
     <span class="kw">use </span>portpicker::pick_unused_port;
+    <span class="kw">use </span>std::str::FromStr;
     <span class="kw">use </span>std::time::Duration;
     <span class="kw">use </span>surf_disco::Client;
     <span class="kw">use </span>tempdir::TempDir;
-    <span class="kw">use </span>tide_disco::App;
+    <span class="kw">use </span>tide_disco::{App, Url};
     <span class="kw">use </span>toml::toml;
 
     <span class="attr">#[async_std::test]
@@ -419,8 +425,8 @@
         spawn(app.serve(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, port)));
 
         <span class="comment">// Start a client.
-        </span><span class="kw">let </span>client =
-            Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}/status&quot;</span>, port).parse().unwrap());
+        </span><span class="kw">let </span>url = Url::from_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}/status&quot;</span>, port)).unwrap();
+        <span class="kw">let </span>client = Client::&lt;Error&gt;::new(url.clone());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
         <span class="comment">// Submit a transaction. We have not yet started the validators, so this transaction will
@@ -458,7 +464,9 @@
         </span>);
 
         <span class="comment">// Test Prometheus export.
-        </span><span class="kw">let </span>prometheus = client.get::&lt;String&gt;(<span class="string">&quot;metrics&quot;</span>).send().<span class="kw">await</span>.unwrap();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>res = surf::get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{url}/metrics&quot;</span>)).send().<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(res.status(), StatusCode::Ok);
+        <span class="kw">let </span>prometheus = res.body_string().<span class="kw">await</span>.unwrap();
         <span class="kw">let </span>lines = prometheus.lines().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="macro">assert!</span>(
             lines.contains(<span class="kw-2">&amp;</span><span class="string">&quot;consensus_outstanding_transactions 1&quot;</span>),
