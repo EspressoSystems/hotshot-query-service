@@ -1505,6 +1505,71 @@
 <a href="#1505" id="1505">1505</a>
 <a href="#1506" id="1506">1506</a>
 <a href="#1507" id="1507">1507</a>
+<a href="#1508" id="1508">1508</a>
+<a href="#1509" id="1509">1509</a>
+<a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
+<a href="#1517" id="1517">1517</a>
+<a href="#1518" id="1518">1518</a>
+<a href="#1519" id="1519">1519</a>
+<a href="#1520" id="1520">1520</a>
+<a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
+<a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
+<a href="#1546" id="1546">1546</a>
+<a href="#1547" id="1547">1547</a>
+<a href="#1548" id="1548">1548</a>
+<a href="#1549" id="1549">1549</a>
+<a href="#1550" id="1550">1550</a>
+<a href="#1551" id="1551">1551</a>
+<a href="#1552" id="1552">1552</a>
+<a href="#1553" id="1553">1553</a>
+<a href="#1554" id="1554">1554</a>
+<a href="#1555" id="1555">1555</a>
+<a href="#1556" id="1556">1556</a>
+<a href="#1557" id="1557">1557</a>
+<a href="#1558" id="1558">1558</a>
+<a href="#1559" id="1559">1559</a>
+<a href="#1560" id="1560">1560</a>
+<a href="#1561" id="1561">1561</a>
+<a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a>
+<a href="#1565" id="1565">1565</a>
+<a href="#1566" id="1566">1566</a>
+<a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a>
+<a href="#1569" id="1569">1569</a>
+<a href="#1570" id="1570">1570</a>
+<a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1555,7 +1620,7 @@
 };
 <span class="kw">use </span>tokio_postgres::{
     types::{BorrowToSql, ToSql},
-    Client, NoTls, Row, RowStream, ToStatement,
+    Client, NoTls, Row, ToStatement,
 };
 
 <span class="kw">pub use </span><span class="kw">crate</span>::include_migrations;
@@ -1691,6 +1756,8 @@
     user: <span class="prelude-ty">Option</span>&lt;String&gt;,
     password: <span class="prelude-ty">Option</span>&lt;String&gt;,
     database: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    schema: String,
+    reset: bool,
     migrations: Vec&lt;Migration&gt;,
     no_migrations: bool,
 }
@@ -1703,6 +1770,8 @@
             user: <span class="prelude-val">None</span>,
             password: <span class="prelude-val">None</span>,
             database: <span class="prelude-val">None</span>,
+            schema: <span class="string">&quot;hotshot&quot;</span>.into(),
+            reset: <span class="bool-val">false</span>,
             migrations: <span class="macro">vec!</span>[],
             no_migrations: <span class="bool-val">false</span>,
         }
@@ -1744,6 +1813,28 @@
         <span class="self">self
     </span>}
 
+    <span class="doccomment">/// Set the name of the schema to use for queries.
+    ///
+    /// The default schema is named `hotshot` and is created via the default migrations.
+    </span><span class="kw">pub fn </span>schema(<span class="kw-2">mut </span><span class="self">self</span>, schema: <span class="kw">impl </span>Into&lt;String&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.schema = schema.into();
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Reset the schema on connection.
+    ///
+    /// When this [`Config`] is used to [`connect`](Self::connect) a [`SqlDataSource`], if this
+    /// option is set, the relevant [`schema`](Self::schema) will first be dropped and then
+    /// recreated, yielding a completely fresh instance of the query service.
+    ///
+    /// This is a particularly useful capability for development and staging environments. Still, it
+    /// must be used with extreme caution, as using this will irrevocably delete any data pertaining
+    /// to the query service in the database.
+    </span><span class="kw">pub fn </span>reset_schema(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.reset = <span class="bool-val">true</span>;
+        <span class="self">self
+    </span>}
+
     <span class="doccomment">/// Add custom migrations to run when connecting to the database.
     </span><span class="kw">pub fn </span>migrations(<span class="kw-2">mut </span><span class="self">self</span>, migrations: <span class="kw">impl </span>IntoIterator&lt;Item = Migration&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.migrations.extend(migrations);
@@ -1776,6 +1867,13 @@
 /// off-the-shelf DBMS adminstration tools. The one exception is migrations, which are handled
 /// transparently by the [`SqlDataSource`].
 ///
+/// ## Schema
+///
+/// All the objects created and used by [`SqlDataSource`] are grouped under a schema for easy
+/// management. By default, the schema is named `hotshot`, and is created the first time a
+/// [`SqlDataSource`] is constructed. The name of the schema can be configured by setting
+/// [`Config::schema`].
+///
 /// ## Initialization
 ///
 /// When creating a [`SqlDataSource`], the caller can use [`Config`] to specify the host, user, and
@@ -1807,6 +1905,15 @@
 ///     .password(&quot;password&quot;)
 /// # ;
 /// ```
+///
+/// ## Resetting
+///
+/// In general, resetting the database when necessary is left up to the administrator. However, for
+/// convenience, we do provide a [`reset_schema`](Config::reset_schema) option which can be used to
+/// wipe out existing state and create a fresh instance of the query service. This is particularly
+/// useful for development and staging environments. This function will permanently delete all
+/// tables associated with the schema used by this query service, but will not reset other schemas
+/// or database.
 ///
 /// ## Migrations
 ///
@@ -2039,6 +2146,19 @@
             }
         }));
 
+        <span class="comment">// Create or connect to the schema for this query service.
+        </span><span class="kw">if </span>config.reset {
+            client
+                .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;DROP SCHEMA IF EXISTS {} CASCADE&quot;</span>, config.schema))
+                .<span class="kw">await</span><span class="question-mark">?</span>;
+        }
+        client
+            .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;CREATE SCHEMA IF NOT EXISTS {}&quot;</span>, config.schema))
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+        client
+            .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;SET search_path TO {}&quot;</span>, config.schema))
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
         <span class="comment">// Get migrations and interleave with custom migrations, sorting by version number.
         </span>validate_migrations(<span class="kw-2">&amp;mut </span>config.migrations)<span class="question-mark">?</span>;
         <span class="kw">let </span>migrations =
@@ -2099,17 +2219,6 @@
 <span class="kw">where
     </span>Types: NodeType,
 {
-    <span class="doccomment">/// Query the underlying SQL database.
-    </span><span class="kw">pub async fn </span>query&lt;T, P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T, params: P) -&gt; <span class="prelude-ty">Result</span>&lt;RowStream, Error&gt;
-    <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement,
-        P: IntoIterator,
-        P::IntoIter: ExactSizeIterator,
-        P::Item: BorrowToSql,
-    {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.client.query_raw(query, params).<span class="kw">await</span><span class="question-mark">?</span>)
-    }
-
     <span class="doccomment">/// Access the transaction which is accumulating all uncommitted changes to the data source.
     ///
     /// This can be used to manually group database modifications to custom state atomically with
@@ -2118,15 +2227,27 @@
     /// If there is no currently open transaction, a new transaction will be opened. No changes
     /// made through the transaction objeect returned by this method will be persisted until
     /// [`commit`](Self::commit) is called.
-    </span><span class="kw">pub async fn </span>transaction(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Transaction&lt;<span class="lifetime">&#39;_</span>&gt;, Error&gt; {
+    </span><span class="kw">pub async fn </span>transaction(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;Transaction&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.tx_in_progress {
             <span class="comment">// If there is no transaction in progress, open one.
-            </span><span class="self">self</span>.client.batch_execute(<span class="string">&quot;BEGIN&quot;</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+            </span><span class="self">self</span>.client
+                .batch_execute(<span class="string">&quot;BEGIN&quot;</span>)
+                .<span class="kw">await
+                </span>.map_err(postgres_err)<span class="question-mark">?</span>;
             <span class="self">self</span>.tx_in_progress = <span class="bool-val">true</span>;
         }
         <span class="prelude-val">Ok</span>(Transaction {
             client: <span class="kw-2">&amp;mut </span><span class="self">self</span>.client,
         })
+    }
+}
+
+<span class="kw">impl</span>&lt;Types&gt; Query <span class="kw">for </span>SqlDataSource&lt;Types&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+{
+    <span class="kw">fn </span>client(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Client {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.client
     }
 }
 
@@ -2210,14 +2331,7 @@
             ResourceId::Hash(h) =&gt; (<span class="string">&quot;hash = $1&quot;</span>, Box::new(h.to_string())),
         };
         <span class="kw">let </span>query = <span class="macro">format!</span>(<span class="string">&quot;SELECT leaf, qc FROM leaf WHERE {where_clause}&quot;</span>);
-        <span class="kw">let </span>row = <span class="self">self
-            </span>.client
-            .query_opt(<span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;*</span>param])
-            .<span class="kw">await
-            </span>.map_err(|err| QueryError::Error {
-                message: err.to_string(),
-            })<span class="question-mark">?
-            </span>.context(NotFoundSnafu)<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="self">self</span>.query_one(<span class="kw-2">&amp;</span>query, [param]).<span class="kw">await</span><span class="question-mark">?</span>;
         parse_leaf(row)
     }
 
@@ -2236,14 +2350,7 @@
               WHERE {where_clause}
               LIMIT 1&quot;
         </span>);
-        <span class="kw">let </span>row = <span class="self">self
-            </span>.client
-            .query_opt(<span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;*</span>param])
-            .<span class="kw">await
-            </span>.map_err(|err| QueryError::Error {
-                message: err.to_string(),
-            })<span class="question-mark">?
-            </span>.context(NotFoundSnafu)<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="self">self</span>.query_one(<span class="kw-2">&amp;</span>query, [param]).<span class="kw">await</span><span class="question-mark">?</span>;
         parse_block(row)
     }
 
@@ -2253,21 +2360,9 @@
     {
         <span class="kw">let </span>(where_clause, params) = bounds_to_where_clause(range, <span class="string">&quot;height&quot;</span>);
         <span class="kw">let </span>query = <span class="macro">format!</span>(<span class="string">&quot;SELECT leaf, qc FROM leaf {where_clause} ORDER BY height ASC&quot;</span>);
-        <span class="kw">let </span>rows =
-            <span class="self">self</span>.client
-                .query_raw(<span class="kw-2">&amp;</span>query, params)
-                .<span class="kw">await
-                </span>.map_err(|err| QueryError::Error {
-                    message: err.to_string(),
-                })<span class="question-mark">?</span>;
+        <span class="kw">let </span>rows = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>query, params).<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(rows
-            .map(|res| {
-                parse_leaf(res.map_err(|err| QueryError::Error {
-                    message: err.to_string(),
-                })<span class="question-mark">?</span>)
-            })
-            .boxed())
+        <span class="prelude-val">Ok</span>(rows.map(|res| parse_leaf(res<span class="question-mark">?</span>)).boxed())
     }
 
     <span class="kw">async fn </span>get_block_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; QueryResult&lt;<span class="self">Self</span>::BlockRange&lt;<span class="lifetime">&#39;_</span>, R&gt;&gt;
@@ -2282,21 +2377,9 @@
               {where_clause}
               ORDER BY h.height ASC&quot;
         </span>);
-        <span class="kw">let </span>rows =
-            <span class="self">self</span>.client
-                .query_raw(<span class="kw-2">&amp;</span>query, params)
-                .<span class="kw">await
-                </span>.map_err(|err| QueryError::Error {
-                    message: err.to_string(),
-                })<span class="question-mark">?</span>;
+        <span class="kw">let </span>rows = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>query, params).<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(rows
-            .map(|res| {
-                parse_block(res.map_err(|err| QueryError::Error {
-                    message: err.to_string(),
-                })<span class="question-mark">?</span>)
-            })
-            .boxed())
+        <span class="prelude-val">Ok</span>(rows.map(|res| parse_block(res<span class="question-mark">?</span>)).boxed())
     }
 
     <span class="kw">async fn </span>get_block_with_transaction(
@@ -2314,14 +2397,7 @@
                 ORDER BY t.id ASC
                 LIMIT 1&quot;
         </span>);
-        <span class="kw">let </span>row = <span class="self">self
-            </span>.client
-            .query_opt(<span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>hash.to_string()])
-            .<span class="kw">await
-            </span>.map_err(|err| QueryError::Error {
-                message: err.to_string(),
-            })<span class="question-mark">?
-            </span>.context(NotFoundSnafu)<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="self">self</span>.query_one(<span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>hash.to_string()]).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Extract the transaction index.
         </span><span class="kw">let </span>index = row.try_get(<span class="string">&quot;tx_index&quot;</span>).map_err(|err| QueryError::Error {
@@ -2349,21 +2425,8 @@
             // recent leaves, so order by descending height.
             </span>query = <span class="macro">format!</span>(<span class="string">&quot;{query} ORDER BY height DESC limit {limit}&quot;</span>);
         }
-        <span class="kw">let </span>rows = <span class="self">self
-            </span>.client
-            .query_raw(<span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>proposer.to_string()])
-            .<span class="kw">await
-            </span>.map_err(|err| QueryError::Error {
-                message: err.to_string(),
-            })<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>leaves: Vec&lt;<span class="kw">_</span>&gt; = rows
-            .map(|res| {
-                parse_leaf(res.map_err(|err| QueryError::Error {
-                    message: err.to_string(),
-                })<span class="question-mark">?</span>)
-            })
-            .try_collect()
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>rows = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>proposer.to_string()]).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>leaves: Vec&lt;<span class="kw">_</span>&gt; = rows.map(|res| parse_leaf(res<span class="question-mark">?</span>)).try_collect().<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">if </span>limit.is_some() {
             <span class="comment">// If there was a limit, we selected the leaves in descending order to get the most
@@ -2376,13 +2439,7 @@
 
     <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>EncodedPublicKey) -&gt; QueryResult&lt;usize&gt; {
         <span class="kw">let </span>query = <span class="string">&quot;SELECT count(*) FROM leaf WHERE proposer = $1&quot;</span>;
-        <span class="kw">let </span>row = <span class="self">self
-            </span>.client
-            .query_one(query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>proposer.to_string()])
-            .<span class="kw">await
-            </span>.map_err(|err| QueryError::Error {
-                message: err.to_string(),
-            })<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="self">self</span>.query_one(query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>proposer.to_string()]).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>count: i64 = row.get(<span class="number">0</span>);
         <span class="prelude-val">Ok</span>(count <span class="kw">as </span>usize)
     }
@@ -2461,14 +2518,8 @@
         ));
 
         <span class="comment">// Grab a transaction and execute all the statements.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.transaction().<span class="kw">await</span>.map_err(|err| QueryError::Error {
-            message: err.to_string(),
-        })<span class="question-mark">?</span>;
-        tx.execute_many(stmts)
-            .<span class="kw">await
-            </span>.map_err(|err| QueryError::Error {
-                message: err.to_string(),
-            })<span class="question-mark">?</span>;
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.transaction().<span class="kw">await</span><span class="question-mark">?</span>;
+        tx.execute_many(stmts).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="self">self</span>.leaf_stream.push(leaf);
         <span class="prelude-val">Ok</span>(())
@@ -2522,14 +2573,8 @@
             ));
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.transaction().<span class="kw">await</span>.map_err(|err| QueryError::Error {
-            message: err.to_string(),
-        })<span class="question-mark">?</span>;
-        tx.execute_many(stmts)
-            .<span class="kw">await
-            </span>.map_err(|err| QueryError::Error {
-                message: err.to_string(),
-            })<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.transaction().<span class="kw">await</span><span class="question-mark">?</span>;
+        tx.execute_many(stmts).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="self">self</span>.block_stream.push(block);
         <span class="prelude-val">Ok</span>(())
@@ -2543,13 +2588,7 @@
 {
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="kw">let </span>query = <span class="string">&quot;SELECT max(height) FROM header&quot;</span>;
-        <span class="kw">let </span>row = <span class="self">self
-            </span>.client
-            .query_one(query, <span class="kw-2">&amp;</span>[])
-            .<span class="kw">await
-            </span>.map_err(|err| QueryError::Error {
-                message: err.to_string(),
-            })<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="self">self</span>.query_one_static(query).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>height: <span class="prelude-ty">Option</span>&lt;i64&gt; = row.get(<span class="number">0</span>);
         <span class="kw">match </span>height {
             <span class="prelude-val">Some</span>(height) =&gt; {
@@ -2586,37 +2625,28 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Transaction&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="doccomment">/// Query the underlying SQL database.
-    ///
-    /// The results will reflect the state after the statements thus far added to this transaction
-    /// have been applied, even though those effects have not been committed to the database yet.
-    </span><span class="kw">pub async fn </span>query&lt;T, P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T, params: P) -&gt; <span class="prelude-ty">Result</span>&lt;RowStream, Error&gt;
-    <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement,
-        P: IntoIterator,
-        P::IntoIter: ExactSizeIterator,
-        P::Item: BorrowToSql,
-    {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.client.query_raw(query, params).<span class="kw">await</span><span class="question-mark">?</span>)
-    }
-
     <span class="doccomment">/// Execute a statement against the underlying database.
     ///
     /// The results of the statement will be reflected immediately in future statements made within
     /// this transaction, but will not be reflected in the underlying database until the transaction
     /// is committed with [`SqlDataSource::commit`].
-    </span><span class="kw">pub async fn </span>execute&lt;T, P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: <span class="kw-2">&amp;</span>T, params: P) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;
+    </span><span class="kw">pub async fn </span>execute&lt;T, P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: <span class="kw-2">&amp;</span>T, params: P) -&gt; QueryResult&lt;()&gt;
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + ToStatement,
         P: IntoIterator,
         P::IntoIter: ExactSizeIterator,
         P::Item: BorrowToSql,
     {
-        <span class="self">self</span>.client.execute_raw(statement, params).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.client
+            .execute_raw(statement, params)
+            .<span class="kw">await
+            </span>.map_err(|err| QueryError::Error {
+                message: err.to_string(),
+            })<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub async fn </span>execute_many&lt;S, T, P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statements: S) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;
+    <span class="kw">pub async fn </span>execute_many&lt;S, T, P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statements: S) -&gt; QueryResult&lt;()&gt;
     <span class="kw">where
         </span>S: IntoIterator&lt;Item = (T, P)&gt;,
         T: ToStatement,
@@ -2628,6 +2658,95 @@
             <span class="self">self</span>.execute(<span class="kw-2">&amp;</span>stmt, params).<span class="kw">await</span><span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="doccomment">/// Query the underlying SQL database.
+///
+/// The results will reflect the state after the statements thus far added to this transaction have
+/// been applied, even though those effects have not been committed to the database yet.
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Query <span class="kw">for </span>Transaction&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>client(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Client {
+        <span class="self">self</span>.client
+    }
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">pub trait </span>Query {
+    <span class="kw">fn </span>client(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Client;
+
+    <span class="comment">// Query the underlying SQL database.
+    </span><span class="kw">async fn </span>query&lt;T, P&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        query: <span class="kw-2">&amp;</span>T,
+        params: P,
+    ) -&gt; QueryResult&lt;BoxStream&lt;<span class="lifetime">&#39;static</span>, QueryResult&lt;Row&gt;&gt;&gt;
+    <span class="kw">where
+        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
+        P: IntoIterator + Send,
+        P::IntoIter: ExactSizeIterator,
+        P::Item: BorrowToSql,
+    {
+        <span class="prelude-val">Ok</span>(<span class="self">self
+            </span>.client()
+            .query_raw(query, params)
+            .<span class="kw">await
+            </span>.map_err(postgres_err)<span class="question-mark">?
+            </span>.map_err(postgres_err)
+            .boxed())
+    }
+
+    <span class="doccomment">/// Query the underlying SQL database with no parameters.
+    </span><span class="kw">async fn </span>query_static&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T) -&gt; QueryResult&lt;BoxStream&lt;<span class="lifetime">&#39;static</span>, QueryResult&lt;Row&gt;&gt;&gt;
+    <span class="kw">where
+        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
+    {
+        <span class="self">self</span>.query::&lt;T, [i64; <span class="number">0</span>]&gt;(query, []).<span class="kw">await
+    </span>}
+
+    <span class="doccomment">/// Query the underlying SQL database, returning exactly one result or failing.
+    </span><span class="kw">async fn </span>query_one&lt;T, P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T, params: P) -&gt; QueryResult&lt;Row&gt;
+    <span class="kw">where
+        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
+        P: IntoIterator + Send,
+        P::IntoIter: ExactSizeIterator,
+        P::Item: BorrowToSql,
+    {
+        <span class="self">self</span>.query_opt(query, params).<span class="kw">await</span><span class="question-mark">?</span>.context(NotFoundSnafu)
+    }
+
+    <span class="doccomment">/// Query the underlying SQL database with no parameters, returning exactly one result or
+    /// failing.
+    </span><span class="kw">async fn </span>query_one_static&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T) -&gt; QueryResult&lt;Row&gt;
+    <span class="kw">where
+        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
+    {
+        <span class="self">self</span>.query_one::&lt;T, [i64; <span class="number">0</span>]&gt;(query, []).<span class="kw">await
+    </span>}
+
+    <span class="doccomment">/// Query the underlying SQL database, returning zero or one results.
+    </span><span class="kw">async fn </span>query_opt&lt;T, P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T, params: P) -&gt; QueryResult&lt;<span class="prelude-ty">Option</span>&lt;Row&gt;&gt;
+    <span class="kw">where
+        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
+        P: IntoIterator + Send,
+        P::IntoIter: ExactSizeIterator,
+        P::Item: BorrowToSql,
+    {
+        <span class="self">self</span>.query(query, params).<span class="kw">await</span><span class="question-mark">?</span>.try_next().<span class="kw">await
+    </span>}
+
+    <span class="doccomment">/// Query the underlying SQL database with no parameters, returning zero or one results.
+    </span><span class="kw">async fn </span>query_opt_static&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T) -&gt; QueryResult&lt;<span class="prelude-ty">Option</span>&lt;Row&gt;&gt;
+    <span class="kw">where
+        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
+    {
+        <span class="self">self</span>.query_opt::&lt;T, [i64; <span class="number">0</span>]&gt;(query, []).<span class="kw">await
+    </span>}
+}
+
+<span class="kw">fn </span>postgres_err(err: tokio_postgres::Error) -&gt; QueryError {
+    QueryError::Error {
+        message: err.to_string(),
     }
 }
 
@@ -2928,6 +3047,17 @@
                 .user(<span class="string">&quot;postgres&quot;</span>)
                 .password(<span class="string">&quot;password&quot;</span>)
                 .port(tmp_db.port())
+                .connect()
+                .<span class="kw">await
+                </span>.unwrap()
+        }
+
+        <span class="kw">async fn </span>reset(tmp_db: <span class="kw-2">&amp;</span><span class="self">Self</span>::Storage) -&gt; <span class="self">Self </span>{
+            Config::default()
+                .user(<span class="string">&quot;postgres&quot;</span>)
+                .password(<span class="string">&quot;password&quot;</span>)
+                .port(tmp_db.port())
+                .reset_schema()
                 .connect()
                 .<span class="kw">await
                 </span>.unwrap()
