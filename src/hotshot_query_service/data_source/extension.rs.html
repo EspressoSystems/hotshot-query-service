@@ -271,6 +271,22 @@
 <a href="#271" id="271">271</a>
 <a href="#272" id="272">272</a>
 <a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -286,10 +302,11 @@
 </span><span class="kw">use </span><span class="kw">super</span>::VersionedDataSource;
 <span class="kw">use crate</span>::{
     availability::{
-        AvailabilityDataSource, BlockId, BlockQueryData, LeafId, LeafQueryData, QueryablePayload,
-        TransactionHash, TransactionIndex, UpdateAvailabilityData,
+        AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
+        QueryablePayload, TransactionHash, TransactionIndex, UpdateAvailabilityData,
     },
     metrics::PrometheusMetrics,
+    node::{NodeDataSource, UpdateNodeData},
     status::StatusDataSource,
     Payload, QueryResult, SignatureKey,
 };
@@ -403,63 +420,42 @@
     Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
 {
-    <span class="kw">type </span>LeafStream = D::LeafStream;
-    <span class="kw">type </span>BlockStream = D::BlockStream;
-
-    <span class="kw">type </span>LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt; = D::LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt;
+    <span class="kw">type </span>LeafRange&lt;R&gt; = D::LeafRange&lt;R&gt;
     <span class="kw">where
-        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
-        R: RangeBounds&lt;usize&gt; + Send;
-    <span class="kw">type </span>BlockRange&lt;<span class="lifetime">&#39;a</span>, R&gt; = D::BlockRange&lt;<span class="lifetime">&#39;a</span>, R&gt;
+        </span>R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>BlockRange&lt;R&gt; = D::BlockRange&lt;R&gt;
     <span class="kw">where
-        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
-        R: RangeBounds&lt;usize&gt; + Send;
+        </span>R: RangeBounds&lt;usize&gt; + Send;
 
-    <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt;
+    <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;LeafQueryData&lt;Types&gt;&gt;
     <span class="kw">where
         </span>ID: Into&lt;LeafId&lt;Types&gt;&gt; + Send + Sync,
     {
         <span class="self">self</span>.data_source.get_leaf(id).<span class="kw">await
     </span>}
-    <span class="kw">async fn </span>get_block&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;
+    <span class="kw">async fn </span>get_block&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;BlockQueryData&lt;Types&gt;&gt;
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
     {
         <span class="self">self</span>.data_source.get_block(id).<span class="kw">await
     </span>}
-    <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; QueryResult&lt;<span class="self">Self</span>::LeafRange&lt;<span class="lifetime">&#39;_</span>, R&gt;&gt;
+    <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::LeafRange&lt;R&gt;
     <span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send,
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
     {
         <span class="self">self</span>.data_source.get_leaf_range(range).<span class="kw">await
     </span>}
-    <span class="kw">async fn </span>get_block_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; QueryResult&lt;<span class="self">Self</span>::BlockRange&lt;<span class="lifetime">&#39;_</span>, R&gt;&gt;
+    <span class="kw">async fn </span>get_block_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::BlockRange&lt;R&gt;
     <span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send,
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
     {
         <span class="self">self</span>.data_source.get_block_range(range).<span class="kw">await
     </span>}
     <span class="kw">async fn </span>get_block_with_transaction(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hash: TransactionHash&lt;Types&gt;,
-    ) -&gt; QueryResult&lt;(BlockQueryData&lt;Types&gt;, TransactionIndex&lt;Types&gt;)&gt; {
+    ) -&gt; Fetch&lt;(BlockQueryData&lt;Types&gt;, TransactionIndex&lt;Types&gt;)&gt; {
         <span class="self">self</span>.data_source.get_block_with_transaction(hash).<span class="kw">await
-    </span>}
-    <span class="kw">async fn </span>get_proposals(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;,
-        limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt; {
-        <span class="self">self</span>.data_source.get_proposals(proposer, limit).<span class="kw">await
-    </span>}
-    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
-        <span class="self">self</span>.data_source.count_proposals(proposer).<span class="kw">await
-    </span>}
-    <span class="kw">async fn </span>subscribe_leaves(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; QueryResult&lt;<span class="self">Self</span>::LeafStream&gt; {
-        <span class="self">self</span>.data_source.subscribe_leaves(height).<span class="kw">await
-    </span>}
-    <span class="kw">async fn </span>subscribe_blocks(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; QueryResult&lt;<span class="self">Self</span>::BlockStream&gt; {
-        <span class="self">self</span>.data_source.subscribe_blocks(height).<span class="kw">await
     </span>}
 }
 
@@ -478,6 +474,42 @@
 
     <span class="kw">async fn </span>insert_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: BlockQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="self">self</span>.data_source.insert_block(block).<span class="kw">await
+    </span>}
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;D, U, Types&gt; NodeDataSource&lt;Types&gt; <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
+<span class="kw">where
+    </span>D: NodeDataSource&lt;Types&gt; + Send + Sync,
+    U: Send + Sync,
+    Types: NodeType,
+{
+    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="self">self</span>.data_source.block_height().<span class="kw">await
+    </span>}
+    <span class="kw">async fn </span>get_proposals(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;,
+        limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt; {
+        <span class="self">self</span>.data_source.get_proposals(proposer, limit).<span class="kw">await
+    </span>}
+    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
+        <span class="self">self</span>.data_source.count_proposals(proposer).<span class="kw">await
+    </span>}
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;D, U, Types&gt; UpdateNodeData&lt;Types&gt; <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
+<span class="kw">where
+    </span>D: UpdateNodeData&lt;Types&gt; + Send + Sync,
+    U: Send + Sync,
+    Types: NodeType,
+{
+    <span class="kw">type </span>Error = D::Error;
+
+    <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+        <span class="self">self</span>.data_source.insert_leaf(leaf).<span class="kw">await
     </span>}
 }
 

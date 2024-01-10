@@ -511,6 +511,41 @@
 <a href="#511" id="511">511</a>
 <a href="#512" id="512">512</a>
 <a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -525,12 +560,12 @@
 
 </span><span class="doccomment">//! Persistent storage and sources of data consumed by APIs.
 //!
-//! Naturally, an archival query service such as this is heavily dependent on a persistent storage
-//! implementation. The APIs provided by this query service are generic over the specific type of
-//! the persistence layer, which we call a _data source_. This module provides the following
-//! concrete persistence implementations:
+//! The APIs provided by this query service are generic over the implementation which actually
+//! retrieves data in answer to queries. We call this implementation a _data source_. This module
+//! defines a data source and provides several pre-built implementations:
 //! * [`FileSystemDataSource`]
 //! * [`SqlDataSource`]
+//! * [`FetchingDataSource`], a generalization of the above
 //! * [`MetricsDataSource`]
 //!
 //! The user can choose which data source to use when initializing the query service.
@@ -539,15 +574,17 @@
 //! * [`ExtensibleDataSource`]
 //!
 
-</span><span class="kw">mod </span>buffered_channel;
-<span class="kw">mod </span>extension;
+</span><span class="kw">mod </span>extension;
+<span class="kw">mod </span>fetching;
 <span class="kw">mod </span>fs;
-<span class="kw">mod </span>ledger_log;
 <span class="kw">mod </span>metrics;
+<span class="kw">mod </span>notifier;
 <span class="kw">pub mod </span>sql;
+<span class="kw">pub mod </span>storage;
 <span class="kw">mod </span>update;
 
 <span class="kw">pub use </span>extension::ExtensibleDataSource;
+<span class="kw">pub use </span>fetching::FetchingDataSource;
 <span class="attr">#[cfg(feature = <span class="string">&quot;file-system-data-source&quot;</span>)]
 </span><span class="kw">pub use </span>fs::FileSystemDataSource;
 <span class="attr">#[cfg(feature = <span class="string">&quot;metrics-data-source&quot;</span>)]
@@ -561,36 +598,75 @@
 #[espresso_macros::generic_tests]
 </span><span class="kw">pub mod </span>availability_tests {
     <span class="kw">use crate</span>::{
-        availability::{payload_size, BlockQueryData, LeafQueryData},
+        availability::{
+            payload_size, BlockQueryData, Fetch, LeafQueryData, UpdateAvailabilityData,
+        },
+        node::NodeDataSource,
         testing::{
             consensus::MockNetwork,
             mocks::{mock_transaction, MockPayload, MockTypes, TestableDataSource},
             setup_test,
         },
-        Leaf, QueryError,
+        Leaf,
     };
     <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>commit::Committable;
-    <span class="kw">use </span>futures::{StreamExt, TryStreamExt};
+    <span class="kw">use </span>futures::{
+        future,
+        stream::{BoxStream, StreamExt},
+    };
     <span class="kw">use </span>hotshot_types::simple_certificate::QuorumCertificate;
     <span class="kw">use </span>std::collections::{HashMap, HashSet};
+    <span class="kw">use </span>std::fmt::Debug;
     <span class="kw">use </span>std::ops::{Bound, RangeBounds};
+
+    <span class="doccomment">/// Apply an upper bound to a range based on the currently available block height.
+    </span><span class="kw">async fn </span>bound_range&lt;R, D&gt;(ds: <span class="kw-2">&amp;</span>D, range: R) -&gt; <span class="kw">impl </span>RangeBounds&lt;usize&gt;
+    <span class="kw">where
+        </span>D: TestableDataSource,
+        R: RangeBounds&lt;usize&gt;,
+    {
+        <span class="kw">let </span>start = range.start_bound().cloned();
+        <span class="kw">let </span><span class="kw-2">mut </span>end = range.end_bound().cloned();
+        <span class="kw">if </span>end == Bound::Unbounded {
+            end = Bound::Excluded(NodeDataSource::block_height(ds).<span class="kw">await</span>.unwrap());
+        }
+        (start, end)
+    }
+
+    <span class="doccomment">/// Get a stream of blocks, implicitly terminating at the current block height.
+    </span><span class="kw">async fn </span>block_range&lt;R, D&gt;(ds: <span class="kw-2">&amp;</span>D, range: R) -&gt; BoxStream&lt;<span class="lifetime">&#39;static</span>, BlockQueryData&lt;MockTypes&gt;&gt;
+    <span class="kw">where
+        </span>D: TestableDataSource,
+        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+    {
+        ds.get_block_range(bound_range(ds, range).<span class="kw">await</span>)
+            .<span class="kw">await
+            </span>.then(Fetch::resolve)
+            .boxed()
+    }
+
+    <span class="doccomment">/// Get a stream of leaves, implicitly terminating at the current block height.
+    </span><span class="kw">async fn </span>leaf_range&lt;R, D&gt;(ds: <span class="kw-2">&amp;</span>D, range: R) -&gt; BoxStream&lt;<span class="lifetime">&#39;static</span>, LeafQueryData&lt;MockTypes&gt;&gt;
+    <span class="kw">where
+        </span>D: TestableDataSource,
+        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+    {
+        ds.get_leaf_range(bound_range(ds, range).<span class="kw">await</span>)
+            .<span class="kw">await
+            </span>.then(Fetch::resolve)
+            .boxed()
+    }
 
     <span class="kw">async fn </span>get_non_empty_blocks(
         ds: <span class="kw-2">&amp;</span>RwLock&lt;<span class="kw">impl </span>TestableDataSource&gt;,
     ) -&gt; Vec&lt;(LeafQueryData&lt;MockTypes&gt;, BlockQueryData&lt;MockTypes&gt;)&gt; {
         <span class="kw">let </span>ds = ds.read().<span class="kw">await</span>;
         <span class="comment">// Ignore the genesis block (start from height 1).
-        </span>ds.get_leaf_range(<span class="number">1</span>..)
+        </span>leaf_range(<span class="kw-2">&amp;*</span>ds, <span class="number">1</span>..)
             .<span class="kw">await
-            </span>.unwrap()
-            .zip(ds.get_block_range(..).<span class="kw">await</span>.unwrap())
-            .filter_map(|entry| <span class="kw">async move </span>{
-                <span class="kw">match </span>entry {
-                    (<span class="prelude-val">Ok</span>(leaf), <span class="prelude-val">Ok</span>(block)) <span class="kw">if </span>!block.is_empty() =&gt; <span class="prelude-val">Some</span>((leaf, block)),
-                    <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-                }
-            })
+            </span>.zip(block_range(<span class="kw-2">&amp;*</span>ds, <span class="number">1</span>..).<span class="kw">await</span>)
+            .filter(|(<span class="kw">_</span>, block)| future::ready(!block.is_empty()))
             .collect()
             .<span class="kw">await
     </span>}
@@ -601,22 +677,21 @@
         <span class="comment">// Check the consistency of every block/leaf pair. Keep track of transactions we&#39;ve seen so
         // we can detect duplicates.
         </span><span class="kw">let </span><span class="kw-2">mut </span>seen_transactions = HashMap::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>leaves = ds.get_leaf_range(..).<span class="kw">await</span>.unwrap().enumerate();
+        <span class="kw">let </span><span class="kw-2">mut </span>leaves = leaf_range(<span class="kw-2">&amp;*</span>ds, ..).<span class="kw">await</span>.enumerate();
         <span class="kw">while let </span><span class="prelude-val">Some</span>((i, leaf)) = leaves.next().<span class="kw">await </span>{
-            <span class="kw">let </span>leaf = leaf.unwrap();
             <span class="macro">assert_eq!</span>(leaf.height(), i <span class="kw">as </span>u64);
             <span class="macro">assert_eq!</span>(leaf.hash(), leaf.leaf().commit());
 
             <span class="comment">// Check indices.
-            </span><span class="macro">assert_eq!</span>(leaf, ds.get_leaf(i).<span class="kw">await</span>.unwrap());
-            <span class="macro">assert_eq!</span>(leaf, ds.get_leaf(leaf.hash()).<span class="kw">await</span>.unwrap());
+            </span><span class="macro">assert_eq!</span>(leaf, ds.get_leaf(i).<span class="kw">await</span>.<span class="kw">await</span>);
+            <span class="macro">assert_eq!</span>(leaf, ds.get_leaf(leaf.hash()).<span class="kw">await</span>.<span class="kw">await</span>);
             <span class="macro">assert!</span>(ds
                 .get_proposals(<span class="kw-2">&amp;</span>leaf.proposer(), <span class="prelude-val">None</span>)
                 .<span class="kw">await
                 </span>.unwrap()
                 .contains(<span class="kw-2">&amp;</span>leaf));
 
-            <span class="kw">let </span><span class="prelude-val">Ok</span>(block) = ds.get_block(i).<span class="kw">await else </span>{
+            <span class="kw">let </span><span class="prelude-val">Ok</span>(block) = ds.get_block(i).<span class="kw">await</span>.try_resolve() <span class="kw">else </span>{
                 <span class="kw">continue</span>;
             };
             <span class="macro">assert_eq!</span>(leaf.block_hash(), block.hash());
@@ -625,8 +700,8 @@
             <span class="macro">assert_eq!</span>(block.size(), payload_size::&lt;MockTypes&gt;(block.payload()));
 
             <span class="comment">// Check indices.
-            </span><span class="macro">assert_eq!</span>(block, ds.get_block(i).<span class="kw">await</span>.unwrap());
-            <span class="macro">assert_eq!</span>(ds.get_block(block.hash()).<span class="kw">await</span>.unwrap().height(), i <span class="kw">as </span>u64);
+            </span><span class="macro">assert_eq!</span>(block, ds.get_block(i).<span class="kw">await</span>.<span class="kw">await</span>);
+            <span class="macro">assert_eq!</span>(ds.get_block(block.hash()).<span class="kw">await</span>.<span class="kw">await</span>.height(), i <span class="kw">as </span>u64);
 
             <span class="kw">for </span>(j, txn) <span class="kw">in </span>block.enumerate() {
                 <span class="comment">// We should be able to look up the transaction by hash unless it is a duplicate.
@@ -635,17 +710,15 @@
                 </span><span class="kw">let </span>ix = seen_transactions
                     .entry(txn.commit())
                     .or_insert((i <span class="kw">as </span>u64, j));
-                <span class="kw">let </span>(block, pos) = ds.get_block_with_transaction(txn.commit()).<span class="kw">await</span>.unwrap();
+                <span class="kw">let </span>(block, pos) = ds.get_block_with_transaction(txn.commit()).<span class="kw">await</span>.<span class="kw">await</span>;
                 <span class="macro">assert_eq!</span>((block.height(), pos), <span class="kw-2">*</span>ix);
             }
         }
 
         <span class="comment">// Validate the list of proposals for every distinct proposer ID in the chain.
-        </span><span class="kw">for </span>proposer <span class="kw">in </span>ds
-            .get_leaf_range(..)
+        </span><span class="kw">for </span>proposer <span class="kw">in </span>leaf_range(<span class="kw-2">&amp;*</span>ds, ..)
             .<span class="kw">await
-            </span>.unwrap()
-            .filter_map(|res| <span class="kw">async move </span>{ res.ok().map(|leaf| leaf.proposer()) })
+            </span>.map(|leaf| leaf.proposer())
             .collect::&lt;HashSet&lt;<span class="kw">_</span>&gt;&gt;()
             .<span class="kw">await
         </span>{
@@ -687,15 +760,7 @@
 
         <span class="comment">// Submit a few blocks and make sure each one gets reflected in the query service and
         // preserves the consistency of the data and indices.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>blocks = {
-            ds.read()
-                .<span class="kw">await
-                </span>.subscribe_blocks(<span class="number">0</span>)
-                .<span class="kw">await
-                </span>.unwrap()
-                .map(Result::unwrap)
-                .enumerate()
-        };
+        </span><span class="kw">let </span><span class="kw-2">mut </span>blocks = { ds.read().<span class="kw">await</span>.subscribe_blocks(<span class="number">0</span>).<span class="kw">await</span>.enumerate() };
         <span class="kw">for </span>nonce <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
             <span class="kw">let </span>txn = mock_transaction(<span class="macro">vec!</span>[nonce]);
             network.submit_transaction(txn).<span class="kw">await</span>;
@@ -710,7 +775,7 @@
                 <span class="macro">tracing::info!</span>(<span class="string">&quot;block {i} is empty&quot;</span>);
             };
 
-            <span class="macro">assert_eq!</span>(ds.read().<span class="kw">await</span>.get_block(i).<span class="kw">await</span>.unwrap(), block);
+            <span class="macro">assert_eq!</span>(ds.read().<span class="kw">await</span>.get_block(i).<span class="kw">await</span>.<span class="kw">await</span>, block);
             validate(<span class="kw-2">&amp;</span>ds).<span class="kw">await</span>;
         }
 
@@ -722,38 +787,14 @@
             </span><span class="kw">let </span>ds = ds.read().<span class="kw">await</span>;
             <span class="kw">let </span>storage = D::connect(network.storage()).<span class="kw">await</span>;
             <span class="macro">assert_eq!</span>(
-                ds.get_block_range(..)
-                    .<span class="kw">await
-                    </span>.unwrap()
-                    .try_collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
-                    .<span class="kw">await
-                    </span>.unwrap(),
-                storage
-                    .get_block_range(..)
-                    .<span class="kw">await
-                    </span>.unwrap()
-                    .try_collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
-                    .<span class="kw">await
-                    </span>.unwrap()
-            );
+                block_range(<span class="kw-2">&amp;*</span>ds, ..).<span class="kw">await</span>.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>,
+                block_range(<span class="kw-2">&amp;</span>storage, ..).<span class="kw">await</span>.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await
+            </span>);
             <span class="macro">assert_eq!</span>(
-                ds.get_leaf_range(..)
-                    .<span class="kw">await
-                    </span>.unwrap()
-                    .try_collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
-                    .<span class="kw">await
-                    </span>.unwrap(),
-                storage
-                    .get_leaf_range(..)
-                    .<span class="kw">await
-                    </span>.unwrap()
-                    .try_collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
-                    .<span class="kw">await
-                    </span>.unwrap()
-            );
+                leaf_range(<span class="kw-2">&amp;*</span>ds, ..).<span class="kw">await</span>.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>,
+                leaf_range(<span class="kw-2">&amp;</span>storage, ..).<span class="kw">await</span>.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await
+            </span>);
         }
-
-        network.shut_down().<span class="kw">await</span>;
     }
 
     <span class="attr">#[async_std::test]
@@ -768,7 +809,9 @@
         // change during the test.
         </span><span class="kw">let </span>(ds, block_height) = <span class="kw">loop </span>{
             <span class="kw">let </span>ds = ds.read().<span class="kw">await</span>;
-            <span class="kw">let </span>block_height = ds.block_height().<span class="kw">await</span>.unwrap();
+            <span class="kw">let </span>block_height = NodeDataSource::&lt;MockTypes&gt;::block_height(<span class="kw-2">&amp;*</span>ds)
+                .<span class="kw">await
+                </span>.unwrap();
             <span class="kw">if </span>block_height &gt;= <span class="number">3 </span>{
                 <span class="kw">break </span>(ds, block_height <span class="kw">as </span>u64);
             }
@@ -790,17 +833,32 @@
     <span class="kw">async fn </span>do_range_test&lt;D, R, I&gt;(ds: <span class="kw-2">&amp;</span>D, range: R, expected_indices: I)
     <span class="kw">where
         </span>D: TestableDataSource,
-        R: RangeBounds&lt;usize&gt; + Clone + Send,
+        R: RangeBounds&lt;usize&gt; + Clone + Debug + Send + <span class="lifetime">&#39;static</span>,
         I: IntoIterator&lt;Item = u64&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>leaves = ds.get_leaf_range(range.clone()).<span class="kw">await</span>.unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>blocks = ds.get_block_range(range).<span class="kw">await</span>.unwrap();
+        <span class="macro">tracing::info!</span>(<span class="string">&quot;testing range {range:?}&quot;</span>);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>leaves = ds.get_leaf_range(range.clone()).<span class="kw">await</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>blocks = ds.get_block_range(range.clone()).<span class="kw">await</span>;
 
         <span class="kw">for </span>i <span class="kw">in </span>expected_indices {
-            <span class="kw">let </span>leaf = leaves.next().<span class="kw">await</span>.unwrap().unwrap();
-            <span class="kw">let </span>block = blocks.next().<span class="kw">await</span>.unwrap().unwrap();
+            <span class="kw">let </span>leaf = leaves.next().<span class="kw">await</span>.unwrap().<span class="kw">await</span>;
+            <span class="kw">let </span>block = blocks.next().<span class="kw">await</span>.unwrap().<span class="kw">await</span>;
             <span class="macro">assert_eq!</span>(leaf.height(), i);
             <span class="macro">assert_eq!</span>(block.height(), i);
+        }
+
+        <span class="kw">if </span>range.end_bound() == Bound::Unbounded {
+            <span class="comment">// If the range is unbounded, the stream should continue, yielding pending futures for
+            // the objects which are not currently available.
+            </span><span class="kw">let </span>fetch_leaf = leaves.next().<span class="kw">await</span>.unwrap();
+            <span class="kw">let </span>fetch_block = blocks.next().<span class="kw">await</span>.unwrap();
+            fetch_leaf.try_resolve().unwrap_err();
+            fetch_block.try_resolve().unwrap_err();
+        } <span class="kw">else </span>{
+            <span class="comment">// If the range is bounded, it should end where expected.
+            </span><span class="macro">assert!</span>(leaves.next().<span class="kw">await</span>.is_none());
+            <span class="macro">assert!</span>(blocks.next().<span class="kw">await</span>.is_none());
         }
     }
 
@@ -837,28 +895,34 @@
         </span>leaf.block_header.block_number += <span class="number">1</span>;
         qc.data.leaf_commit = leaf.commit();
 
-        <span class="kw">let </span>block = BlockQueryData::new(leaf.clone(), qc.clone(), MockPayload::genesis()).unwrap();
+        <span class="kw">let </span>block = BlockQueryData::new(<span class="kw-2">&amp;</span>leaf, <span class="kw-2">&amp;</span>qc, MockPayload::genesis()).unwrap();
         <span class="kw">let </span>leaf = LeafQueryData::new(leaf, qc).unwrap();
 
         <span class="comment">// Insert, but do not commit, some data and check that we can read it back.
-        </span>ds.insert_leaf(leaf.clone()).<span class="kw">await</span>.unwrap();
+        </span>UpdateAvailabilityData::&lt;MockTypes&gt;::insert_leaf(<span class="kw-2">&amp;mut </span>ds, leaf.clone())
+            .<span class="kw">await
+            </span>.unwrap();
         ds.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
 
-        <span class="macro">assert_eq!</span>(ds.block_height().<span class="kw">await</span>.unwrap(), <span class="number">2</span>);
-        <span class="macro">assert_eq!</span>(leaf, ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.unwrap());
-        <span class="macro">assert_eq!</span>(block, ds.get_block(<span class="number">1</span>).<span class="kw">await</span>.unwrap());
+        <span class="macro">assert_eq!</span>(
+            NodeDataSource::&lt;MockTypes&gt;::block_height(<span class="kw-2">&amp;</span>ds)
+                .<span class="kw">await
+                </span>.unwrap(),
+            <span class="number">2
+        </span>);
+        <span class="macro">assert_eq!</span>(leaf, ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.<span class="kw">await</span>);
+        <span class="macro">assert_eq!</span>(block, ds.get_block(<span class="number">1</span>).<span class="kw">await</span>.<span class="kw">await</span>);
 
         <span class="comment">// Revert the changes.
         </span>ds.revert().<span class="kw">await</span>;
-        <span class="macro">assert_eq!</span>(ds.block_height().<span class="kw">await</span>.unwrap(), <span class="number">1</span>);
-        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.unwrap_err(),
-            QueryError::NotFound
-        ));
-        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            ds.get_block(<span class="number">1</span>).<span class="kw">await</span>.unwrap_err(),
-            QueryError::NotFound
-        ));
+        <span class="macro">assert_eq!</span>(
+            NodeDataSource::&lt;MockTypes&gt;::block_height(<span class="kw-2">&amp;</span>ds)
+                .<span class="kw">await
+                </span>.unwrap(),
+            <span class="number">1
+        </span>);
+        ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.try_resolve().unwrap_err();
+        ds.get_block(<span class="number">1</span>).<span class="kw">await</span>.try_resolve().unwrap_err();
     }
 
     <span class="attr">#[async_std::test]
@@ -876,31 +940,37 @@
         </span>leaf.block_header.block_number += <span class="number">1</span>;
         qc.data.leaf_commit = leaf.commit();
 
-        <span class="kw">let </span>block = BlockQueryData::new(leaf.clone(), qc.clone(), MockPayload::genesis()).unwrap();
+        <span class="kw">let </span>block = BlockQueryData::new(<span class="kw-2">&amp;</span>leaf, <span class="kw-2">&amp;</span>qc, MockPayload::genesis()).unwrap();
         <span class="kw">let </span>leaf = LeafQueryData::new(leaf, qc).unwrap();
 
         <span class="comment">// Insert some data and check that we can read it back.
-        </span>ds.insert_leaf(leaf.clone()).<span class="kw">await</span>.unwrap();
+        </span>UpdateAvailabilityData::&lt;MockTypes&gt;::insert_leaf(<span class="kw-2">&amp;mut </span>ds, leaf.clone())
+            .<span class="kw">await
+            </span>.unwrap();
         ds.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
         ds.commit().<span class="kw">await</span>.unwrap();
 
-        <span class="macro">assert_eq!</span>(ds.block_height().<span class="kw">await</span>.unwrap(), <span class="number">2</span>);
-        <span class="macro">assert_eq!</span>(leaf, ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.unwrap());
-        <span class="macro">assert_eq!</span>(block, ds.get_block(<span class="number">1</span>).<span class="kw">await</span>.unwrap());
+        <span class="macro">assert_eq!</span>(
+            NodeDataSource::&lt;MockTypes&gt;::block_height(<span class="kw-2">&amp;</span>ds)
+                .<span class="kw">await
+                </span>.unwrap(),
+            <span class="number">2
+        </span>);
+        <span class="macro">assert_eq!</span>(leaf, ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.<span class="kw">await</span>);
+        <span class="macro">assert_eq!</span>(block, ds.get_block(<span class="number">1</span>).<span class="kw">await</span>.<span class="kw">await</span>);
 
         drop(ds);
 
         <span class="comment">// Reset and check that the changes are gone.
         </span><span class="kw">let </span>ds = D::reset(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
-        <span class="macro">assert_eq!</span>(ds.block_height().<span class="kw">await</span>.unwrap(), <span class="number">1</span>);
-        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.unwrap_err(),
-            QueryError::NotFound
-        ));
-        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            ds.get_block(<span class="number">1</span>).<span class="kw">await</span>.unwrap_err(),
-            QueryError::NotFound
-        ));
+        <span class="macro">assert_eq!</span>(
+            NodeDataSource::&lt;MockTypes&gt;::block_height(<span class="kw-2">&amp;</span>ds)
+                .<span class="kw">await
+                </span>.unwrap(),
+            <span class="number">1
+        </span>);
+        ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.try_resolve().unwrap_err();
+        ds.get_block(<span class="number">1</span>).<span class="kw">await</span>.try_resolve().unwrap_err();
     }
 }
 

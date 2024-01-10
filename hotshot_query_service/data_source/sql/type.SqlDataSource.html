@@ -1,0 +1,249 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A data source for the APIs provided in this crate, backed by a remote PostgreSQL database."><title>SqlDataSource in hotshot_query_service::data_source::sql - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc type"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../hotshot_query_service/index.html">hotshot_query_service</a><span class="version">0.0.7</span></h2></div><h2 class="location"><a href="#">SqlDataSource</a></h2><div class="sidebar-elems"><section><h3><a href="#aliased-type">Aliased type</a></h3><h3><a href="#implementations">Methods</a></h3><ul class="block method"><li><a href="#method.connect">connect</a></li><li><a href="#method.transaction">transaction</a></li></ul><h3><a href="#trait-implementations">Trait Implementations</a></h3><ul class="block trait-implementation"><li><a href="#impl-Query-for-FetchingDataSource%3CTypes,+SqlStorage,+()%3E">Query</a></li></ul></section><h2><a href="index.html">In hotshot_query_service::data_source::sql</a></h2></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Type Alias <a href="../../index.html">hotshot_query_service</a>::<wbr><a href="../index.html">data_source</a>::<wbr><a href="index.html">sql</a>::<wbr><a class="type" href="#">SqlDataSource</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../../../src/hotshot_query_service/data_source/sql.rs.html#283">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><pre class="rust item-decl"><code>pub type SqlDataSource&lt;Types&gt; = <a class="struct" href="../struct.FetchingDataSource.html" title="struct hotshot_query_service::data_source::FetchingDataSource">FetchingDataSource</a>&lt;Types, <a class="struct" href="../storage/sql/struct.SqlStorage.html" title="struct hotshot_query_service::data_source::storage::sql::SqlStorage">SqlStorage</a>, <a class="primitive" href="https://doc.rust-lang.org/1.75.0/std/primitive.unit.html">()</a>&gt;;</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A data source for the APIs provided in this crate, backed by a remote PostgreSQL database.</p>
+<h2 id="administration"><a href="#administration">Administration</a></h2>
+<p>This data source will automatically connect to and perform queries on a remote SQL database.
+However, <em>administration</em> of the database, such as initialization, resetting, and backups, is
+left out of the scope of this implementation, and is expected to be performed manually using
+off-the-shelf DBMS adminstration tools. The one exception is migrations, which are handled
+transparently by the <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a>.</p>
+<h3 id="schema"><a href="#schema">Schema</a></h3>
+<p>All the objects created and used by <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> are grouped under a schema for easy
+management. By default, the schema is named <code>hotshot</code>, and is created the first time a
+<a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> is constructed. The name of the schema can be configured by setting
+<a href="../storage/sql/struct.Config.html#method.schema" title="method hotshot_query_service::data_source::storage::sql::Config::schema"><code>Config::schema</code></a>.</p>
+<h3 id="initialization"><a href="#initialization">Initialization</a></h3>
+<p>When creating a <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a>, the caller can use <a href="../storage/sql/struct.Config.html" title="struct hotshot_query_service::data_source::storage::sql::Config"><code>Config</code></a> to specify the host, user, and
+database to connect to. As such, <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> is not very opinionated about how the
+Postgres instance is set up. The administrator must simply ensure that there is a database
+dedicated to the <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> and a user with appropriate permissions (all on <code>SCHEMA</code> and
+all on <code>DATABASE</code>) over that database.</p>
+<p>Here is an example of how a sufficient database could be initialized. When using the standard
+<code>postgres</code> Docker image, these statements could be placed in
+<code>/docker-entrypoint-initdb.d/init.sql</code> to automatically initialize the database upon startup.</p>
+<div class="example-wrap"><pre class="language-sql"><code>CREATE DATABASE hotshot_query_service;
+\connect hotshot_query_service;
+CREATE USER hotshot_user WITH PASSWORD &#39;password&#39;;
+GRANT ALL ON SCHEMA public TO hotshot_user;
+GRANT ALL ON DATABASE hotshot_query_service TO hotshot_user WITH GRANT OPTION;
+</code></pre></div>
+<p>One could then connect to this database with the following <a href="../storage/sql/struct.Config.html" title="struct hotshot_query_service::data_source::storage::sql::Config"><code>Config</code></a>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code>Config::default()
+    .host(<span class="string">&quot;postgres.database.hostname&quot;</span>)
+    .database(<span class="string">&quot;hotshot_query_service&quot;</span>)
+    .user(<span class="string">&quot;hotshot_user&quot;</span>)
+    .password(<span class="string">&quot;password&quot;</span>)</code></pre></div>
+<h3 id="resetting"><a href="#resetting">Resetting</a></h3>
+<p>In general, resetting the database when necessary is left up to the administrator. However, for
+convenience, we do provide a <a href="../storage/sql/struct.Config.html#method.reset_schema" title="method hotshot_query_service::data_source::storage::sql::Config::reset_schema"><code>reset_schema</code></a> option which can be used to
+wipe out existing state and create a fresh instance of the query service. This is particularly
+useful for development and staging environments. This function will permanently delete all
+tables associated with the schema used by this query service, but will not reset other schemas
+or database.</p>
+<h3 id="migrations"><a href="#migrations">Migrations</a></h3>
+<p>For the <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> to work, the database must be initialized with the appropriate schema,
+and the schema must be kept up to date when deploying a new version of this software which
+depends on a different schema. Both of these tasks are accomplished via <em>migrations</em>.</p>
+<p>Each release of this software is bundled with a sequence of migration files: one migration for
+each release that changed the schema, including the latest one. Replaying these SQL files
+against a database with an older version of the schema, including a completely empty database,
+will bring it up to date with the schema required by this version of the software. Upon creating
+an instance of <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> and connecting to a database, the data source will
+automatically fetch the current version from the database and, if it is old, replay the
+necessary migration files.</p>
+<h3 id="custom-migrations"><a href="#custom-migrations">Custom Migrations</a></h3>
+<p>In keeping with the philosophy of this crate, <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> is designed to be
+<a href="#extension-and-composition">extensible and composable</a>. When extending the provided APIs with
+new, application-specific queries, it will often be desirable to alter the schema of the
+database in some way, such as adding additional columns to some of the tables or creating new
+indices. When composing the provided APIs with additional API modules, it may also be desirable
+to alter the schema, although the changes are more likely to be completely independent of the
+schema used by this data source, such as adding entirely new tables.</p>
+<p>In either case, the default schema can be modified by inserting additional migrations between
+the migrations distributed with this crate. The new migrations will then automatically be
+replayed as necessary when initializing a <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a>. New custom migrations can be
+added with each software update, to keep the custom data up to date as the default schema
+changes.</p>
+<p>Custom migrations can be inserted using <a href="../storage/sql/struct.Config.html#method.migrations" title="method hotshot_query_service::data_source::storage::sql::Config::migrations"><code>Config::migrations</code></a>. Each custom migration will be
+inserted into the overall sequence of migrations in order of version number. The migrations
+provided by this crate only use version numbers which are multiples of 10, so the non-multiples
+can be used to insert custom migrations between the default migrations. You can also replace a
+default migration completely by providing a custom migration with the same version number. This
+may be useful when an earlier custom migration has altered the schema in such a way that a later
+migration no longer works as-is. However, this technique is error prone and should be used only
+when necessary.</p>
+<p>When using custom migrations, it is the user’s responsibility to ensure that the resulting
+schema is compatible with the schema expected by <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a>. Adding things (tables,
+columns, indices) should usually be safe. Removing, altering, or renaming things should be done
+with extreme caution.</p>
+<p>It is standard to store custom migrations as SQL files in a sub-directory of the crate. For ease
+of release and deploymenet, such directories can be embedded into a Rust binary and parsed into
+a list of <a href="../storage/sql/struct.Migration.html" title="struct hotshot_query_service::data_source::storage::sql::Migration"><code>Migration</code></a> objects using the <a href="macro.include_migrations.html" title="macro hotshot_query_service::data_source::sql::include_migrations"><code>include_migrations</code></a> macro.</p>
+<p>It is also possible to take complete control over migrating the schema using
+<a href="../storage/sql/struct.Config.html#method.no_migrations" title="method hotshot_query_service::data_source::storage::sql::Config::no_migrations"><code>Config::no_migrations</code></a> to prevent the <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> from running its own migrations. The
+database administrator then becomes responsible for manually migrating the database, ensuring the
+schema is up to date, and ensuring that the schema is at all times compatible with the schema
+expected by the current version of this software. Nevertheless, this may be the best option when
+your application-specific schema has diverged significantly from the default schema.</p>
+<h2 id="synchronization"><a href="#synchronization">Synchronization</a></h2>
+<p><a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> implements <a href="../trait.VersionedDataSource.html" title="trait hotshot_query_service::data_source::VersionedDataSource"><code>VersionedDataSource</code></a>, which means
+changes are not applied to the underlying database with every operation. Instead, outstanding
+changes are batched and applied all at once, atomically, whenever
+<a href="../trait.VersionedDataSource.html#tymethod.commit" title="method hotshot_query_service::data_source::VersionedDataSource::commit"><code>commit</code></a> is called. Outstanding, uncommitted changes can
+also be rolled back completely using <a href="../trait.VersionedDataSource.html#tymethod.revert" title="method hotshot_query_service::data_source::VersionedDataSource::revert"><code>revert</code></a>.</p>
+<p>Internally, the data source maintains an open <a href="../storage/sql/struct.Transaction.html" title="struct hotshot_query_service::data_source::storage::sql::Transaction"><code>Transaction</code></a> whenever there are outstanding
+changes, and commits the transaction on <a href="../trait.VersionedDataSource.html#tymethod.commit" title="method hotshot_query_service::data_source::VersionedDataSource::commit"><code>commit</code></a>. The
+underlying database transaction can be accessed directly via <a href="../struct.FetchingDataSource.html#method.transaction" title="method hotshot_query_service::data_source::FetchingDataSource::transaction"><code>transaction</code></a>,
+which makes it possible to compose application-specific database updates atomically with updates
+made by the <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> itself. This is useful for <a href="#extension-and-composition">extension and
+composition</a>.</p>
+<h2 id="extension-and-composition"><a href="#extension-and-composition">Extension and Composition</a></h2>
+<p><a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> is designed to be both extensible (so you can add additional state to the API
+modules defined in this crate) and composable (so you can use <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> as one component
+of a larger state type for an application with additional modules).</p>
+<h3 id="extension"><a href="#extension">Extension</a></h3>
+<p>It is possible to add additional, application-specific state to <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a>. If the new
+state should live in memory, simply wrap the <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> in an
+<a href="../struct.ExtensibleDataSource.html" title="struct hotshot_query_service::data_source::ExtensibleDataSource"><code>ExtensibleDataSource</code></a>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">type </span>AppState = <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str;
+
+<span class="kw">let </span>data_source: ExtensibleDataSource&lt;SqlDataSource&lt;AppTypes&gt;, AppState&gt; =
+    ExtensibleDataSource::new(SqlDataSource::connect(config).<span class="kw">await</span><span class="question-mark">?</span>, <span class="string">&quot;app state&quot;</span>);</code></pre></div>
+<p>The <a href="../struct.ExtensibleDataSource.html" title="struct hotshot_query_service::data_source::ExtensibleDataSource"><code>ExtensibleDataSource</code></a> wrapper implements all the same data
+source traits as <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a>, and also provides access to the <code>AppState</code> parameter for use
+in API endpoint handlers. This can be used to implement an app-specific data source trait and
+add a new API endpoint that uses this app-specific data, as described in the
+<a href="../../index.html#extension" title="mod hotshot_query_service">extension guide</a>.</p>
+<p>If the new application-specific state should live in the SQL database itself, the implementation
+is more involved, but still possible. Follow the steps for
+<a href="#custom-migrations">custom migrations</a> to modify the database schema to account for the new
+data you want to store. You can then access this data through the <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> using
+<a href="../struct.FetchingDataSource.html#method.query" title="method hotshot_query_service::data_source::FetchingDataSource::query"><code>query</code></a> to run a custom read-only SQL query or <a href="../struct.FetchingDataSource.html#method.transaction" title="method hotshot_query_service::data_source::FetchingDataSource::transaction"><code>transaction</code></a>
+to execute a custom atomic mutation of the database. If you use
+<a href="../struct.FetchingDataSource.html#method.transaction" title="method hotshot_query_service::data_source::FetchingDataSource::transaction"><code>transaction</code></a>, be sure to call
+<a href="../trait.VersionedDataSource.html#tymethod.commit" title="method hotshot_query_service::data_source::VersionedDataSource::commit"><code>commit</code></a> when you are ready to persist your changes.</p>
+<p>You will typically use <a href="../struct.FetchingDataSource.html#method.query" title="method hotshot_query_service::data_source::FetchingDataSource::query"><code>query</code></a> to read custom data in API endpoint handlers and
+<a href="../struct.FetchingDataSource.html#method.transaction" title="method hotshot_query_service::data_source::FetchingDataSource::transaction"><code>transaction</code></a> to populate custom data in your web server’s update loop.</p>
+<h3 id="composition"><a href="#composition">Composition</a></h3>
+<p>Composing <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> with other module states is fairly simple – just
+create an aggregate struct containing both <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> and your additional module
+states, as described in the <a href="../../index.html#composition" title="mod hotshot_query_service">composition guide</a>. If the additional modules
+have data that should live in the same database as the <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> data, you can follow
+the steps in <a href="#custom-migrations">custom migrations</a> to accomodate this. When modifying that
+data, you can use <a href="../struct.FetchingDataSource.html#method.transaction" title="method hotshot_query_service::data_source::FetchingDataSource::transaction"><code>transaction</code></a> to atomically synchronize updates to the
+other modules’ data with updates to the <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a>. If the additional data is completely
+independent of HotShot query service data and does not need to be synchronized, you can also
+connect to the database directly to make updates.</p>
+<p>In the following example, we compose HotShot query service modules with other application-
+specific modules, synchronizing updates using <a href="../struct.FetchingDataSource.html#method.transaction" title="method hotshot_query_service::data_source::FetchingDataSource::transaction"><code>transaction</code></a>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">struct </span>AppState {
+    hotshot_qs: SqlDataSource&lt;AppTypes&gt;,
+    <span class="comment">// additional state for other modules
+</span>}
+
+<span class="kw">async fn </span>init_server(
+    config: Config,
+    <span class="kw-2">mut </span>hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;App&lt;Arc&lt;RwLock&lt;AppState&gt;&gt;, Error&gt;, Error&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>hotshot_qs = SqlDataSource::connect(config).<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
+    <span class="comment">// Initialize storage for other modules, using `hotshot_qs` to access the database.
+    </span><span class="kw">let </span>tx = hotshot_qs.transaction().<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
+    <span class="comment">// ...
+
+    </span><span class="kw">let </span>state = Arc::new(RwLock::new(AppState {
+        hotshot_qs,
+        <span class="comment">// additional state for other modules
+    </span>}));
+    <span class="kw">let </span><span class="kw-2">mut </span>app = App::with_state(state.clone());
+    <span class="comment">// Register API modules.
+
+    </span>spawn(<span class="kw">async move </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.get_event_stream(Default::default()).<span class="kw">await</span>.<span class="number">0</span>;
+        <span class="kw">while let </span><span class="prelude-val">Some</span>(event) = events.next().<span class="kw">await </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>state = state.write().<span class="kw">await</span>;
+            UpdateDataSource::&lt;AppTypes&gt;::update(<span class="kw-2">&amp;mut </span>state.hotshot_qs, <span class="kw-2">&amp;</span>event)
+                .<span class="kw">await
+                </span>.unwrap();
+            <span class="comment">// Update other modules&#39; states based on `event`. Use `hotshot_qs` to include
+            // database updates in the same atomic transaction as `hotshot_qs.update`.
+            </span><span class="kw">let </span>tx = state.hotshot_qs.transaction().<span class="kw">await</span>.unwrap();
+
+            <span class="comment">// Commit all outstanding changes to the entire state at the same time.
+            </span>state.hotshot_qs.commit().<span class="kw">await</span>.unwrap();
+        }
+    });
+
+    <span class="prelude-val">Ok</span>(app)
+}</code></pre></div>
+</div></details><h2 id="aliased-type" class="small-section-header">Aliased Type<a href="#aliased-type" class="anchor">§</a></h2><pre class="rust item-decl"><code>struct SqlDataSource&lt;Types&gt; { /* private fields */ }</code></pre><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-FetchingDataSource%3CTypes,+SqlStorage,+()%3E" class="impl"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/sql.rs.html#285-294">source</a><a href="#impl-FetchingDataSource%3CTypes,+SqlStorage,+()%3E" class="anchor">§</a><h3 class="code-header">impl&lt;Types&gt; <a class="type" href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource">SqlDataSource</a>&lt;Types&gt;<span class="where fmt-newline">where
+    Types: NodeType,
+    <a class="type" href="../../type.Payload.html" title="type hotshot_query_service::Payload">Payload</a>&lt;Types&gt;: <a class="trait" href="../../availability/trait.QueryablePayload.html" title="trait hotshot_query_service::availability::QueryablePayload">QueryablePayload</a>,</span></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.connect" class="method"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/sql.rs.html#291-293">source</a><h4 class="code-header">pub async fn <a href="#method.connect" class="fn">connect</a>(config: <a class="struct" href="../storage/sql/struct.Config.html" title="struct hotshot_query_service::data_source::storage::sql::Config">Config</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.75.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Self, <a class="struct" href="../storage/sql/struct.Error.html" title="struct hotshot_query_service::data_source::storage::sql::Error">Error</a>&gt;</h4></section></summary><div class="docblock"><p>Connect to a remote database.</p>
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-FetchingDataSource%3CTypes,+SqlStorage,+()%3E-1" class="impl"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/sql.rs.html#296-316">source</a><a href="#impl-FetchingDataSource%3CTypes,+SqlStorage,+()%3E-1" class="anchor">§</a><h3 class="code-header">impl&lt;Types&gt; <a class="type" href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource">SqlDataSource</a>&lt;Types&gt;<span class="where fmt-newline">where
+    Types: NodeType,</span></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.transaction" class="method"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/sql.rs.html#308-315">source</a><h4 class="code-header">pub async fn <a href="#method.transaction" class="fn">transaction</a>(&amp;mut self) -&gt; <a class="type" href="../../type.QueryResult.html" title="type hotshot_query_service::QueryResult">QueryResult</a>&lt;<a class="struct" href="../storage/sql/struct.Transaction.html" title="struct hotshot_query_service::data_source::storage::sql::Transaction">Transaction</a>&lt;'_&gt;&gt;</h4></section></summary><div class="docblock"><p>Access the transaction which is accumulating all uncommitted changes to the data source.</p>
+<p>This can be used to manually group database modifications to custom state atomically with
+modifications made through the <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a>.</p>
+<p>If there is no currently open transaction, a new transaction will be opened. No changes
+made through the transaction objeect returned by this method will be persisted until
+<a href="../trait.VersionedDataSource.html#tymethod.commit" title="method hotshot_query_service::data_source::VersionedDataSource::commit"><code>commit</code></a> is called.</p>
+</div></details></div></details></div><h2 id="trait-implementations" class="small-section-header">Trait Implementations<a href="#trait-implementations" class="anchor">§</a></h2><div id="trait-implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-Query-for-FetchingDataSource%3CTypes,+SqlStorage,+()%3E" class="impl"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/sql.rs.html#319-326">source</a><a href="#impl-Query-for-FetchingDataSource%3CTypes,+SqlStorage,+()%3E" class="anchor">§</a><h3 class="code-header">impl&lt;Types&gt; <a class="trait" href="../storage/sql/trait.Query.html" title="trait hotshot_query_service::data_source::storage::sql::Query">Query</a> for <a class="type" href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource">SqlDataSource</a>&lt;Types&gt;<span class="where fmt-newline">where
+    Types: NodeType,</span></h3></section></summary><div class="impl-items"><section id="method.client" class="method trait-impl"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/sql.rs.html#323-325">source</a><a href="#method.client" class="anchor">§</a><h4 class="code-header">fn <a href="../storage/sql/trait.Query.html#tymethod.client" class="fn">client</a>&lt;'life0, 'async_trait&gt;(
+    &amp;'life0 self
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.75.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.75.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="enum" href="https://doc.rust-lang.org/1.75.0/alloc/borrow/enum.Cow.html" title="enum alloc::borrow::Cow">Cow</a>&lt;'_, <a class="struct" href="https://doc.rust-lang.org/1.75.0/alloc/sync/struct.Arc.html" title="struct alloc::sync::Arc">Arc</a>&lt;Client&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<span class="where fmt-newline">where
+    Self: 'async_trait,
+    'life0: 'async_trait,</span></h4></section><section id="method.query" class="method trait-impl"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/storage/sql.rs.html#833-852">source</a><a href="#method.query" class="anchor">§</a><h4 class="code-header">fn <a href="../storage/sql/trait.Query.html#method.query" class="fn">query</a>&lt;'life0, 'life1, 'async_trait, T, P&gt;(
+    &amp;'life0 self,
+    query: <a class="primitive" href="https://doc.rust-lang.org/1.75.0/std/primitive.reference.html">&amp;'life1 T</a>,
+    params: P
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.75.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.75.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../type.QueryResult.html" title="type hotshot_query_service::QueryResult">QueryResult</a>&lt;BoxStream&lt;'static, <a class="type" href="../../type.QueryResult.html" title="type hotshot_query_service::QueryResult">QueryResult</a>&lt;Row&gt;&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<span class="where fmt-newline">where
+    T: ?<a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + ToStatement + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,
+    P: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIterator</a> + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait,
+    P::<a class="associatedtype" href="https://doc.rust-lang.org/1.75.0/core/iter/traits/collect/trait.IntoIterator.html#associatedtype.IntoIter" title="type core::iter::traits::collect::IntoIterator::IntoIter">IntoIter</a>: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/iter/traits/exact_size/trait.ExactSizeIterator.html" title="trait core::iter::traits::exact_size::ExactSizeIterator">ExactSizeIterator</a>,
+    P::<a class="associatedtype" href="https://doc.rust-lang.org/1.75.0/core/iter/traits/collect/trait.IntoIterator.html#associatedtype.Item" title="type core::iter::traits::collect::IntoIterator::Item">Item</a>: BorrowToSql,
+    Self: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,
+    'life0: 'async_trait,
+    'life1: 'async_trait,</span></h4></section><details class="toggle method-toggle" open><summary><section id="method.query_static" class="method trait-impl"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/storage/sql.rs.html#855-860">source</a><a href="#method.query_static" class="anchor">§</a><h4 class="code-header">fn <a href="../storage/sql/trait.Query.html#method.query_static" class="fn">query_static</a>&lt;'life0, 'life1, 'async_trait, T&gt;(
+    &amp;'life0 self,
+    query: <a class="primitive" href="https://doc.rust-lang.org/1.75.0/std/primitive.reference.html">&amp;'life1 T</a>
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.75.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.75.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../type.QueryResult.html" title="type hotshot_query_service::QueryResult">QueryResult</a>&lt;BoxStream&lt;'static, <a class="type" href="../../type.QueryResult.html" title="type hotshot_query_service::QueryResult">QueryResult</a>&lt;Row&gt;&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<span class="where fmt-newline">where
+    T: ?<a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + ToStatement + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,
+    Self: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,
+    'life0: 'async_trait,
+    'life1: 'async_trait,</span></h4></section></summary><div class='docblock'>Query the underlying SQL database with no parameters.</div></details><details class="toggle method-toggle" open><summary><section id="method.query_one" class="method trait-impl"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/storage/sql.rs.html#863-871">source</a><a href="#method.query_one" class="anchor">§</a><h4 class="code-header">fn <a href="../storage/sql/trait.Query.html#method.query_one" class="fn">query_one</a>&lt;'life0, 'life1, 'async_trait, T, P&gt;(
+    &amp;'life0 self,
+    query: <a class="primitive" href="https://doc.rust-lang.org/1.75.0/std/primitive.reference.html">&amp;'life1 T</a>,
+    params: P
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.75.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.75.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../type.QueryResult.html" title="type hotshot_query_service::QueryResult">QueryResult</a>&lt;Row&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<span class="where fmt-newline">where
+    T: ?<a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + ToStatement + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,
+    P: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIterator</a> + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait,
+    P::<a class="associatedtype" href="https://doc.rust-lang.org/1.75.0/core/iter/traits/collect/trait.IntoIterator.html#associatedtype.IntoIter" title="type core::iter::traits::collect::IntoIterator::IntoIter">IntoIter</a>: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/iter/traits/exact_size/trait.ExactSizeIterator.html" title="trait core::iter::traits::exact_size::ExactSizeIterator">ExactSizeIterator</a>,
+    P::<a class="associatedtype" href="https://doc.rust-lang.org/1.75.0/core/iter/traits/collect/trait.IntoIterator.html#associatedtype.Item" title="type core::iter::traits::collect::IntoIterator::Item">Item</a>: BorrowToSql,
+    Self: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,
+    'life0: 'async_trait,
+    'life1: 'async_trait,</span></h4></section></summary><div class='docblock'>Query the underlying SQL database, returning exactly one result or failing.</div></details><details class="toggle method-toggle" open><summary><section id="method.query_one_static" class="method trait-impl"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/storage/sql.rs.html#875-880">source</a><a href="#method.query_one_static" class="anchor">§</a><h4 class="code-header">fn <a href="../storage/sql/trait.Query.html#method.query_one_static" class="fn">query_one_static</a>&lt;'life0, 'life1, 'async_trait, T&gt;(
+    &amp;'life0 self,
+    query: <a class="primitive" href="https://doc.rust-lang.org/1.75.0/std/primitive.reference.html">&amp;'life1 T</a>
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.75.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.75.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../type.QueryResult.html" title="type hotshot_query_service::QueryResult">QueryResult</a>&lt;Row&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<span class="where fmt-newline">where
+    T: ?<a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + ToStatement + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,
+    Self: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,
+    'life0: 'async_trait,
+    'life1: 'async_trait,</span></h4></section></summary><div class='docblock'>Query the underlying SQL database with no parameters, returning exactly one result or
+failing.</div></details><details class="toggle method-toggle" open><summary><section id="method.query_opt" class="method trait-impl"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/storage/sql.rs.html#883-891">source</a><a href="#method.query_opt" class="anchor">§</a><h4 class="code-header">fn <a href="../storage/sql/trait.Query.html#method.query_opt" class="fn">query_opt</a>&lt;'life0, 'life1, 'async_trait, T, P&gt;(
+    &amp;'life0 self,
+    query: <a class="primitive" href="https://doc.rust-lang.org/1.75.0/std/primitive.reference.html">&amp;'life1 T</a>,
+    params: P
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.75.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.75.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../type.QueryResult.html" title="type hotshot_query_service::QueryResult">QueryResult</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.75.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Row&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<span class="where fmt-newline">where
+    T: ?<a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + ToStatement + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,
+    P: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIterator</a> + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait,
+    P::<a class="associatedtype" href="https://doc.rust-lang.org/1.75.0/core/iter/traits/collect/trait.IntoIterator.html#associatedtype.IntoIter" title="type core::iter::traits::collect::IntoIterator::IntoIter">IntoIter</a>: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/iter/traits/exact_size/trait.ExactSizeIterator.html" title="trait core::iter::traits::exact_size::ExactSizeIterator">ExactSizeIterator</a>,
+    P::<a class="associatedtype" href="https://doc.rust-lang.org/1.75.0/core/iter/traits/collect/trait.IntoIterator.html#associatedtype.Item" title="type core::iter::traits::collect::IntoIterator::Item">Item</a>: BorrowToSql,
+    Self: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,
+    'life0: 'async_trait,
+    'life1: 'async_trait,</span></h4></section></summary><div class='docblock'>Query the underlying SQL database, returning zero or one results.</div></details><details class="toggle method-toggle" open><summary><section id="method.query_opt_static" class="method trait-impl"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/storage/sql.rs.html#894-899">source</a><a href="#method.query_opt_static" class="anchor">§</a><h4 class="code-header">fn <a href="../storage/sql/trait.Query.html#method.query_opt_static" class="fn">query_opt_static</a>&lt;'life0, 'life1, 'async_trait, T&gt;(
+    &amp;'life0 self,
+    query: <a class="primitive" href="https://doc.rust-lang.org/1.75.0/std/primitive.reference.html">&amp;'life1 T</a>
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.75.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.75.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../type.QueryResult.html" title="type hotshot_query_service::QueryResult">QueryResult</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.75.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Row&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<span class="where fmt-newline">where
+    T: ?<a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + ToStatement + <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,
+    Self: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> + 'async_trait,
+    'life0: 'async_trait,
+    'life1: 'async_trait,</span></h4></section></summary><div class='docblock'>Query the underlying SQL database with no parameters, returning zero or one results.</div></details></div></details></div><script src="../../../type.impl/hotshot_query_service/data_source/struct.FetchingDataSource.js" data-self-path="hotshot_query_service::data_source::sql::SqlDataSource" async></script></section></div></main></body></html>

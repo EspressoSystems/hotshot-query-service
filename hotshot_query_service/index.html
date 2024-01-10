@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The HotShot Query Service is a minimal, generic query service that can be integrated into any decentralized application running on the hotshot consensus layer. It provides all the features that HotShot itself expects of a query service (such as providing consensus-related data for catchup and synchronization) as well as some application-level features that deal only with consensus-related or application-agnostic data. In addition, the query service is provided as an extensible library, which makes it easy to add additional, application-specific features."><title>hotshot_query_service - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../hotshot_query_service/index.html">hotshot_query_service</a><span class="version">0.0.7</span></h2></div><div class="sidebar-elems"><ul class="block">
-            <li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Aliases</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">hotshot_query_service</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../src/hotshot_query_service/lib.rs.html#13-665">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The HotShot Query Service is a minimal, generic query service that can be integrated into any
+            <li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Aliases</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">hotshot_query_service</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../src/hotshot_query_service/lib.rs.html#13-706">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The HotShot Query Service is a minimal, generic query service that can be integrated into any
 decentralized application running on the [hotshot] consensus layer. It provides all the features
 that HotShot itself expects of a query service (such as providing consensus-related data for
 catchup and synchronization) as well as some application-level features that deal only with
@@ -9,6 +9,7 @@ extensible library, which makes it easy to add additional, application-specific 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>hotshot_query_service::{
     availability,
     data_source::{FileSystemDataSource, UpdateDataSource, VersionedDataSource},
+    node,
     status::UpdateStatusData,
     status, Error
 };
@@ -32,6 +33,8 @@ extensible library, which makes it easy to add additional, application-specific 
 <span class="comment">// Create API modules.
 </span><span class="kw">let </span>availability_api = availability::define_api(<span class="kw-2">&amp;</span>Default::default())
     .map_err(Error::internal)<span class="question-mark">?</span>;
+<span class="kw">let </span>node_api = node::define_api(<span class="kw-2">&amp;</span>Default::default())
+    .map_err(Error::internal)<span class="question-mark">?</span>;
 <span class="kw">let </span>status_api = status::define_api(<span class="kw-2">&amp;</span>Default::default())
     .map_err(Error::internal)<span class="question-mark">?</span>;
 
@@ -40,6 +43,8 @@ extensible library, which makes it easy to add additional, application-specific 
 <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(data_source.clone());
 app
     .register_module(<span class="string">&quot;availability&quot;</span>, availability_api)
+    .map_err(Error::internal)<span class="question-mark">?
+    </span>.register_module(<span class="string">&quot;node&quot;</span>, node_api)
     .map_err(Error::internal)<span class="question-mark">?
     </span>.register_module(<span class="string">&quot;status&quot;</span>, status_api)
     .map_err(Error::internal)<span class="question-mark">?</span>;
@@ -135,7 +140,7 @@ the availability API like so:</p>
         <span class="kw">let </span>block = state
             .get_block(block_index)
             .<span class="kw">await
-            </span>.context(QueryBlockSnafu { resource: block_index.to_string() })<span class="question-mark">?</span>;
+            </span>.context(FetchBlockSnafu { resource: block_index.to_string() })<span class="question-mark">?</span>;
         <span class="kw">let </span>txn = block.transaction(<span class="kw-2">&amp;</span>txn_index).unwrap();
         <span class="kw">let </span>utxo = <span class="comment">// Application-specific logic to extract a UTXO from a transaction.
         </span><span class="prelude-val">Ok</span>(utxo)
@@ -165,15 +170,15 @@ DOC = &quot;Get a UTXO by its index&quot;
 <p>Composing the modules provided by this crate with other, unrelated modules to create a unified
 service is fairly simple, as most of the complexity is handled by [tide_disco], which already
 provides a mechanism for composing several modules into a single application. In principle, all
-you need to do is register the <a href="availability/index.html" title="mod hotshot_query_service::availability">availability</a> and <a href="status/index.html" title="mod hotshot_query_service::status">status</a> APIs provided by this crate with a
-[tide_disco::App], and then register your own API modules with the same app.</p>
+you need to do is register the <a href="availability/index.html" title="mod hotshot_query_service::availability">availability</a>, <a href="node/index.html" title="mod hotshot_query_service::node">node</a>, and <a href="status/index.html" title="mod hotshot_query_service::status">status</a> APIs provided by this crate
+with a [tide_disco::App], and then register your own API modules with the same app.</p>
 <p>The one wrinkle is that all modules within a [tide_disco] app must share the same state type. It
-is for this reason that the modules provided by this crate are generic on the state type – both
-<a href="availability/fn.define_api.html" title="fn hotshot_query_service::availability::define_api">availability::define_api</a> and <a href="status/fn.define_api.html" title="fn hotshot_query_service::status::define_api">status::define_api</a> can work with any state type, provided that
-type implements the corresponding data source traits. The data sources provided by this crate
-implement both of these traits, but if you want to use a custom state type that includes state
-for other modules, you will need to implement these traits for your custom type. The basic
-pattern looks like this:</p>
+is for this reason that the modules provided by this crate are generic on the state type –
+<a href="availability/fn.define_api.html" title="fn hotshot_query_service::availability::define_api">availability::define_api</a>, <a href="node/fn.define_api.html" title="fn hotshot_query_service::node::define_api">node::define_api</a>, and <a href="status/fn.define_api.html" title="fn hotshot_query_service::status::define_api">status::define_api</a> can all work with any
+state type, provided that type implements the corresponding data source traits. The data sources
+provided by this crate implement these traits, but if you want to use a custom state type that
+includes state for other modules, you will need to implement these traits for your custom type.
+The basic pattern looks like this:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// Our AppState takes an underlying data source `D` which already implements the relevant
 // traits, and adds some state for use with other modules.
@@ -187,19 +192,14 @@ pattern looks like this:</p>
 </span><span class="kw">impl</span>&lt;D: AvailabilityDataSource&lt;AppTypes&gt; + Send + Sync&gt;
     AvailabilityDataSource&lt;AppTypes&gt; <span class="kw">for </span>AppState&lt;D&gt;
 {
-    <span class="kw">type </span>LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt; = D::LeafRange&lt;<span class="lifetime">&#39;a</span>, R&gt;
+    <span class="kw">type </span>LeafRange&lt;R&gt; = D::LeafRange&lt;R&gt;
     <span class="kw">where
-        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
-        R: RangeBounds&lt;usize&gt; + Send;
-    <span class="kw">type </span>BlockRange&lt;<span class="lifetime">&#39;a</span>, R&gt; = D::BlockRange&lt;<span class="lifetime">&#39;a</span>, R&gt;
+        </span>R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>BlockRange&lt;R&gt; = D::BlockRange&lt;R&gt;
     <span class="kw">where
-        </span><span class="self">Self</span>: <span class="lifetime">&#39;a</span>,
-        R: RangeBounds&lt;usize&gt; + Send;
+        </span>R: RangeBounds&lt;usize&gt; + Send;
 
-    <span class="kw">type </span>LeafStream = D::LeafStream;
-    <span class="kw">type </span>BlockStream = D::BlockStream;
-
-    <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;LeafQueryData&lt;AppTypes&gt;&gt;
+    <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;LeafQueryData&lt;AppTypes&gt;&gt;
     <span class="kw">where
         </span>ID: Into&lt;LeafId&lt;AppTypes&gt;&gt; + Send + Sync,
     {
@@ -208,6 +208,26 @@ pattern looks like this:</p>
 
     <span class="comment">// etc
 </span>}
+
+<span class="comment">// Implement data source trait for node API by delegating to the underlying data source.
+</span><span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;D: NodeDataSource&lt;AppTypes&gt; + Send + Sync&gt; NodeDataSource&lt;AppTypes&gt; <span class="kw">for </span>AppState&lt;D&gt; {
+    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="self">self</span>.hotshot_qs.block_height().<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>get_proposals(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        id: <span class="kw-2">&amp;</span>SignatureKey&lt;AppTypes&gt;,
+        limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;AppTypes&gt;&gt;&gt; {
+        <span class="self">self</span>.hotshot_qs.get_proposals(id, limit).<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>SignatureKey&lt;AppTypes&gt;) -&gt; QueryResult&lt;usize&gt; {
+        <span class="self">self</span>.hotshot_qs.count_proposals(id).<span class="kw">await
+    </span>}
+}
 
 <span class="comment">// Implement data source trait for status API by delegating to the underlying data source.
 </span><span class="attr">#[async_trait]
@@ -223,19 +243,21 @@ pattern looks like this:</p>
 
 <span class="comment">// Implement data source traits for other modules, using additional state from AppState.</span></code></pre></div>
 <p>In the future, we may provide derive macros for
-<a href="availability/trait.AvailabilityDataSource.html" title="trait hotshot_query_service::availability::AvailabilityDataSource">AvailabilityDataSource</a> and
-<a href="status/trait.StatusDataSource.html" title="trait hotshot_query_service::status::StatusDataSource">StatusDataSource</a> to eliminate the boilerplate of implementing them
-for a custom type that has an existing implementation as one of its fields.</p>
+<a href="availability/trait.AvailabilityDataSource.html" title="trait hotshot_query_service::availability::AvailabilityDataSource">AvailabilityDataSource</a>,
+<a href="node/trait.NodeDataSource.html" title="trait hotshot_query_service::node::NodeDataSource">NodeDataSource</a>, and <a href="status/trait.StatusDataSource.html" title="trait hotshot_query_service::status::StatusDataSource">StatusDataSource</a> to
+eliminate the boilerplate of implementing them for a custom type that has an existing
+implementation as one of its fields.</p>
 <p>Once you have created your <code>AppState</code> type aggregating the state for each API module, you can
 initialize the state as normal, instantiating <code>D</code> with a concrete implementation of a data
 source and initializing <code>hotshot_qs</code> as you normally would that data source.</p>
-<p><em>However</em>, this only works if you want the persistent storage for the availability and status
+<p><em>However</em>, this only works if you want the persistent storage for the availability and node
 modules (managed by <code>hotshot_qs</code>) to be independent of the persistent storage for other modules.
 You may well want to synchronize the storage for all modules together, so that updates to the
 entire application state can be done atomically. This is particularly relevant if one of your
 application-specific modules updates its storage based on a stream of HotShot leaves. Since the
-availability module also updates with each new leaf, you probably want these two modules to stay
-in sync. The data source implementations provided by this crate provide means by which you can
-add additional data to the same persistent store and synchronize the entire store together.
-Refer to the documentation for you specific data source for information on how to achieve this.</p>
-</div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2><ul class="item-table"><li><div class="item-name"><a class="mod" href="availability/index.html" title="mod hotshot_query_service::availability">availability</a></div></li><li><div class="item-name"><a class="mod" href="data_source/index.html" title="mod hotshot_query_service::data_source">data_source</a></div><div class="desc docblock-short">Persistent storage and sources of data consumed by APIs.</div></li><li><div class="item-name"><a class="mod" href="metrics/index.html" title="mod hotshot_query_service::metrics">metrics</a></div></li><li><div class="item-name"><a class="mod" href="status/index.html" title="mod hotshot_query_service::status">status</a></div></li></ul><h2 id="macros" class="small-section-header"><a href="#macros">Macros</a></h2><ul class="item-table"><li><div class="item-name"><a class="macro" href="macro.include_migrations.html" title="macro hotshot_query_service::include_migrations">include_migrations</a></div><div class="desc docblock-short">Embed migrations from the given directory into the current binary.</div></li><li><div class="item-name"><a class="macro" href="macro.instantiate_data_source_tests.html" title="macro hotshot_query_service::instantiate_data_source_tests">instantiate_data_source_tests</a></div></li></ul><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.MissingSnafu.html" title="struct hotshot_query_service::MissingSnafu">MissingSnafu</a></div><div class="desc docblock-short">SNAFU context selector for the <code>QueryError::Missing</code> variant</div></li><li><div class="item-name"><a class="struct" href="struct.NotFoundSnafu.html" title="struct hotshot_query_service::NotFoundSnafu">NotFoundSnafu</a></div><div class="desc docblock-short">SNAFU context selector for the <code>QueryError::NotFound</code> variant</div></li><li><div class="item-name"><a class="struct" href="struct.Options.html" title="struct hotshot_query_service::Options">Options</a></div></li><li><div class="item-name"><a class="struct" href="struct.Snafu.html" title="struct hotshot_query_service::Snafu">Snafu</a></div><div class="desc docblock-short">SNAFU context selector for the <code>QueryError::Error</code> variant</div></li></ul><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2><ul class="item-table"><li><div class="item-name"><a class="enum" href="enum.Error.html" title="enum hotshot_query_service::Error">Error</a></div></li><li><div class="item-name"><a class="enum" href="enum.QueryError.html" title="enum hotshot_query_service::QueryError">QueryError</a></div></li></ul><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2><ul class="item-table"><li><div class="item-name"><a class="trait" href="trait.Resolvable.html" title="trait hotshot_query_service::Resolvable">Resolvable</a></div><div class="desc docblock-short">A reference to a <code>T</code> which can be resolved into a whole <code>T</code>.</div></li></ul><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2><ul class="item-table"><li><div class="item-name"><a class="fn" href="fn.run_standalone_service.html" title="fn hotshot_query_service::run_standalone_service">run_standalone_service</a></div><div class="desc docblock-short">Run an instance of the HotShot Query service with no customization.</div></li></ul><h2 id="types" class="small-section-header"><a href="#types">Type Aliases</a></h2><ul class="item-table"><li><div class="item-name"><a class="type" href="type.Header.html" title="type hotshot_query_service::Header">Header</a></div></li><li><div class="item-name"><a class="type" href="type.Metadata.html" title="type hotshot_query_service::Metadata">Metadata</a></div></li><li><div class="item-name"><a class="type" href="type.Payload.html" title="type hotshot_query_service::Payload">Payload</a></div></li><li><div class="item-name"><a class="type" href="type.QueryResult.html" title="type hotshot_query_service::QueryResult">QueryResult</a></div></li><li><div class="item-name"><a class="type" href="type.SignatureKey.html" title="type hotshot_query_service::SignatureKey">SignatureKey</a></div></li><li><div class="item-name"><a class="type" href="type.Transaction.html" title="type hotshot_query_service::Transaction">Transaction</a></div><div class="desc docblock-short">Item within a <a href="type.Payload.html" title="type hotshot_query_service::Payload"><code>Payload</code></a>.</div></li></ul></section></div></main></body></html>
+availability and node modules also update with each new leaf, you probably want all of these
+modules to stay in sync. The data source implementations provided by this crate provide means by
+which you can add additional data to the same persistent store and synchronize the entire store
+together. Refer to the documentation for you specific data source for information on how to
+achieve this.</p>
+</div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2><ul class="item-table"><li><div class="item-name"><a class="mod" href="availability/index.html" title="mod hotshot_query_service::availability">availability</a></div><div class="desc docblock-short">Queries for HotShot chain state.</div></li><li><div class="item-name"><a class="mod" href="data_source/index.html" title="mod hotshot_query_service::data_source">data_source</a></div><div class="desc docblock-short">Persistent storage and sources of data consumed by APIs.</div></li><li><div class="item-name"><a class="mod" href="metrics/index.html" title="mod hotshot_query_service::metrics">metrics</a></div></li><li><div class="item-name"><a class="mod" href="node/index.html" title="mod hotshot_query_service::node">node</a></div><div class="desc docblock-short">A node’s view of a HotShot chain</div></li><li><div class="item-name"><a class="mod" href="status/index.html" title="mod hotshot_query_service::status">status</a></div><div class="desc docblock-short">Queries for node-specific state and uncommitted data.</div></li></ul><h2 id="macros" class="small-section-header"><a href="#macros">Macros</a></h2><ul class="item-table"><li><div class="item-name"><a class="macro" href="macro.include_migrations.html" title="macro hotshot_query_service::include_migrations">include_migrations</a></div><div class="desc docblock-short">Embed migrations from the given directory into the current binary.</div></li><li><div class="item-name"><a class="macro" href="macro.instantiate_data_source_tests.html" title="macro hotshot_query_service::instantiate_data_source_tests">instantiate_data_source_tests</a></div></li></ul><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.MissingSnafu.html" title="struct hotshot_query_service::MissingSnafu">MissingSnafu</a></div><div class="desc docblock-short">SNAFU context selector for the <code>QueryError::Missing</code> variant</div></li><li><div class="item-name"><a class="struct" href="struct.NotFoundSnafu.html" title="struct hotshot_query_service::NotFoundSnafu">NotFoundSnafu</a></div><div class="desc docblock-short">SNAFU context selector for the <code>QueryError::NotFound</code> variant</div></li><li><div class="item-name"><a class="struct" href="struct.Options.html" title="struct hotshot_query_service::Options">Options</a></div></li><li><div class="item-name"><a class="struct" href="struct.Snafu.html" title="struct hotshot_query_service::Snafu">Snafu</a></div><div class="desc docblock-short">SNAFU context selector for the <code>QueryError::Error</code> variant</div></li></ul><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2><ul class="item-table"><li><div class="item-name"><a class="enum" href="enum.Error.html" title="enum hotshot_query_service::Error">Error</a></div></li><li><div class="item-name"><a class="enum" href="enum.QueryError.html" title="enum hotshot_query_service::QueryError">QueryError</a></div></li></ul><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2><ul class="item-table"><li><div class="item-name"><a class="trait" href="trait.Resolvable.html" title="trait hotshot_query_service::Resolvable">Resolvable</a></div><div class="desc docblock-short">A reference to a <code>T</code> which can be resolved into a whole <code>T</code>.</div></li></ul><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2><ul class="item-table"><li><div class="item-name"><a class="fn" href="fn.run_standalone_service.html" title="fn hotshot_query_service::run_standalone_service">run_standalone_service</a></div><div class="desc docblock-short">Run an instance of the HotShot Query service with no customization.</div></li></ul><h2 id="types" class="small-section-header"><a href="#types">Type Aliases</a></h2><ul class="item-table"><li><div class="item-name"><a class="type" href="type.Header.html" title="type hotshot_query_service::Header">Header</a></div></li><li><div class="item-name"><a class="type" href="type.Metadata.html" title="type hotshot_query_service::Metadata">Metadata</a></div></li><li><div class="item-name"><a class="type" href="type.Payload.html" title="type hotshot_query_service::Payload">Payload</a></div></li><li><div class="item-name"><a class="type" href="type.QueryResult.html" title="type hotshot_query_service::QueryResult">QueryResult</a></div></li><li><div class="item-name"><a class="type" href="type.SignatureKey.html" title="type hotshot_query_service::SignatureKey">SignatureKey</a></div></li><li><div class="item-name"><a class="type" href="type.Transaction.html" title="type hotshot_query_service::Transaction">Transaction</a></div><div class="desc docblock-short">Item within a <a href="type.Payload.html" title="type hotshot_query_service::Payload"><code>Payload</code></a>.</div></li></ul></section></div></main></body></html>

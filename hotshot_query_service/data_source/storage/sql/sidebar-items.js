@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["default_migrations"],"macro":["include_dir","include_migrations"],"struct":["Config","Error","Migration","SqlStorage","Transaction"],"trait":["Query"]};

@@ -288,12 +288,6 @@
 <a href="#288" id="288">288</a>
 <a href="#289" id="289">289</a>
 <a href="#290" id="290">290</a>
-<a href="#291" id="291">291</a>
-<a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a>
-<a href="#294" id="294">294</a>
-<a href="#295" id="295">295</a>
-<a href="#296" id="296">296</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -305,6 +299,20 @@
 // General Public License for more details.
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
+
+</span><span class="doccomment">//! Queries for node-specific state and uncommitted data.
+//!
+//! Unlike the [availability](crate::availability) and [node](crate::node) APIs, which deal only
+//! with committed data (albeit with different consistency properties), the status API offers a
+//! glimpse into internal consensus state and uncommitted data. Here you can find low-level
+//! information about a particular node, such as consensus and networking metrics. You can also find
+//! information about pending blocks and transactions in the mempool.
+//!
+//! The status API is intended to be a lightweight way to inspect the activities and health of a
+//! consensus node. It is the only API that can be run without any persistent storage, and its
+//! memory overhead is also very low. As a consequence, it only serves two types of data:
+//! * snapshots of the state right now, with no way to query historical snapshots
+//! * summary statistics
 
 </span><span class="kw">use </span><span class="kw">crate</span>::api::load_api;
 <span class="kw">use </span>clap::Args;
@@ -371,7 +379,7 @@
         options.extensions.clone(),
     )<span class="question-mark">?</span>;
     api.with_version(<span class="string">&quot;0.0.1&quot;</span>.parse().unwrap())
-        .get(<span class="string">&quot;latest_block_height&quot;</span>, |<span class="kw">_</span>, state| {
+        .get(<span class="string">&quot;block_height&quot;</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async </span>{ state.block_height().<span class="kw">await</span>.map_err(internal) }.boxed()
         })<span class="question-mark">?
         </span>.get(<span class="string">&quot;mempool_info&quot;</span>, |<span class="kw">_</span>, state| {
@@ -436,7 +444,7 @@
         network.submit_transaction(txn.clone()).<span class="kw">await</span>;
         <span class="kw">loop </span>{
             <span class="kw">let </span>mempool = client
-                .get::&lt;MempoolQueryData&gt;(<span class="string">&quot;mempool_info&quot;</span>)
+                .get::&lt;MempoolQueryData&gt;(<span class="string">&quot;mempool-info&quot;</span>)
                 .send()
                 .<span class="kw">await
                 </span>.unwrap();
@@ -454,14 +462,7 @@
             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
         }
         <span class="comment">// The block height is initially 1 (for the genesis block).
-        </span><span class="macro">assert_eq!</span>(
-            client
-                .get::&lt;u64&gt;(<span class="string">&quot;latest_block_height&quot;</span>)
-                .send()
-                .<span class="kw">await
-                </span>.unwrap(),
-            <span class="number">1
-        </span>);
+        </span><span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;block-height&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">1</span>);
 
         <span class="comment">// Test Prometheus export.
         </span><span class="kw">let </span><span class="kw-2">mut </span>res = surf::get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{url}/metrics&quot;</span>)).send().<span class="kw">await</span>.unwrap();
@@ -488,7 +489,7 @@
         <span class="comment">// Start the validators and wait for the block to be finalized.
         </span>network.start().<span class="kw">await</span>;
         <span class="kw">while </span>client
-            .get::&lt;MempoolQueryData&gt;(<span class="string">&quot;mempool_info&quot;</span>)
+            .get::&lt;MempoolQueryData&gt;(<span class="string">&quot;mempool-info&quot;</span>)
             .send()
             .<span class="kw">await
             </span>.unwrap()
@@ -502,17 +503,11 @@
         <span class="comment">// Check updated block height. There can be a brief delay between the mempool statistics
         // being updated and the decide event being published. Retry this a few times until it
         // succeeds.
-        </span><span class="kw">while </span>client
-            .get::&lt;u64&gt;(<span class="string">&quot;latest_block_height&quot;</span>)
-            .send()
-            .<span class="kw">await
-            </span>.unwrap()
-            == <span class="number">1
-        </span>{
+        </span><span class="kw">while </span>client.get::&lt;u64&gt;(<span class="string">&quot;block-height&quot;</span>).send().<span class="kw">await</span>.unwrap() == <span class="number">1 </span>{
             <span class="macro">tracing::info!</span>(<span class="string">&quot;waiting for block height to update&quot;</span>);
             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
         }
-        <span class="kw">let </span>success_rate = client.get::&lt;f64&gt;(<span class="string">&quot;success_rate&quot;</span>).send().<span class="kw">await</span>.unwrap();
+        <span class="kw">let </span>success_rate = client.get::&lt;f64&gt;(<span class="string">&quot;success-rate&quot;</span>).send().<span class="kw">await</span>.unwrap();
         <span class="comment">// If metrics are populating correctly, we should get a finite number. If not, we might get
         // NaN or infinity due to division by 0.
         </span><span class="macro">assert!</span>(success_rate.is_finite(), <span class="string">&quot;{success_rate}&quot;</span>);
@@ -580,14 +575,7 @@
         <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
 
         <span class="comment">// Ensure we can still access the built-in functionality.
-        </span><span class="macro">assert_eq!</span>(
-            client
-                .get::&lt;u64&gt;(<span class="string">&quot;latest_block_height&quot;</span>)
-                .send()
-                .<span class="kw">await
-                </span>.unwrap(),
-            <span class="number">1
-        </span>);
+        </span><span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;block-height&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">1</span>);
     }
 }
 </code></pre></div></section></main></body></html>
