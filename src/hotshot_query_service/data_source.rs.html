@@ -561,7 +561,7 @@
 #[espresso_macros::generic_tests]
 </span><span class="kw">pub mod </span>availability_tests {
     <span class="kw">use crate</span>::{
-        availability::{payload_size, BlockQueryData, LeafQueryData, QueryablePayload},
+        availability::{payload_size, BlockQueryData, LeafQueryData},
         testing::{
             consensus::MockNetwork,
             mocks::{mock_transaction, MockPayload, MockTypes, TestableDataSource},
@@ -628,7 +628,7 @@
             </span><span class="macro">assert_eq!</span>(block, ds.get_block(i).<span class="kw">await</span>.unwrap());
             <span class="macro">assert_eq!</span>(ds.get_block(block.hash()).<span class="kw">await</span>.unwrap().height(), i <span class="kw">as </span>u64);
 
-            <span class="kw">for </span>(j, txn) <span class="kw">in </span>block.payload().enumerate() {
+            <span class="kw">for </span>(j, txn) <span class="kw">in </span>block.enumerate() {
                 <span class="comment">// We should be able to look up the transaction by hash unless it is a duplicate.
                 // For duplicate transactions, this function returns the index of the first
                 // duplicate.

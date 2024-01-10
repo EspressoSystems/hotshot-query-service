@@ -1639,6 +1639,15 @@
 <a href="#1639" id="1639">1639</a>
 <a href="#1640" id="1640">1640</a>
 <a href="#1641" id="1641">1641</a>
+<a href="#1642" id="1642">1642</a>
+<a href="#1643" id="1643">1643</a>
+<a href="#1644" id="1644">1644</a>
+<a href="#1645" id="1645">1645</a>
+<a href="#1646" id="1646">1646</a>
+<a href="#1647" id="1647">1647</a>
+<a href="#1648" id="1648">1648</a>
+<a href="#1649" id="1649">1649</a>
+<a href="#1650" id="1650">1650</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1661,7 +1670,7 @@
     },
     metrics::PrometheusMetrics,
     status::StatusDataSource,
-    Header, Leaf, MissingSnafu, NotFoundSnafu, Payload, QueryError, QueryResult,
+    Header, Leaf, MissingSnafu, NotFoundSnafu, Payload, QueryError, QueryResult, SignatureKey,
 };
 <span class="kw">use </span>async_std::{net::ToSocketAddrs, task::spawn};
 <span class="kw">use </span>async_trait::async_trait;
@@ -1678,7 +1687,6 @@
     traits::{
         block_contents::{BlockHeader, BlockPayload},
         node_implementation::NodeType,
-        signature_key::EncodedPublicKey,
     },
 };
 <span class="kw">use </span>itertools::Itertools;
@@ -2499,7 +2507,7 @@
 
     <span class="kw">async fn </span>get_proposals(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        proposer: <span class="kw-2">&amp;</span>EncodedPublicKey,
+        proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;,
         limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>query = <span class="string">&quot;SELECT leaf, qc FROM leaf WHERE proposer = $1&quot;</span>.to_owned();
@@ -2508,7 +2516,10 @@
             // recent leaves, so order by descending height.
             </span>query = <span class="macro">format!</span>(<span class="string">&quot;{query} ORDER BY height DESC limit {limit}&quot;</span>);
         }
-        <span class="kw">let </span>rows = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>proposer.to_string()]).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>proposer_json = serde_json::to_value(proposer).map_err(|err| QueryError::Error {
+            message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize proposer ID: {err}&quot;</span>),
+        })<span class="question-mark">?</span>;
+        <span class="kw">let </span>rows = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>proposer_json]).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>leaves: Vec&lt;<span class="kw">_</span>&gt; = rows.map(|res| parse_leaf(res<span class="question-mark">?</span>)).try_collect().<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">if </span>limit.is_some() {
@@ -2520,9 +2531,12 @@
         <span class="prelude-val">Ok</span>(leaves)
     }
 
-    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>EncodedPublicKey) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
         <span class="kw">let </span>query = <span class="string">&quot;SELECT count(*) FROM leaf WHERE proposer = $1&quot;</span>;
-        <span class="kw">let </span>row = <span class="self">self</span>.query_one(query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>proposer.to_string()]).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>proposer_json = serde_json::to_value(proposer).map_err(|err| QueryError::Error {
+            message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize proposer ID: {err}&quot;</span>),
+        })<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = <span class="self">self</span>.query_one(query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>proposer_json]).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>count: i64 = row.get(<span class="number">0</span>);
         <span class="prelude-val">Ok</span>(count <span class="kw">as </span>usize)
     }
@@ -2586,6 +2600,10 @@
         <span class="kw">let </span>qc_json = serde_json::to_value(leaf.qc()).map_err(|err| QueryError::Error {
             message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize QC: {err}&quot;</span>),
         })<span class="question-mark">?</span>;
+        <span class="kw">let </span>proposer_json =
+            serde_json::to_value(<span class="kw-2">&amp;</span>leaf.proposer()).map_err(|err| QueryError::Error {
+                message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize proposer ID: {err}&quot;</span>),
+            })<span class="question-mark">?</span>;
         stmts.push((
             <span class="string">&quot;INSERT INTO leaf (height, hash, proposer, block_hash, leaf, qc)
              VALUES ($1, $2, $3, $4, $5, $6)&quot;
@@ -2593,7 +2611,7 @@
             <span class="macro">vec!</span>[
                 Box::new(leaf.height() <span class="kw">as </span>i64),
                 Box::new(leaf.hash().to_string()),
-                Box::new(leaf.proposer().to_string()),
+                Box::new(proposer_json),
                 Box::new(leaf.block_hash().to_string()),
                 Box::new(leaf_json),
                 Box::new(qc_json),
@@ -2632,7 +2650,7 @@
         <span class="comment">// Index the transactions in the block.
         </span><span class="kw">let </span><span class="kw-2">mut </span>values = <span class="macro">vec!</span>[];
         <span class="kw">let </span><span class="kw-2">mut </span>params: Vec&lt;Box&lt;<span class="kw">dyn </span>ToSql + Send + Sync&gt;&gt; = <span class="macro">vec!</span>[];
-        <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.payload().enumerate() {
+        <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.enumerate() {
             <span class="kw">let </span>txn_ix = serde_json::to_value(<span class="kw-2">&amp;</span>txn_ix).map_err(|err| QueryError::Error {
                 message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize transaction index: {err}&quot;</span>),
             })<span class="question-mark">?</span>;

@@ -916,8 +916,7 @@
 //!
 //! ```
 //! # use async_trait::async_trait;
-//! # use hotshot_types::traits::signature_key::EncodedPublicKey;
-//! # use hotshot_query_service::QueryResult;
+//! # use hotshot_query_service::{QueryResult, SignatureKey};
 //! # use hotshot_query_service::availability::{
 //! #   AvailabilityDataSource, BlockId, BlockQueryData, LeafId, LeafQueryData, TransactionHash,
 //! #   TransactionIndex,
@@ -969,8 +968,8 @@
 //! #   async fn get_block_range&lt;R&gt;(&amp;self, range: R) -&gt; QueryResult&lt;Self::BlockRange&lt;&#39;_, R&gt;&gt;
 //! #   where
 //! #       R: RangeBounds&lt;usize&gt; + Send { todo!() }
-//! #   async fn get_proposals(&amp;self, id: &amp;EncodedPublicKey, limit: Option&lt;usize&gt;) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;AppTypes&gt;&gt;&gt; { todo!() }
-//! #   async fn count_proposals(&amp;self, id: &amp;EncodedPublicKey) -&gt; QueryResult&lt;usize&gt; { todo!() }
+//! #   async fn get_proposals(&amp;self, id: &amp;SignatureKey&lt;AppTypes&gt;, limit: Option&lt;usize&gt;) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;AppTypes&gt;&gt;&gt; { todo!() }
+//! #   async fn count_proposals(&amp;self, id: &amp;SignatureKey&lt;AppTypes&gt;) -&gt; QueryResult&lt;usize&gt; { todo!() }
 //! #   async fn subscribe_leaves(&amp;self, height: usize) -&gt; QueryResult&lt;Self::LeafStream&gt; { todo!() }
 //! #   async fn subscribe_blocks(&amp;self, height: usize) -&gt; QueryResult&lt;Self::BlockStream&gt; { todo!() }
 //! }
@@ -1041,8 +1040,10 @@
 
 <span class="kw">pub type </span>Payload&lt;Types&gt; = &lt;Types <span class="kw">as </span>NodeType&gt;::BlockPayload;
 <span class="kw">pub type </span>Header&lt;Types&gt; = &lt;Types <span class="kw">as </span>NodeType&gt;::BlockHeader;
+<span class="kw">pub type </span>Metadata&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>BlockPayload&gt;::Metadata;
 <span class="doccomment">/// Item within a [`Payload`].
 </span><span class="kw">pub type </span>Transaction&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>BlockPayload&gt;::Transaction;
+<span class="kw">pub type </span>SignatureKey&lt;Types&gt; = &lt;Types <span class="kw">as </span>NodeType&gt;::SignatureKey;
 
 <span class="attr">#[derive(Clone, Debug, Snafu, Deserialize, Serialize)]
 #[snafu(visibility(<span class="kw">pub</span>))]
@@ -1145,9 +1146,8 @@
     <span class="kw">use </span>async_trait::async_trait;
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
     <span class="kw">use </span>futures::FutureExt;
-    <span class="kw">use </span>hotshot::types::SignatureKey;
+    <span class="kw">use </span>hotshot::types::SignatureKey <span class="kw">as _</span>;
     <span class="kw">use </span>hotshot_signature_key::bn254::BLSPubKey;
-    <span class="kw">use </span>hotshot_types::traits::signature_key::EncodedPublicKey;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::ops::RangeBounds;
     <span class="kw">use </span>std::time::Duration;
@@ -1214,12 +1214,12 @@
         </span>}
         <span class="kw">async fn </span>get_proposals(
             <span class="kw-2">&amp;</span><span class="self">self</span>,
-            proposer: <span class="kw-2">&amp;</span>EncodedPublicKey,
+            proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;MockTypes&gt;,
             limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
         ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt; {
             <span class="self">self</span>.hotshot_qs.get_proposals(proposer, limit).<span class="kw">await
         </span>}
-        <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>EncodedPublicKey) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;MockTypes&gt;) -&gt; QueryResult&lt;usize&gt; {
             <span class="self">self</span>.hotshot_qs.count_proposals(proposer).<span class="kw">await
         </span>}
         <span class="kw">async fn </span>subscribe_leaves(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; QueryResult&lt;<span class="self">Self</span>::LeafStream&gt; {

@@ -661,6 +661,25 @@
 <a href="#661" id="661">661</a>
 <a href="#662" id="662">662</a>
 <a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -673,16 +692,17 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use crate</span>::{api::load_api, Payload, QueryError, QueryResult};
+</span><span class="kw">use crate</span>::{api::load_api, Payload, QueryError, QueryResult, SignatureKey};
 <span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::{FutureExt, Stream, StreamExt, TryFutureExt, TryStreamExt};
+<span class="kw">use </span>hotshot::types::SignatureKey <span class="kw">as _</span>;
 <span class="kw">use </span>hotshot_types::traits::{node_implementation::NodeType, signature_key::EncodedPublicKey};
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::{OptionExt, ResultExt, Snafu};
 <span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::path::PathBuf;
-<span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
+<span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, RequestParams, StatusCode};
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>data_source;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>query_data;
@@ -764,6 +784,9 @@
         height: usize,
         reason: String,
     },
+    <span class="attr">#[snafu(display(<span class="string">&quot;malformed signature key&quot;</span>))]
+    #[from(ignore)]
+    </span>InvalidSignatureKey,
     Custom {
         message: String,
         status: StatusCode,
@@ -780,7 +803,7 @@
 
     <span class="kw">pub fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Request { .. } =&gt; StatusCode::BadRequest,
+            <span class="self">Self</span>::Request { .. } | <span class="self">Self</span>::InvalidSignatureKey =&gt; StatusCode::BadRequest,
             <span class="self">Self</span>::QueryLeaf { source, .. }
             | <span class="self">Self</span>::StreamLeaf { source, .. }
             | <span class="self">Self</span>::QueryBlock { source, .. }
@@ -931,14 +954,12 @@
                             resource: id.to_string(),
                         })<span class="question-mark">?</span>;
                         <span class="kw">let </span>i = req.integer_param(<span class="string">&quot;index&quot;</span>)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>index =
-                            block
-                                .payload()
-                                .nth(i)
-                                .context(InvalidTransactionIndexSnafu {
-                                    height: height <span class="kw">as </span>u64,
-                                    index: i <span class="kw">as </span>u64,
-                                })<span class="question-mark">?</span>;
+                        <span class="kw">let </span>index = block.payload().nth(block.metadata(), i).context(
+                            InvalidTransactionIndexSnafu {
+                                height: height <span class="kw">as </span>u64,
+                                index: i <span class="kw">as </span>u64,
+                            },
+                        )<span class="question-mark">?</span>;
                         (block, index)
                     }
                 };
@@ -951,26 +972,43 @@
         })<span class="question-mark">?
         </span>.get(<span class="string">&quot;countproposals&quot;</span>, |req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>proposer = req.blob_param(<span class="string">&quot;proposer_id&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>proposer = proposer_param::&lt;Types&gt;(<span class="kw-2">&amp;</span>req, <span class="string">&quot;proposer_id&quot;</span>)<span class="question-mark">?</span>;
                 state
                     .count_proposals(<span class="kw-2">&amp;</span>proposer)
                     .<span class="kw">await
-                    </span>.context(QueryProposalsSnafu { proposer })
+                    </span>.context(QueryProposalsSnafu {
+                        proposer: proposer.to_bytes(),
+                    })
             }
             .boxed()
         })<span class="question-mark">?
         </span>.get(<span class="string">&quot;getproposals&quot;</span>, |req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>proposer = req.blob_param(<span class="string">&quot;proposer_id&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>proposer = proposer_param::&lt;Types&gt;(<span class="kw-2">&amp;</span>req, <span class="string">&quot;proposer_id&quot;</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>limit = req.opt_integer_param(<span class="string">&quot;count&quot;</span>)<span class="question-mark">?</span>;
                 state
                     .get_proposals(<span class="kw-2">&amp;</span>proposer, limit)
                     .<span class="kw">await
-                    </span>.context(QueryProposalsSnafu { proposer })
+                    </span>.context(QueryProposalsSnafu {
+                        proposer: proposer.to_bytes(),
+                    })
             }
             .boxed()
         })<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(api)
+}
+
+<span class="kw">fn </span>proposer_param&lt;Types: NodeType&gt;(
+    req: <span class="kw-2">&amp;</span>RequestParams,
+    param: <span class="kw-2">&amp;</span>str,
+) -&gt; <span class="prelude-ty">Result</span>&lt;SignatureKey&lt;Types&gt;, Error&gt; {
+    <span class="comment">// The HotShot signature key trait temporarily lacks the trait bounds required to convert
+    // directly from TaggedBase64. As a workaround, we parse the TaggedBase64 as an
+    // EncodedPublicKey and then decode to the actual signature key type.
+    //
+    // This can be simplified after https://github.com/EspressoSystems/HotShot/issues/2374.
+    </span><span class="kw">let </span>encoded: EncodedPublicKey = req.blob_param(param)<span class="question-mark">?</span>;
+    SignatureKey::&lt;Types&gt;::from_bytes(<span class="kw-2">&amp;</span>encoded).context(InvalidSignatureKeySnafu)
 }
 
 <span class="kw">fn </span>handle_stream_errors&lt;T, S, F&gt;(
@@ -1098,7 +1136,7 @@
 
             <span class="comment">// Check that this block is included as a proposal by the proposer listed in the leaf.
             </span><span class="kw">let </span>proposals: Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt; = client
-                .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}&quot;</span>, leaf.proposer()))
+                .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}&quot;</span>, leaf.proposer().to_bytes()))
                 .send()
                 .<span class="kw">await
                 </span>.unwrap();
@@ -1106,7 +1144,7 @@
             <span class="comment">// Check the `proposals/limit` and `proposals/count` features.
             </span><span class="macro">assert!</span>(
                 client
-                    .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}/count&quot;</span>, leaf.proposer()))
+                    .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}/count&quot;</span>, leaf.proposer().to_bytes()))
                     .send()
                     .<span class="kw">await
                     </span>.unwrap()
@@ -1119,7 +1157,7 @@
                 client
                     .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;proposals/{}/limit/1&quot;</span>,
-                        leaf.proposer()
+                        leaf.proposer().to_bytes()
                     ))
                     .send()
                     .<span class="kw">await
@@ -1131,7 +1169,7 @@
                 client
                     .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                         <span class="string">&quot;proposals/{}/limit/0&quot;</span>,
-                        leaf.proposer()
+                        leaf.proposer().to_bytes()
                     ))
                     .send()
                     .<span class="kw">await
@@ -1142,7 +1180,7 @@
 
             <span class="comment">// Check that looking up each transaction in the block various ways returns the correct
             // transaction.
-            </span><span class="kw">for </span>(j, txn_from_block) <span class="kw">in </span>block.payload().enumerate() {
+            </span><span class="kw">for </span>(j, txn_from_block) <span class="kw">in </span>block.enumerate() {
                 <span class="kw">let </span>txn: TransactionQueryData&lt;MockTypes&gt; = client
                     .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;transaction/{}/{}&quot;</span>, i, j))
                     .send()

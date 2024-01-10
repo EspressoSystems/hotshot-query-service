@@ -291,10 +291,10 @@
     },
     metrics::PrometheusMetrics,
     status::StatusDataSource,
-    Payload, QueryResult,
+    Payload, QueryResult, SignatureKey,
 };
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>hotshot_types::traits::{node_implementation::NodeType, signature_key::EncodedPublicKey};
+<span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>std::ops::RangeBounds;
 
 <span class="doccomment">/// Wrapper to add extensibility to an existing data source.
@@ -447,12 +447,12 @@
     </span>}
     <span class="kw">async fn </span>get_proposals(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        proposer: <span class="kw-2">&amp;</span>EncodedPublicKey,
+        proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;,
         limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt; {
         <span class="self">self</span>.data_source.get_proposals(proposer, limit).<span class="kw">await
     </span>}
-    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>EncodedPublicKey) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
         <span class="self">self</span>.data_source.count_proposals(proposer).<span class="kw">await
     </span>}
     <span class="kw">async fn </span>subscribe_leaves(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; QueryResult&lt;<span class="self">Self</span>::LeafStream&gt; {

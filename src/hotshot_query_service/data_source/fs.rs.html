@@ -629,6 +629,7 @@
 <a href="#629" id="629">629</a>
 <a href="#630" id="630">630</a>
 <a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -659,13 +660,13 @@
     },
     metrics::PrometheusMetrics,
     status::data_source::StatusDataSource,
-    MissingSnafu, NotFoundSnafu, Payload, QueryResult,
+    MissingSnafu, NotFoundSnafu, Payload, QueryResult, SignatureKey,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>atomic_store::{AtomicStore, AtomicStoreLoader, PersistenceError};
 <span class="kw">use </span>commit::Committable;
 <span class="kw">use </span>futures::stream::{<span class="self">self</span>, BoxStream, Stream, StreamExt, TryStreamExt};
-<span class="kw">use </span>hotshot_types::traits::{node_implementation::NodeType, signature_key::EncodedPublicKey};
+<span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>serde::{de::DeserializeOwned, Serialize};
 <span class="kw">use </span>snafu::OptionExt;
 <span class="kw">use </span>std::collections::hash_map::{Entry, HashMap};
@@ -802,7 +803,7 @@
     index_by_leaf_hash: HashMap&lt;LeafHash&lt;Types&gt;, u64&gt;,
     index_by_block_hash: HashMap&lt;BlockHash&lt;Types&gt;, u64&gt;,
     index_by_txn_hash: HashMap&lt;TransactionHash&lt;Types&gt;, (u64, TransactionIndex&lt;Types&gt;)&gt;,
-    index_by_proposer_id: HashMap&lt;EncodedPublicKey, Vec&lt;u64&gt;&gt;,
+    index_by_proposer_id: HashMap&lt;SignatureKey&lt;Types&gt;, Vec&lt;u64&gt;&gt;,
     <span class="attr">#[debug(skip)]
     </span>top_storage: <span class="prelude-ty">Option</span>&lt;AtomicStore&gt;,
     leaf_storage: LedgerLog&lt;LeafQueryData&lt;Types&gt;&gt;,
@@ -899,7 +900,8 @@
         <span class="kw">let </span><span class="kw-2">mut </span>index_by_txn_hash = HashMap::new();
         <span class="kw">for </span>block <span class="kw">in </span>block_storage.iter().flatten() {
             <span class="kw">let </span>height = block.height();
-            <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.payload().enumerate() {
+            <span class="kw">let </span>meta = <span class="kw-2">&amp;</span>block.metadata();
+            <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.payload().enumerate(meta) {
                 update_index_by_hash(<span class="kw-2">&amp;mut </span>index_by_txn_hash, txn.commit(), (height, txn_ix));
             }
         }
@@ -1101,7 +1103,7 @@
 
     <span class="kw">async fn </span>get_proposals(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id: <span class="kw-2">&amp;</span>EncodedPublicKey,
+        id: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;,
         limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt; {
         <span class="kw">let </span>all_ids = <span class="self">self
@@ -1120,7 +1122,7 @@
             .<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>EncodedPublicKey) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self</span>.index_by_proposer_id.get(id) {
             <span class="prelude-val">Some</span>(ids) =&gt; ids.len(),
             <span class="prelude-val">None </span>=&gt; <span class="number">0</span>,
@@ -1172,7 +1174,7 @@
     <span class="kw">async fn </span>insert_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: BlockQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="self">self</span>.block_storage
             .insert(block.height() <span class="kw">as </span>usize, block.clone())<span class="question-mark">?</span>;
-        <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.payload().enumerate() {
+        <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.enumerate() {
             update_index_by_hash(
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.index_by_txn_hash,
                 txn.commit(),
