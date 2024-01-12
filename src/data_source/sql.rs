@@ -22,7 +22,10 @@ use crate::{
     status::StatusDataSource,
     Header, Leaf, MissingSnafu, NotFoundSnafu, Payload, QueryError, QueryResult,
 };
-use async_std::{net::ToSocketAddrs, task::spawn};
+use async_std::{
+    net::ToSocketAddrs,
+    task::{sleep, spawn},
+};
 use async_trait::async_trait;
 use commit::Committable;
 use futures::{
@@ -40,13 +43,14 @@ use hotshot_types::{
         signature_key::EncodedPublicKey,
     },
 };
-use itertools::Itertools;
+use itertools::{izip, Itertools};
 use postgres_native_tls::TlsConnector;
 use snafu::OptionExt;
 use std::{
     ops::{Bound, RangeBounds},
     pin::Pin,
     str::FromStr,
+    time::Duration,
 };
 use tokio_postgres::{
     config::Host,
@@ -920,7 +924,7 @@ where
             serde_json::to_value(&leaf.leaf().block_header).map_err(|err| QueryError::Error {
                 message: format!("failed to serialize header: {err}"),
             })?;
-        tx.execute_one(
+        tx.execute_one_with_retries(
             "INSERT INTO header (height, hash, data) VALUES ($1, $2, $3)",
             [
                 sql_param(&(leaf.height() as i64)),
@@ -933,7 +937,7 @@ where
         // Similarly, we can initialize the payload table with a null payload, which can help us
         // distinguish between blocks that haven't been produced yet and blocks we haven't received
         // yet when answering queries.
-        tx.execute_one(
+        tx.execute_one_with_retries(
             "INSERT INTO payload (height) VALUES ($1)",
             [leaf.height() as i64],
         )
@@ -947,7 +951,7 @@ where
         let qc_json = serde_json::to_value(leaf.qc()).map_err(|err| QueryError::Error {
             message: format!("failed to serialize QC: {err}"),
         })?;
-        tx.execute_one(
+        tx.execute_one_with_retries(
             "INSERT INTO leaf (height, hash, proposer, block_hash, leaf, qc)
              VALUES ($1, $2, $3, $4, $5, $6)",
             vec![
@@ -977,7 +981,7 @@ where
                 message: format!("failed to serialize block: {err}"),
             })?
             .collect::<Vec<_>>();
-        tx.execute_one(
+        tx.execute_one_with_retries(
             "UPDATE payload SET (data, size) = ($1, $2) WHERE height = $3",
             [
                 sql_param(&payload),
@@ -989,28 +993,40 @@ where
 
         // Index the transactions in the block.
         let mut values = vec![];
-        let mut params: Vec<Box<dyn ToSql + Send + Sync>> = vec![];
-        for (txn_ix, txn) in block.payload().enumerate() {
+        // For each transaction, collect, separately, its hash, height, and index. These items all
+        // have different types, so we collect them into different vecs.
+        let mut tx_hashes = vec![];
+        let mut tx_block_heights = vec![];
+        let mut tx_indexes = vec![];
+        for (i, (txn_ix, txn)) in block.payload().enumerate().enumerate() {
             let txn_ix = serde_json::to_value(&txn_ix).map_err(|err| QueryError::Error {
                 message: format!("failed to serialize transaction index: {err}"),
             })?;
-            values.push(format!(
-                "(${},${},${})",
-                params.len() + 1,
-                params.len() + 2,
-                params.len() + 3
-            ));
-            params.push(Box::new(txn.commit().to_string()));
-            params.push(Box::new(block.height() as i64));
-            params.push(Box::new(txn_ix));
+            values.push(format!("(${},${},${})", 3 * i + 1, 3 * i + 2, 3 * i + 3));
+            tx_hashes.push(txn.commit().to_string());
+            tx_block_heights.push(block.height() as i64);
+            tx_indexes.push(txn_ix);
         }
         if !values.is_empty() {
-            tx.execute_one(
+            tx.execute_many_with_retries(
                 &format!(
                     "INSERT INTO transaction (hash, block_height, index) VALUES {}",
                     values.join(",")
                 ),
-                params,
+                // Now that we have the transaction hashes, block heights, and indexes collected in
+                // memory, we can combine them all into a single vec using type erasure: all the
+                // values get converted to `&dyn ToSql`. The references all borrow from one of
+                // `tx_hashes`, `tx_block_heights`, or `tx_indexes`, which all outlive this function
+                // call, so the lifetimes work out.
+                izip!(
+                    tx_hashes.iter().map(sql_param),
+                    tx_block_heights.iter().map(sql_param),
+                    tx_indexes.iter().map(sql_param),
+                )
+                // Interleave the three parameters for each transaction, so we have a list of
+                // (hash, height, index) triples, repeated for each transaction.
+                .flat_map(|(hash, height, index)| [hash, height, index])
+                .collect::<Vec<_>>(),
             )
             .await?;
         }
@@ -1094,20 +1110,98 @@ impl<'a> Transaction<'a> {
         P::IntoIter: ExactSizeIterator,
         P::Item: BorrowToSql,
     {
+        let nrows = self.execute_many(statement, params).await?;
+        if nrows > 1 {
+            // If more than one row is affected, we don't return an error, because clearly
+            // _something_ happened and modified the database. So we don't necessarily want the
+            // caller to retry. But we do log an error, because it seems the query did something
+            // different than the caller intended.
+            tracing::error!("statement modified more rows ({nrows}) than expected (1)");
+        }
+        Ok(())
+    }
+
+    /// Execute a statement that is expected to modify exactly one row.
+    ///
+    /// Returns an error if the database is not modified. Retries several times before failing.
+    pub async fn execute_one_with_retries<T, P>(
+        &mut self,
+        statement: &T,
+        params: P,
+    ) -> QueryResult<()>
+    where
+        T: ?Sized + ToStatement,
+        P: IntoIterator + Clone,
+        P::IntoIter: ExactSizeIterator,
+        P::Item: BorrowToSql,
+    {
+        let interval = Duration::from_secs(1);
+        let mut retries = 5;
+
+        while let Err(err) = self.execute_one(statement, params.clone()).await {
+            tracing::error!("error in statement execution ({retries} tries remaining): {err}");
+            if retries == 0 {
+                return Err(err);
+            }
+            retries -= 1;
+            sleep(interval).await;
+        }
+
+        Ok(())
+    }
+
+    /// Execute a statement that is expected to modify at least one row.
+    ///
+    /// Returns an error if the database is not modified.
+    pub async fn execute_many<T, P>(&mut self, statement: &T, params: P) -> QueryResult<u64>
+    where
+        T: ?Sized + ToStatement,
+        P: IntoIterator,
+        P::IntoIter: ExactSizeIterator,
+        P::Item: BorrowToSql,
+    {
         let nrows = self.execute(statement, params).await?;
         if nrows == 0 {
             return Err(QueryError::Error {
                 message: "statement failed: should have affected one row, but affected 0".into(),
             });
-        } else if nrows > 1 {
-            // If more than one row is affected, we don't return an error, because clearly
-            // _something_ happened and modified the database. So we don't necessarily want the caller
-            // to retry. But we do log an error, because it seems the query did something different
-            // than the caller intended.
-            tracing::error!("statement modified more rows ({nrows}) than expected (1)");
         }
 
-        Ok(())
+        Ok(nrows)
+    }
+
+    /// Execute a statement that is expected to modify at least one row.
+    ///
+    /// Returns an error if the database is not modified. Retries several times before failing.
+    pub async fn execute_many_with_retries<T, P>(
+        &mut self,
+        statement: &T,
+        params: P,
+    ) -> QueryResult<u64>
+    where
+        T: ?Sized + ToStatement,
+        P: IntoIterator + Clone,
+        P::IntoIter: ExactSizeIterator,
+        P::Item: BorrowToSql,
+    {
+        let interval = Duration::from_secs(1);
+        let mut retries = 5;
+
+        loop {
+            match self.execute_many(statement, params.clone()).await {
+                Ok(nrows) => return Ok(nrows),
+                Err(err) => {
+                    tracing::error!(
+                        "error in statement execution ({retries} tries remaining): {err}"
+                    );
+                    if retries == 0 {
+                        return Err(err);
+                    }
+                    retries -= 1;
+                    sleep(interval).await;
+                }
+            }
+        }
     }
 }
 
