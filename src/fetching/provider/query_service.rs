@@ -245,8 +245,8 @@ mod test {
         // tracing::info!("fetching payload");
         let payload = data_source
             .get_payload(test_payload.height() as usize)
+            .await
             .await;
-            // .await;
         {
             // Verify the data.
             let truth = network.data_source();
@@ -259,13 +259,13 @@ mod test {
                 block,
                 truth.get_block(test_block.height() as usize).await.await
             );
-            // assert_eq!(
-            //     payload,
-            //     truth
-            //         .get_payload(test_payload.height() as usize)
-            //         .await
-            //         .await
-            // );
+            assert_eq!(
+                payload,
+                truth
+                    .get_payload(test_payload.height() as usize)
+                    .await
+                    .await
+            );
         }
 
         // Fetching the block and payload should have also fetched the corresponding leaves, since

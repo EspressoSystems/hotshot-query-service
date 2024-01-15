@@ -20,7 +20,7 @@ use crate::{
     },
     data_source::VersionedDataSource,
     node::{NodeDataSource, UpdateNodeData},
-    Header, Leaf, MissingSnafu, NotFoundSnafu, Payload, QueryError, QueryResult, SignatureKey,
+    Header, Leaf, NotFoundSnafu, Payload, QueryError, QueryResult, SignatureKey,
 };
 use async_std::{net::ToSocketAddrs, sync::Arc, task::spawn};
 use async_trait::async_trait;
@@ -467,7 +467,7 @@ where
         let query = format!(
             "SELECT {BLOCK_COLUMNS}
               FROM header AS h
-              JOIN payload AS p ON h.height = p.height
+              JOIN payload AS p ON h.payload_hash = p.hash
               WHERE {where_clause}
               ORDER BY h.height ASC
               LIMIT 1"
@@ -498,7 +498,7 @@ where
         let query = format!(
             "SELECT {PAYLOAD_COLUMNS}
                FROM header AS h
-               JOIN payload AS p ON h.height = p.height
+               JOIN payload AS p ON h.payload_hash = p.hash
                WHERE {where_clause}
                ORDER BY h.height ASC
                LIMIT 1"
@@ -621,14 +621,6 @@ where
             ],
         ));
 
-        // Similarly, we can initialize the payload table with a null payload, which can help us
-        // distinguish between blocks that haven't been produced yet and blocks we haven't received
-        // yet when answering queries.
-        stmts.push((
-            "INSERT INTO payload (height) VALUES ($1)".into(),
-            vec![Box::new(leaf.height() as i64)],
-        ));
-
         // Finally, we insert the leaf itself, which references the header row we created.
         // Serialize the full leaf and QC to JSON for easy storage.
         let leaf_json = serde_json::to_value(leaf.leaf()).map_err(|err| QueryError::Error {
@@ -670,12 +662,22 @@ where
                 message: format!("failed to serialize block: {err}"),
             })?
             .collect::<Vec<_>>();
+        // Payloads are not necessarily unique: two different blocks can have the same table. This
+        // payload may or may not already exist, so we do an atomic insert or update. The update is
+        // not strictly necessary: if a payload with the same hash already exists, it is guaranteed
+        // to have the same data and size. However, performing a no-op update on conflict ensures
+        // the number of rows modified will always be 1 on success, which makes it easier to detect
+        // failures.
         stmts.push((
-            "UPDATE payload SET (data, size) = ($1, $2) WHERE height = $3".into(),
+            "INSERT INTO payload (hash, data, size)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (hash) DO UPDATE
+                SET (hash, data, size) = (excluded.hash, excluded.data, excluded.size)"
+                .into(),
             vec![
+                Box::new(block.payload_hash().to_string()),
                 Box::new(payload),
                 Box::new(block.size() as i32),
-                Box::new(block.height() as i64),
             ],
         ));
 
@@ -986,20 +988,6 @@ fn parse_block<Types>(row: Row) -> QueryResult<BlockQueryData<Types>>
 where
     Types: NodeType,
 {
-    // First, check if we have the payload for this block yet.
-    let size: Option<i32> = row
-        .try_get("payload_size")
-        .map_err(|err| QueryError::Error {
-            message: format!("error extracting payload size from query results: {err}"),
-        })?;
-    let payload_data: Option<Vec<u8>> =
-        row.try_get("payload_data")
-            .map_err(|err| QueryError::Error {
-                message: format!("error extracting payload data from query results: {err}"),
-            })?;
-    let (size, payload_data) = size.zip(payload_data).context(MissingSnafu)?;
-    let size = size as u64;
-
     // Reconstruct the full header.
     let header_data = row
         .try_get("header_data")
@@ -1012,6 +1000,17 @@ where
         })?;
 
     // Reconstruct the full block payload.
+    let size: i32 = row
+        .try_get("payload_size")
+        .map_err(|err| QueryError::Error {
+            message: format!("error extracting payload size from query results: {err}"),
+        })?;
+    let size = size as u64;
+    let payload_data: Vec<u8> = row
+        .try_get("payload_data")
+        .map_err(|err| QueryError::Error {
+            message: format!("error extracting payload data from query results: {err}"),
+        })?;
     let payload = Payload::<Types>::from_bytes(payload_data.into_iter(), header.metadata());
 
     // Reconstruct the query data by adding metadata.

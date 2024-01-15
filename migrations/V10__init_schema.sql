@@ -1,7 +1,17 @@
+CREATE TABLE payload
+(
+    hash VARCHAR PRIMARY KEY,
+    size INTEGER,
+    data BYTEA
+);
+
 CREATE TABLE header
 (
     height    BIGINT  PRIMARY KEY,
     hash      VARCHAR NOT NULL UNIQUE,
+
+    -- We can't use `REFERENCES payload(hash)` here because the payload may not exist at the time
+    -- the header is inserted.
     payload_hash VARCHAR NOT NULL,
 
     -- For convenience, we store the entire application-specific header type as JSON. Just like
@@ -11,13 +21,6 @@ CREATE TABLE header
     -- application-specific API endpoints to be implemented without altering the schema (beyond
     -- possibly adding an index for performance reasons).
     data JSONB NOT NULL
-);
-
-CREATE TABLE payload
-(
-    height BIGINT PRIMARY KEY REFERENCES header (height),
-    size   INTEGER,
-    data   BYTEA
 );
 
 CREATE TABLE leaf
