@@ -318,15 +318,6 @@
 <a href="#318" id="318">318</a>
 <a href="#319" id="319">319</a>
 <a href="#320" id="320">320</a>
-<a href="#321" id="321">321</a>
-<a href="#322" id="322">322</a>
-<a href="#323" id="323">323</a>
-<a href="#324" id="324">324</a>
-<a href="#325" id="325">325</a>
-<a href="#326" id="326">326</a>
-<a href="#327" id="327">327</a>
-<a href="#328" id="328">328</a>
-<a href="#329" id="329">329</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -353,10 +344,9 @@
 <span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::FutureExt;
-<span class="kw">use </span>hotshot::types::SignatureKey <span class="kw">as _</span>;
-<span class="kw">use </span>hotshot_types::traits::{node_implementation::NodeType, signature_key::EncodedPublicKey};
+<span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
-<span class="kw">use </span>snafu::{OptionExt, ResultExt, Snafu};
+<span class="kw">use </span>snafu::{ResultExt, Snafu};
 <span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, RequestParams, StatusCode};
@@ -398,7 +388,7 @@
     #[from(ignore)]
     </span>QueryProposals {
         source: QueryError,
-        proposer: EncodedPublicKey,
+        proposer: String,
     },
     <span class="attr">#[snafu(display(<span class="string">&quot;malformed signature key&quot;</span>))]
     #[from(ignore)]
@@ -447,7 +437,7 @@
                     .count_proposals(<span class="kw-2">&amp;</span>proposer)
                     .<span class="kw">await
                     </span>.context(QueryProposalsSnafu {
-                        proposer: proposer.to_bytes(),
+                        proposer: proposer.to_string(),
                     })
             }
             .boxed()
@@ -460,7 +450,7 @@
                     .get_proposals(<span class="kw-2">&amp;</span>proposer, limit)
                     .<span class="kw">await
                     </span>.context(QueryProposalsSnafu {
-                        proposer: proposer.to_bytes(),
+                        proposer: proposer.to_string(),
                     })
             }
             .boxed()
@@ -472,13 +462,8 @@
     req: <span class="kw-2">&amp;</span>RequestParams,
     param: <span class="kw-2">&amp;</span>str,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;SignatureKey&lt;Types&gt;, Error&gt; {
-    <span class="comment">// The HotShot signature key trait temporarily lacks the trait bounds required to convert
-    // directly from TaggedBase64. As a workaround, we parse the TaggedBase64 as an
-    // EncodedPublicKey and then decode to the actual signature key type.
-    //
-    // This can be simplified after https://github.com/EspressoSystems/HotShot/issues/2374.
-    </span><span class="kw">let </span>encoded: EncodedPublicKey = req.blob_param(param)<span class="question-mark">?</span>;
-    SignatureKey::&lt;Types&gt;::from_bytes(<span class="kw-2">&amp;</span>encoded).context(InvalidSignatureKeySnafu)
+    <span class="kw">let </span>encoded = req.tagged_base64_param(param)<span class="question-mark">?</span>;
+    encoded.try_into().map_err(|<span class="kw">_</span>| Error::InvalidSignatureKey)
 }
 
 <span class="attr">#[cfg(test)]
@@ -499,7 +484,7 @@
     };
     <span class="kw">use </span>futures::FutureExt;
     <span class="kw">use </span>hotshot::types::SignatureKey;
-    <span class="kw">use </span>hotshot_signature_key::bn254::BLSPubKey;
+    <span class="kw">use </span>hotshot_types::signature_key::BLSPubKey;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::time::Duration;
     <span class="kw">use </span>surf_disco::Client;
@@ -534,7 +519,7 @@
 
         <span class="comment">// Check proposals for node 0.
         </span><span class="kw">let </span>proposals: Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt; = client
-            .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}&quot;</span>, network.proposer(<span class="number">0</span>).to_bytes()))
+            .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}&quot;</span>, network.proposer(<span class="number">0</span>)))
             .send()
             .<span class="kw">await
             </span>.unwrap();
@@ -545,10 +530,7 @@
         <span class="comment">// Check the `proposals/limit` and `proposals/count` features.
         </span><span class="macro">assert!</span>(
             client
-                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                    <span class="string">&quot;proposals/{}/count&quot;</span>,
-                    network.proposer(<span class="number">0</span>).to_bytes()
-                ))
+                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}/count&quot;</span>, network.proposer(<span class="number">0</span>)))
                 .send()
                 .<span class="kw">await
                 </span>.unwrap()
@@ -561,7 +543,7 @@
             client
                 .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;proposals/{}/limit/1&quot;</span>,
-                    network.proposer(<span class="number">0</span>).to_bytes()
+                    network.proposer(<span class="number">0</span>)
                 ))
                 .send()
                 .<span class="kw">await
@@ -573,7 +555,7 @@
             client
                 .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                     <span class="string">&quot;proposals/{}/limit/0&quot;</span>,
-                    network.proposer(<span class="number">0</span>).to_bytes()
+                    network.proposer(<span class="number">0</span>)
                 ))
                 .send()
                 .<span class="kw">await
@@ -648,7 +630,7 @@
         </span><span class="kw">let </span>(key, <span class="kw">_</span>) = BLSPubKey::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], <span class="number">0</span>);
         <span class="macro">assert_eq!</span>(
             client
-                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}/count&quot;</span>, key.to_bytes()))
+                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}/count&quot;</span>, key))
                 .send()
                 .<span class="kw">await
                 </span>.unwrap(),

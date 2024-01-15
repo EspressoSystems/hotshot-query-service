@@ -1218,7 +1218,7 @@
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
     <span class="kw">use </span>futures::FutureExt;
     <span class="kw">use </span>hotshot::types::SignatureKey <span class="kw">as _</span>;
-    <span class="kw">use </span>hotshot_signature_key::bn254::BLSPubKey;
+    <span class="kw">use </span>hotshot_types::signature_key::BLSPubKey;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::ops::RangeBounds;
     <span class="kw">use </span>std::time::Duration;
@@ -1393,7 +1393,7 @@
         <span class="kw">let </span>(key, <span class="kw">_</span>) = BLSPubKey::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], <span class="number">0</span>);
         <span class="macro">assert_eq!</span>(
             client
-                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;node/proposals/{}/count&quot;</span>, key.to_bytes()))
+                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;node/proposals/{}/count&quot;</span>, key))
                 .send()
                 .<span class="kw">await
                 </span>.unwrap(),
