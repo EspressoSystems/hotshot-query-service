@@ -79,7 +79,7 @@ impl<Types: NodeType, T: UpdateAvailabilityData<Types> + UpdateStatusData + Send
                     )
                     .await?;
                 } else {
-                    tracing::info!(
+                    tracing::error!(
                         "block {} not available at decide",
                         leaf.block_header.block_number()
                     );
