@@ -490,7 +490,7 @@
     </span>}
 
     <span class="doccomment">/// List the transaction indices in the block.
-    </span><span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>, meta: <span class="kw-2">&amp;</span><span class="self">Self</span>::Metadata) -&gt; <span class="self">Self</span>::Iter&lt;<span class="lifetime">&#39;_</span>&gt;;
+    </span><span class="kw">fn </span>iter&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, meta: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">Self</span>::Metadata) -&gt; <span class="self">Self</span>::Iter&lt;<span class="lifetime">&#39;a</span>&gt;;
 
     <span class="doccomment">/// Enumerate the transactions in the block with their indices.
     </span><span class="kw">fn </span>enumerate&lt;<span class="lifetime">&#39;a</span>&gt;(
