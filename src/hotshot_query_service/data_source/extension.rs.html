@@ -287,6 +287,22 @@
 <a href="#287" id="287">287</a>
 <a href="#288" id="288">288</a>
 <a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -303,7 +319,8 @@
 <span class="kw">use crate</span>::{
     availability::{
         AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
-        QueryablePayload, TransactionHash, TransactionIndex, UpdateAvailabilityData,
+        PayloadQueryData, QueryablePayload, TransactionHash, TransactionIndex,
+        UpdateAvailabilityData,
     },
     metrics::PrometheusMetrics,
     node::{NodeDataSource, UpdateNodeData},
@@ -426,6 +443,9 @@
     <span class="kw">type </span>BlockRange&lt;R&gt; = D::BlockRange&lt;R&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>PayloadRange&lt;R&gt; = D::PayloadRange&lt;R&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send;
 
     <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;LeafQueryData&lt;Types&gt;&gt;
     <span class="kw">where
@@ -439,6 +459,12 @@
     {
         <span class="self">self</span>.data_source.get_block(id).<span class="kw">await
     </span>}
+    <span class="kw">async fn </span>get_payload&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;PayloadQueryData&lt;Types&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
+    {
+        <span class="self">self</span>.data_source.get_payload(id).<span class="kw">await
+    </span>}
     <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::LeafRange&lt;R&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
@@ -450,6 +476,12 @@
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
     {
         <span class="self">self</span>.data_source.get_block_range(range).<span class="kw">await
+    </span>}
+    <span class="kw">async fn </span>get_payload_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::PayloadRange&lt;R&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+    {
+        <span class="self">self</span>.data_source.get_payload_range(range).<span class="kw">await
     </span>}
     <span class="kw">async fn </span>get_block_with_transaction(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -566,14 +598,14 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
-    <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::{availability_tests, status_tests, FileSystemDataSource};
+    <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::{availability_tests, status_tests};
     <span class="kw">use </span><span class="kw">super</span>::ExtensibleDataSource;
-    <span class="kw">use </span><span class="kw">crate</span>::testing::mocks::MockTypes;
+    <span class="kw">use </span><span class="kw">crate</span>::testing::consensus::MockDataSource;
 
     <span class="comment">// For some reason this is the only way to import the macro defined in another module of this
     // crate.
     </span><span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
-    <span class="macro">instantiate_data_source_tests!</span>(ExtensibleDataSource&lt;FileSystemDataSource&lt;MockTypes&gt;, ()&gt;);
+    <span class="macro">instantiate_data_source_tests!</span>(ExtensibleDataSource&lt;MockDataSource, ()&gt;);
 }
 </code></pre></div></section></main></body></html>

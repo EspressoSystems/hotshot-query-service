@@ -383,11 +383,6 @@
 <a href="#383" id="383">383</a>
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -422,12 +417,15 @@
 
 <span class="kw">impl </span>Config {
     <span class="doccomment">/// Connect to the database with this config.
-    </span><span class="kw">pub async fn </span>connect&lt;Types&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;SqlDataSource&lt;Types&gt;, Error&gt;
+    </span><span class="kw">pub async fn </span>connect&lt;Types, P: Send + Sync&gt;(
+        <span class="self">self</span>,
+        provider: P,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SqlDataSource&lt;Types, P&gt;, Error&gt;
     <span class="kw">where
         </span>Types: NodeType,
         Payload&lt;Types&gt;: QueryablePayload,
     {
-        SqlDataSource::connect(<span class="self">self</span>).<span class="kw">await
+        SqlDataSource::connect(<span class="self">self</span>, provider).<span class="kw">await
     </span>}
 }
 
@@ -575,12 +573,13 @@
 /// # use hotshot_query_service::data_source::{
 /// #   sql::{Config, Error}, ExtensibleDataSource, SqlDataSource,
 /// # };
+/// # use hotshot_query_service::fetching::provider::NoFetching;
 /// # use hotshot_query_service::testing::mocks::MockTypes as AppTypes;
 /// # async fn doc(config: Config) -&gt; Result&lt;(), Error&gt; {
 /// type AppState = &amp;&#39;static str;
 ///
-/// let data_source: ExtensibleDataSource&lt;SqlDataSource&lt;AppTypes&gt;, AppState&gt; =
-///     ExtensibleDataSource::new(SqlDataSource::connect(config).await?, &quot;app state&quot;);
+/// let data_source: ExtensibleDataSource&lt;SqlDataSource&lt;AppTypes, NoFetching&gt;, AppState&gt; =
+///     ExtensibleDataSource::new(config.connect(NoFetching).await?, &quot;app state&quot;);
 /// # Ok(())
 /// # }
 /// ```
@@ -626,12 +625,13 @@
 /// # use hotshot_query_service::data_source::{
 /// #   sql::Config, SqlDataSource, UpdateDataSource, VersionedDataSource,
 /// # };
+/// # use hotshot_query_service::fetching::provider::NoFetching;
 /// # use hotshot_query_service::testing::mocks::{
 /// #   MockNodeImpl as AppNodeImpl, MockTypes as AppTypes,
 /// # };
 /// # use tide_disco::App;
 /// struct AppState {
-///     hotshot_qs: SqlDataSource&lt;AppTypes&gt;,
+///     hotshot_qs: SqlDataSource&lt;AppTypes, NoFetching&gt;,
 ///     // additional state for other modules
 /// }
 ///
@@ -639,7 +639,7 @@
 ///     config: Config,
 ///     mut hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl&gt;,
 /// ) -&gt; Result&lt;App&lt;Arc&lt;RwLock&lt;AppState&gt;&gt;, Error&gt;, Error&gt; {
-///     let mut hotshot_qs = SqlDataSource::connect(config).await.map_err(Error::internal)?;
+///     let mut hotshot_qs = config.connect(NoFetching).await.map_err(Error::internal)?;
 ///     // Initialize storage for other modules, using `hotshot_qs` to access the database.
 ///     let tx = hotshot_qs.transaction().await.map_err(Error::internal)?;
 ///     // ...
@@ -670,20 +670,20 @@
 ///     Ok(app)
 /// }
 /// ```
-</span><span class="kw">pub type </span>SqlDataSource&lt;Types&gt; = FetchingDataSource&lt;Types, SqlStorage, ()&gt;;
+</span><span class="kw">pub type </span>SqlDataSource&lt;Types, P&gt; = FetchingDataSource&lt;Types, SqlStorage, P&gt;;
 
-<span class="kw">impl</span>&lt;Types&gt; SqlDataSource&lt;Types&gt;
+<span class="kw">impl</span>&lt;Types, P: Send + Sync&gt; SqlDataSource&lt;Types, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="doccomment">/// Connect to a remote database.
-    </span><span class="kw">pub async fn </span>connect(config: Config) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
-        <span class="self">Self</span>::new(SqlStorage::connect(config).<span class="kw">await</span><span class="question-mark">?</span>, ()).<span class="kw">await
+    </span><span class="kw">pub async fn </span>connect(config: Config, provider: P) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
+        <span class="self">Self</span>::new(SqlStorage::connect(config).<span class="kw">await</span><span class="question-mark">?</span>, provider).<span class="kw">await
     </span>}
 }
 
-<span class="kw">impl</span>&lt;Types&gt; SqlDataSource&lt;Types&gt;
+<span class="kw">impl</span>&lt;Types, P&gt; SqlDataSource&lt;Types, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
 {
@@ -706,7 +706,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types&gt; Query <span class="kw">for </span>SqlDataSource&lt;Types&gt;
+</span><span class="kw">impl</span>&lt;Types, P: Send + Sync&gt; Query <span class="kw">for </span>SqlDataSource&lt;Types, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
 {
@@ -728,7 +728,7 @@
     <span class="kw">pub use </span>sql::testing::TmpDb;
 
     <span class="attr">#[async_trait]
-    </span><span class="kw">impl </span>DataSourceLifeCycle <span class="kw">for </span>SqlDataSource&lt;MockTypes&gt; {
+    </span><span class="kw">impl</span>&lt;P: Default + Send + Sync + <span class="lifetime">&#39;static</span>&gt; DataSourceLifeCycle <span class="kw">for </span>SqlDataSource&lt;MockTypes, P&gt; {
         <span class="kw">type </span>Storage = TmpDb;
 
         <span class="kw">async fn </span>create(_node_id: usize) -&gt; <span class="self">Self</span>::Storage {
@@ -736,24 +736,14 @@
         </span>}
 
         <span class="kw">async fn </span>connect(tmp_db: <span class="kw-2">&amp;</span><span class="self">Self</span>::Storage) -&gt; <span class="self">Self </span>{
-            Config::default()
-                .user(<span class="string">&quot;postgres&quot;</span>)
-                .password(<span class="string">&quot;password&quot;</span>)
-                .port(tmp_db.port())
-                .tls()
-                .connect()
-                .<span class="kw">await
-                </span>.unwrap()
+            tmp_db.config().connect(Default::default()).<span class="kw">await</span>.unwrap()
         }
 
         <span class="kw">async fn </span>reset(tmp_db: <span class="kw-2">&amp;</span><span class="self">Self</span>::Storage) -&gt; <span class="self">Self </span>{
-            Config::default()
-                .user(<span class="string">&quot;postgres&quot;</span>)
-                .password(<span class="string">&quot;password&quot;</span>)
-                .port(tmp_db.port())
-                .tls()
+            tmp_db
+                .config()
                 .reset_schema()
-                .connect()
+                .connect(Default::default())
                 .<span class="kw">await
                 </span>.unwrap()
         }
@@ -770,12 +760,12 @@
 </span><span class="kw">mod </span>generic_test {
     <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::{availability_tests, status_tests};
     <span class="kw">use </span><span class="kw">super</span>::SqlDataSource;
-    <span class="kw">use </span><span class="kw">crate</span>::testing::mocks::MockTypes;
+    <span class="kw">use crate</span>::{fetching::provider::NoFetching, testing::mocks::MockTypes};
 
     <span class="comment">// For some reason this is the only way to import the macro defined in another module of this
     // crate.
     </span><span class="kw">use crate</span>::<span class="kw-2">*</span>;
 
-    <span class="macro">instantiate_data_source_tests!</span>(SqlDataSource&lt;MockTypes&gt;);
+    <span class="macro">instantiate_data_source_tests!</span>(SqlDataSource&lt;MockTypes, NoFetching&gt;);
 }
 </code></pre></div></section></main></body></html>

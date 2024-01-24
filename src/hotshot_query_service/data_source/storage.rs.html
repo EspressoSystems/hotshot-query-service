@@ -84,6 +84,16 @@
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
 <a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -111,10 +121,11 @@
 
 </span><span class="kw">use crate</span>::{
     availability::{
-        BlockId, BlockQueryData, LeafId, LeafQueryData, QueryablePayload, TransactionHash,
-        TransactionIndex, UpdateAvailabilityData,
+        BlockId, BlockQueryData, LeafId, LeafQueryData, PayloadQueryData, QueryablePayload,
+        TransactionHash, TransactionIndex, UpdateAvailabilityData,
     },
-    Payload, QueryResult,
+    data_source::VersionedDataSource,
+    Header, Payload, QueryResult,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
@@ -144,13 +155,16 @@
 /// Rust gives us ways to abstract and deduplicate these two similar APIs, but they do not lead to a
 /// better interface.
 </span><span class="attr">#[async_trait]
-</span><span class="kw">pub trait </span>AvailabilityStorage&lt;Types&gt;: UpdateAvailabilityData&lt;Types&gt; + Send + Sync
+</span><span class="kw">pub trait </span>AvailabilityStorage&lt;Types&gt;:
+    UpdateAvailabilityData&lt;Types&gt; + VersionedDataSource + Send + Sync
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">async fn </span>get_leaf(<span class="kw-2">&amp;</span><span class="self">self</span>, id: LeafId&lt;Types&gt;) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt;;
     <span class="kw">async fn </span>get_block(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;;
+    <span class="kw">async fn </span>get_header(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;Header&lt;Types&gt;&gt;;
+    <span class="kw">async fn </span>get_payload(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt;;
 
     <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -162,6 +176,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         range: R,
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;&gt;&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>;
+    <span class="kw">async fn </span>get_payload_range&lt;R&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        range: R,
+    ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt;&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>;
 

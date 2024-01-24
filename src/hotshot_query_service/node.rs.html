@@ -316,8 +316,6 @@
 <a href="#316" id="316">316</a>
 <a href="#317" id="317">317</a>
 <a href="#318" id="318">318</a>
-<a href="#319" id="319">319</a>
-<a href="#320" id="320">320</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -470,7 +468,7 @@
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
-        data_source::{ExtensibleDataSource, FileSystemDataSource},
+        data_source::ExtensibleDataSource,
         testing::{
             consensus::{MockDataSource, MockNetwork},
             mocks::MockTypes,
@@ -573,7 +571,7 @@
 
         <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_node_extensions&quot;</span>).unwrap();
         <span class="kw">let </span>data_source = ExtensibleDataSource::new(
-            FileSystemDataSource::&lt;MockTypes&gt;::create(dir.path())
+            MockDataSource::create(dir.path(), Default::default())
                 .<span class="kw">await
                 </span>.unwrap(),
             <span class="number">0</span>,
@@ -591,14 +589,12 @@
             METHOD = <span class="string">&quot;GET&quot;
         </span>};
 
-        <span class="kw">let </span><span class="kw-2">mut </span>api = define_api::&lt;
-            RwLock&lt;ExtensibleDataSource&lt;FileSystemDataSource&lt;MockTypes&gt;, u64&gt;&gt;,
-            MockTypes,
-        &gt;(<span class="kw-2">&amp;</span>Options {
-            extensions: <span class="macro">vec!</span>[extensions.into()],
-            ..Default::default()
-        })
-        .unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>api =
+            define_api::&lt;RwLock&lt;ExtensibleDataSource&lt;MockDataSource, u64&gt;&gt;, MockTypes&gt;(<span class="kw-2">&amp;</span>Options {
+                extensions: <span class="macro">vec!</span>[extensions.into()],
+                ..Default::default()
+            })
+            .unwrap();
         api.get(<span class="string">&quot;get_ext&quot;</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>state.as_ref()) }.boxed()
         })
@@ -630,7 +626,7 @@
         </span><span class="kw">let </span>(key, <span class="kw">_</span>) = BLSPubKey::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], <span class="number">0</span>);
         <span class="macro">assert_eq!</span>(
             client
-                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}/count&quot;</span>, key))
+                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{key}/count&quot;</span>))
                 .send()
                 .<span class="kw">await
                 </span>.unwrap(),
