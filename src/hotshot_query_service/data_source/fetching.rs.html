@@ -1401,6 +1401,22 @@
 <a href="#1401" id="1401">1401</a>
 <a href="#1402" id="1402">1402</a>
 <a href="#1403" id="1403">1403</a>
+<a href="#1404" id="1404">1404</a>
+<a href="#1405" id="1405">1405</a>
+<a href="#1406" id="1406">1406</a>
+<a href="#1407" id="1407">1407</a>
+<a href="#1408" id="1408">1408</a>
+<a href="#1409" id="1409">1409</a>
+<a href="#1410" id="1410">1410</a>
+<a href="#1411" id="1411">1411</a>
+<a href="#1412" id="1412">1412</a>
+<a href="#1413" id="1413">1413</a>
+<a href="#1414" id="1414">1414</a>
+<a href="#1415" id="1415">1415</a>
+<a href="#1416" id="1416">1416</a>
+<a href="#1417" id="1417">1417</a>
+<a href="#1418" id="1418">1418</a>
+<a href="#1419" id="1419">1419</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1447,6 +1463,7 @@
     future::IntoFuture,
     iter::once,
     ops::{Bound, Deref, DerefMut, Range, RangeBounds},
+    time::Duration,
 };
 
 <span class="doccomment">/// The number of items to process at a time when loading a range or stream.
@@ -1500,8 +1517,16 @@
 {
     <span class="doccomment">/// Create a data source with local storage and a remote data availability provider.
     </span><span class="kw">pub async fn </span>new(storage: S, provider: P) -&gt; anyhow::Result&lt;<span class="self">Self</span>&gt; {
+        <span class="self">Self</span>::with_retry_delay(storage, provider, <span class="prelude-val">None</span>).<span class="kw">await
+    </span>}
+
+    <span class="kw">pub async fn </span>with_retry_delay(
+        storage: S,
+        provider: P,
+        delay: <span class="prelude-ty">Option</span>&lt;Duration&gt;,
+    ) -&gt; anyhow::Result&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>ds = <span class="self">Self </span>{
-            fetcher: Arc::new(Fetcher::new(storage, provider).<span class="kw">await</span>),
+            fetcher: Arc::new(Fetcher::new(storage, provider, delay).<span class="kw">await</span>),
             metrics: Default::default(),
         };
 
@@ -1810,13 +1835,20 @@
     </span>Types: NodeType,
     S: NodeDataSource&lt;Types&gt;,
 {
-    <span class="kw">async fn </span>new(storage: S, provider: P) -&gt; <span class="self">Self </span>{
+    <span class="kw">async fn </span>new(storage: S, provider: P, retry_delay: <span class="prelude-ty">Option</span>&lt;Duration&gt;) -&gt; <span class="self">Self </span>{
         <span class="comment">// Get the height from storage if possible. If not, it&#39;s fine: we&#39;ll update this as soon as
         // we see a new block or leaf anyways.
         </span><span class="kw">let </span>height = storage.block_height().<span class="kw">await</span>.unwrap_or_else(|err| {
             <span class="macro">tracing::error!</span>(<span class="string">&quot;unable to load block height, defaulting to 0: {err}&quot;</span>);
             <span class="number">0
         </span>}) <span class="kw">as </span>u64;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>payload_fetcher = fetching::Fetcher::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>leaf_fetcher = fetching::Fetcher::default();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(delay) = retry_delay {
+            payload_fetcher = payload_fetcher.with_retry_delay(delay);
+            leaf_fetcher = leaf_fetcher.with_retry_delay(delay);
+        }
 
         <span class="self">Self </span>{
             storage: RwLock::new(NotifyStorage {
@@ -1826,8 +1858,8 @@
                 leaf_notifier: Notifier::new(),
             }),
             provider: Arc::new(provider),
-            payload_fetcher: Default::default(),
-            leaf_fetcher: Default::default(),
+            payload_fetcher: Arc::new(payload_fetcher),
+            leaf_fetcher: Arc::new(leaf_fetcher),
         }
     }
 }

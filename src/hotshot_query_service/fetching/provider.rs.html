@@ -73,6 +73,14 @@
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
 <a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -112,17 +120,23 @@
 
 </span><span class="kw">use </span><span class="kw">super</span>::Request;
 <span class="kw">use </span>async_std::sync::Arc;
+<span class="kw">use </span>async_trait::async_trait;
 
+<span class="kw">mod </span>any;
 <span class="kw">mod </span>query_service;
 <span class="kw">mod </span>testing;
 
+<span class="kw">pub use </span>any::AnyProvider;
 <span class="kw">pub use </span>query_service::QueryServiceProvider;
 <span class="attr">#[cfg(any(test, feature = <span class="string">&quot;testing&quot;</span>))]
 </span><span class="kw">pub use </span>testing::TestProvider;
 
 <span class="doccomment">/// A provider which is able to satisfy requests for data of type `T`.
-</span><span class="attr">#[trait_variant::make(Provider: Send)]
-</span><span class="kw">pub trait </span>LocalProvider&lt;Types, T: Request&lt;Types&gt;&gt; {
+///
+/// This trait use boxed future return types (`#[async_trait]`) instead of `impl Future` return
+/// types, so that it can be object safe.
+</span><span class="attr">#[async_trait]
+</span><span class="kw">pub trait </span>Provider&lt;Types, T: Request&lt;Types&gt;&gt;: Send + Sync {
     <span class="doccomment">/// Fetch a resource.
     </span><span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, req: T) -&gt; <span class="prelude-ty">Option</span>&lt;T::Response&gt;;
 }
@@ -133,15 +147,17 @@
 </span><span class="attr">#[derive(Clone, Copy, Debug, Default)]
 </span><span class="kw">pub struct </span>NoFetching;
 
-<span class="kw">impl</span>&lt;Types, T: Send + Request&lt;Types&gt;&gt; Provider&lt;Types, T&gt; <span class="kw">for </span>NoFetching {
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;Types, T: Send + Request&lt;Types&gt; + <span class="lifetime">&#39;static</span>&gt; Provider&lt;Types, T&gt; <span class="kw">for </span>NoFetching {
     <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, _req: T) -&gt; <span class="prelude-ty">Option</span>&lt;T::Response&gt; {
         <span class="prelude-val">None
     </span>}
 }
 
-<span class="kw">impl</span>&lt;Types, T, P&gt; Provider&lt;Types, T&gt; <span class="kw">for </span>Arc&lt;P&gt;
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;Types, T, P&gt; Provider&lt;Types, T&gt; <span class="kw">for </span>Arc&lt;P&gt;
 <span class="kw">where
-    </span>T: Request&lt;Types&gt;,
+    </span>T: Request&lt;Types&gt; + <span class="lifetime">&#39;static</span>,
     P: Provider&lt;Types, T&gt; + Sync,
 {
     <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, req: T) -&gt; <span class="prelude-ty">Option</span>&lt;T::Response&gt; {
