@@ -419,6 +419,7 @@ pub mod persistence_tests {
         Leaf,
     };
     use commit::Committable;
+    use hotshot_testing::state_types::TestInstanceState;
     use hotshot_types::simple_certificate::QuorumCertificate;
 
     #[async_std::test]
@@ -430,7 +431,7 @@ pub mod persistence_tests {
 
         // Mock up some consensus data.
         let mut qc = QuorumCertificate::<MockTypes>::genesis();
-        let mut leaf = Leaf::<MockTypes>::genesis();
+        let mut leaf = Leaf::<MockTypes>::genesis(&TestInstanceState {});
         // Increment the block number, to distinguish this block from the genesis block, which
         // already exists.
         leaf.block_header.block_number += 1;
@@ -475,7 +476,7 @@ pub mod persistence_tests {
 
         // Mock up some consensus data.
         let mut qc = QuorumCertificate::<MockTypes>::genesis();
-        let mut leaf = Leaf::<MockTypes>::genesis();
+        let mut leaf = Leaf::<MockTypes>::genesis(&TestInstanceState {});
         // Increment the block number, to distinguish this block from the genesis block, which
         // already exists.
         leaf.block_header.block_number += 1;
