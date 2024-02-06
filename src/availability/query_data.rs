@@ -215,13 +215,6 @@ impl<Types: NodeType> LeafQueryData<Types> {
         Ok(Self { leaf, qc })
     }
 
-    pub fn genesis() -> Self {
-        Self {
-            leaf: Leaf::genesis(),
-            qc: QuorumCertificate::genesis(),
-        }
-    }
-
     pub fn leaf(&self) -> &Leaf<Types> {
         &self.leaf
     }
