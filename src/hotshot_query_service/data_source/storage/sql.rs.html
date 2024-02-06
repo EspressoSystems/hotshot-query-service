@@ -1518,6 +1518,33 @@
 <a href="#1518" id="1518">1518</a>
 <a href="#1519" id="1519">1519</a>
 <a href="#1520" id="1520">1520</a>
+<a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
+<a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
+<a href="#1546" id="1546">1546</a>
+<a href="#1547" id="1547">1547</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -2863,6 +2890,7 @@
     <span class="kw">use </span><span class="kw">crate</span>::testing::sleep;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::{
+        env,
         process::{Command, Stdio},
         str,
         time::Duration,
@@ -2870,13 +2898,21 @@
 
     <span class="attr">#[derive(Debug)]
     </span><span class="kw">pub struct </span>TmpDb {
+        host: String,
         port: u16,
         container_id: String,
     }
 
     <span class="kw">impl </span>TmpDb {
         <span class="kw">pub async fn </span>init() -&gt; <span class="self">Self </span>{
-            <span class="kw">let </span>port = pick_unused_port().unwrap();
+            <span class="kw">let </span>docker_hostname = env::var(<span class="string">&quot;DOCKER_HOSTNAME&quot;</span>);
+            <span class="comment">// This picks an unused port on the current system.  If docker is
+            // configured to run on a different host then this may not find a
+            // &quot;free&quot; port on that system.
+            // We *might* be able to get away with this as any remote docker
+            // host should hopefully be pretty open with it&#39;s port space.
+            </span><span class="kw">let </span>port = pick_unused_port().unwrap();
+            <span class="kw">let </span>host = docker_hostname.unwrap_or(<span class="string">&quot;localhost&quot;</span>.to_string());
 
             <span class="kw">let </span>output = Command::new(<span class="string">&quot;docker&quot;</span>)
                 .arg(<span class="string">&quot;run&quot;</span>)
@@ -2896,11 +2932,22 @@
             // anything panics after this `drop` will be called and we will clean up.
             </span><span class="kw">let </span>container_id = stdout.trim().to_owned();
             <span class="macro">tracing::info!</span>(<span class="string">&quot;launched postgres docker {container_id}&quot;</span>);
-            <span class="kw">let </span>db = <span class="self">Self </span>{ port, container_id };
+            <span class="kw">let </span>db = <span class="self">Self </span>{
+                host,
+                port,
+                container_id,
+            };
 
             <span class="comment">// Wait for the database to be ready.
             </span><span class="kw">while </span>!Command::new(<span class="string">&quot;psql&quot;</span>)
-                .args([<span class="string">&quot;-h&quot;</span>, <span class="string">&quot;localhost&quot;</span>, <span class="string">&quot;-p&quot;</span>, <span class="kw-2">&amp;</span>port.to_string(), <span class="string">&quot;-U&quot;</span>, <span class="string">&quot;postgres&quot;</span>])
+                .args([
+                    <span class="string">&quot;-h&quot;</span>,
+                    <span class="kw-2">&amp;</span>(db.host()),
+                    <span class="string">&quot;-p&quot;</span>,
+                    <span class="kw-2">&amp;</span>(db.port().to_string()),
+                    <span class="string">&quot;-U&quot;</span>,
+                    <span class="string">&quot;postgres&quot;</span>,
+                ])
                 .env(<span class="string">&quot;PGPASSWORD&quot;</span>, <span class="string">&quot;password&quot;</span>)
                 <span class="comment">// Null input so the command terminates as soon as it manages to connect.
                 </span>.stdin(Stdio::null())
@@ -2918,6 +2965,10 @@
             db
         }
 
+        <span class="kw">pub fn </span>host(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+            <span class="self">self</span>.host.clone()
+        }
+
         <span class="kw">pub fn </span>port(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u16 {
             <span class="self">self</span>.port
         }
@@ -2926,6 +2977,7 @@
             Config::default()
                 .user(<span class="string">&quot;postgres&quot;</span>)
                 .password(<span class="string">&quot;password&quot;</span>)
+                .host(<span class="self">self</span>.host())
                 .port(<span class="self">self</span>.port())
                 .tls()
         }
@@ -2972,11 +3024,13 @@
 
         <span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
         <span class="kw">let </span>port = db.port();
+        <span class="kw">let </span>host = <span class="kw-2">&amp;</span>db.host();
 
         <span class="kw">let </span>connect = |migrations: bool, custom_migrations| <span class="kw">async move </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>cfg = Config::default()
                 .user(<span class="string">&quot;postgres&quot;</span>)
                 .password(<span class="string">&quot;password&quot;</span>)
+                .host(host)
                 .port(port)
                 .migrations(custom_migrations);
             <span class="kw">if </span>!migrations {
