@@ -94,6 +94,10 @@
 <a href="#94" id="94">94</a>
 <a href="#95" id="95">95</a>
 <a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -117,6 +121,7 @@
 //! This module also comes with a few pre-built persistence implementations:
 //! * [`SqlStorage`]
 //! * [`FileSystemStorage`]
+//! * [`NoStorage`]
 //!
 
 </span><span class="kw">use crate</span>::{
@@ -133,10 +138,13 @@
 
 <span class="kw">pub mod </span>fs;
 <span class="kw">mod </span>ledger_log;
+<span class="kw">pub mod </span>no_storage;
 <span class="kw">pub mod </span>sql;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;file-system-data-source&quot;</span>)]
 </span><span class="kw">pub use </span>fs::FileSystemStorage;
+<span class="attr">#[cfg(feature = <span class="string">&quot;no-storage&quot;</span>)]
+</span><span class="kw">pub use </span>no_storage::NoStorage;
 <span class="attr">#[cfg(feature = <span class="string">&quot;sql-data-source&quot;</span>)]
 </span><span class="kw">pub use </span>sql::SqlStorage;
 

@@ -212,7 +212,7 @@
 <span class="attr">#[cfg(any(test, feature = <span class="string">&quot;testing&quot;</span>))]
 </span><span class="kw">mod </span>impl_testable_data_source {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::testing::mocks::{DataSourceLifeCycle, MockTypes};
+    <span class="kw">use </span><span class="kw">crate</span>::testing::{consensus::DataSourceLifeCycle, mocks::MockTypes};
     <span class="kw">use </span>hotshot::types::Event;
 
     <span class="attr">#[async_trait]

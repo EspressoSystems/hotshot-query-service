@@ -383,6 +383,28 @@
 <a href="#383" id="383">383</a>
 <a href="#384" id="384">384</a>
 <a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -398,8 +420,9 @@
 </span><span class="attr">#![cfg(feature = <span class="string">&quot;sql-data-source&quot;</span>)]
 
 </span><span class="kw">use super</span>::{
+    fetching,
     storage::sql::{<span class="self">self</span>, SqlStorage},
-    FetchingDataSource,
+    AvailabilityProvider, FetchingDataSource,
 };
 <span class="kw">use crate</span>::{availability::QueryablePayload, Payload, QueryResult};
 <span class="kw">use </span>async_std::sync::Arc;
@@ -415,12 +438,27 @@
 
 <span class="kw">pub use </span>sql::{Config, Query, Transaction};
 
+<span class="kw">pub type </span>Builder&lt;Types, Provider&gt; = fetching::Builder&lt;Types, SqlStorage, Provider&gt;;
+
 <span class="kw">impl </span>Config {
     <span class="doccomment">/// Connect to the database with this config.
-    </span><span class="kw">pub async fn </span>connect&lt;Types, P: Send + Sync&gt;(
+    </span><span class="kw">pub async fn </span>connect&lt;Types, P: AvailabilityProvider&lt;Types&gt;&gt;(
         <span class="self">self</span>,
         provider: P,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SqlDataSource&lt;Types, P&gt;, Error&gt;
+    <span class="kw">where
+        </span>Types: NodeType,
+        Payload&lt;Types&gt;: QueryablePayload,
+    {
+        <span class="self">self</span>.builder(provider).<span class="kw">await</span><span class="question-mark">?</span>.build().<span class="kw">await
+    </span>}
+
+    <span class="doccomment">/// Connect to the database, setting options on the underlying [`FetchingDataSource`] using the
+    /// [`fetching::Builder`] interface.
+    </span><span class="kw">pub async fn </span>builder&lt;Types, P: AvailabilityProvider&lt;Types&gt;&gt;(
+        <span class="self">self</span>,
+        provider: P,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Builder&lt;Types, P&gt;, Error&gt;
     <span class="kw">where
         </span>Types: NodeType,
         Payload&lt;Types&gt;: QueryablePayload,
@@ -672,15 +710,20 @@
 /// ```
 </span><span class="kw">pub type </span>SqlDataSource&lt;Types, P&gt; = FetchingDataSource&lt;Types, SqlStorage, P&gt;;
 
-<span class="kw">impl</span>&lt;Types, P: Send + Sync&gt; SqlDataSource&lt;Types, P&gt;
+<span class="kw">impl</span>&lt;Types, P: AvailabilityProvider&lt;Types&gt;&gt; SqlDataSource&lt;Types, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="doccomment">/// Connect to a remote database.
-    </span><span class="kw">pub async fn </span>connect(config: Config, provider: P) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
-        <span class="self">Self</span>::new(SqlStorage::connect(config).<span class="kw">await</span><span class="question-mark">?</span>, provider).<span class="kw">await
-    </span>}
+    ///
+    /// This function returns a [`fetching::Builder`] which can be used to set options on the
+    /// underlying [`FetchingDataSource`], before constructing the [`SqlDataSource`] with
+    /// [`build`](fetching::Builder::build). For a convenient constructor that uses the default
+    /// fetching options, see [`Config::connect`].
+    </span><span class="kw">pub async fn </span>connect(config: Config, provider: P) -&gt; <span class="prelude-ty">Result</span>&lt;Builder&lt;Types, P&gt;, Error&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::builder(SqlStorage::connect(config).<span class="kw">await</span><span class="question-mark">?</span>, provider))
+    }
 }
 
 <span class="kw">impl</span>&lt;Types, P&gt; SqlDataSource&lt;Types, P&gt;
@@ -721,14 +764,16 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
         data_source::{UpdateDataSource, VersionedDataSource},
-        testing::mocks::{DataSourceLifeCycle, MockTypes},
+        testing::{consensus::DataSourceLifeCycle, mocks::MockTypes},
     };
     <span class="kw">use </span>hotshot::types::Event;
 
     <span class="kw">pub use </span>sql::testing::TmpDb;
 
     <span class="attr">#[async_trait]
-    </span><span class="kw">impl</span>&lt;P: Default + Send + Sync + <span class="lifetime">&#39;static</span>&gt; DataSourceLifeCycle <span class="kw">for </span>SqlDataSource&lt;MockTypes, P&gt; {
+    </span><span class="kw">impl</span>&lt;P: AvailabilityProvider&lt;MockTypes&gt; + Default&gt; DataSourceLifeCycle
+        <span class="kw">for </span>SqlDataSource&lt;MockTypes, P&gt;
+    {
         <span class="kw">type </span>Storage = TmpDb;
 
         <span class="kw">async fn </span>create(_node_id: usize) -&gt; <span class="self">Self</span>::Storage {
@@ -758,7 +803,6 @@
 <span class="comment">// These tests run the `postgres` Docker image, which doesn&#39;t work on Windows.
 </span><span class="attr">#[cfg(all(test, not(target_os = <span class="string">&quot;windows&quot;</span>)))]
 </span><span class="kw">mod </span>generic_test {
-    <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::{availability_tests, status_tests};
     <span class="kw">use </span><span class="kw">super</span>::SqlDataSource;
     <span class="kw">use crate</span>::{fetching::provider::NoFetching, testing::mocks::MockTypes};
 
