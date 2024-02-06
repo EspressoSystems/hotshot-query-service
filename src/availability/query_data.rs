@@ -267,11 +267,6 @@ impl<Types: NodeType> BlockQueryData<Types> {
         }
     }
 
-    pub fn genesis() -> Self {
-        let (header, payload, _) = Types::BlockHeader::genesis();
-        Self::new(header, payload)
-    }
-
     pub fn header(&self) -> &Header<Types> {
         &self.header
     }
