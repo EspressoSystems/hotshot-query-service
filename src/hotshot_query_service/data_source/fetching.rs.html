@@ -1680,6 +1680,8 @@
 <a href="#1680" id="1680">1680</a>
 <a href="#1681" id="1681">1681</a>
 <a href="#1682" id="1682">1682</a>
+<a href="#1683" id="1683">1683</a>
+<a href="#1684" id="1684">1684</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -2398,7 +2400,9 @@
         <span class="kw">let </span>storage = <span class="self">self</span>.storage.read().<span class="kw">await</span>;
         <span class="kw">let </span>ts = T::load_range(<span class="kw-2">&amp;</span>storage, chunk.clone())
             .<span class="kw">await
-            </span>.unwrap_or_default();
+            </span>.context(<span class="macro">format!</span>(<span class="string">&quot;when fetching items in range {chunk:?}&quot;</span>))
+            .ok_or_trace()
+            .unwrap_or_default();
         <span class="comment">// Log and discard error information; we want a list of Option where None indicates an
         // object that needs to be fetched.
         </span><span class="kw">let </span>ts = ts.into_iter().map(ResultExt::ok_or_trace);
