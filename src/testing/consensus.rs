@@ -37,7 +37,7 @@ use hotshot_types::{
     consensus::ConsensusMetricsValue,
     light_client::StateKeyPair,
     signature_key::BLSPubKey,
-    traits::{election::Membership, signature_key::SignatureKey as _, states::InstanceState},
+    traits::{election::Membership, signature_key::SignatureKey as _},
     ExecutionType, HotShotConfig, ValidatorConfig,
 };
 use std::num::NonZeroUsize;
