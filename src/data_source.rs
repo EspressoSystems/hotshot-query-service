@@ -637,9 +637,9 @@ pub mod status_tests {
             let ds = ds.read().await;
             // Check that block height is initially zero (for the genesis block).
             assert_eq!(ds.block_height().await.unwrap(), 0);
-            // With consensus paused, check that the success rate returns infinity (since the block
-            // height, the numerator, is 1, and the view number, the denominator, is 0).
-            assert_eq!(ds.success_rate().await.unwrap(), f64::INFINITY);
+            // With consensus paused, check that the success rate returns NAN (since the block
+            // height, the numerator, is 0, and the view number, the denominator, is 0).
+            assert!(ds.success_rate().await.unwrap().is_nan());
         }
 
         // Submit a transaction, and check that it is reflected in the mempool.
