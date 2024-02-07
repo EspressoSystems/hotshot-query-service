@@ -389,6 +389,11 @@ mod test {
     async fn validate(client: &Client<Error>, height: u64) {
         // Check the consistency of every block/leaf pair.
         for i in 0..height {
+            // Limit the number of blocks we validate in order to
+            // speeed up the tests.
+            if ![0, 1, height / 2, height - 1].contains(&i) {
+                continue;
+            }
             tracing::info!("validate block {i}/{height}");
 
             // Check that looking up the leaf various ways returns the correct leaf.
