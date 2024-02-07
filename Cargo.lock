@@ -523,7 +523,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
- "synstructure",
+ "synstructure 0.12.6",
 ]
 
 [[package]]
@@ -1711,7 +1711,16 @@ version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e89e0ae2c2a42be29595d05c50e3ce6096c0698a97e021c3289790f0750cc8e2"
 dependencies = [
- "custom_debug_derive",
+ "custom_debug_derive 0.5.1",
+]
+
+[[package]]
+name = "custom_debug"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14e715bf0e503e909c7076c052e39dd215202e8edeb32f1c194fd630c314d256"
+dependencies = [
+ "custom_debug_derive 0.6.1",
 ]
 
 [[package]]
@@ -1722,7 +1731,21 @@ checksum = "08a9f3941234c9f62ceaa2782974827749de9b0a8a6487275a278da068e1baf7"
 dependencies = [
  "proc-macro2",
  "syn 1.0.109",
- "synstructure",
+ "synstructure 0.12.6",
+]
+
+[[package]]
+name = "custom_debug_derive"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f731440b39c73910e253cb465ec1fac97732b3c7af215639881ec0c2a38f4f69"
+dependencies = [
+ "darling 0.20.5",
+ "itertools 0.12.1",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.48",
+ "synstructure 0.13.1",
 ]
 
 [[package]]
@@ -2752,7 +2775,7 @@ dependencies = [
  "bimap",
  "bincode",
  "commit",
- "custom_debug",
+ "custom_debug 0.5.1",
  "dashmap",
  "derive_more",
  "either",
@@ -2824,7 +2847,7 @@ dependencies = [
  "clap",
  "cld",
  "commit",
- "custom_debug",
+ "custom_debug 0.6.1",
  "derivative",
  "derive_more",
  "either",
@@ -2950,7 +2973,7 @@ dependencies = [
  "bitvec",
  "blake3",
  "commit",
- "custom_debug",
+ "custom_debug 0.5.1",
  "derivative",
  "digest 0.10.7",
  "displaydoc",
@@ -3942,7 +3965,7 @@ dependencies = [
  "async-trait",
  "bincode",
  "blake3",
- "custom_debug",
+ "custom_debug 0.5.1",
  "dashmap",
  "derive_builder",
  "either",
@@ -6792,6 +6815,17 @@ dependencies = [
  "quote",
  "syn 1.0.109",
  "unicode-xid",
+]
+
+[[package]]
+name = "synstructure"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c8af7666ab7b6390ab78131fb5b0fce11d6b7a6951602017c35fa82800708971"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.48",
 ]
 
 [[package]]
