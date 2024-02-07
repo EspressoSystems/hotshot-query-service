@@ -206,7 +206,7 @@ impl<Types: NodeType> LeafQueryData<Types> {
         qc: QuorumCertificate<Types>,
     ) -> Result<Self, InconsistentLeafError<Types>> {
         ensure!(
-            qc.data.leaf_commit == leaf.commit(),
+            qc.is_genesis || qc.data.leaf_commit == leaf.commit(),
             InconsistentLeafSnafu {
                 leaf: leaf.commit(),
                 qc_leaf: qc.data.leaf_commit
