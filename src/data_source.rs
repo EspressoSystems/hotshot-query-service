@@ -635,7 +635,7 @@ pub mod status_tests {
 
         {
             let ds = ds.read().await;
-            // Check that block height is initially one (for the genesis block).
+            // Check that block height is initially zero (for the genesis block).
             assert_eq!(ds.block_height().await.unwrap(), 0);
             // With consensus paused, check that the success rate returns infinity (since the block
             // height, the numerator, is 1, and the view number, the denominator, is 0).

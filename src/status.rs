@@ -171,7 +171,7 @@ mod test {
             );
             sleep(Duration::from_secs(1)).await;
         }
-        // The block height is initially 1 (for the genesis block).
+        // The block height is initially zero (for the genesis block).
         assert_eq!(client.get::<u64>("block-height").send().await.unwrap(), 0);
 
         // Test Prometheus export.
