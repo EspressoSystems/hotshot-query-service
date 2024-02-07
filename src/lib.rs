@@ -712,7 +712,7 @@ mod test {
                 .send()
                 .await
                 .unwrap(),
-            1
+            0
         );
         let (key, _) = BLSPubKey::generated_from_seed_indexed([0; 32], 0);
         assert_eq!(

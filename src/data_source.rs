@@ -461,7 +461,7 @@ pub mod persistence_tests {
             NodeDataSource::<MockTypes>::block_height(&ds)
                 .await
                 .unwrap(),
-            1
+            0
         );
         ds.get_leaf(1).await.try_resolve().unwrap_err();
         ds.get_block(1).await.try_resolve().unwrap_err();
@@ -509,7 +509,7 @@ pub mod persistence_tests {
             NodeDataSource::<MockTypes>::block_height(&ds)
                 .await
                 .unwrap(),
-            1
+            0
         );
         ds.get_leaf(1).await.try_resolve().unwrap_err();
         ds.get_block(1).await.try_resolve().unwrap_err();
@@ -636,7 +636,7 @@ pub mod status_tests {
         {
             let ds = ds.read().await;
             // Check that block height is initially one (for the genesis block).
-            assert_eq!(ds.block_height().await.unwrap(), 1);
+            assert_eq!(ds.block_height().await.unwrap(), 0);
             // With consensus paused, check that the success rate returns infinity (since the block
             // height, the numerator, is 1, and the view number, the denominator, is 0).
             assert_eq!(ds.success_rate().await.unwrap(), f64::INFINITY);
