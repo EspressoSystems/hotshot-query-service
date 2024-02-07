@@ -2790,12 +2790,12 @@ dependencies = [
  "either",
  "embed-doc-image",
  "futures",
- "hotshot-constants",
+ "hotshot-constants 0.3.3 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.10)",
  "hotshot-orchestrator",
  "hotshot-task",
  "hotshot-task-impls",
  "hotshot-types",
- "hotshot-utils",
+ "hotshot-utils 0.1.0 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.10)",
  "hotshot-web-server",
  "libp2p-identity",
  "libp2p-networking",
@@ -2814,6 +2814,14 @@ dependencies = [
 name = "hotshot-constants"
 version = "0.3.3"
 source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.10#0f1ff61dc147781c4b51bb4a578b8313747eae22"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "hotshot-constants"
+version = "0.3.3"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.11#5381a2ca5490ccb5cecb5f303be51a4ae83a4fbc"
 dependencies = [
  "serde",
 ]
@@ -2865,7 +2873,7 @@ dependencies = [
  "hotshot",
  "hotshot-testing",
  "hotshot-types",
- "hotshot-utils",
+ "hotshot-utils 0.1.0 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.11)",
  "include_dir",
  "itertools 0.12.1",
  "native-tls",
@@ -2923,10 +2931,10 @@ dependencies = [
  "commit",
  "either",
  "futures",
- "hotshot-constants",
+ "hotshot-constants 0.3.3 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.10)",
  "hotshot-task",
  "hotshot-types",
- "hotshot-utils",
+ "hotshot-utils 0.1.0 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.10)",
  "sha2 0.10.8",
  "snafu",
  "time 0.3.34",
@@ -2949,7 +2957,7 @@ dependencies = [
  "ethereum-types",
  "futures",
  "hotshot",
- "hotshot-constants",
+ "hotshot-constants 0.3.3 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.10)",
  "hotshot-orchestrator",
  "hotshot-task",
  "hotshot-task-impls",
@@ -2990,9 +2998,9 @@ dependencies = [
  "espresso-systems-common 0.4.1",
  "ethereum-types",
  "generic-array",
- "hotshot-constants",
+ "hotshot-constants 0.3.3 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.10)",
  "hotshot-task",
- "hotshot-utils",
+ "hotshot-utils 0.1.0 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.10)",
  "jf-plonk",
  "jf-primitives",
  "jf-utils",
@@ -3015,6 +3023,15 @@ version = "0.1.0"
 source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.10#0f1ff61dc147781c4b51bb4a578b8313747eae22"
 dependencies = [
  "bincode",
+]
+
+[[package]]
+name = "hotshot-utils"
+version = "0.1.0"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.11#5381a2ca5490ccb5cecb5f303be51a4ae83a4fbc"
+dependencies = [
+ "bincode",
+ "hotshot-constants 0.3.3 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.11)",
 ]
 
 [[package]]
@@ -3473,7 +3490,7 @@ checksum = "af150ab688ff2122fcef229be89cb50dd66af9e01a4ff320cc137eecc9bacc38"
 [[package]]
 name = "jf-plonk"
 version = "0.4.0-pre.0"
-source = "git+https://github.com/EspressoSystems/jellyfish#34059730ee692a35963732b7b9f909c9546dd5c0"
+source = "git+https://github.com/EspressoSystems/jellyfish#d9c1b634a96256b9adf92f549fb87e0167adfae4"
 dependencies = [
  "ark-ec",
  "ark-ff",
@@ -3502,7 +3519,7 @@ dependencies = [
 [[package]]
 name = "jf-primitives"
 version = "0.4.0-pre.0"
-source = "git+https://github.com/EspressoSystems/jellyfish#34059730ee692a35963732b7b9f909c9546dd5c0"
+source = "git+https://github.com/EspressoSystems/jellyfish#d9c1b634a96256b9adf92f549fb87e0167adfae4"
 dependencies = [
  "anyhow",
  "ark-bls12-377",
@@ -3547,7 +3564,7 @@ dependencies = [
 [[package]]
 name = "jf-relation"
 version = "0.4.0-pre.0"
-source = "git+https://github.com/EspressoSystems/jellyfish#34059730ee692a35963732b7b9f909c9546dd5c0"
+source = "git+https://github.com/EspressoSystems/jellyfish#d9c1b634a96256b9adf92f549fb87e0167adfae4"
 dependencies = [
  "ark-bls12-377",
  "ark-bls12-381",
@@ -3573,7 +3590,7 @@ dependencies = [
 [[package]]
 name = "jf-utils"
 version = "0.4.0-pre.0"
-source = "git+https://github.com/EspressoSystems/jellyfish#34059730ee692a35963732b7b9f909c9546dd5c0"
+source = "git+https://github.com/EspressoSystems/jellyfish#d9c1b634a96256b9adf92f549fb87e0167adfae4"
 dependencies = [
  "ark-ec",
  "ark-ff",
@@ -3977,8 +3994,8 @@ dependencies = [
  "derive_builder",
  "either",
  "futures",
- "hotshot-constants",
- "hotshot-utils",
+ "hotshot-constants 0.3.3 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.10)",
+ "hotshot-utils 0.1.0 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.10)",
  "libp2p",
  "libp2p-identity",
  "libp2p-swarm-derive",
