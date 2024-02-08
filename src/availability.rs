@@ -346,7 +346,7 @@ mod test {
     use commit::Committable;
     use futures::FutureExt;
     use hotshot_testing::state_types::TestInstanceState;
-    use hotshot_types::{data::Leaf};
+    use hotshot_types::data::Leaf;
     use portpicker::pick_unused_port;
     use std::time::Duration;
     use surf_disco::Client;
