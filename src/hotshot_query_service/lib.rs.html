@@ -734,6 +734,14 @@
 <a href="#734" id="734">734</a>
 <a href="#735" id="735">735</a>
 <a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1245,21 +1253,23 @@
     <span class="kw">use crate</span>::{
         availability::{
             AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
-            PayloadQueryData, TransactionHash, TransactionIndex,
+            PayloadQueryData, TransactionHash, TransactionIndex, UpdateAvailabilityData,
         },
         metrics::PrometheusMetrics,
         node::NodeDataSource,
         status::StatusDataSource,
         testing::{
             consensus::MockDataSource,
-            mocks::{MockHeader, MockTypes},
+            mocks::{MockHeader, MockPayload, MockTypes},
         },
     };
     <span class="kw">use </span>async_std::{sync::RwLock, task::spawn};
     <span class="kw">use </span>async_trait::async_trait;
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
+
     <span class="kw">use </span>futures::FutureExt;
     <span class="kw">use </span>hotshot::types::SignatureKey <span class="kw">as _</span>;
+    <span class="kw">use </span>hotshot_testing::state_types::TestInstanceState;
     <span class="kw">use </span>hotshot_types::signature_key::BLSPubKey;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::ops::RangeBounds;
@@ -1373,9 +1383,15 @@
     </span><span class="kw">async fn </span>test_composition() {
         <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_composition&quot;</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">&quot;test_composition&quot;</span>).unwrap();
-        <span class="kw">let </span>hotshot_qs = MockDataSource::create_with_store(<span class="kw-2">&amp;mut </span>loader, Default::default())
+        <span class="kw">let </span><span class="kw-2">mut </span>hotshot_qs = MockDataSource::create_with_store(<span class="kw-2">&amp;mut </span>loader, Default::default())
             .<span class="kw">await
             </span>.unwrap();
+
+        <span class="comment">// Mock up some data and add a block to the store.
+        </span><span class="kw">let </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
+        <span class="kw">let </span>block = BlockQueryData::new(leaf.block_header.clone(), MockPayload::genesis());
+        hotshot_qs.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
+
         <span class="kw">let </span>module_state =
             RollingLog::create(<span class="kw-2">&amp;mut </span>loader, Default::default(), <span class="string">&quot;module_state&quot;</span>, <span class="number">1024</span>).unwrap();
         <span class="kw">let </span>state = CompositeState {

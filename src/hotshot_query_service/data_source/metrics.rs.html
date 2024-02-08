@@ -113,17 +113,6 @@
 <a href="#113" id="113">113</a>
 <a href="#114" id="114">114</a>
 <a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -190,18 +179,7 @@
                 message: err.to_string(),
             })<span class="question-mark">?
             </span>.get();
-        <span class="kw">if </span>last_synced_height == <span class="number">0 </span>{
-            <span class="comment">// The block height must always be at least one, since the genesis block is assumed to
-            // exist by default. We need to specially handle the case where we havent received any
-            // decide events yet, since in this case the height will be 0, and the genesis block
-            // itself does not trigger a decide event.
-            //
-            // This is required for consistency with the other data sources, which insert the
-            // genesis block at data source creation time, so that their block height is never 0.
-            </span><span class="prelude-val">Ok</span>(<span class="number">1</span>)
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Ok</span>(last_synced_height)
-        }
+        <span class="prelude-val">Ok</span>(last_synced_height)
     }
 
     <span class="kw">fn </span>metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PrometheusMetrics {

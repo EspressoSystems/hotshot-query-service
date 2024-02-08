@@ -1668,20 +1668,6 @@
 <a href="#1668" id="1668">1668</a>
 <a href="#1669" id="1669">1669</a>
 <a href="#1670" id="1670">1670</a>
-<a href="#1671" id="1671">1671</a>
-<a href="#1672" id="1672">1672</a>
-<a href="#1673" id="1673">1673</a>
-<a href="#1674" id="1674">1674</a>
-<a href="#1675" id="1675">1675</a>
-<a href="#1676" id="1676">1676</a>
-<a href="#1677" id="1677">1677</a>
-<a href="#1678" id="1678">1678</a>
-<a href="#1679" id="1679">1679</a>
-<a href="#1680" id="1680">1680</a>
-<a href="#1681" id="1681">1681</a>
-<a href="#1682" id="1682">1682</a>
-<a href="#1683" id="1683">1683</a>
-<a href="#1684" id="1684">1684</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1983,27 +1969,13 @@
             <span class="prelude-val">None
         </span>};
 
-        <span class="kw">let </span><span class="kw-2">mut </span>ds = <span class="self">Self </span>{
+        <span class="kw">let </span>ds = <span class="self">Self </span>{
             fetcher,
             scanner,
             metrics: Default::default(),
         };
 
-        <span class="kw">if </span>NodeDataSource::block_height(<span class="kw-2">&amp;</span>ds).<span class="kw">await</span><span class="question-mark">? </span>== <span class="number">0 </span>{
-            <span class="comment">// HotShot doesn&#39;t emit an event for the genesis block, so we need to manually ensure it
-            // is present.
-            </span>ds.insert_genesis().<span class="kw">await</span><span class="question-mark">?</span>;
-        }
-
         <span class="prelude-val">Ok</span>(ds)
-    }
-
-    <span class="kw">async fn </span>insert_genesis(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
-        UpdateAvailabilityData::insert_leaf(<span class="self">self</span>, LeafQueryData::genesis()).<span class="kw">await</span><span class="question-mark">?</span>;
-        UpdateNodeData::insert_leaf(<span class="self">self</span>, LeafQueryData::genesis()).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.insert_block(BlockQueryData::genesis()).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.commit().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(())
     }
 }
 

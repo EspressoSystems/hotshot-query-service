@@ -459,8 +459,8 @@
             );
             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
         }
-        <span class="comment">// The block height is initially 1 (for the genesis block).
-        </span><span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;block-height&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">1</span>);
+        <span class="comment">// The block height is initially zero.
+        </span><span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;block-height&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
 
         <span class="comment">// Test Prometheus export.
         </span><span class="kw">let </span><span class="kw-2">mut </span>res = surf::get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{url}/metrics&quot;</span>)).send().<span class="kw">await</span>.unwrap();
@@ -571,7 +571,7 @@
         <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
 
         <span class="comment">// Ensure we can still access the built-in functionality.
-        </span><span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;block-height&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">1</span>);
+        </span><span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;block-height&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
     }
 }
 </code></pre></div></section></main></body></html>

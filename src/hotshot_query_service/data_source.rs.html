@@ -735,6 +735,7 @@
 <a href="#735" id="735">735</a>
 <a href="#736" id="736">736</a>
 <a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1156,6 +1157,7 @@
         Leaf,
     };
     <span class="kw">use </span>commit::Committable;
+    <span class="kw">use </span>hotshot_testing::state_types::TestInstanceState;
     <span class="kw">use </span>hotshot_types::simple_certificate::QuorumCertificate;
 
     <span class="attr">#[async_std::test]
@@ -1167,7 +1169,7 @@
 
         <span class="comment">// Mock up some consensus data.
         </span><span class="kw">let </span><span class="kw-2">mut </span>qc = QuorumCertificate::&lt;MockTypes&gt;::genesis();
-        <span class="kw">let </span><span class="kw-2">mut </span>leaf = Leaf::&lt;MockTypes&gt;::genesis();
+        <span class="kw">let </span><span class="kw-2">mut </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
         <span class="comment">// Increment the block number, to distinguish this block from the genesis block, which
         // already exists.
         </span>leaf.block_header.block_number += <span class="number">1</span>;
@@ -1197,7 +1199,7 @@
             NodeDataSource::&lt;MockTypes&gt;::block_height(<span class="kw-2">&amp;</span>ds)
                 .<span class="kw">await
                 </span>.unwrap(),
-            <span class="number">1
+            <span class="number">0
         </span>);
         ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.try_resolve().unwrap_err();
         ds.get_block(<span class="number">1</span>).<span class="kw">await</span>.try_resolve().unwrap_err();
@@ -1212,7 +1214,7 @@
 
         <span class="comment">// Mock up some consensus data.
         </span><span class="kw">let </span><span class="kw-2">mut </span>qc = QuorumCertificate::&lt;MockTypes&gt;::genesis();
-        <span class="kw">let </span><span class="kw-2">mut </span>leaf = Leaf::&lt;MockTypes&gt;::genesis();
+        <span class="kw">let </span><span class="kw-2">mut </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
         <span class="comment">// Increment the block number, to distinguish this block from the genesis block, which
         // already exists.
         </span>leaf.block_header.block_number += <span class="number">1</span>;
@@ -1245,7 +1247,7 @@
             NodeDataSource::&lt;MockTypes&gt;::block_height(<span class="kw-2">&amp;</span>ds)
                 .<span class="kw">await
                 </span>.unwrap(),
-            <span class="number">1
+            <span class="number">0
         </span>);
         ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.try_resolve().unwrap_err();
         ds.get_block(<span class="number">1</span>).<span class="kw">await</span>.try_resolve().unwrap_err();
@@ -1371,11 +1373,11 @@
 
         {
             <span class="kw">let </span>ds = ds.read().<span class="kw">await</span>;
-            <span class="comment">// Check that block height is initially one (for the genesis block).
-            </span><span class="macro">assert_eq!</span>(ds.block_height().<span class="kw">await</span>.unwrap(), <span class="number">1</span>);
-            <span class="comment">// With consensus paused, check that the success rate returns infinity (since the block
-            // height, the numerator, is 1, and the view number, the denominator, is 0).
-            </span><span class="macro">assert_eq!</span>(ds.success_rate().<span class="kw">await</span>.unwrap(), f64::INFINITY);
+            <span class="comment">// Check that block height is initially zero.
+            </span><span class="macro">assert_eq!</span>(ds.block_height().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
+            <span class="comment">// With consensus paused, check that the success rate returns NAN (since the block
+            // height, the numerator, is 0, and the view number, the denominator, is 0).
+            </span><span class="macro">assert!</span>(ds.success_rate().<span class="kw">await</span>.unwrap().is_nan());
         }
 
         <span class="comment">// Submit a transaction, and check that it is reflected in the mempool.
