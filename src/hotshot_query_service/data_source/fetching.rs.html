@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/fetching.rs`."><title>fetching.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/fetching.rs`."><title>fetching.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1668,6 +1669,10 @@
 <a href="#1668" id="1668">1668</a>
 <a href="#1669" id="1669">1669</a>
 <a href="#1670" id="1670">1670</a>
+<a href="#1671" id="1671">1671</a>
+<a href="#1672" id="1672">1672</a>
+<a href="#1673" id="1673">1673</a>
+<a href="#1674" id="1674">1674</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1756,7 +1761,7 @@
         Callback, Provider,
     },
     metrics::PrometheusMetrics,
-    node::{NodeDataSource, UpdateNodeData},
+    node::{NodeDataSource, SyncStatus, UpdateNodeData},
     status::StatusDataSource,
     task::BackgroundTask,
     Header, NotFoundSnafu, Payload, QueryResult, SignatureKey,
@@ -1889,7 +1894,7 @@
         + UpdateNodeData&lt;Types&gt;
         + AvailabilityStorage&lt;Types&gt;
         + VersionedDataSource
-        + <span class="lifetime">&#39;static</span>,
+        + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="doccomment">/// Build a [`FetchingDataSource`] with these options.
@@ -1915,7 +1920,7 @@
 /// implementations used, and more complex data sources can be built on top using data source
 /// combinators.
 </span><span class="attr">#[derive(Derivative)]
-#[derivative(Clone(bound = <span class="string">&quot;&quot;</span>), Debug(bound = <span class="string">&quot;S: Debug, P: Debug&quot;</span>))]
+#[derivative(Clone(bound = <span class="string">""</span>), Debug(bound = <span class="string">"S: Debug, P: Debug"</span>))]
 </span><span class="kw">pub struct </span>FetchingDataSource&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
@@ -1939,7 +1944,7 @@
         + UpdateNodeData&lt;Types&gt;
         + AvailabilityStorage&lt;Types&gt;
         + VersionedDataSource
-        + <span class="lifetime">&#39;static</span>,
+        + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="doccomment">/// Build a [`FetchingDataSource`] with the given `storage` and `provider`.
@@ -1958,7 +1963,7 @@
         <span class="kw">let </span>fetcher = Arc::new(Fetcher::new(builder).<span class="kw">await</span><span class="question-mark">?</span>);
         <span class="kw">let </span>scanner = <span class="kw">if </span>proactive_fetching {
             <span class="prelude-val">Some</span>(BackgroundTask::spawn(
-                <span class="string">&quot;proactive scanner&quot;</span>,
+                <span class="string">"proactive scanner"</span>,
                 fetcher.clone().proactive_scan(
                     minor_interval,
                     major_interval,
@@ -1980,14 +1985,14 @@
 }
 
 <span class="attr">#[derive(From)]
-</span><span class="kw">pub struct </span>StorageReadGuard&lt;<span class="lifetime">&#39;a</span>, Types, S&gt;
+</span><span class="kw">pub struct </span>StorageReadGuard&lt;<span class="lifetime">'a</span>, Types, S&gt;
 <span class="kw">where
     </span>Types: NodeType,
 {
-    inner: RwLockReadGuard&lt;<span class="lifetime">&#39;a</span>, NotifyStorage&lt;Types, S&gt;&gt;,
+    inner: RwLockReadGuard&lt;<span class="lifetime">'a</span>, NotifyStorage&lt;Types, S&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Types, S&gt; Deref <span class="kw">for </span>StorageReadGuard&lt;<span class="lifetime">&#39;a</span>, Types, S&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types, S&gt; Deref <span class="kw">for </span>StorageReadGuard&lt;<span class="lifetime">'a</span>, Types, S&gt;
 <span class="kw">where
     </span>Types: NodeType,
 {
@@ -1999,14 +2004,14 @@
 }
 
 <span class="attr">#[derive(From)]
-</span><span class="kw">pub struct </span>StorageWriteGuard&lt;<span class="lifetime">&#39;a</span>, Types, S&gt;
+</span><span class="kw">pub struct </span>StorageWriteGuard&lt;<span class="lifetime">'a</span>, Types, S&gt;
 <span class="kw">where
     </span>Types: NodeType,
 {
-    inner: RwLockWriteGuard&lt;<span class="lifetime">&#39;a</span>, NotifyStorage&lt;Types, S&gt;&gt;,
+    inner: RwLockWriteGuard&lt;<span class="lifetime">'a</span>, NotifyStorage&lt;Types, S&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Types, S&gt; Deref <span class="kw">for </span>StorageWriteGuard&lt;<span class="lifetime">&#39;a</span>, Types, S&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types, S&gt; Deref <span class="kw">for </span>StorageWriteGuard&lt;<span class="lifetime">'a</span>, Types, S&gt;
 <span class="kw">where
     </span>Types: NodeType,
 {
@@ -2017,7 +2022,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Types, S&gt; DerefMut <span class="kw">for </span>StorageWriteGuard&lt;<span class="lifetime">&#39;a</span>, Types, S&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types, S&gt; DerefMut <span class="kw">for </span>StorageWriteGuard&lt;<span class="lifetime">'a</span>, Types, S&gt;
 <span class="kw">where
     </span>Types: NodeType,
 {
@@ -2062,16 +2067,16 @@
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
-    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">&#39;static</span>,
+    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
-    <span class="kw">type </span>LeafRange&lt;R&gt; = BoxStream&lt;<span class="lifetime">&#39;static</span>, Fetch&lt;LeafQueryData&lt;Types&gt;&gt;&gt;
+    <span class="kw">type </span>LeafRange&lt;R&gt; = BoxStream&lt;<span class="lifetime">'static</span>, Fetch&lt;LeafQueryData&lt;Types&gt;&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send;
-    <span class="kw">type </span>BlockRange&lt;R&gt; = BoxStream&lt;<span class="lifetime">&#39;static</span>, Fetch&lt;BlockQueryData&lt;Types&gt;&gt;&gt;
+    <span class="kw">type </span>BlockRange&lt;R&gt; = BoxStream&lt;<span class="lifetime">'static</span>, Fetch&lt;BlockQueryData&lt;Types&gt;&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send;
-    <span class="kw">type </span>PayloadRange&lt;R&gt; = BoxStream&lt;<span class="lifetime">&#39;static</span>, Fetch&lt;PayloadQueryData&lt;Types&gt;&gt;&gt;
+    <span class="kw">type </span>PayloadRange&lt;R&gt; = BoxStream&lt;<span class="lifetime">'static</span>, Fetch&lt;PayloadQueryData&lt;Types&gt;&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send;
 
@@ -2098,21 +2103,21 @@
 
     <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::LeafRange&lt;R&gt;
     <span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
     {
         <span class="self">self</span>.fetcher.clone().get_range(range)
     }
 
     <span class="kw">async fn </span>get_block_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::BlockRange&lt;R&gt;
     <span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
     {
         <span class="self">self</span>.fetcher.clone().get_range(range)
     }
 
     <span class="kw">async fn </span>get_payload_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::PayloadRange&lt;R&gt;
     <span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
     {
         <span class="self">self</span>.fetcher.clone().get_range(range)
     }
@@ -2165,6 +2170,10 @@
 
     <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
         <span class="self">self</span>.storage().<span class="kw">await</span>.count_proposals(proposer).<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+        <span class="self">self</span>.storage().<span class="kw">await</span>.sync_status().<span class="kw">await
     </span>}
 }
 
@@ -2305,7 +2314,7 @@
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
-    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">&#39;static</span>,
+    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="kw">async fn </span>get&lt;T, R&gt;(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;, req: R) -&gt; Fetch&lt;T&gt;
@@ -2334,9 +2343,9 @@
     /// Objects are loaded and fetched in chunks, which strikes a good balance of limiting the total
     /// number of storage and network requests, while also keeping the amount of simultaneous
     /// resource consumption bounded.
-    </span><span class="kw">fn </span>get_range&lt;R, T&gt;(<span class="self">self</span>: Arc&lt;<span class="self">Self</span>&gt;, range: R) -&gt; BoxStream&lt;<span class="lifetime">&#39;static</span>, Fetch&lt;T&gt;&gt;
+    </span><span class="kw">fn </span>get_range&lt;R, T&gt;(<span class="self">self</span>: Arc&lt;<span class="self">Self</span>&gt;, range: R) -&gt; BoxStream&lt;<span class="lifetime">'static</span>, Fetch&lt;T&gt;&gt;
     <span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         T: RangedFetchable&lt;Types&gt;,
     {
         <span class="kw">let </span>chunk_size = <span class="self">self</span>.range_chunk_size;
@@ -2348,9 +2357,9 @@
         <span class="self">self</span>: Arc&lt;<span class="self">Self</span>&gt;,
         chunk_size: usize,
         range: R,
-    ) -&gt; BoxStream&lt;<span class="lifetime">&#39;static</span>, Fetch&lt;T&gt;&gt;
+    ) -&gt; BoxStream&lt;<span class="lifetime">'static</span>, Fetch&lt;T&gt;&gt;
     <span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         T: RangedFetchable&lt;Types&gt;,
     {
         stream::iter(range_chunks(range, chunk_size))
@@ -2372,18 +2381,18 @@
         <span class="kw">let </span>storage = <span class="self">self</span>.storage.read().<span class="kw">await</span>;
         <span class="kw">let </span>ts = T::load_range(<span class="kw-2">&amp;</span>storage, chunk.clone())
             .<span class="kw">await
-            </span>.context(<span class="macro">format!</span>(<span class="string">&quot;when fetching items in range {chunk:?}&quot;</span>))
+            </span>.context(<span class="macro">format!</span>(<span class="string">"when fetching items in range {chunk:?}"</span>))
             .ok_or_trace()
             .unwrap_or_default();
         <span class="comment">// Log and discard error information; we want a list of Option where None indicates an
         // object that needs to be fetched.
         </span><span class="kw">let </span>ts = ts.into_iter().map(ResultExt::ok_or_trace);
         <span class="comment">// Storage may return fewer objects than asked for if we hit the end of the current chain.
-        // Pad out to the end of the chunk with None, indicating that objects we don&#39;t have yet must
+        // Pad out to the end of the chunk with None, indicating that objects we don't have yet must
         // be fetched.
         </span><span class="kw">if </span>ts.len() &lt; chunk.len() {
             <span class="macro">tracing::info!</span>(
-                <span class="string">&quot;items {}-{} in chunk are not available, will be fetched&quot;</span>,
+                <span class="string">"items {}-{} in chunk are not available, will be fetched"</span>,
                 ts.len(),
                 chunk.len()
             );
@@ -2400,7 +2409,7 @@
         // 1. It borrows from `self`, which is local to this future. This avoids having to clone
         //    `self` for every entry, instead we clone it for every chunk.
         // 2. We evaluate all the `some_or_fetch` calls eagerly, so the fetches are triggered as
-        //    soon as we evaluate the chunk. This ensures we don&#39;t miss any notifications, since we
+        //    soon as we evaluate the chunk. This ensures we don't miss any notifications, since we
         //    load from storage and subscribe to notifications for missing objects all while we have
         //    a read lock on `self.storage`. No notifications can be sent during this time since
         //    sending a notification requires a write lock.
@@ -2409,32 +2418,32 @@
 
     <span class="kw">async fn </span>ok_or_fetch&lt;R, T&gt;(
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
-        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">&#39;_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
+        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
         req: R,
         res: QueryResult&lt;T&gt;,
     ) -&gt; Fetch&lt;T&gt;
     <span class="kw">where
         </span>R: Into&lt;T::Request&gt; + Send,
-        T: Fetchable&lt;Types&gt; + Send + Sync + <span class="lifetime">&#39;static</span>,
+        T: Fetchable&lt;Types&gt; + Send + Sync + <span class="lifetime">'static</span>,
     {
         <span class="kw">let </span>req = req.into();
         <span class="self">self</span>.some_or_fetch(
             storage,
             req,
-            res.context(<span class="macro">format!</span>(<span class="string">&quot;req: {req:?}&quot;</span>)).ok_or_trace(),
+            res.context(<span class="macro">format!</span>(<span class="string">"req: {req:?}"</span>)).ok_or_trace(),
         )
         .<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>some_or_fetch&lt;R, T&gt;(
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
-        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">&#39;_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
+        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
         req: R,
         res: <span class="prelude-ty">Option</span>&lt;T&gt;,
     ) -&gt; Fetch&lt;T&gt;
     <span class="kw">where
         </span>R: Into&lt;T::Request&gt; + Send,
-        T: Fetchable&lt;Types&gt; + Send + Sync + <span class="lifetime">&#39;static</span>,
+        T: Fetchable&lt;Types&gt; + Send + Sync + <span class="lifetime">'static</span>,
     {
         <span class="kw">match </span>res {
             <span class="prelude-val">Some</span>(t) =&gt; Fetch::Ready(t),
@@ -2444,7 +2453,7 @@
 
     <span class="kw">async fn </span>fetch&lt;R, T&gt;(
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
-        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">&#39;_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
+        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
         req: R,
     ) -&gt; Fetch&lt;T&gt;
     <span class="kw">where
@@ -2452,7 +2461,7 @@
         T: Fetchable&lt;Types&gt;,
     {
         <span class="kw">let </span>req = req.into();
-        <span class="macro">tracing::debug!</span>(<span class="string">&quot;fetching resource {req:?}&quot;</span>);
+        <span class="macro">tracing::debug!</span>(<span class="string">"fetching resource {req:?}"</span>);
 
         <span class="comment">// Subscribe to notifications so we are alerted when we get the resource.
         </span><span class="kw">let </span>fut = T::passive_fetch(<span class="kw-2">&amp;**</span>storage, req)
@@ -2465,7 +2474,7 @@
                         // without ever sending a notification. In this case, the correct behavior
                         // is actually to block forever (unless the `Fetch` itself is dropped),
                         // since the semantics of `Fetch` are to never fail. This is analogous to
-                        // fetching an object which doesn&#39;t actually exist: the `Fetch` will never
+                        // fetching an object which doesn't actually exist: the `Fetch` will never
                         // return.
                         //
                         // However, for ease of debugging, and since this is never expected to
@@ -2477,7 +2486,7 @@
                         // * There is a very unexpected runtime bug resulting in the notifier being
                         //   dropped. If this happens, things are very broken in any case, and it is
                         //   better to panic loudly than simply block forever.
-                        </span><span class="macro">panic!</span>(<span class="string">&quot;notifier dropped without satisfying request {req:?}&quot;</span>);
+                        </span><span class="macro">panic!</span>(<span class="string">"notifier dropped without satisfying request {req:?}"</span>);
                     }
                 }
             });
@@ -2490,7 +2499,7 @@
         // appropriate to spawn an active fetching task.
         //
         // Ordinarily, taking a read-only lock recursively from the same task would be fine,
-        // but because async_std::RwLock is &quot;write-preferring&quot; (attempts to acquire a read lock
+        // but because async_std::RwLock is "write-preferring" (attempts to acquire a read lock
         // block if there are concurrent attempts to acquire a write lock) we can have the following
         // deadlock:
         // * This task acquires `storage` in the caller of this function
@@ -2531,7 +2540,7 @@
             </span>} <span class="kw">else </span>{
                 prev_height
             };
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;starting proactive scan {i} of blocks from {start}-{block_height}&quot;</span>);
+            <span class="macro">tracing::info!</span>(<span class="string">"starting proactive scan {i} of blocks from {start}-{block_height}"</span>);
             prev_height = block_height;
 
             <span class="comment">// Iterate over all blocks that we should have. Merely iterating over the `Fetch`es
@@ -2542,7 +2551,7 @@
             //
             // The chunking behavior of `get_range` automatically ensures that, no matter how big
             // the range is, we will release the read lock on storage every `chunk_size` items, so
-            // we don&#39;t starve out would-be writers.
+            // we don't starve out would-be writers.
             </span><span class="kw">let </span><span class="kw-2">mut </span>blocks = <span class="self">self
                 </span>.clone()
                 .get_range_with_chunk_size::&lt;<span class="kw">_</span>, BlockQueryData&lt;Types&gt;&gt;(
@@ -2551,7 +2560,7 @@
                 );
             <span class="kw">while </span>blocks.next().<span class="kw">await</span>.is_some() {}
 
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;completed proactive scan {i} of blocks from {start}-{block_height}, will scan again in {minor_interval:?}&quot;</span>);
+            <span class="macro">tracing::info!</span>(<span class="string">"completed proactive scan {i} of blocks from {start}-{block_height}, will scan again in {minor_interval:?}"</span>);
             sleep(minor_interval).<span class="kw">await</span>;
         }
     }
@@ -2559,14 +2568,14 @@
 
 <span class="doccomment">/// A provider which can be used as a fetcher by the availability service.
 </span><span class="kw">pub trait </span>AvailabilityProvider&lt;Types: NodeType&gt;:
-    Provider&lt;Types, request::LeafRequest&gt; + Provider&lt;Types, request::PayloadRequest&gt; + Sync + <span class="lifetime">&#39;static
+    Provider&lt;Types, request::LeafRequest&gt; + Provider&lt;Types, request::PayloadRequest&gt; + Sync + <span class="lifetime">'static
 </span>{
 }
 <span class="kw">impl</span>&lt;Types: NodeType, P&gt; AvailabilityProvider&lt;Types&gt; <span class="kw">for </span>P <span class="kw">where
     </span>P: Provider&lt;Types, request::LeafRequest&gt;
         + Provider&lt;Types, request::PayloadRequest&gt;
         + Sync
-        + <span class="lifetime">&#39;static
+        + <span class="lifetime">'static
 </span>{
 }
 
@@ -2576,13 +2585,13 @@
 /// logistics of fetching are shared between all objects, and only the low-level particulars are
 /// type-specific.
 </span><span class="attr">#[async_trait]
-</span><span class="kw">trait </span>Fetchable&lt;Types&gt;: Clone + Send + Sync + <span class="lifetime">&#39;static
+</span><span class="kw">trait </span>Fetchable&lt;Types&gt;: Clone + Send + Sync + <span class="lifetime">'static
 </span><span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="doccomment">/// A succinct specification of the object to be fetched.
-    </span><span class="kw">type </span>Request: Copy + Debug + Send + Sync + <span class="lifetime">&#39;static</span>;
+    </span><span class="kw">type </span>Request: Copy + Debug + Send + Sync + <span class="lifetime">'static</span>;
 
     <span class="doccomment">/// Does this object satisfy the given request?
     </span><span class="kw">fn </span>satisfies(<span class="kw-2">&amp;</span><span class="self">self</span>, req: <span class="self">Self</span>::Request) -&gt; bool;
@@ -2594,7 +2603,7 @@
     /// * The requested object is known to exist. For example, we will trigger a fetch of a block
     ///   with a height less than the current block height, but not greater, since the latter might
     ///   not exist yet, and we should receive it passively once it is produced. Or, we will fetch a
-    ///   leaf by height but not by hash, since we can&#39;t guarantee that a leaf with an arbitrary
+    ///   leaf by height but not by hash, since we can't guarantee that a leaf with an arbitrary
     ///   hash exists.
     ///
     /// If we do trigger an active fetch for an object, the provided callback will be called if and
@@ -2607,17 +2616,17 @@
     /// produced. Active fetching merely helps us receive certain objects sooner.
     </span><span class="kw">async fn </span>active_fetch&lt;S, P&gt;(
         fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
-        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">&#39;_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
+        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
-        </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">&#39;static</span>,
+        </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
         P: AvailabilityProvider&lt;Types&gt;;
 
     <span class="doccomment">/// Wait for someone else to fetch the object.
     </span><span class="kw">async fn </span>passive_fetch&lt;S&gt;(
         storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;,
         req: <span class="self">Self</span>::Request,
-    ) -&gt; BoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt;
+    ) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;;
 
@@ -2642,7 +2651,7 @@
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;<span class="self">Self</span>&gt;&gt;&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
-        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>;
+        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 }
 
 <span class="attr">#[async_trait]
@@ -2663,7 +2672,7 @@
     <span class="kw">async fn </span>passive_fetch&lt;S&gt;(
         storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;,
         req: <span class="self">Self</span>::Request,
-    ) -&gt; BoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt;
+    ) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
     {
@@ -2677,10 +2686,10 @@
 
     <span class="kw">async fn </span>active_fetch&lt;S, P&gt;(
         fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
-        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">&#39;_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
+        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
-        </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">&#39;static</span>,
+        </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
         P: AvailabilityProvider&lt;Types&gt;,
     {
         fetch_leaf_with_callbacks(fetcher, storage, req, <span class="prelude-val">None</span>)
@@ -2691,7 +2700,7 @@
         </span>S: AvailabilityStorage&lt;Types&gt;,
     {
         <span class="comment">// Fail quickly, without touching storage, if the requested height is greater than the
-        // current height. In this case, we know we don&#39;t have the leaf.
+        // current height. In this case, we know we don't have the leaf.
         </span><span class="kw">if let </span>LeafId::Number(n) = req {
             <span class="macro">ensure!</span>((n <span class="kw">as </span>u64) &lt; storage.height, NotFoundSnafu);
         }
@@ -2701,15 +2710,15 @@
 
 <span class="kw">fn </span>fetch_leaf_with_callbacks&lt;Types, S, P, I&gt;(
     fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
-    storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">&#39;_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
+    storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
     req: LeafId&lt;Types&gt;,
     callbacks: I,
 ) <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
-    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">&#39;static</span>,
+    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
-    I: IntoIterator&lt;Item = LeafCallback&lt;Types, S, P&gt;&gt; + Send + <span class="lifetime">&#39;static</span>,
+    I: IntoIterator&lt;Item = LeafCallback&lt;Types, S, P&gt;&gt; + Send + <span class="lifetime">'static</span>,
     I::IntoIter: Send,
 {
     <span class="kw">match </span>req {
@@ -2719,7 +2728,7 @@
                 <span class="comment">// If the requested leaf has yet to be produced, based on the current block height,
                 // there is no point in requesting it. We will receive it passively once it is
                 // created.
-                </span><span class="macro">tracing::info!</span>(<span class="string">&quot;not fetching leaf {n} because height is only {height}&quot;</span>);
+                </span><span class="macro">tracing::info!</span>(<span class="string">"not fetching leaf {n} because height is only {height}"</span>);
                 <span class="kw">return</span>;
             }
 
@@ -2731,10 +2740,10 @@
             );
         }
         LeafId::Hash(h) =&gt; {
-            <span class="comment">// We don&#39;t actively fetch leaves when requested by hash, because we have no way of
-            // knowing whether a leaf with such a hash actually exists, and we don&#39;t want to bother
+            <span class="comment">// We don't actively fetch leaves when requested by hash, because we have no way of
+            // knowing whether a leaf with such a hash actually exists, and we don't want to bother
             // peers with requests for non-existant leaves.
-            </span><span class="macro">tracing::info!</span>(<span class="string">&quot;not fetching unknown leaf {h}&quot;</span>);
+            </span><span class="macro">tracing::info!</span>(<span class="string">"not fetching unknown leaf {h}"</span>);
         }
     }
 }
@@ -2747,7 +2756,7 @@
     </span>Types: NodeType,
     S: UpdateAvailabilityData&lt;Types&gt; + VersionedDataSource,
 {
-    <span class="macro">tracing::info!</span>(<span class="string">&quot;storing leaf&quot;</span>);
+    <span class="macro">tracing::info!</span>(<span class="string">"storing leaf"</span>);
     storage.insert_leaf(leaf).<span class="kw">await</span><span class="question-mark">?</span>;
     storage.commit().<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
@@ -2767,7 +2776,7 @@
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;<span class="self">Self</span>&gt;&gt;&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
-        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
     {
         <span class="comment">// Return quickly, without touching storage, if the start of the requested range is greater
         // than the current height. In this case, we know storage would return an empty range.
@@ -2785,14 +2794,14 @@
 /// Blocks can be requested either directly by their [`BlockId`], or indirectly, by requesting a
 /// block containing a particular transaction.
 </span><span class="attr">#[derive(Derivative, From, Display)]
-#[derivative(Ord = <span class="string">&quot;feature_allow_slow_enum&quot;</span>)]
+#[derivative(Ord = <span class="string">"feature_allow_slow_enum"</span>)]
 #[derivative(
-    Copy(bound = <span class="string">&quot;&quot;</span>),
-    Debug(bound = <span class="string">&quot;&quot;</span>),
-    PartialEq(bound = <span class="string">&quot;&quot;</span>),
-    Eq(bound = <span class="string">&quot;&quot;</span>),
-    Ord(bound = <span class="string">&quot;&quot;</span>),
-    Hash(bound = <span class="string">&quot;&quot;</span>)
+    Copy(bound = <span class="string">""</span>),
+    Debug(bound = <span class="string">""</span>),
+    PartialEq(bound = <span class="string">""</span>),
+    Eq(bound = <span class="string">""</span>),
+    Ord(bound = <span class="string">""</span>),
+    Hash(bound = <span class="string">""</span>)
 )]
 </span><span class="kw">pub enum </span>BlockRequest&lt;Types&gt;
 <span class="kw">where
@@ -2849,7 +2858,7 @@
     <span class="kw">async fn </span>passive_fetch&lt;S&gt;(
         storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;,
         req: <span class="self">Self</span>::Request,
-    ) -&gt; BoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt;
+    ) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
     {
@@ -2863,10 +2872,10 @@
 
     <span class="kw">async fn </span>active_fetch&lt;S, P&gt;(
         fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
-        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">&#39;_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
+        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
-        </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">&#39;static</span>,
+        </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
         P: AvailabilityProvider&lt;Types&gt;,
     {
         <span class="kw">match </span>req {
@@ -2881,7 +2890,7 @@
                 //    members.
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(header) = load_header(<span class="kw-2">&amp;**</span>storage, id)
                     .<span class="kw">await
-                    </span>.context(<span class="macro">format!</span>(<span class="string">&quot;loading header for block {id}&quot;</span>))
+                    </span>.context(<span class="macro">format!</span>(<span class="string">"loading header for block {id}"</span>))
                     .ok_or_trace()
                 {
                     fetch_block_with_header(fetcher, header);
@@ -2903,25 +2912,25 @@
                     }
                     BlockId::Hash(h) =&gt; {
                         <span class="comment">// Given only the hash, we cannot tell if the corresonding leaf actually
-                        // exists, since we don&#39;t have a corresponding header. Therefore, we will
+                        // exists, since we don't have a corresponding header. Therefore, we will
                         // not spawn an active fetch.
-                        </span><span class="macro">tracing::info!</span>(<span class="string">&quot;not fetching unknown block {h}&quot;</span>);
+                        </span><span class="macro">tracing::info!</span>(<span class="string">"not fetching unknown block {h}"</span>);
                         <span class="kw">return</span>;
                     }
                     BlockId::PayloadHash(h) =&gt; {
-                        <span class="comment">// Same as above, we don&#39;t fetch a block with a payload that is not known to
+                        <span class="comment">// Same as above, we don't fetch a block with a payload that is not known to
                         // exist.
-                        </span><span class="macro">tracing::info!</span>(<span class="string">&quot;not fetching block with unknown payload {h}&quot;</span>);
+                        </span><span class="macro">tracing::info!</span>(<span class="string">"not fetching block with unknown payload {h}"</span>);
                         <span class="kw">return</span>;
                     }
                 }
             }
             BlockRequest::WithTransaction(h) =&gt; {
-                <span class="comment">// We don&#39;t actively fetch blocks when requested by transaction, because without the
+                <span class="comment">// We don't actively fetch blocks when requested by transaction, because without the
                 // block payload, we have no way of knowing whether a block with such a transaction
-                // actually exists, and we don&#39;t want to bother peers with requests for non-existant
+                // actually exists, and we don't want to bother peers with requests for non-existant
                 // blocks.
-                </span><span class="macro">tracing::info!</span>(<span class="string">&quot;not fetching block with unknown transaction {h}&quot;</span>);
+                </span><span class="macro">tracing::info!</span>(<span class="string">"not fetching block with unknown transaction {h}"</span>);
             }
         }
     }
@@ -2933,7 +2942,7 @@
         <span class="kw">match </span>req {
             BlockRequest::Id(id) =&gt; {
                 <span class="comment">// Fail quickly, without touching storage, if the requested height is greater than
-                // the current height. In this case, we know we don&#39;t have the block.
+                // the current height. In this case, we know we don't have the block.
                 </span><span class="kw">if let </span>BlockId::Number(n) = id {
                     <span class="macro">ensure!</span>((n <span class="kw">as </span>u64) &lt; storage.height, NotFoundSnafu);
                 }
@@ -2960,7 +2969,7 @@
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;<span class="self">Self</span>&gt;&gt;&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
-        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
     {
         <span class="comment">// Return quickly, without touching storage, if the start of the requested range is greater
         // than the current height. In this case, we know storage would return an empty range.
@@ -2977,12 +2986,12 @@
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
-    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">&#39;static</span>,
+    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="comment">// Now that we have the header, we only need to retrieve the payload.
     </span><span class="macro">tracing::info!</span>(
-        <span class="string">&quot;spawned active fetch for payload {:?} (height {})&quot;</span>,
+        <span class="string">"spawned active fetch for payload {:?} (height {})"</span>,
         header.payload_commitment(),
         header.block_number()
     );
@@ -3019,7 +3028,7 @@
     S: AvailabilityStorage&lt;Types&gt;,
 {
     <span class="comment">// Fail quickly, without touching storage, if the requested height is greater than the current
-    // height. In this case, we know we don&#39;t have the header.
+    // height. In this case, we know we don't have the header.
     </span><span class="kw">if let </span>BlockId::Number(n) = id {
         <span class="macro">ensure!</span>((n <span class="kw">as </span>u64) &lt; storage.height, NotFoundSnafu);
     }
@@ -3041,7 +3050,7 @@
     <span class="kw">async fn </span>passive_fetch&lt;S&gt;(
         storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;,
         req: <span class="self">Self</span>::Request,
-    ) -&gt; BoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt;
+    ) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
     {
@@ -3064,16 +3073,16 @@
 
     <span class="kw">async fn </span>active_fetch&lt;S, P&gt;(
         _fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
-        _storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">&#39;_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
+        _storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
-        </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">&#39;static</span>,
+        </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
         P: AvailabilityProvider&lt;Types&gt;,
     {
-        <span class="comment">// We don&#39;t actively fetch blocks when requested by transaction, because without the block
+        <span class="comment">// We don't actively fetch blocks when requested by transaction, because without the block
         // payload, we have no way of knowing whether a block with such a transaction actually
-        // exists, and we don&#39;t want to bother peers with requests for non-existant blocks.
-        </span><span class="macro">tracing::info!</span>(<span class="string">&quot;not fetching block with unknown transaction {req}&quot;</span>);
+        // exists, and we don't want to bother peers with requests for non-existant blocks.
+        </span><span class="macro">tracing::info!</span>(<span class="string">"not fetching block with unknown transaction {req}"</span>);
     }
 
     <span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;
@@ -3103,7 +3112,7 @@
     <span class="kw">async fn </span>passive_fetch&lt;S&gt;(
         storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;,
         req: <span class="self">Self</span>::Request,
-    ) -&gt; BoxFuture&lt;<span class="lifetime">&#39;static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt;
+    ) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
     {
@@ -3118,15 +3127,15 @@
 
     <span class="kw">async fn </span>active_fetch&lt;S, P&gt;(
         fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
-        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">&#39;_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
+        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
-        </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">&#39;static</span>,
+        </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
         P: AvailabilityProvider&lt;Types&gt;,
     {
-        <span class="comment">// We don&#39;t have storage for the payload alone, only the whole block. So if we need to fetch
+        <span class="comment">// We don't have storage for the payload alone, only the whole block. So if we need to fetch
         // the payload, we just fetch the whole block (which may end up fetching only the payload,
-        // if that&#39;s all that&#39;s needed to complete the block).
+        // if that's all that's needed to complete the block).
         </span>BlockQueryData::active_fetch(fetcher, storage, req.into()).<span class="kw">await
     </span>}
 
@@ -3135,7 +3144,7 @@
         </span>S: AvailabilityStorage&lt;Types&gt;,
     {
         <span class="comment">// Fail quickly, without touching storage, if the requested height is greater than the
-        // current height. In this case, we know we don&#39;t have the payload.
+        // current height. In this case, we know we don't have the payload.
         </span><span class="kw">if let </span>BlockId::Number(n) = req {
             <span class="macro">ensure!</span>((n <span class="kw">as </span>u64) &lt; storage.height, NotFoundSnafu);
         }
@@ -3157,7 +3166,7 @@
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;<span class="self">Self</span>&gt;&gt;&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
-        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
     {
         <span class="comment">// Return quickly, without touching storage, if the start of the requested range is greater
         // than the current height. In this case, we know storage would return an empty range.
@@ -3171,10 +3180,10 @@
 }
 
 <span class="attr">#[derive(Derivative)]
-#[derivative(Debug(bound = <span class="string">&quot;&quot;</span>))]
+#[derivative(Debug(bound = <span class="string">""</span>))]
 </span><span class="kw">struct </span>PayloadCallback&lt;Types: NodeType, S, P&gt; {
     header: Header&lt;Types&gt;,
-    <span class="attr">#[derivative(Debug = <span class="string">&quot;ignore&quot;</span>)]
+    <span class="attr">#[derivative(Debug = <span class="string">"ignore"</span>)]
     </span>fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
 }
 
@@ -3205,7 +3214,7 @@
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="kw">async fn </span>run(<span class="self">self</span>, payload: Payload&lt;Types&gt;) {
-        <span class="macro">tracing::info!</span>(<span class="string">&quot;fetched payload {:?}&quot;</span>, <span class="self">self</span>.header.payload_commitment());
+        <span class="macro">tracing::info!</span>(<span class="string">"fetched payload {:?}"</span>, <span class="self">self</span>.header.payload_commitment());
         <span class="kw">let </span>block = BlockQueryData::new(<span class="self">self</span>.header, payload);
 
         <span class="comment">// Store the block in local storage, so we can avoid fetching it in the future.
@@ -3215,23 +3224,23 @@
                 <span class="comment">// It is unfortunate if this fails, but we can still proceed by returning
                 // the block that we fetched, keeping it in memory. Simply log the error and
                 // move on.
-                </span><span class="macro">tracing::warn!</span>(<span class="string">&quot;failed to store fetched block {}: {err}&quot;</span>, block.height());
+                </span><span class="macro">tracing::warn!</span>(<span class="string">"failed to store fetched block {}: {err}"</span>, block.height());
             }
         }
     }
 }
 
 <span class="attr">#[derive(Derivative)]
-#[derivative(Debug(bound = <span class="string">&quot;&quot;</span>))]
+#[derivative(Debug(bound = <span class="string">""</span>))]
 </span><span class="kw">enum </span>LeafCallback&lt;Types: NodeType, S, P&gt; {
     <span class="doccomment">/// Callback when fetching the leaf for its own sake.
     </span>Leaf {
-        <span class="attr">#[derivative(Debug = <span class="string">&quot;ignore&quot;</span>)]
+        <span class="attr">#[derivative(Debug = <span class="string">"ignore"</span>)]
         </span>fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
     },
     <span class="doccomment">/// Callback when fetching the leaf in order to then look up a block.
     </span>Block {
-        <span class="attr">#[derivative(Debug = <span class="string">&quot;ignore&quot;</span>)]
+        <span class="attr">#[derivative(Debug = <span class="string">"ignore"</span>)]
         </span>fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
     },
 }
@@ -3264,24 +3273,24 @@
 <span class="kw">impl</span>&lt;Types: NodeType, S, P&gt; Callback&lt;LeafQueryData&lt;Types&gt;&gt; <span class="kw">for </span>LeafCallback&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload,
-    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">&#39;static</span>,
+    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="kw">async fn </span>run(<span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Leaf { fetcher } =&gt; {
                 <span class="kw">let </span>height = leaf.height();
-                <span class="macro">tracing::info!</span>(<span class="string">&quot;fetched leaf {height}&quot;</span>);
+                <span class="macro">tracing::info!</span>(<span class="string">"fetched leaf {height}"</span>);
                 <span class="kw">let </span><span class="kw-2">mut </span>storage = fetcher.storage.write().<span class="kw">await</span>;
                 <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = store_leaf(<span class="kw-2">&amp;mut *</span>storage, leaf).<span class="kw">await </span>{
                     <span class="comment">// It is unfortunate if this fails, but we can still proceed by
                     // returning the leaf that we fetched, keeping it in memory.
                     // Simply log the error and move on.
-                    </span><span class="macro">tracing::warn!</span>(<span class="string">&quot;failed to store fetched leaf {height}: {err}&quot;</span>);
+                    </span><span class="macro">tracing::warn!</span>(<span class="string">"failed to store fetched leaf {height}: {err}"</span>);
                 }
             }
             <span class="self">Self</span>::Block { fetcher } =&gt; {
-                <span class="macro">tracing::info!</span>(<span class="string">&quot;fetched leaf {}, will now fetch payload&quot;</span>, leaf.height());
+                <span class="macro">tracing::info!</span>(<span class="string">"fetched leaf {}, will now fetch payload"</span>, leaf.height());
                 fetch_block_with_header(fetcher, leaf.leaf.block_header);
             }
         }
@@ -3331,7 +3340,7 @@
             <span class="prelude-val">Ok</span>(t) =&gt; <span class="prelude-val">Some</span>(t),
             <span class="prelude-val">Err</span>(err) =&gt; {
                 <span class="macro">tracing::warn!</span>(
-                    <span class="string">&quot;error loading resource from local storage, will try to fetch: {err:#}&quot;
+                    <span class="string">"error loading resource from local storage, will try to fetch: {err:#}"
                 </span>);
                 <span class="prelude-val">None
             </span>}

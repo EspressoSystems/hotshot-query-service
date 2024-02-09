@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/node.rs`."><title>node.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/node.rs`."><title>node.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -316,6 +317,25 @@
 <a href="#316" id="316">316</a>
 <a href="#317" id="317">317</a>
 <a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -328,7 +348,7 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="doccomment">//! A node&#39;s view of a HotShot chain
+</span><span class="doccomment">//! A node's view of a HotShot chain
 //!
 //! The node API provides a subjective view of the HotShot blockchain, from the perspective of
 //! one particular node. It provides access to information that the
@@ -356,7 +376,7 @@
 
 <span class="attr">#[derive(Args, Default)]
 </span><span class="kw">pub struct </span>Options {
-    <span class="attr">#[arg(long = <span class="string">&quot;node-api-path&quot;</span>, env = <span class="string">&quot;HOTSHOT_NODE_API_PATH&quot;</span>)]
+    <span class="attr">#[arg(long = <span class="string">"node-api-path"</span>, env = <span class="string">"HOTSHOT_NODE_API_PATH"</span>)]
     </span><span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
 
     <span class="doccomment">/// Additional API specification files to merge with `node-api-path`.
@@ -364,9 +384,9 @@
     /// These optional files may contain route definitions for application-specific routes that have
     /// been added as extensions to the basic node API.
     </span><span class="attr">#[arg(
-        long = <span class="string">&quot;node-extension&quot;</span>,
-        env = <span class="string">&quot;HOTSHOT_NODE_EXTENSIONS&quot;</span>,
-        value_delimiter = <span class="string">&#39;,&#39;
+        long = <span class="string">"node-extension"</span>,
+        env = <span class="string">"HOTSHOT_NODE_EXTENSIONS"</span>,
+        value_delimiter = <span class="string">','
     </span>)]
     </span><span class="kw">pub </span>extensions: Vec&lt;toml::Value&gt;,
 }
@@ -377,20 +397,25 @@
     Request {
         source: RequestError,
     },
-    <span class="attr">#[snafu(display(<span class="string">&quot;{source}&quot;</span>))]
+    <span class="attr">#[snafu(display(<span class="string">"{source}"</span>))]
     #[from(ignore)]
     </span>Query {
         source: QueryError,
     },
-    <span class="attr">#[snafu(display(<span class="string">&quot;error fetching proposals by {proposer}: {source}&quot;</span>))]
+    <span class="attr">#[snafu(display(<span class="string">"error fetching proposals by {proposer}: {source}"</span>))]
     #[from(ignore)]
     </span>QueryProposals {
         source: QueryError,
         proposer: String,
     },
-    <span class="attr">#[snafu(display(<span class="string">&quot;malformed signature key&quot;</span>))]
+    <span class="attr">#[snafu(display(<span class="string">"malformed signature key"</span>))]
     #[from(ignore)]
     </span>InvalidSignatureKey,
+    <span class="attr">#[snafu(display(<span class="string">"error getting sync status: {source}"</span>))]
+    #[from(ignore)]
+    </span>SyncStatus {
+        source: QueryError,
+    },
     Custom {
         message: String,
         status: StatusCode,
@@ -408,7 +433,9 @@
     <span class="kw">pub fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Request { .. } | <span class="self">Self</span>::InvalidSignatureKey =&gt; StatusCode::BadRequest,
-            <span class="self">Self</span>::Query { source, .. } | <span class="self">Self</span>::QueryProposals { source, .. } =&gt; source.status(),
+            <span class="self">Self</span>::Query { source, .. }
+            | <span class="self">Self</span>::QueryProposals { source, .. }
+            | <span class="self">Self</span>::SyncStatus { source, .. } =&gt; source.status(),
             <span class="self">Self</span>::Custom { status, .. } =&gt; <span class="kw-2">*</span>status,
         }
     }
@@ -416,21 +443,21 @@
 
 <span class="kw">pub fn </span>define_api&lt;State, Types: NodeType&gt;(options: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt;
 <span class="kw">where
-    </span>State: <span class="lifetime">&#39;static </span>+ Send + Sync + ReadState,
+    </span>State: <span class="lifetime">'static </span>+ Send + Sync + ReadState,
     &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + NodeDataSource&lt;Types&gt;,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error&gt;(
         options.api_path.as_ref(),
-        <span class="macro">include_str!</span>(<span class="string">&quot;../api/node.toml&quot;</span>),
+        <span class="macro">include_str!</span>(<span class="string">"../api/node.toml"</span>),
         options.extensions.clone(),
     )<span class="question-mark">?</span>;
-    api.with_version(<span class="string">&quot;0.0.1&quot;</span>.parse().unwrap())
-        .get(<span class="string">&quot;block_height&quot;</span>, |_req, state| {
+    api.with_version(<span class="string">"0.0.1"</span>.parse().unwrap())
+        .get(<span class="string">"block_height"</span>, |_req, state| {
             <span class="kw">async move </span>{ state.block_height().<span class="kw">await</span>.context(QuerySnafu) }.boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">&quot;count_proposals&quot;</span>, |req, state| {
+        </span>.get(<span class="string">"count_proposals"</span>, |req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>proposer = proposer_param::&lt;Types&gt;(<span class="kw-2">&amp;</span>req, <span class="string">&quot;proposer_id&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>proposer = proposer_param::&lt;Types&gt;(<span class="kw-2">&amp;</span>req, <span class="string">"proposer_id"</span>)<span class="question-mark">?</span>;
                 state
                     .count_proposals(<span class="kw-2">&amp;</span>proposer)
                     .<span class="kw">await
@@ -440,10 +467,10 @@
             }
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">&quot;get_proposals&quot;</span>, |req, state| {
+        </span>.get(<span class="string">"get_proposals"</span>, |req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>proposer = proposer_param::&lt;Types&gt;(<span class="kw-2">&amp;</span>req, <span class="string">&quot;proposer_id&quot;</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>limit = req.opt_integer_param(<span class="string">&quot;count&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>proposer = proposer_param::&lt;Types&gt;(<span class="kw-2">&amp;</span>req, <span class="string">"proposer_id"</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>limit = req.opt_integer_param(<span class="string">"count"</span>)<span class="question-mark">?</span>;
                 state
                     .get_proposals(<span class="kw-2">&amp;</span>proposer, limit)
                     .<span class="kw">await
@@ -452,6 +479,9 @@
                     })
             }
             .boxed()
+        })<span class="question-mark">?
+        </span>.get(<span class="string">"sync_status"</span>, |_req, state| {
+            <span class="kw">async move </span>{ state.sync_status().<span class="kw">await</span>.context(SyncStatusSnafu) }.boxed()
         })<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(api)
 }
@@ -501,23 +531,23 @@
         <span class="comment">// Start the web server.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
-        app.register_module(<span class="string">&quot;node&quot;</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
+        app.register_module(<span class="string">"node"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
             .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, port)));
+        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
         <span class="comment">// Start a client.
         </span><span class="kw">let </span>client =
-            Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}/node&quot;</span>, port).parse().unwrap());
+            Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
         <span class="comment">// Wait for each node to propose a block.
-        </span><span class="kw">while </span>client.get::&lt;usize&gt;(<span class="string">&quot;block-height&quot;</span>).send().<span class="kw">await</span>.unwrap() &lt; network.num_nodes() + <span class="number">1 </span>{
+        </span><span class="kw">while </span>client.get::&lt;usize&gt;(<span class="string">"block-height"</span>).send().<span class="kw">await</span>.unwrap() &lt; network.num_nodes() + <span class="number">1 </span>{
             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
         }
 
         <span class="comment">// Check proposals for node 0.
         </span><span class="kw">let </span>proposals: Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt; = client
-            .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}&quot;</span>, network.proposer(<span class="number">0</span>)))
+            .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"proposals/{}"</span>, network.proposer(<span class="number">0</span>)))
             .send()
             .<span class="kw">await
             </span>.unwrap();
@@ -528,19 +558,19 @@
         <span class="comment">// Check the `proposals/limit` and `proposals/count` features.
         </span><span class="macro">assert!</span>(
             client
-                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{}/count&quot;</span>, network.proposer(<span class="number">0</span>)))
+                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"proposals/{}/count"</span>, network.proposer(<span class="number">0</span>)))
                 .send()
                 .<span class="kw">await
                 </span>.unwrap()
                 &gt;= proposals.len() <span class="kw">as </span>u64
         );
-        <span class="comment">// For the limit queries, we just check the count. We don&#39;t know exactly which blocks to
+        <span class="comment">// For the limit queries, we just check the count. We don't know exactly which blocks to
         // expect in the response, since it returns the most recent `count` blocks which may
         // include new empty blocks committed since we started checking.
         </span><span class="macro">assert_eq!</span>(
             client
                 .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                    <span class="string">&quot;proposals/{}/limit/1&quot;</span>,
+                    <span class="string">"proposals/{}/limit/1"</span>,
                     network.proposer(<span class="number">0</span>)
                 ))
                 .send()
@@ -552,7 +582,7 @@
         <span class="macro">assert_eq!</span>(
             client
                 .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                    <span class="string">&quot;proposals/{}/limit/0&quot;</span>,
+                    <span class="string">"proposals/{}/limit/0"</span>,
                     network.proposer(<span class="number">0</span>)
                 ))
                 .send()
@@ -562,6 +592,15 @@
             <span class="number">0
         </span>);
 
+        <span class="comment">// In this simple test, the node should be fully synchronized.
+        </span><span class="kw">let </span>sync_status = client
+            .get::&lt;SyncStatus&gt;(<span class="string">"sync-status"</span>)
+            .send()
+            .<span class="kw">await
+            </span>.unwrap();
+        <span class="macro">assert_eq!</span>(sync_status.missing_blocks, <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(sync_status.missing_leaves, <span class="number">0</span>);
+
         network.shut_down().<span class="kw">await</span>;
     }
 
@@ -569,7 +608,7 @@
     </span><span class="kw">async fn </span>test_extensions() {
         setup_test();
 
-        <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_node_extensions&quot;</span>).unwrap();
+        <span class="kw">let </span>dir = TempDir::new(<span class="string">"test_node_extensions"</span>).unwrap();
         <span class="kw">let </span>data_source = ExtensibleDataSource::new(
             MockDataSource::create(dir.path(), Default::default())
                 .<span class="kw">await
@@ -580,13 +619,13 @@
         <span class="comment">// Create the API extensions specification.
         </span><span class="kw">let </span>extensions = <span class="macro">toml! </span>{
             [route.post_ext]
-            PATH = [<span class="string">&quot;/ext/:val&quot;</span>]
-            METHOD = <span class="string">&quot;POST&quot;
-            &quot;:val&quot; </span>= <span class="string">&quot;Integer&quot;
+            PATH = [<span class="string">"/ext/:val"</span>]
+            METHOD = <span class="string">"POST"
+            ":val" </span>= <span class="string">"Integer"
 
             </span>[route.get_ext]
-            PATH = [<span class="string">&quot;/ext&quot;</span>]
-            METHOD = <span class="string">&quot;GET&quot;
+            PATH = [<span class="string">"/ext"</span>]
+            METHOD = <span class="string">"GET"
         </span>};
 
         <span class="kw">let </span><span class="kw-2">mut </span>api =
@@ -595,13 +634,13 @@
                 ..Default::default()
             })
             .unwrap();
-        api.get(<span class="string">&quot;get_ext&quot;</span>, |<span class="kw">_</span>, state| {
+        api.get(<span class="string">"get_ext"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>state.as_ref()) }.boxed()
         })
         .unwrap()
-        .post(<span class="string">&quot;post_ext&quot;</span>, |req, state| {
+        .post(<span class="string">"post_ext"</span>, |req, state| {
             <span class="kw">async move </span>{
-                <span class="kw-2">*</span>state.as_mut() = req.integer_param(<span class="string">&quot;val&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw-2">*</span>state.as_mut() = req.integer_param(<span class="string">"val"</span>)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(())
             }
             .boxed()
@@ -609,24 +648,24 @@
         .unwrap();
 
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(RwLock::new(data_source));
-        app.register_module(<span class="string">&quot;node&quot;</span>, api).unwrap();
+        app.register_module(<span class="string">"node"</span>, api).unwrap();
 
         <span class="kw">let </span>port = pick_unused_port().unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, port)));
+        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
         <span class="kw">let </span>client =
-            Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}/node&quot;</span>, port).parse().unwrap());
+            Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
-        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
-        client.post::&lt;()&gt;(<span class="string">&quot;ext/42&quot;</span>).send().<span class="kw">await</span>.unwrap();
-        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
+        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"ext"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
+        client.post::&lt;()&gt;(<span class="string">"ext/42"</span>).send().<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"ext"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
 
         <span class="comment">// Ensure we can still access the built-in functionality.
         </span><span class="kw">let </span>(key, <span class="kw">_</span>) = BLSPubKey::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], <span class="number">0</span>);
         <span class="macro">assert_eq!</span>(
             client
-                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;proposals/{key}/count&quot;</span>))
+                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"proposals/{key}/count"</span>))
                 .send()
                 .<span class="kw">await
                 </span>.unwrap(),

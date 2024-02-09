@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -742,6 +743,13 @@
 <a href="#742" id="742">742</a>
 <a href="#743" id="743">743</a>
 <a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -809,15 +817,15 @@
 //! let data_source = Arc::new(RwLock::new(data_source));
 //! let mut app = App::&lt;_, Error&gt;::with_state(data_source.clone());
 //! app
-//!     .register_module(&quot;availability&quot;, availability_api)
+//!     .register_module("availability", availability_api)
 //!     .map_err(Error::internal)?
-//!     .register_module(&quot;node&quot;, node_api)
+//!     .register_module("node", node_api)
 //!     .map_err(Error::internal)?
-//!     .register_module(&quot;status&quot;, status_api)
+//!     .register_module("status", status_api)
 //!     .map_err(Error::internal)?;
 //!
 //! // Serve app.
-//! spawn(app.serve(&quot;0.0.0.0:8080&quot;));
+//! spawn(app.serve("0.0.0.0:8080"));
 //!
 //! // Update query data using HotShot events.
 //! let mut events = hotshot.get_event_stream(Default::default()).await.0;
@@ -912,7 +920,7 @@
 //! }
 //! ```
 //!
-//! Implement this trait for the extended data source you&#39;re using, and then add a new endpoint to
+//! Implement this trait for the extended data source you're using, and then add a new endpoint to
 //! the availability API like so:
 //!
 //! ```
@@ -935,17 +943,17 @@
 //!     options: &amp;availability::Options,
 //! ) -&gt; Result&lt;Api&lt;State, availability::Error&gt;, ApiError&gt;
 //! where
-//!     State: &#39;static + Send + Sync + ReadState,
+//!     State: 'static + Send + Sync + ReadState,
 //!     &lt;State as ReadState&gt;::State: UtxoDataSource + Send + Sync,
 //! {
 //!     let mut api = availability::define_api(options)?;
-//!     api.get(&quot;get_utxo&quot;, |req, state: &amp;&lt;State as ReadState&gt;::State| async move {
-//!         let utxo_index = req.integer_param(&quot;index&quot;)?;
+//!     api.get("get_utxo", |req, state: &amp;&lt;State as ReadState&gt;::State| async move {
+//!         let utxo_index = req.integer_param("index")?;
 //!         let (block_index, txn_index, output_index) = state
 //!             .find_utxo(utxo_index)
 //!             .await
 //!             .ok_or_else(|| availability::Error::Custom {
-//!                 message: format!(&quot;no such UTXO {}&quot;, utxo_index),
+//!                 message: format!("no such UTXO {}", utxo_index),
 //!                 status: StatusCode::NotFound,
 //!             })?;
 //!         let block = state
@@ -960,14 +968,14 @@
 //!     Ok(api)
 //! }
 //!
-//! fn init_server&lt;D: UtxoDataSource + Send + Sync + &#39;static&gt;(
+//! fn init_server&lt;D: UtxoDataSource + Send + Sync + 'static&gt;(
 //!     options: &amp;availability::Options,
 //!     data_source: D,
 //! ) -&gt; Result&lt;App&lt;RwLock&lt;D&gt;, Error&gt;, availability::Error&gt; {
 //!     let api = define_app_specific_availability_api(options)
 //!         .map_err(availability::Error::internal)?;
 //!     let mut app = App::with_state(RwLock::new(data_source));
-//!     app.register_module(&quot;availability&quot;, api).map_err(availability::Error::internal)?;
+//!     app.register_module("availability", api).map_err(availability::Error::internal)?;
 //!     Ok(app)
 //! }
 //! ```
@@ -977,12 +985,12 @@
 //!
 //! ```toml
 //! [route.get_utxo]
-//! PATH = [&quot;utxo/:index&quot;]
-//! &quot;:index&quot; = &quot;Integer&quot;
-//! DOC = &quot;Get a UTXO by its index&quot;
+//! PATH = ["utxo/:index"]
+//! ":index" = "Integer"
+//! DOC = "Get a UTXO by its index"
 //! ```
 //!
-//! and make sure `options.extensions` includes `&quot;app_specific_availability.toml&quot;`.
+//! and make sure `options.extensions` includes `"app_specific_availability.toml"`.
 //!
 //! ## Composition
 //!
@@ -1008,7 +1016,7 @@
 //! #   PayloadQueryData, TransactionHash, TransactionIndex,
 //! # };
 //! # use hotshot_query_service::metrics::PrometheusMetrics;
-//! # use hotshot_query_service::node::NodeDataSource;
+//! # use hotshot_query_service::node::{NodeDataSource, SyncStatus};
 //! # use hotshot_query_service::status::StatusDataSource;
 //! # use hotshot_query_service::testing::mocks::MockTypes as AppTypes;
 //! # use std::ops::RangeBounds;
@@ -1078,6 +1086,10 @@
 //!
 //!     async fn count_proposals(&amp;self, id: &amp;SignatureKey&lt;AppTypes&gt;) -&gt; QueryResult&lt;usize&gt; {
 //!         self.hotshot_qs.count_proposals(id).await
+//!     }
+//!
+//!     async fn sync_status(&amp;self) -&gt; QueryResult&lt;SyncStatus&gt; {
+//!         self.hotshot_qs.sync_status().await
 //!     }
 //! }
 //!
@@ -1166,7 +1178,7 @@
     /// In most cases a missing resource can be recovered from DA.
     </span>Missing,
     <span class="doccomment">/// There was an error while trying to fetch the requested resource.
-    </span><span class="attr">#[snafu(display(<span class="string">&quot;Failed to fetch requested resource: {message}&quot;</span>))]
+    </span><span class="attr">#[snafu(display(<span class="string">"Failed to fetch requested resource: {message}"</span>))]
     </span>Error { message: String },
 }
 
@@ -1189,7 +1201,7 @@
     </span><span class="kw">pub </span>node: node::Options,
     <span class="attr">#[clap(flatten)]
     </span><span class="kw">pub </span>status: status::Options,
-    <span class="attr">#[clap(short, long, default_value = <span class="string">&quot;8080&quot;</span>)]
+    <span class="attr">#[clap(short, long, default_value = <span class="string">"8080"</span>)]
     </span><span class="kw">pub </span>port: u16,
 }
 
@@ -1208,7 +1220,7 @@
         + data_source::VersionedDataSource
         + Send
         + Sync
-        + <span class="lifetime">&#39;static</span>,
+        + <span class="lifetime">'static</span>,
 {
     <span class="comment">// Create API modules.
     </span><span class="kw">let </span>availability_api =
@@ -1219,18 +1231,18 @@
     <span class="comment">// Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
     </span><span class="kw">let </span>data_source = Arc::new(RwLock::new(data_source));
     <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(data_source.clone());
-    app.register_module(<span class="string">&quot;availability&quot;</span>, availability_api)
+    app.register_module(<span class="string">"availability"</span>, availability_api)
         .map_err(Error::internal)<span class="question-mark">?
-        </span>.register_module(<span class="string">&quot;node&quot;</span>, node_api)
+        </span>.register_module(<span class="string">"node"</span>, node_api)
         .map_err(Error::internal)<span class="question-mark">?
-        </span>.register_module(<span class="string">&quot;status&quot;</span>, status_api)
+        </span>.register_module(<span class="string">"status"</span>, status_api)
         .map_err(Error::internal)<span class="question-mark">?</span>;
 
     <span class="comment">// Serve app.
-    </span><span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, options.port);
+    </span><span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, options.port);
     spawn(<span class="kw">async move </span>{ app.serve(<span class="kw-2">&amp;</span>url).<span class="kw">await </span>});
 
-    <span class="comment">// Subscribe to events before starting consensus, so we don&#39;t miss any events.
+    <span class="comment">// Subscribe to events before starting consensus, so we don't miss any events.
     </span><span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.get_event_stream(Default::default()).<span class="kw">await</span>.<span class="number">0</span>;
     hotshot.hotshot.start_consensus().<span class="kw">await</span>;
 
@@ -1256,7 +1268,7 @@
             PayloadQueryData, TransactionHash, TransactionIndex, UpdateAvailabilityData,
         },
         metrics::PrometheusMetrics,
-        node::NodeDataSource,
+        node::{NodeDataSource, SyncStatus},
         status::StatusDataSource,
         testing::{
             consensus::MockDataSource,
@@ -1326,19 +1338,19 @@
         </span>}
         <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::LeafRange&lt;R&gt;
         <span class="kw">where
-            </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+            </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         {
             <span class="self">self</span>.hotshot_qs.get_leaf_range(range).<span class="kw">await
         </span>}
         <span class="kw">async fn </span>get_block_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::BlockRange&lt;R&gt;
         <span class="kw">where
-            </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+            </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         {
             <span class="self">self</span>.hotshot_qs.get_block_range(range).<span class="kw">await
         </span>}
         <span class="kw">async fn </span>get_payload_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::PayloadRange&lt;R&gt;
         <span class="kw">where
-            </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+            </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         {
             <span class="self">self</span>.hotshot_qs.get_payload_range(range).<span class="kw">await
         </span>}
@@ -1366,6 +1378,9 @@
         <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;MockTypes&gt;) -&gt; QueryResult&lt;usize&gt; {
             <span class="self">self</span>.hotshot_qs.count_proposals(proposer).<span class="kw">await
         </span>}
+        <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+            <span class="self">self</span>.hotshot_qs.sync_status().<span class="kw">await
+        </span>}
     }
 
     <span class="comment">// Implement data source trait for status API.
@@ -1381,8 +1396,8 @@
 
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_composition() {
-        <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_composition&quot;</span>).unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">&quot;test_composition&quot;</span>).unwrap();
+        <span class="kw">let </span>dir = TempDir::new(<span class="string">"test_composition"</span>).unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">"test_composition"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>hotshot_qs = MockDataSource::create_with_store(<span class="kw-2">&amp;mut </span>loader, Default::default())
             .<span class="kw">await
             </span>.unwrap();
@@ -1393,7 +1408,7 @@
         hotshot_qs.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
 
         <span class="kw">let </span>module_state =
-            RollingLog::create(<span class="kw-2">&amp;mut </span>loader, Default::default(), <span class="string">&quot;module_state&quot;</span>, <span class="number">1024</span>).unwrap();
+            RollingLog::create(<span class="kw-2">&amp;mut </span>loader, Default::default(), <span class="string">"module_state"</span>, <span class="number">1024</span>).unwrap();
         <span class="kw">let </span>state = CompositeState {
             hotshot_qs,
             module_state,
@@ -1402,36 +1417,36 @@
 
         <span class="kw">let </span>module_spec = <span class="macro">toml! </span>{
             [route.post_ext]
-            PATH = [<span class="string">&quot;/ext/:val&quot;</span>]
-            METHOD = <span class="string">&quot;POST&quot;
-            &quot;:val&quot; </span>= <span class="string">&quot;Integer&quot;
+            PATH = [<span class="string">"/ext/:val"</span>]
+            METHOD = <span class="string">"POST"
+            ":val" </span>= <span class="string">"Integer"
 
             </span>[route.get_ext]
-            PATH = [<span class="string">&quot;/ext&quot;</span>]
-            METHOD = <span class="string">&quot;GET&quot;
+            PATH = [<span class="string">"/ext"</span>]
+            METHOD = <span class="string">"GET"
         </span>};
 
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(RwLock::new(state));
         app.register_module(
-            <span class="string">&quot;availability&quot;</span>,
+            <span class="string">"availability"</span>,
             availability::define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap(),
         )
         .unwrap()
-        .register_module(<span class="string">&quot;node&quot;</span>, node::define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
+        .register_module(<span class="string">"node"</span>, node::define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
         .unwrap()
-        .register_module(<span class="string">&quot;status&quot;</span>, status::define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
+        .register_module(<span class="string">"status"</span>, status::define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
         .unwrap()
-        .module::&lt;Error&gt;(<span class="string">&quot;mod&quot;</span>, module_spec)
+        .module::&lt;Error&gt;(<span class="string">"mod"</span>, module_spec)
         .unwrap()
-        .get(<span class="string">&quot;get_ext&quot;</span>, |<span class="kw">_</span>, state| {
+        .get(<span class="string">"get_ext"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async move </span>{ state.module_state.load_latest().map_err(Error::internal) }.boxed()
         })
         .unwrap()
-        .post(<span class="string">&quot;post_ext&quot;</span>, |req, state| {
+        .post(<span class="string">"post_ext"</span>, |req, state| {
             <span class="kw">async move </span>{
                 state
                     .module_state
-                    .store_resource(<span class="kw-2">&amp;</span>req.integer_param(<span class="string">&quot;val&quot;</span>).map_err(Error::internal)<span class="question-mark">?</span>)
+                    .store_resource(<span class="kw-2">&amp;</span>req.integer_param(<span class="string">"val"</span>).map_err(Error::internal)<span class="question-mark">?</span>)
                     .map_err(Error::internal)<span class="question-mark">?</span>;
                 state
                     .module_state
@@ -1449,18 +1464,18 @@
         .unwrap();
 
         <span class="kw">let </span>port = pick_unused_port().unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, port)));
+        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
-        <span class="kw">let </span>client = Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}&quot;</span>, port).parse().unwrap());
+        <span class="kw">let </span>client = Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}"</span>, port).parse().unwrap());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
-        client.post::&lt;()&gt;(<span class="string">&quot;mod/ext/42&quot;</span>).send().<span class="kw">await</span>.unwrap();
-        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;mod/ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
+        client.post::&lt;()&gt;(<span class="string">"mod/ext/42"</span>).send().<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"mod/ext"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
 
         <span class="comment">// Check that we can still access the built-in modules.
         </span><span class="macro">assert_eq!</span>(
             client
-                .get::&lt;u64&gt;(<span class="string">&quot;status/block-height&quot;</span>)
+                .get::&lt;u64&gt;(<span class="string">"status/block-height"</span>)
                 .send()
                 .<span class="kw">await
                 </span>.unwrap(),
@@ -1469,7 +1484,7 @@
         <span class="kw">let </span>(key, <span class="kw">_</span>) = BLSPubKey::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], <span class="number">0</span>);
         <span class="macro">assert_eq!</span>(
             client
-                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;node/proposals/{key}/count&quot;</span>))
+                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"node/proposals/{key}/count"</span>))
                 .send()
                 .<span class="kw">await
                 </span>.unwrap(),
@@ -1477,7 +1492,7 @@
         </span>);
         <span class="macro">assert_eq!</span>(
             client
-                .get::&lt;MockHeader&gt;(<span class="string">&quot;availability/header/0&quot;</span>)
+                .get::&lt;MockHeader&gt;(<span class="string">"availability/header/0"</span>)
                 .send()
                 .<span class="kw">await
                 </span>.unwrap()

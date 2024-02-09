@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source.rs`."><title>data_source.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source.rs`."><title>data_source.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -736,6 +737,99 @@
 <a href="#736" id="736">736</a>
 <a href="#737" id="737">737</a>
 <a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -775,15 +869,15 @@
 
 <span class="kw">pub use </span>extension::ExtensibleDataSource;
 <span class="kw">pub use </span>fetching::{AvailabilityProvider, FetchingDataSource};
-<span class="attr">#[cfg(feature = <span class="string">&quot;file-system-data-source&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"file-system-data-source"</span>)]
 </span><span class="kw">pub use </span>fs::FileSystemDataSource;
-<span class="attr">#[cfg(feature = <span class="string">&quot;metrics-data-source&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"metrics-data-source"</span>)]
 </span><span class="kw">pub use </span>metrics::MetricsDataSource;
-<span class="attr">#[cfg(feature = <span class="string">&quot;sql-data-source&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"sql-data-source"</span>)]
 </span><span class="kw">pub use </span>sql::SqlDataSource;
 <span class="kw">pub use </span>update::{UpdateDataSource, VersionedDataSource};
 
-<span class="attr">#[cfg(any(test, feature = <span class="string">&quot;testing&quot;</span>))]
+<span class="attr">#[cfg(any(test, feature = <span class="string">"testing"</span>))]
 </span><span class="kw">mod </span>test_helpers {
     <span class="kw">use crate</span>::{
         availability::{BlockQueryData, Fetch, LeafQueryData},
@@ -815,10 +909,10 @@
     </span><span class="kw">pub async fn </span>block_range&lt;R, D&gt;(
         ds: <span class="kw-2">&amp;</span>D,
         range: R,
-    ) -&gt; BoxStream&lt;<span class="lifetime">&#39;static</span>, BlockQueryData&lt;MockTypes&gt;&gt;
+    ) -&gt; BoxStream&lt;<span class="lifetime">'static</span>, BlockQueryData&lt;MockTypes&gt;&gt;
     <span class="kw">where
         </span>D: TestableDataSource,
-        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
     {
         ds.get_block_range(bound_range(ds, range).<span class="kw">await</span>)
             .<span class="kw">await
@@ -827,10 +921,10 @@
     }
 
     <span class="doccomment">/// Get a stream of leaves, implicitly terminating at the current block height.
-    </span><span class="kw">pub async fn </span>leaf_range&lt;R, D&gt;(ds: <span class="kw-2">&amp;</span>D, range: R) -&gt; BoxStream&lt;<span class="lifetime">&#39;static</span>, LeafQueryData&lt;MockTypes&gt;&gt;
+    </span><span class="kw">pub async fn </span>leaf_range&lt;R, D&gt;(ds: <span class="kw-2">&amp;</span>D, range: R) -&gt; BoxStream&lt;<span class="lifetime">'static</span>, LeafQueryData&lt;MockTypes&gt;&gt;
     <span class="kw">where
         </span>D: TestableDataSource,
-        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">&#39;static</span>,
+        R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
     {
         ds.get_leaf_range(bound_range(ds, range).<span class="kw">await</span>)
             .<span class="kw">await
@@ -853,7 +947,7 @@
 }
 
 <span class="doccomment">/// Generic tests we can instantiate for all the availability data sources.
-</span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;testing&quot;</span>))]
+</span><span class="attr">#[cfg(any(test, feature = <span class="string">"testing"</span>))]
 #[espresso_macros::generic_tests]
 </span><span class="kw">pub mod </span>availability_tests {
     <span class="kw">use </span><span class="kw">super</span>::test_helpers::<span class="kw-2">*</span>;
@@ -877,7 +971,7 @@
         <span class="kw">let </span>ds = ds.read().<span class="kw">await</span>;
 
         <span class="comment">// Check the consistency of every block/leaf pair. Keep track of payloads and transactions
-        // we&#39;ve seen so we can detect duplicates.
+        // we've seen so we can detect duplicates.
         </span><span class="kw">let </span><span class="kw-2">mut </span>seen_payloads = HashMap::new();
         <span class="kw">let </span><span class="kw-2">mut </span>seen_transactions = HashMap::new();
         <span class="kw">let </span><span class="kw-2">mut </span>leaves = leaf_range(<span class="kw-2">&amp;*</span>ds, ..).<span class="kw">await</span>.enumerate();
@@ -886,11 +980,11 @@
             <span class="macro">assert_eq!</span>(leaf.hash(), leaf.leaf().commit());
 
             <span class="comment">// Check indices.
-            </span><span class="macro">tracing::info!</span>(<span class="string">&quot;looking up leaf {i} various ways&quot;</span>);
+            </span><span class="macro">tracing::info!</span>(<span class="string">"looking up leaf {i} various ways"</span>);
             <span class="macro">assert_eq!</span>(leaf, ds.get_leaf(i).<span class="kw">await</span>.<span class="kw">await</span>);
             <span class="macro">assert_eq!</span>(leaf, ds.get_leaf(leaf.hash()).<span class="kw">await</span>.<span class="kw">await</span>);
 
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;looking up block {i} various ways&quot;</span>);
+            <span class="macro">tracing::info!</span>(<span class="string">"looking up block {i} various ways"</span>);
             <span class="kw">let </span>block = ds.get_block(i).<span class="kw">await</span>.<span class="kw">await</span>;
             <span class="macro">assert_eq!</span>(leaf.block_hash(), block.hash());
             <span class="macro">assert_eq!</span>(block.height(), i <span class="kw">as </span>u64);
@@ -905,9 +999,9 @@
             // duplicate.
             //
             // Note: this ordering is not a strict requirement. It should hold for payloads in local
-            // storage, but we don&#39;t have a good way of enforcing it if the payload is missing, in
+            // storage, but we don't have a good way of enforcing it if the payload is missing, in
             // which case we will return the first matching payload we see, which could happen in
-            // any order. We use `try_resolve` to skip this check if the object isn&#39;t available
+            // any order. We use `try_resolve` to skip this check if the object isn't available
             // locally.
             </span><span class="kw">let </span>ix = seen_payloads
                 .entry(block.payload_hash())
@@ -920,7 +1014,7 @@
                 <span class="macro">assert_eq!</span>(block.height(), <span class="kw-2">*</span>ix);
             } <span class="kw">else </span>{
                 <span class="macro">tracing::warn!</span>(
-                    <span class="string">&quot;skipping block by payload index check for missing payload {:?}&quot;</span>,
+                    <span class="string">"skipping block by payload index check for missing payload {:?}"</span>,
                     block.header()
                 );
                 <span class="comment">// At least check that _some_ block can be fetched.
@@ -933,7 +1027,7 @@
             </span><span class="kw">let </span>expected_payload = block.clone().into();
             <span class="macro">assert_eq!</span>(ds.get_payload(i).<span class="kw">await</span>.<span class="kw">await</span>, expected_payload);
             <span class="macro">assert_eq!</span>(ds.get_payload(block.hash()).<span class="kw">await</span>.<span class="kw">await</span>, expected_payload);
-            <span class="comment">// Similar to the above, we can&#39;t guarantee which index we will get when passively
+            <span class="comment">// Similar to the above, we can't guarantee which index we will get when passively
             // fetching this payload, so only check the index if the payload is available locally.
             </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(payload) = ds
                 .get_payload(BlockId::PayloadHash(block.payload_hash()))
@@ -945,7 +1039,7 @@
                 }
             } <span class="kw">else </span>{
                 <span class="macro">tracing::warn!</span>(
-                    <span class="string">&quot;skipping payload index check for missing payload {:?}&quot;</span>,
+                    <span class="string">"skipping payload index check for missing payload {:?}"</span>,
                     block.header()
                 );
                 <span class="comment">// At least check that _some_ payload can be fetched.
@@ -955,13 +1049,13 @@
             }
 
             <span class="kw">for </span>(j, txn) <span class="kw">in </span>block.enumerate() {
-                <span class="macro">tracing::info!</span>(<span class="string">&quot;looking up transaction {i},{j}&quot;</span>);
+                <span class="macro">tracing::info!</span>(<span class="string">"looking up transaction {i},{j}"</span>);
 
                 <span class="comment">// We should be able to look up the transaction by hash unless it is a duplicate.
                 // For duplicate transactions, this function returns the index of the first
                 // duplicate.
                 //
-                // Similar to the above, we can&#39;t guarantee which index we will get when passively
+                // Similar to the above, we can't guarantee which index we will get when passively
                 // fetching this transaction, so only check the index if the transaction is
                 // available locally.
                 </span><span class="kw">let </span>ix = seen_transactions
@@ -975,7 +1069,7 @@
                     <span class="macro">assert_eq!</span>((block.height(), pos), <span class="kw-2">*</span>ix);
                 } <span class="kw">else </span>{
                     <span class="macro">tracing::warn!</span>(
-                        <span class="string">&quot;skipping transaction index check for missing transaction {j} {txn:?}&quot;
+                        <span class="string">"skipping transaction index check for missing transaction {j} {txn:?}"
                     </span>);
                     <span class="comment">// At least check that _some_ transaction can be fetched.
                     </span>ds.get_block_with_transaction(txn.commit()).<span class="kw">await</span>.<span class="kw">await</span>;
@@ -1003,12 +1097,12 @@
 
             <span class="comment">// Wait for the transaction to be finalized.
             </span><span class="kw">let </span>(i, block) = <span class="kw">loop </span>{
-                <span class="macro">tracing::info!</span>(<span class="string">&quot;waiting for block {nonce}&quot;</span>);
+                <span class="macro">tracing::info!</span>(<span class="string">"waiting for block {nonce}"</span>);
                 <span class="kw">let </span>(i, block) = blocks.next().<span class="kw">await</span>.unwrap();
                 <span class="kw">if </span>!block.is_empty() {
                     <span class="kw">break </span>(i, block);
                 }
-                <span class="macro">tracing::info!</span>(<span class="string">&quot;block {i} is empty&quot;</span>);
+                <span class="macro">tracing::info!</span>(<span class="string">"block {i} is empty"</span>);
             };
 
             <span class="macro">assert_eq!</span>(ds.read().<span class="kw">await</span>.get_block(i).<span class="kw">await</span>.<span class="kw">await</span>, block);
@@ -1019,7 +1113,7 @@
         // should be able to read the same data if we connect an entirely new data source to the
         // underlying storage.
         </span>{
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;checking persisted storage&quot;</span>);
+            <span class="macro">tracing::info!</span>(<span class="string">"checking persisted storage"</span>);
 
             <span class="comment">// Lock the original data source to prevent concurrent updates.
             </span><span class="kw">let </span>ds = ds.read().<span class="kw">await</span>;
@@ -1066,7 +1160,7 @@
         <span class="kw">let </span>ds = network.data_source();
         network.start().<span class="kw">await</span>;
 
-        <span class="comment">// Wait for there to be at least 3 blocks, then lock the state so the block height can&#39;t
+        <span class="comment">// Wait for there to be at least 3 blocks, then lock the state so the block height can't
         // change during the test.
         </span><span class="kw">let </span>(ds, block_height) = <span class="kw">loop </span>{
             <span class="kw">let </span>ds = ds.read().<span class="kw">await</span>;
@@ -1094,10 +1188,10 @@
     <span class="kw">async fn </span>do_range_test&lt;D, R, I&gt;(ds: <span class="kw-2">&amp;</span>D, range: R, expected_indices: I)
     <span class="kw">where
         </span>D: TestableDataSource,
-        R: RangeBounds&lt;usize&gt; + Clone + Debug + Send + <span class="lifetime">&#39;static</span>,
+        R: RangeBounds&lt;usize&gt; + Clone + Debug + Send + <span class="lifetime">'static</span>,
         I: IntoIterator&lt;Item = u64&gt;,
     {
-        <span class="macro">tracing::info!</span>(<span class="string">&quot;testing range {range:?}&quot;</span>);
+        <span class="macro">tracing::info!</span>(<span class="string">"testing range {range:?}"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>leaves = ds.get_leaf_range(range.clone()).<span class="kw">await</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>blocks = ds.get_block_range(range.clone()).<span class="kw">await</span>;
@@ -1143,7 +1237,7 @@
 }
 
 <span class="doccomment">/// Generic tests we can instantiate for any data source with reliable, versioned persistent storage.
-</span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;testing&quot;</span>))]
+</span><span class="attr">#[cfg(any(test, feature = <span class="string">"testing"</span>))]
 #[espresso_macros::generic_tests]
 </span><span class="kw">pub mod </span>persistence_tests {
     <span class="kw">use crate</span>::{
@@ -1255,15 +1349,21 @@
 }
 
 <span class="doccomment">/// Generic tests we can instantiate for all the node data sources.
-</span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;testing&quot;</span>))]
+</span><span class="attr">#[cfg(any(test, feature = <span class="string">"testing"</span>))]
 #[espresso_macros::generic_tests]
 </span><span class="kw">pub mod </span>node_tests {
     <span class="kw">use </span><span class="kw">super</span>::test_helpers::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::testing::{
-        consensus::{MockNetwork, TestableDataSource},
-        setup_test,
+    <span class="kw">use crate</span>::{
+        availability::{BlockQueryData, LeafQueryData, UpdateAvailabilityData},
+        node::SyncStatus,
+        testing::{
+            consensus::{MockNetwork, TestableDataSource},
+            mocks::MockTypes,
+            setup_test,
+        },
     };
     <span class="kw">use </span>futures::stream::StreamExt;
+    <span class="kw">use </span>hotshot_testing::state_types::TestInstanceState;
     <span class="kw">use </span>std::collections::HashSet;
 
     <span class="kw">async fn </span>validate(ds: <span class="kw-2">&amp;</span><span class="kw">impl </span>TestableDataSource) {
@@ -1330,7 +1430,7 @@
                 </span>.take(<span class="number">2 </span>* network.num_nodes())
         };
         <span class="kw">while let </span><span class="prelude-val">Some</span>(leaf) = leaves.next().<span class="kw">await </span>{
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;got leaf {}&quot;</span>, leaf.height());
+            <span class="macro">tracing::info!</span>(<span class="string">"got leaf {}"</span>, leaf.height());
         }
         {
             validate(<span class="kw-2">&amp;*</span>ds.read().<span class="kw">await</span>).<span class="kw">await</span>;
@@ -1339,17 +1439,104 @@
         <span class="comment">// Check that all the updates have been committed to storage, not simply held in memory: a
         // new data source created from the same underlying storage should have valid proposer
         // indexes.
-        </span><span class="macro">tracing::info!</span>(<span class="string">&quot;checking persisted storage&quot;</span>);
+        </span><span class="macro">tracing::info!</span>(<span class="string">"checking persisted storage"</span>);
 
         <span class="comment">// Lock the original data source to prevent concurrent updates.
         </span><span class="kw">let _ </span>= ds.read().<span class="kw">await</span>;
         <span class="kw">let </span>storage = D::connect(network.storage()).<span class="kw">await</span>;
         validate(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
     }
+
+    <span class="attr">#[async_std::test]
+    </span><span class="kw">pub async fn </span>test_sync_status&lt;D: TestableDataSource&gt;() {
+        setup_test();
+
+        <span class="kw">let </span>storage = D::create(<span class="number">0</span>).<span class="kw">await</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
+
+        <span class="comment">// Generate some mock leaves and blocks to insert.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>leaves = <span class="macro">vec!</span>[LeafQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {})];
+        <span class="kw">let </span><span class="kw-2">mut </span>blocks = <span class="macro">vec!</span>[BlockQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {})];
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">2 </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>leaf = leaves[i].clone();
+            leaf.leaf.block_header.block_number += <span class="number">1</span>;
+            leaves.push(leaf);
+
+            <span class="kw">let </span><span class="kw-2">mut </span>block = blocks[i].clone();
+            block.header.block_number += <span class="number">1</span>;
+            blocks.push(block);
+        }
+
+        <span class="comment">// At first, the node is fully synced.
+        </span><span class="macro">assert_eq!</span>(
+            ds.sync_status().<span class="kw">await</span>.unwrap(),
+            SyncStatus {
+                missing_blocks: <span class="number">0</span>,
+                missing_leaves: <span class="number">0</span>,
+            }
+        );
+
+        <span class="comment">// Insert a leaf without the corresponding block, make sure we detect that the block is
+        // missing.
+        </span>UpdateAvailabilityData::insert_leaf(<span class="kw-2">&amp;mut </span>ds, leaves[<span class="number">0</span>].clone())
+            .<span class="kw">await
+            </span>.unwrap();
+        ds.commit().<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(
+            ds.sync_status().<span class="kw">await</span>.unwrap(),
+            SyncStatus {
+                missing_blocks: <span class="number">1</span>,
+                missing_leaves: <span class="number">0</span>,
+            }
+        );
+
+        <span class="comment">// Insert a leaf whose height is not the successor of the previous leaf. We should now
+        // detect that the leaf in between is missing (along with all _three_ corresponding blocks).
+        </span>UpdateAvailabilityData::insert_leaf(<span class="kw-2">&amp;mut </span>ds, leaves[<span class="number">2</span>].clone())
+            .<span class="kw">await
+            </span>.unwrap();
+        ds.commit().<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(
+            ds.sync_status().<span class="kw">await</span>.unwrap(),
+            SyncStatus {
+                missing_blocks: <span class="number">3</span>,
+                missing_leaves: <span class="number">1</span>,
+            }
+        );
+
+        <span class="comment">// Rectify the missing data.
+        </span>ds.insert_block(blocks[<span class="number">0</span>].clone()).<span class="kw">await</span>.unwrap();
+        UpdateAvailabilityData::insert_leaf(<span class="kw-2">&amp;mut </span>ds, leaves[<span class="number">1</span>].clone())
+            .<span class="kw">await
+            </span>.unwrap();
+        ds.insert_block(blocks[<span class="number">1</span>].clone()).<span class="kw">await</span>.unwrap();
+        ds.insert_block(blocks[<span class="number">2</span>].clone()).<span class="kw">await</span>.unwrap();
+        ds.commit().<span class="kw">await</span>.unwrap();
+
+        <span class="comment">// Some data sources (e.g. file system) don't support out-of-order insertion of missing
+        // data. These would have just ignored the insertion of `leaves[1]`. Detect if this is the
+        // case; then we allow 1 missing leaf remaining.
+        </span><span class="kw">let </span>expected_missing_leaves = <span class="kw">if </span>ds.get_leaf(<span class="number">1</span>).<span class="kw">await</span>.try_resolve().is_err() {
+            <span class="macro">tracing::warn!</span>(
+                <span class="string">"data source does not support out-of-order filling, allowing one missing leaf"
+            </span>);
+            <span class="number">1
+        </span>} <span class="kw">else </span>{
+            <span class="number">0
+        </span>};
+
+        <span class="macro">assert_eq!</span>(
+            ds.sync_status().<span class="kw">await</span>.unwrap(),
+            SyncStatus {
+                missing_blocks: <span class="number">0</span>,
+                missing_leaves: expected_missing_leaves
+            }
+        );
+    }
 }
 
 <span class="doccomment">/// Generic tests we can instantiate for all the status data sources.
-</span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;testing&quot;</span>))]
+</span><span class="attr">#[cfg(any(test, feature = <span class="string">"testing"</span>))]
 #[espresso_macros::generic_tests]
 </span><span class="kw">pub mod </span>status_tests {
     <span class="kw">use crate</span>::{
@@ -1393,7 +1580,7 @@
                 <span class="kw">break</span>;
             }
             <span class="macro">tracing::info!</span>(
-                <span class="string">&quot;waiting for mempool to reflect transaction (currently {:?})&quot;</span>,
+                <span class="string">"waiting for mempool to reflect transaction (currently {:?})"</span>,
                 mempool
             );
             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
@@ -1441,11 +1628,11 @@
 
         {
             <span class="comment">// Check that the success rate has been updated. Note that we can only check if success
-            // rate is positive. We don&#39;t know exactly what it is because we can&#39;t know how many
+            // rate is positive. We don't know exactly what it is because we can't know how many
             // views have elapsed without race conditions.
             </span><span class="kw">let </span>success_rate = ds.read().<span class="kw">await</span>.success_rate().<span class="kw">await</span>.unwrap();
-            <span class="macro">assert!</span>(success_rate.is_finite(), <span class="string">&quot;{success_rate}&quot;</span>);
-            <span class="macro">assert!</span>(success_rate &gt; <span class="number">0.0</span>, <span class="string">&quot;{success_rate}&quot;</span>);
+            <span class="macro">assert!</span>(success_rate.is_finite(), <span class="string">"{success_rate}"</span>);
+            <span class="macro">assert!</span>(success_rate &gt; <span class="number">0.0</span>, <span class="string">"{success_rate}"</span>);
         }
 
         {

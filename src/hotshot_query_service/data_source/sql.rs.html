@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/sql.rs`."><title>sql.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/sql.rs`."><title>sql.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -417,7 +418,7 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="attr">#![cfg(feature = <span class="string">&quot;sql-data-source&quot;</span>)]
+</span><span class="attr">#![cfg(feature = <span class="string">"sql-data-source"</span>)]
 
 </span><span class="kw">use super</span>::{
     fetching,
@@ -499,7 +500,7 @@
 /// ```sql
 /// CREATE DATABASE hotshot_query_service;
 /// \connect hotshot_query_service;
-/// CREATE USER hotshot_user WITH PASSWORD &#39;password&#39;;
+/// CREATE USER hotshot_user WITH PASSWORD 'password';
 /// GRANT ALL ON SCHEMA public TO hotshot_user;
 /// GRANT ALL ON DATABASE hotshot_query_service TO hotshot_user WITH GRANT OPTION;
 /// ```
@@ -509,10 +510,10 @@
 /// ```
 /// # use hotshot_query_service::data_source::sql::Config;
 /// Config::default()
-///     .host(&quot;postgres.database.hostname&quot;)
-///     .database(&quot;hotshot_query_service&quot;)
-///     .user(&quot;hotshot_user&quot;)
-///     .password(&quot;password&quot;)
+///     .host("postgres.database.hostname")
+///     .database("hotshot_query_service")
+///     .user("hotshot_user")
+///     .password("password")
 /// # ;
 /// ```
 ///
@@ -564,7 +565,7 @@
 /// migration no longer works as-is. However, this technique is error prone and should be used only
 /// when necessary.
 ///
-/// When using custom migrations, it is the user&#39;s responsibility to ensure that the resulting
+/// When using custom migrations, it is the user's responsibility to ensure that the resulting
 /// schema is compatible with the schema expected by [`SqlDataSource`]. Adding things (tables,
 /// columns, indices) should usually be safe. Removing, altering, or renaming things should be done
 /// with extreme caution.
@@ -614,10 +615,10 @@
 /// # use hotshot_query_service::fetching::provider::NoFetching;
 /// # use hotshot_query_service::testing::mocks::MockTypes as AppTypes;
 /// # async fn doc(config: Config) -&gt; Result&lt;(), Error&gt; {
-/// type AppState = &amp;&#39;static str;
+/// type AppState = &amp;'static str;
 ///
 /// let data_source: ExtensibleDataSource&lt;SqlDataSource&lt;AppTypes, NoFetching&gt;, AppState&gt; =
-///     ExtensibleDataSource::new(config.connect(NoFetching).await?, &quot;app state&quot;);
+///     ExtensibleDataSource::new(config.connect(NoFetching).await?, "app state");
 /// # Ok(())
 /// # }
 /// ```
@@ -638,7 +639,7 @@
 /// [`commit`](super::VersionedDataSource::commit) when you are ready to persist your changes.
 ///
 /// You will typically use [`query`](Self::query) to read custom data in API endpoint handlers and
-/// [`transaction`](Self::transaction) to populate custom data in your web server&#39;s update loop.
+/// [`transaction`](Self::transaction) to populate custom data in your web server's update loop.
 ///
 /// ## Composition
 ///
@@ -648,7 +649,7 @@
 /// have data that should live in the same database as the [`SqlDataSource`] data, you can follow
 /// the steps in [custom migrations](#custom-migrations) to accomodate this. When modifying that
 /// data, you can use [`transaction`](Self::transaction) to atomically synchronize updates to the
-/// other modules&#39; data with updates to the [`SqlDataSource`]. If the additional data is completely
+/// other modules' data with updates to the [`SqlDataSource`]. If the additional data is completely
 /// independent of HotShot query service data and does not need to be synchronized, you can also
 /// connect to the database directly to make updates.
 ///
@@ -696,7 +697,7 @@
 ///             UpdateDataSource::&lt;AppTypes&gt;::update(&amp;mut state.hotshot_qs, &amp;event)
 ///                 .await
 ///                 .unwrap();
-///             // Update other modules&#39; states based on `event`. Use `hotshot_qs` to include
+///             // Update other modules' states based on `event`. Use `hotshot_qs` to include
 ///             // database updates in the same atomic transaction as `hotshot_qs.update`.
 ///             let tx = state.hotshot_qs.transaction().await.unwrap();
 ///
@@ -738,7 +739,7 @@
     /// If there is no currently open transaction, a new transaction will be opened. No changes
     /// made through the transaction objeect returned by this method will be persisted until
     /// [`commit`](super::VersionedDataSource::commit) is called.
-    </span><span class="kw">pub async fn </span>transaction(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;Transaction&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+    </span><span class="kw">pub async fn </span>transaction(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;Transaction&lt;<span class="lifetime">'_</span>&gt;&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">self
             </span>.storage_mut()
             .<span class="kw">await
@@ -758,8 +759,8 @@
     }
 }
 
-<span class="comment">// These tests run the `postgres` Docker image, which doesn&#39;t work on Windows.
-</span><span class="attr">#[cfg(all(any(test, feature = <span class="string">&quot;testing&quot;</span>), not(target_os = <span class="string">&quot;windows&quot;</span>)))]
+<span class="comment">// These tests run the `postgres` Docker image, which doesn't work on Windows.
+</span><span class="attr">#[cfg(all(any(test, feature = <span class="string">"testing"</span>), not(target_os = <span class="string">"windows"</span>)))]
 </span><span class="kw">pub mod </span>testing {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
@@ -800,8 +801,8 @@
     }
 }
 
-<span class="comment">// These tests run the `postgres` Docker image, which doesn&#39;t work on Windows.
-</span><span class="attr">#[cfg(all(test, not(target_os = <span class="string">&quot;windows&quot;</span>)))]
+<span class="comment">// These tests run the `postgres` Docker image, which doesn't work on Windows.
+</span><span class="attr">#[cfg(all(test, not(target_os = <span class="string">"windows"</span>)))]
 </span><span class="kw">mod </span>generic_test {
     <span class="kw">use </span><span class="kw">super</span>::SqlDataSource;
     <span class="kw">use crate</span>::{fetching::provider::NoFetching, testing::mocks::MockTypes};

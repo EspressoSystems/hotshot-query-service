@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/status.rs`."><title>status.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/status.rs`."><title>status.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -330,7 +331,7 @@
 
 <span class="attr">#[derive(Args, Default)]
 </span><span class="kw">pub struct </span>Options {
-    <span class="attr">#[arg(long = <span class="string">&quot;status-api-path&quot;</span>, env = <span class="string">&quot;HOTSHOT_STATUS_API_PATH&quot;</span>)]
+    <span class="attr">#[arg(long = <span class="string">"status-api-path"</span>, env = <span class="string">"HOTSHOT_STATUS_API_PATH"</span>)]
     </span><span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
 
     <span class="doccomment">/// Additional API specification files to merge with `status-api-path`.
@@ -338,9 +339,9 @@
     /// These optional files may contain route definitions for application-specific routes that have
     /// been added as extensions to the basic status API.
     </span><span class="attr">#[arg(
-        long = <span class="string">&quot;status-extension&quot;</span>,
-        env = <span class="string">&quot;HOTSHOT_STATUS_EXTENSIONS&quot;</span>,
-        value_delimiter = <span class="string">&#39;,&#39;
+        long = <span class="string">"status-extension"</span>,
+        env = <span class="string">"HOTSHOT_STATUS_EXTENSIONS"</span>,
+        value_delimiter = <span class="string">','
     </span>)]
     </span><span class="kw">pub </span>extensions: Vec&lt;toml::Value&gt;,
 }
@@ -368,25 +369,25 @@
 
 <span class="kw">pub fn </span>define_api&lt;State&gt;(options: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt;
 <span class="kw">where
-    </span>State: <span class="lifetime">&#39;static </span>+ Send + Sync + ReadState,
+    </span>State: <span class="lifetime">'static </span>+ Send + Sync + ReadState,
     &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + StatusDataSource,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error&gt;(
         options.api_path.as_ref(),
-        <span class="macro">include_str!</span>(<span class="string">&quot;../api/status.toml&quot;</span>),
+        <span class="macro">include_str!</span>(<span class="string">"../api/status.toml"</span>),
         options.extensions.clone(),
     )<span class="question-mark">?</span>;
-    api.with_version(<span class="string">&quot;0.0.1&quot;</span>.parse().unwrap())
-        .get(<span class="string">&quot;block_height&quot;</span>, |<span class="kw">_</span>, state| {
+    api.with_version(<span class="string">"0.0.1"</span>.parse().unwrap())
+        .get(<span class="string">"block_height"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async </span>{ state.block_height().<span class="kw">await</span>.map_err(internal) }.boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">&quot;mempool_info&quot;</span>, |<span class="kw">_</span>, state| {
+        </span>.get(<span class="string">"mempool_info"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async </span>{ state.mempool_info().<span class="kw">await</span>.map_err(internal) }.boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">&quot;success_rate&quot;</span>, |<span class="kw">_</span>, state| {
+        </span>.get(<span class="string">"success_rate"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async </span>{ state.success_rate().<span class="kw">await</span>.map_err(internal) }.boxed()
         })<span class="question-mark">?
-        </span>.metrics(<span class="string">&quot;metrics&quot;</span>, |<span class="kw">_</span>, state| {
+        </span>.metrics(<span class="string">"metrics"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async </span>{ <span class="prelude-val">Ok</span>(Cow::Borrowed(state.metrics())) }.boxed()
         })<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(api)
@@ -426,12 +427,12 @@
         <span class="comment">// Start the web server.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
-        app.register_module(<span class="string">&quot;status&quot;</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
+        app.register_module(<span class="string">"status"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
             .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, port)));
+        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
         <span class="comment">// Start a client.
-        </span><span class="kw">let </span>url = Url::from_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}/status&quot;</span>, port)).unwrap();
+        </span><span class="kw">let </span>url = Url::from_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"http://localhost:{}/status"</span>, port)).unwrap();
         <span class="kw">let </span>client = Client::&lt;Error&gt;::new(url.clone());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
@@ -442,7 +443,7 @@
         network.submit_transaction(txn.clone()).<span class="kw">await</span>;
         <span class="kw">loop </span>{
             <span class="kw">let </span>mempool = client
-                .get::&lt;MempoolQueryData&gt;(<span class="string">&quot;mempool-info&quot;</span>)
+                .get::&lt;MempoolQueryData&gt;(<span class="string">"mempool-info"</span>)
                 .send()
                 .<span class="kw">await
                 </span>.unwrap();
@@ -454,63 +455,63 @@
                 <span class="kw">break</span>;
             }
             <span class="macro">tracing::info!</span>(
-                <span class="string">&quot;waiting for mempool to reflect transaction (currently {:?})&quot;</span>,
+                <span class="string">"waiting for mempool to reflect transaction (currently {:?})"</span>,
                 mempool
             );
             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
         }
         <span class="comment">// The block height is initially zero.
-        </span><span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;block-height&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
+        </span><span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"block-height"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
 
         <span class="comment">// Test Prometheus export.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>res = surf::get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{url}/metrics&quot;</span>)).send().<span class="kw">await</span>.unwrap();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>res = surf::get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{url}/metrics"</span>)).send().<span class="kw">await</span>.unwrap();
         <span class="macro">assert_eq!</span>(res.status(), StatusCode::Ok);
         <span class="kw">let </span>prometheus = res.body_string().<span class="kw">await</span>.unwrap();
         <span class="kw">let </span>lines = prometheus.lines().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="macro">assert!</span>(
-            lines.contains(<span class="kw-2">&amp;</span><span class="string">&quot;consensus_outstanding_transactions 1&quot;</span>),
-            <span class="string">&quot;Missing consensus_outstanding_transactions in metrics:\n{}&quot;</span>,
+            lines.contains(<span class="kw-2">&amp;</span><span class="string">"consensus_outstanding_transactions 1"</span>),
+            <span class="string">"Missing consensus_outstanding_transactions in metrics:\n{}"</span>,
             prometheus
         );
         <span class="macro">assert!</span>(
             lines.contains(
                 <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                    <span class="string">&quot;consensus_outstanding_transactions_memory_size {}&quot;</span>,
+                    <span class="string">"consensus_outstanding_transactions_memory_size {}"</span>,
                     txn_size
                 )
                 .as_str()
             ),
-            <span class="string">&quot;Missing consensus_outstanding_transactions_memory_size in metrics:\n{}&quot;</span>,
+            <span class="string">"Missing consensus_outstanding_transactions_memory_size in metrics:\n{}"</span>,
             prometheus
         );
 
         <span class="comment">// Start the validators and wait for the block to be finalized.
         </span>network.start().<span class="kw">await</span>;
         <span class="kw">while </span>client
-            .get::&lt;MempoolQueryData&gt;(<span class="string">&quot;mempool-info&quot;</span>)
+            .get::&lt;MempoolQueryData&gt;(<span class="string">"mempool-info"</span>)
             .send()
             .<span class="kw">await
             </span>.unwrap()
             .transaction_count
             &gt; <span class="number">0
         </span>{
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;waiting for transaction to be finalized&quot;</span>);
+            <span class="macro">tracing::info!</span>(<span class="string">"waiting for transaction to be finalized"</span>);
             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
         }
 
         <span class="comment">// Check updated block height. There can be a brief delay between the mempool statistics
         // being updated and the decide event being published. Retry this a few times until it
         // succeeds.
-        </span><span class="kw">while </span>client.get::&lt;u64&gt;(<span class="string">&quot;block-height&quot;</span>).send().<span class="kw">await</span>.unwrap() == <span class="number">1 </span>{
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;waiting for block height to update&quot;</span>);
+        </span><span class="kw">while </span>client.get::&lt;u64&gt;(<span class="string">"block-height"</span>).send().<span class="kw">await</span>.unwrap() == <span class="number">1 </span>{
+            <span class="macro">tracing::info!</span>(<span class="string">"waiting for block height to update"</span>);
             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
         }
-        <span class="kw">let </span>success_rate = client.get::&lt;f64&gt;(<span class="string">&quot;success-rate&quot;</span>).send().<span class="kw">await</span>.unwrap();
+        <span class="kw">let </span>success_rate = client.get::&lt;f64&gt;(<span class="string">"success-rate"</span>).send().<span class="kw">await</span>.unwrap();
         <span class="comment">// If metrics are populating correctly, we should get a finite number. If not, we might get
         // NaN or infinity due to division by 0.
-        </span><span class="macro">assert!</span>(success_rate.is_finite(), <span class="string">&quot;{success_rate}&quot;</span>);
+        </span><span class="macro">assert!</span>(success_rate.is_finite(), <span class="string">"{success_rate}"</span>);
         <span class="comment">// We know at least some views have been successful, since we finalized a block.
-        </span><span class="macro">assert!</span>(success_rate &gt; <span class="number">0.0</span>, <span class="string">&quot;{success_rate}&quot;</span>);
+        </span><span class="macro">assert!</span>(success_rate &gt; <span class="number">0.0</span>, <span class="string">"{success_rate}"</span>);
 
         network.shut_down().<span class="kw">await</span>;
     }
@@ -519,7 +520,7 @@
     </span><span class="kw">async fn </span>test_extensions() {
         setup_test();
 
-        <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_status_extensions&quot;</span>).unwrap();
+        <span class="kw">let </span>dir = TempDir::new(<span class="string">"test_status_extensions"</span>).unwrap();
         <span class="kw">let </span>data_source = ExtensibleDataSource::new(
             MockDataSource::create(dir.path(), Default::default())
                 .<span class="kw">await
@@ -529,13 +530,13 @@
 
         <span class="kw">let </span>extensions = <span class="macro">toml! </span>{
             [route.post_ext]
-            PATH = [<span class="string">&quot;/ext/:val&quot;</span>]
-            METHOD = <span class="string">&quot;POST&quot;
-            &quot;:val&quot; </span>= <span class="string">&quot;Integer&quot;
+            PATH = [<span class="string">"/ext/:val"</span>]
+            METHOD = <span class="string">"POST"
+            ":val" </span>= <span class="string">"Integer"
 
             </span>[route.get_ext]
-            PATH = [<span class="string">&quot;/ext&quot;</span>]
-            METHOD = <span class="string">&quot;GET&quot;
+            PATH = [<span class="string">"/ext"</span>]
+            METHOD = <span class="string">"GET"
         </span>};
 
         <span class="kw">let </span><span class="kw-2">mut </span>api = define_api::&lt;RwLock&lt;ExtensibleDataSource&lt;MockDataSource, u64&gt;&gt;&gt;(<span class="kw-2">&amp;</span>Options {
@@ -543,13 +544,13 @@
             ..Default::default()
         })
         .unwrap();
-        api.get(<span class="string">&quot;get_ext&quot;</span>, |<span class="kw">_</span>, state| {
+        api.get(<span class="string">"get_ext"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>state.as_ref()) }.boxed()
         })
         .unwrap()
-        .post(<span class="string">&quot;post_ext&quot;</span>, |req, state| {
+        .post(<span class="string">"post_ext"</span>, |req, state| {
             <span class="kw">async move </span>{
-                <span class="kw-2">*</span>state.as_mut() = req.integer_param(<span class="string">&quot;val&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw-2">*</span>state.as_mut() = req.integer_param(<span class="string">"val"</span>)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(())
             }
             .boxed()
@@ -557,21 +558,21 @@
         .unwrap();
 
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(RwLock::new(data_source));
-        app.register_module(<span class="string">&quot;status&quot;</span>, api).unwrap();
+        app.register_module(<span class="string">"status"</span>, api).unwrap();
 
         <span class="kw">let </span>port = pick_unused_port().unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, port)));
+        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
         <span class="kw">let </span>client =
-            Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}/status&quot;</span>, port).parse().unwrap());
+            Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}/status"</span>, port).parse().unwrap());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
-        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
-        client.post::&lt;()&gt;(<span class="string">&quot;ext/42&quot;</span>).send().<span class="kw">await</span>.unwrap();
-        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
+        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"ext"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
+        client.post::&lt;()&gt;(<span class="string">"ext/42"</span>).send().<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"ext"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
 
         <span class="comment">// Ensure we can still access the built-in functionality.
-        </span><span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;block-height&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
+        </span><span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"block-height"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
     }
 }
 </code></pre></div></section></main></body></html>

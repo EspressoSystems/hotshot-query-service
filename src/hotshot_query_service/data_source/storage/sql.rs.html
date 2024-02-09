@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/storage/sql.rs`."><title>sql.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/storage/sql.rs`."><title>sql.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1545,6 +1546,60 @@
 <a href="#1545" id="1545">1545</a>
 <a href="#1546" id="1546">1546</a>
 <a href="#1547" id="1547">1547</a>
+<a href="#1548" id="1548">1548</a>
+<a href="#1549" id="1549">1549</a>
+<a href="#1550" id="1550">1550</a>
+<a href="#1551" id="1551">1551</a>
+<a href="#1552" id="1552">1552</a>
+<a href="#1553" id="1553">1553</a>
+<a href="#1554" id="1554">1554</a>
+<a href="#1555" id="1555">1555</a>
+<a href="#1556" id="1556">1556</a>
+<a href="#1557" id="1557">1557</a>
+<a href="#1558" id="1558">1558</a>
+<a href="#1559" id="1559">1559</a>
+<a href="#1560" id="1560">1560</a>
+<a href="#1561" id="1561">1561</a>
+<a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a>
+<a href="#1565" id="1565">1565</a>
+<a href="#1566" id="1566">1566</a>
+<a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a>
+<a href="#1569" id="1569">1569</a>
+<a href="#1570" id="1570">1570</a>
+<a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
+<a href="#1573" id="1573">1573</a>
+<a href="#1574" id="1574">1574</a>
+<a href="#1575" id="1575">1575</a>
+<a href="#1576" id="1576">1576</a>
+<a href="#1577" id="1577">1577</a>
+<a href="#1578" id="1578">1578</a>
+<a href="#1579" id="1579">1579</a>
+<a href="#1580" id="1580">1580</a>
+<a href="#1581" id="1581">1581</a>
+<a href="#1582" id="1582">1582</a>
+<a href="#1583" id="1583">1583</a>
+<a href="#1584" id="1584">1584</a>
+<a href="#1585" id="1585">1585</a>
+<a href="#1586" id="1586">1586</a>
+<a href="#1587" id="1587">1587</a>
+<a href="#1588" id="1588">1588</a>
+<a href="#1589" id="1589">1589</a>
+<a href="#1590" id="1590">1590</a>
+<a href="#1591" id="1591">1591</a>
+<a href="#1592" id="1592">1592</a>
+<a href="#1593" id="1593">1593</a>
+<a href="#1594" id="1594">1594</a>
+<a href="#1595" id="1595">1595</a>
+<a href="#1596" id="1596">1596</a>
+<a href="#1597" id="1597">1597</a>
+<a href="#1598" id="1598">1598</a>
+<a href="#1599" id="1599">1599</a>
+<a href="#1600" id="1600">1600</a>
+<a href="#1601" id="1601">1601</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1557,7 +1612,7 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="attr">#![cfg(feature = <span class="string">&quot;sql-data-source&quot;</span>)]
+</span><span class="attr">#![cfg(feature = <span class="string">"sql-data-source"</span>)]
 
 </span><span class="kw">use </span><span class="kw">super</span>::AvailabilityStorage;
 <span class="kw">use crate</span>::{
@@ -1566,7 +1621,7 @@
         TransactionHash, TransactionIndex, UpdateAvailabilityData,
     },
     data_source::VersionedDataSource,
-    node::{NodeDataSource, UpdateNodeData},
+    node::{NodeDataSource, SyncStatus, UpdateNodeData},
     Header, Leaf, MissingSnafu, NotFoundSnafu, Payload, QueryError, QueryResult, SignatureKey,
 };
 <span class="kw">use </span>async_std::{
@@ -1614,7 +1669,7 @@
 
 <span class="comment">// This needs to be reexported so that we can reference it by absolute path relative to this crate
 // in the expansion of `include_migrations`, even when `include_migrations` is invoked from another
-// crate which doesn&#39;t have `include_dir` as a dependency.
+// crate which doesn't have `include_dir` as a dependency.
 </span><span class="kw">pub use </span>include_dir::include_dir;
 
 <span class="doccomment">/// Embed migrations from the given directory into the current binary.
@@ -1636,9 +1691,9 @@
 ///
 /// ```
 /// # use hotshot_query_service::data_source::sql::{include_migrations, Migration};
-/// let migrations: Vec&lt;Migration&gt; = include_migrations!(&quot;$CARGO_MANIFEST_DIR/migrations&quot;).collect();
+/// let migrations: Vec&lt;Migration&gt; = include_migrations!("$CARGO_MANIFEST_DIR/migrations").collect();
 /// assert_eq!(migrations[0].version(), 10);
-/// assert_eq!(migrations[0].name(), &quot;init_schema&quot;);
+/// assert_eq!(migrations[0].name(), "init_schema");
 /// ```
 ///
 /// Note that a similar macro is available from Refinery:
@@ -1661,32 +1716,32 @@
                     .and_then(std::ffi::OsStr::to_str)
                     .unwrap_or_else(|| {
                         <span class="macro">panic!</span>(
-                            <span class="string">&quot;migration file {} must have a non-empty UTF-8 name&quot;</span>,
+                            <span class="string">"migration file {} must have a non-empty UTF-8 name"</span>,
                             path.display()
                         )
                     });
                 <span class="kw">let </span>sql = file
                     .contents_utf8()
-                    .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">&quot;migration file {name} must use UTF-8 encoding&quot;</span>));
+                    .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">"migration file {name} must use UTF-8 encoding"</span>));
                 <span class="macro-nonterminal">$crate::data_source::storage::sql::Migration::unapplied</span>(name, sql)
-                    .expect(<span class="string">&quot;invalid migration&quot;</span>)
+                    .expect(<span class="string">"invalid migration"</span>)
             })
     };
 }
 
 <span class="doccomment">/// The migrations requied to build the default schema for this version of [`SqlStorage`].
 </span><span class="kw">pub fn </span>default_migrations() -&gt; Vec&lt;Migration&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>migrations = <span class="macro">include_migrations!</span>(<span class="string">&quot;$CARGO_MANIFEST_DIR/migrations&quot;</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+    <span class="kw">let </span><span class="kw-2">mut </span>migrations = <span class="macro">include_migrations!</span>(<span class="string">"$CARGO_MANIFEST_DIR/migrations"</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
     <span class="comment">// Check version uniqueness and sort by version.
-    </span>validate_migrations(<span class="kw-2">&amp;mut </span>migrations).expect(<span class="string">&quot;default migrations are invalid&quot;</span>);
+    </span>validate_migrations(<span class="kw-2">&amp;mut </span>migrations).expect(<span class="string">"default migrations are invalid"</span>);
 
     <span class="comment">// Check that all migration versions are multiples of 10, so that custom migrations can be
     // inserted in between.
     </span><span class="kw">for </span>m <span class="kw">in </span><span class="kw-2">&amp;</span>migrations {
         <span class="kw">if </span>m.version() == <span class="number">0 </span>|| m.version() % <span class="number">10 </span>!= <span class="number">0 </span>{
             <span class="macro">panic!</span>(
-                <span class="string">&quot;default migration version {} is not a positive multiple of 10&quot;</span>,
+                <span class="string">"default migration version {} is not a positive multiple of 10"</span>,
                 m.version()
             );
         }
@@ -1706,7 +1761,7 @@
     </span><span class="kw">for </span>(prev, next) <span class="kw">in </span>migrations.iter().zip(migrations.iter().skip(<span class="number">1</span>)) {
         <span class="kw">if </span>next &lt;= prev {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::msg(<span class="macro">format!</span>(
-                <span class="string">&quot;migration versions are not strictly increasing ({prev}-&gt;{next})&quot;
+                <span class="string">"migration versions are not strictly increasing ({prev}-&gt;{next})"
             </span>)));
         }
     }
@@ -1750,9 +1805,9 @@
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             pgcfg: Default::default(),
-            host: <span class="string">&quot;localhost&quot;</span>.into(),
+            host: <span class="string">"localhost"</span>.into(),
             port: <span class="number">5432</span>,
-            schema: <span class="string">&quot;hotshot&quot;</span>.into(),
+            schema: <span class="string">"hotshot"</span>.into(),
             reset: <span class="bool-val">false</span>,
             migrations: <span class="macro">vec!</span>[],
             no_migrations: <span class="bool-val">false</span>,
@@ -1767,7 +1822,7 @@
         // pull those out of pgcfg if they have been specified, to override the defaults.
         </span><span class="kw">let </span>host = <span class="kw">match </span>pgcfg.get_hosts().first() {
             <span class="prelude-val">Some</span>(Host::Tcp(host)) =&gt; host.to_string(),
-            <span class="kw">_ </span>=&gt; <span class="string">&quot;localhost&quot;</span>.into(),
+            <span class="kw">_ </span>=&gt; <span class="string">"localhost"</span>.into(),
         };
         <span class="kw">let </span>port = <span class="kw-2">*</span>pgcfg.get_ports().first().unwrap_or(<span class="kw-2">&amp;</span><span class="number">5432</span>);
         <span class="self">Self </span>{
@@ -1889,14 +1944,14 @@
         <span class="comment">// Create or connect to the schema for this query service.
         </span><span class="kw">if </span>config.reset {
             client
-                .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;DROP SCHEMA IF EXISTS {} CASCADE&quot;</span>, config.schema))
+                .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"DROP SCHEMA IF EXISTS {} CASCADE"</span>, config.schema))
                 .<span class="kw">await</span><span class="question-mark">?</span>;
         }
         client
-            .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;CREATE SCHEMA IF NOT EXISTS {}&quot;</span>, config.schema))
+            .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"CREATE SCHEMA IF NOT EXISTS {}"</span>, config.schema))
             .<span class="kw">await</span><span class="question-mark">?</span>;
         client
-            .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;SET search_path TO {}&quot;</span>, config.schema))
+            .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"SET search_path TO {}"</span>, config.schema))
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Get migrations and interleave with custom migrations, sorting by version number.
@@ -1909,21 +1964,21 @@
         </span><span class="kw">let </span>runner = refinery::Runner::new(<span class="kw-2">&amp;</span>migrations).set_grouped(<span class="bool-val">true</span>);
 
         <span class="kw">if </span>config.no_migrations {
-            <span class="comment">// We&#39;ve been asked not to run any migrations. Abort if the DB is not already up to
+            <span class="comment">// We've been asked not to run any migrations. Abort if the DB is not already up to
             // date.
             </span><span class="kw">let </span>last_applied = runner.get_last_applied_migration_async(<span class="kw-2">&amp;mut </span>client).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">let </span>last_expected = migrations.last();
             <span class="kw">if </span>last_applied.as_ref() != last_expected {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::msg(<span class="macro">format!</span>(<span class="string">&quot;DB is out of date: last applied migration is {last_applied:?}, but expected {last_expected:?}&quot;</span>)));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::msg(<span class="macro">format!</span>(<span class="string">"DB is out of date: last applied migration is {last_applied:?}, but expected {last_expected:?}"</span>)));
             }
         } <span class="kw">else </span>{
             <span class="comment">// Run migrations using `refinery`.
             </span><span class="kw">match </span>runner.run_async(<span class="kw-2">&amp;mut </span>client).<span class="kw">await </span>{
                 <span class="prelude-val">Ok</span>(report) =&gt; {
-                    <span class="macro">tracing::info!</span>(<span class="string">&quot;ran DB migrations: {report:?}&quot;</span>);
+                    <span class="macro">tracing::info!</span>(<span class="string">"ran DB migrations: {report:?}"</span>);
                 }
                 <span class="prelude-val">Err</span>(err) =&gt; {
-                    <span class="macro">tracing::error!</span>(<span class="string">&quot;DB migrations failed: {:?}&quot;</span>, err.report());
+                    <span class="macro">tracing::error!</span>(<span class="string">"DB migrations failed: {:?}"</span>, err.report());
                     <span class="prelude-val">Err</span>(err)<span class="question-mark">?</span>;
                 }
             }
@@ -1935,15 +1990,13 @@
             kill: <span class="prelude-val">Some</span>(kill),
         })
     }
-}
 
-<span class="kw">impl </span>SqlStorage {
     <span class="doccomment">/// Access the transaction which is accumulating all uncommitted changes to the data source.
-    </span><span class="kw">pub async fn </span>transaction(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;Transaction&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+    </span><span class="kw">pub async fn </span>transaction(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;Transaction&lt;<span class="lifetime">'_</span>&gt;&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.tx_in_progress {
             <span class="comment">// If there is no transaction in progress, open one.
             </span><span class="self">self</span>.client
-                .batch_execute(<span class="string">&quot;BEGIN&quot;</span>)
+                .batch_execute(<span class="string">"BEGIN"</span>)
                 .<span class="kw">await
                 </span>.map_err(postgres_err)<span class="question-mark">?</span>;
             <span class="self">self</span>.tx_in_progress = <span class="bool-val">true</span>;
@@ -1976,7 +2029,7 @@
 
     <span class="kw">async fn </span>commit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="kw">if </span><span class="self">self</span>.tx_in_progress {
-            <span class="self">self</span>.client.batch_execute(<span class="string">&quot;COMMIT&quot;</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="self">self</span>.client.batch_execute(<span class="string">"COMMIT"</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="self">self</span>.tx_in_progress = <span class="bool-val">false</span>;
         }
         <span class="prelude-val">Ok</span>(())
@@ -1984,13 +2037,13 @@
 
     <span class="kw">async fn </span>revert(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span><span class="self">self</span>.tx_in_progress {
-            <span class="comment">// If we&#39;re trying to roll back a transaction, something has already gone wrong and
-            // we&#39;re trying to recover. If we&#39;re unable to revert the changes and recover, all we
+            <span class="comment">// If we're trying to roll back a transaction, something has already gone wrong and
+            // we're trying to recover. If we're unable to revert the changes and recover, all we
             // can do is panic.
             </span><span class="self">self</span>.client
-                .batch_execute(<span class="string">&quot;ROLLBACK&quot;</span>)
+                .batch_execute(<span class="string">"ROLLBACK"</span>)
                 .<span class="kw">await
-                </span>.expect(<span class="string">&quot;DB rollback succeeds&quot;</span>);
+                </span>.expect(<span class="string">"DB rollback succeeds"</span>);
             <span class="self">self</span>.tx_in_progress = <span class="bool-val">false</span>;
         }
     }
@@ -2004,10 +2057,10 @@
 {
     <span class="kw">async fn </span>get_leaf(<span class="kw-2">&amp;</span><span class="self">self</span>, id: LeafId&lt;Types&gt;) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt; {
         <span class="kw">let </span>(where_clause, param): (<span class="kw-2">&amp;</span>str, Box&lt;<span class="kw">dyn </span>ToSql + Send + Sync&gt;) = <span class="kw">match </span>id {
-            LeafId::Number(n) =&gt; (<span class="string">&quot;height = $1&quot;</span>, Box::new(n <span class="kw">as </span>i64)),
-            LeafId::Hash(h) =&gt; (<span class="string">&quot;hash = $1&quot;</span>, Box::new(h.to_string())),
+            LeafId::Number(n) =&gt; (<span class="string">"height = $1"</span>, Box::new(n <span class="kw">as </span>i64)),
+            LeafId::Hash(h) =&gt; (<span class="string">"hash = $1"</span>, Box::new(h.to_string())),
         };
-        <span class="kw">let </span>query = <span class="macro">format!</span>(<span class="string">&quot;SELECT leaf, qc FROM leaf WHERE {where_clause}&quot;</span>);
+        <span class="kw">let </span>query = <span class="macro">format!</span>(<span class="string">"SELECT leaf, qc FROM leaf WHERE {where_clause}"</span>);
         <span class="kw">let </span>row = <span class="self">self</span>.query_one(<span class="kw-2">&amp;</span>query, [param]).<span class="kw">await</span><span class="question-mark">?</span>;
         parse_leaf(row)
     }
@@ -2017,12 +2070,12 @@
         <span class="comment">// ORDER BY h.height ASC ensures that if there are duplicate blocks (this can happen when
         // selecting by payload ID, as payloads are not unique), we return the first one.
         </span><span class="kw">let </span>query = <span class="macro">format!</span>(
-            <span class="string">&quot;SELECT {BLOCK_COLUMNS}
+            <span class="string">"SELECT {BLOCK_COLUMNS}
               FROM header AS h
               JOIN payload AS p ON h.height = p.height
               WHERE {where_clause}
               ORDER BY h.height ASC
-              LIMIT 1&quot;
+              LIMIT 1"
         </span>);
         <span class="kw">let </span>row = <span class="self">self</span>.query_one(<span class="kw-2">&amp;</span>query, [param]).<span class="kw">await</span><span class="question-mark">?</span>;
         parse_block(row)
@@ -2033,11 +2086,11 @@
         <span class="comment">// ORDER BY h.height ASC ensures that if there are duplicate blocks (this can happen when
         // selecting by payload ID, as payloads are not unique), we return the first one.
         </span><span class="kw">let </span>query = <span class="macro">format!</span>(
-            <span class="string">&quot;SELECT {HEADER_COLUMNS}
+            <span class="string">"SELECT {HEADER_COLUMNS}
                FROM header AS h
               WHERE {where_clause}
               ORDER BY h.height ASC
-              LIMIT 1&quot;
+              LIMIT 1"
         </span>);
         <span class="kw">let </span>row = <span class="self">self</span>.query_one(<span class="kw-2">&amp;</span>query, [param]).<span class="kw">await</span><span class="question-mark">?</span>;
         parse_header::&lt;Types&gt;(row)
@@ -2048,12 +2101,12 @@
         <span class="comment">// ORDER BY h.height ASC ensures that if there are duplicate blocks (this can happen when
         // selecting by payload ID, as payloads are not unique), we return the first one.
         </span><span class="kw">let </span>query = <span class="macro">format!</span>(
-            <span class="string">&quot;SELECT {PAYLOAD_COLUMNS}
+            <span class="string">"SELECT {PAYLOAD_COLUMNS}
                FROM header AS h
                JOIN payload AS p ON h.height = p.height
                WHERE {where_clause}
                ORDER BY h.height ASC
-               LIMIT 1&quot;
+               LIMIT 1"
         </span>);
         <span class="kw">let </span>row = <span class="self">self</span>.query_one(<span class="kw-2">&amp;</span>query, [param]).<span class="kw">await</span><span class="question-mark">?</span>;
         parse_payload(row)
@@ -2066,8 +2119,8 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send,
     {
-        <span class="kw">let </span>(where_clause, params) = bounds_to_where_clause(range, <span class="string">&quot;height&quot;</span>);
-        <span class="kw">let </span>query = <span class="macro">format!</span>(<span class="string">&quot;SELECT leaf, qc FROM leaf {where_clause} ORDER BY height ASC&quot;</span>);
+        <span class="kw">let </span>(where_clause, params) = bounds_to_where_clause(range, <span class="string">"height"</span>);
+        <span class="kw">let </span>query = <span class="macro">format!</span>(<span class="string">"SELECT leaf, qc FROM leaf {where_clause} ORDER BY height ASC"</span>);
         <span class="kw">let </span>rows = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>query, params).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(rows.map(|res| parse_leaf(res<span class="question-mark">?</span>)).collect().<span class="kw">await</span>)
@@ -2080,13 +2133,13 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send,
     {
-        <span class="kw">let </span>(where_clause, params) = bounds_to_where_clause(range, <span class="string">&quot;h.height&quot;</span>);
+        <span class="kw">let </span>(where_clause, params) = bounds_to_where_clause(range, <span class="string">"h.height"</span>);
         <span class="kw">let </span>query = <span class="macro">format!</span>(
-            <span class="string">&quot;SELECT {BLOCK_COLUMNS}
+            <span class="string">"SELECT {BLOCK_COLUMNS}
               FROM header AS h
               JOIN payload AS p ON h.height = p.height
               {where_clause}
-              ORDER BY h.height ASC&quot;
+              ORDER BY h.height ASC"
         </span>);
         <span class="kw">let </span>rows = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>query, params).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -2100,13 +2153,13 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send,
     {
-        <span class="kw">let </span>(where_clause, params) = bounds_to_where_clause(range, <span class="string">&quot;h.height&quot;</span>);
+        <span class="kw">let </span>(where_clause, params) = bounds_to_where_clause(range, <span class="string">"h.height"</span>);
         <span class="kw">let </span>query = <span class="macro">format!</span>(
-            <span class="string">&quot;SELECT {PAYLOAD_COLUMNS}
+            <span class="string">"SELECT {PAYLOAD_COLUMNS}
               FROM header AS h
               JOIN payload AS p ON h.height = p.height
               {where_clause}
-              ORDER BY h.height ASC&quot;
+              ORDER BY h.height ASC"
         </span>);
         <span class="kw">let </span>rows = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>query, params).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -2120,23 +2173,23 @@
         <span class="comment">// ORDER BY ASC ensures that if there are duplicate transactions, we return the first
         // one.
         </span><span class="kw">let </span>query = <span class="macro">format!</span>(
-            <span class="string">&quot;SELECT {BLOCK_COLUMNS}, t.index AS tx_index
+            <span class="string">"SELECT {BLOCK_COLUMNS}, t.index AS tx_index
                 FROM header AS h
                 JOIN payload AS p ON h.height = p.height
                 JOIN transaction AS t ON t.block_height = h.height
                 WHERE t.hash = $1
                 ORDER BY (t.block_height, t.index) ASC
-                LIMIT 1&quot;
+                LIMIT 1"
         </span>);
         <span class="kw">let </span>row = <span class="self">self</span>.query_one(<span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>hash.to_string()]).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Extract the transaction index.
-        </span><span class="kw">let </span>index = row.try_get(<span class="string">&quot;tx_index&quot;</span>).map_err(|err| QueryError::Error {
-            message: <span class="macro">format!</span>(<span class="string">&quot;error extracting transaction index from query results: {err}&quot;</span>),
+        </span><span class="kw">let </span>index = row.try_get(<span class="string">"tx_index"</span>).map_err(|err| QueryError::Error {
+            message: <span class="macro">format!</span>(<span class="string">"error extracting transaction index from query results: {err}"</span>),
         })<span class="question-mark">?</span>;
         <span class="kw">let </span>index: TransactionIndex&lt;Types&gt; =
             serde_json::from_value(index).map_err(|err| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">&quot;malformed transaction index: {err}&quot;</span>),
+                message: <span class="macro">format!</span>(<span class="string">"malformed transaction index: {err}"</span>),
             })<span class="question-mark">?</span>;
 
         <span class="comment">// Extract the block.
@@ -2157,16 +2210,16 @@
     <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.transaction().<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="comment">// While we don&#39;t necessarily have the full block for this leaf yet, we can initialize the
+        <span class="comment">// While we don't necessarily have the full block for this leaf yet, we can initialize the
         // header table with block metadata taken from the leaf.
         </span><span class="kw">let </span>header_json =
             serde_json::to_value(<span class="kw-2">&amp;</span>leaf.leaf().block_header).map_err(|err| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize header: {err}&quot;</span>),
+                message: <span class="macro">format!</span>(<span class="string">"failed to serialize header: {err}"</span>),
             })<span class="question-mark">?</span>;
         tx.upsert(
-            <span class="string">&quot;header&quot;</span>,
-            [<span class="string">&quot;height&quot;</span>, <span class="string">&quot;hash&quot;</span>, <span class="string">&quot;payload_hash&quot;</span>, <span class="string">&quot;data&quot;</span>],
-            [<span class="string">&quot;height&quot;</span>],
+            <span class="string">"header"</span>,
+            [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"data"</span>],
+            [<span class="string">"height"</span>],
             [[
                 sql_param(<span class="kw-2">&amp;</span>(leaf.height() <span class="kw">as </span>i64)),
                 sql_param(<span class="kw-2">&amp;</span>leaf.block_hash().to_string()),
@@ -2177,23 +2230,23 @@
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Similarly, we can initialize the payload table with a null payload, which can help us
-        // distinguish between blocks that haven&#39;t been produced yet and blocks we haven&#39;t received
+        // distinguish between blocks that haven't been produced yet and blocks we haven't received
         // yet when answering queries.
-        </span>tx.upsert(<span class="string">&quot;payload&quot;</span>, [<span class="string">&quot;height&quot;</span>], [<span class="string">&quot;height&quot;</span>], [[leaf.height() <span class="kw">as </span>i64]])
+        </span>tx.upsert(<span class="string">"payload"</span>, [<span class="string">"height"</span>], [<span class="string">"height"</span>], [[leaf.height() <span class="kw">as </span>i64]])
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Finally, we insert the leaf itself, which references the header row we created.
         // Serialize the full leaf and QC to JSON for easy storage.
         </span><span class="kw">let </span>leaf_json = serde_json::to_value(leaf.leaf()).map_err(|err| QueryError::Error {
-            message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize leaf: {err}&quot;</span>),
+            message: <span class="macro">format!</span>(<span class="string">"failed to serialize leaf: {err}"</span>),
         })<span class="question-mark">?</span>;
         <span class="kw">let </span>qc_json = serde_json::to_value(leaf.qc()).map_err(|err| QueryError::Error {
-            message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize QC: {err}&quot;</span>),
+            message: <span class="macro">format!</span>(<span class="string">"failed to serialize QC: {err}"</span>),
         })<span class="question-mark">?</span>;
         tx.upsert(
-            <span class="string">&quot;leaf&quot;</span>,
-            [<span class="string">&quot;height&quot;</span>, <span class="string">&quot;hash&quot;</span>, <span class="string">&quot;proposer&quot;</span>, <span class="string">&quot;block_hash&quot;</span>, <span class="string">&quot;leaf&quot;</span>, <span class="string">&quot;qc&quot;</span>],
-            [<span class="string">&quot;height&quot;</span>],
+            <span class="string">"leaf"</span>,
+            [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"proposer"</span>, <span class="string">"block_hash"</span>, <span class="string">"leaf"</span>, <span class="string">"qc"</span>],
+            [<span class="string">"height"</span>],
             [[
                 sql_param(<span class="kw-2">&amp;</span>(leaf.height() <span class="kw">as </span>i64)),
                 sql_param(<span class="kw-2">&amp;</span>leaf.hash().to_string()),
@@ -2217,13 +2270,13 @@
             .payload
             .encode()
             .map_err(|err| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize block: {err}&quot;</span>),
+                message: <span class="macro">format!</span>(<span class="string">"failed to serialize block: {err}"</span>),
             })<span class="question-mark">?
             </span>.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         tx.upsert(
-            <span class="string">&quot;payload&quot;</span>,
-            [<span class="string">&quot;height&quot;</span>, <span class="string">&quot;data&quot;</span>, <span class="string">&quot;size&quot;</span>],
-            [<span class="string">&quot;height&quot;</span>],
+            <span class="string">"payload"</span>,
+            [<span class="string">"height"</span>, <span class="string">"data"</span>, <span class="string">"size"</span>],
+            [<span class="string">"height"</span>],
             [[
                 sql_param(<span class="kw-2">&amp;</span>(block.height() <span class="kw">as </span>i64)),
                 sql_param(<span class="kw-2">&amp;</span>payload),
@@ -2240,7 +2293,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>tx_indexes = <span class="macro">vec!</span>[];
         <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.enumerate() {
             <span class="kw">let </span>txn_ix = serde_json::to_value(<span class="kw-2">&amp;</span>txn_ix).map_err(|err| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">&quot;failed to serialize transaction index: {err}&quot;</span>),
+                message: <span class="macro">format!</span>(<span class="string">"failed to serialize transaction index: {err}"</span>),
             })<span class="question-mark">?</span>;
             tx_hashes.push(txn.commit().to_string());
             tx_block_heights.push(block.height() <span class="kw">as </span>i64);
@@ -2248,9 +2301,9 @@
         }
         <span class="kw">if </span>!tx_hashes.is_empty() {
             tx.upsert(
-                <span class="string">&quot;transaction&quot;</span>,
-                [<span class="string">&quot;hash&quot;</span>, <span class="string">&quot;block_height&quot;</span>, <span class="string">&quot;index&quot;</span>],
-                [<span class="string">&quot;block_height&quot;</span>, <span class="string">&quot;index&quot;</span>],
+                <span class="string">"transaction"</span>,
+                [<span class="string">"hash"</span>, <span class="string">"block_height"</span>, <span class="string">"index"</span>],
+                [<span class="string">"block_height"</span>, <span class="string">"index"</span>],
                 <span class="comment">// Now that we have the transaction hashes, block heights, and indexes collected in
                 // memory, we can combine them all into a single vec using type erasure: all the
                 // values get converted to `&amp;dyn ToSql`. The references all borrow from one of
@@ -2276,7 +2329,7 @@
     </span>Types: NodeType,
 {
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">let </span>query = <span class="string">&quot;SELECT max(height) FROM header&quot;</span>;
+        <span class="kw">let </span>query = <span class="string">"SELECT max(height) FROM header"</span>;
         <span class="kw">let </span>row = <span class="self">self</span>.query_one_static(query).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>height: <span class="prelude-ty">Option</span>&lt;i64&gt; = row.get(<span class="number">0</span>);
         <span class="kw">match </span>height {
@@ -2297,11 +2350,11 @@
         proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;,
         limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>query = <span class="string">&quot;SELECT leaf, qc FROM leaf WHERE proposer = $1&quot;</span>.to_owned();
+        <span class="kw">let </span><span class="kw-2">mut </span>query = <span class="string">"SELECT leaf, qc FROM leaf WHERE proposer = $1"</span>.to_owned();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(limit) = limit {
             <span class="comment">// If there is a limit on the number of leaves to return, we want to return the most
             // recent leaves, so order by descending height.
-            </span>query = <span class="macro">format!</span>(<span class="string">&quot;{query} ORDER BY height DESC limit {limit}&quot;</span>);
+            </span>query = <span class="macro">format!</span>(<span class="string">"{query} ORDER BY height DESC limit {limit}"</span>);
         }
         <span class="kw">let </span>rows = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>proposer.to_string()]).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>leaves: Vec&lt;<span class="kw">_</span>&gt; = rows.map(|res| parse_leaf(res<span class="question-mark">?</span>)).try_collect().<span class="kw">await</span><span class="question-mark">?</span>;
@@ -2316,10 +2369,66 @@
     }
 
     <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">let </span>query = <span class="string">&quot;SELECT count(*) FROM leaf WHERE proposer = $1&quot;</span>;
+        <span class="kw">let </span>query = <span class="string">"SELECT count(*) FROM leaf WHERE proposer = $1"</span>;
         <span class="kw">let </span>row = <span class="self">self</span>.query_one(query, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>proposer.to_string()]).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>count: i64 = row.get(<span class="number">0</span>);
         <span class="prelude-val">Ok</span>(count <span class="kw">as </span>usize)
+    }
+
+    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+        <span class="comment">// A leaf can only be missing if there is no row for it in the database (all its columns are
+        // non-nullable). A block can be missing if its corresponding leaf is missing or if the
+        // block's `data` field is `NULL`. Thus we need to get the number of fully missing leaf rows
+        // and the number of present but null-payload block rows.
+        //
+        // Note that it should not be possible for a block's row to be missing (as opposed to
+        // present but having a `NULL` payload) if the corresponding leaf is present. The schema
+        // enforces this, since the payload table `REFERENCES` the corresponding leaf row. Thus,
+        // missing block rows should be a subset of missing leaf rows and do not need to be counted
+        // separately. This is very important: if we had to count the number of block rows that were
+        // missing whose corresponding leaf row was present, this would require an expensive join
+        // and table traversal.
+        //
+        // We can get the number of missing leaf rows very efficiently, by subtracting the total
+        // number of leaf rows from the block height (since the block height by definition is the
+        // height of the highest leaf we do have). We can also get the number of null payloads
+        // directly using an `IS NULL` filter.
+        //
+        // We will thus select these three quantities, using a single SQL statement to minimize
+        // latency to the database. We accomplish this using a UNION of a sub-select from `leaf` and
+        // one from `payload`. From each of these tables, we are selecting disjoint sets of numeric
+        // quanitities. A trick to combine these into a single query is to select NULL
+        // for each column we are _not_ selecting from each table, and then combine the unioned
+        // table into a single row using `sum` (where the NULL placeholders are ignored).
+        </span><span class="kw">let </span>row = <span class="self">self
+            </span>.query_one_static(
+                <span class="string">"SELECT sum(h)::bigint AS max_height, sum(l)::bigint AS total_leaves, sum(p)::bigint AS null_payloads FROM (
+                    SELECT max(leaf.height) AS h, count(*) AS l, NULL     AS p FROM leaf UNION
+                    SELECT NULL             AS h, NULL     AS l, count(*) AS p FROM payload WHERE payload.data IS NULL
+                )"
+            </span>)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>block_height = <span class="kw">match </span>row.get::&lt;<span class="kw">_</span>, <span class="prelude-ty">Option</span>&lt;i64&gt;&gt;(<span class="string">"max_height"</span>) {
+            <span class="prelude-val">Some</span>(height) =&gt; {
+                <span class="comment">// The height of the block is the number of blocks below it, so the total number of
+                // blocks is one more than the height of the highest block.
+                </span>height <span class="kw">as </span>usize + <span class="number">1
+            </span>}
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="comment">// If there are no blocks yet, the height is 0.
+                </span><span class="number">0
+            </span>}
+        };
+        <span class="kw">let </span>total_leaves = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"total_leaves"</span>) <span class="kw">as </span>usize;
+        <span class="kw">let </span>null_payloads = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"null_payloads"</span>) <span class="kw">as </span>usize;
+
+        <span class="kw">let </span>missing_leaves = block_height.saturating_sub(total_leaves);
+        <span class="kw">let </span>missing_blocks = missing_leaves + null_payloads;
+
+        <span class="prelude-val">Ok</span>(SyncStatus {
+            missing_leaves,
+            missing_blocks,
+        })
     }
 }
 
@@ -2332,7 +2441,7 @@
 
     <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _leaf: LeafQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="comment">// The node data source borrows data that is populated by the availability source, so
-        // there&#39;s nothing more to do here.
+        // there's nothing more to do here.
         </span><span class="prelude-val">Ok</span>(())
     }
 }
@@ -2351,16 +2460,16 @@
 // wrapper object.
 //
 // The lifetime parameter here is mostly for type safety for callers. Internally, we can change the
-// lifetime parameter to `&#39;static` very easily, using `Cow::into_owned` on the inner `client`. This
+// lifetime parameter to `'static` very easily, using `Cow::into_owned` on the inner `client`. This
 // is even necessary, to move the [`Transaction`] out of an [`RwLockWriteGuard`] when exposing it
 // via the higher-level [`SqlDataSource`]. However, none of the _public_ APIs exposed by this crate
 // allow a caller to detach the lifetime parameter here from the lifetime of the [`SqlStorage`] or
 // [`SqlDataSource`] from which the [`Transaction`] is borrowed, providing enhanced type safety.
-</span><span class="kw">pub struct </span>Transaction&lt;<span class="lifetime">&#39;a</span>&gt; {
-    client: Cow&lt;<span class="lifetime">&#39;a</span>, Arc&lt;Client&gt;&gt;,
+</span><span class="kw">pub struct </span>Transaction&lt;<span class="lifetime">'a</span>&gt; {
+    client: Cow&lt;<span class="lifetime">'a</span>, Arc&lt;Client&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Transaction&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Transaction&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Change the lifetime parameter of a [`Transaction`].
     ///
     /// This allows the caller to change the lifetime parameter of this [`Transaction`], by taking
@@ -2369,14 +2478,14 @@
     /// borrowed from an [`RwLockWriteGuard`] up the stack, by replacing the lifetime parameter of
     /// the write guard with the lifetime parameter of the [`SqlDataSource`] that owns the
     /// [`RwLock`].
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>change_lifetime&lt;<span class="lifetime">&#39;b</span>&gt;(<span class="self">self</span>) -&gt; Transaction&lt;<span class="lifetime">&#39;b</span>&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>change_lifetime&lt;<span class="lifetime">'b</span>&gt;(<span class="self">self</span>) -&gt; Transaction&lt;<span class="lifetime">'b</span>&gt; {
         Transaction {
             client: Cow::Owned(<span class="self">self</span>.client.into_owned()),
         }
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Transaction&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Transaction&lt;<span class="lifetime">'a</span>&gt; {
     <span class="doccomment">/// Execute a statement against the underlying database.
     ///
     /// The results of the statement will be reflected immediately in future statements made within
@@ -2409,11 +2518,11 @@
     {
         <span class="kw">let </span>nrows = <span class="self">self</span>.execute_many(statement, params).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">if </span>nrows &gt; <span class="number">1 </span>{
-            <span class="comment">// If more than one row is affected, we don&#39;t return an error, because clearly
-            // _something_ happened and modified the database. So we don&#39;t necessarily want the
+            <span class="comment">// If more than one row is affected, we don't return an error, because clearly
+            // _something_ happened and modified the database. So we don't necessarily want the
             // caller to retry. But we do log an error, because it seems the query did something
             // different than the caller intended.
-            </span><span class="macro">tracing::error!</span>(<span class="string">&quot;statement modified more rows ({nrows}) than expected (1)&quot;</span>);
+            </span><span class="macro">tracing::error!</span>(<span class="string">"statement modified more rows ({nrows}) than expected (1)"</span>);
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -2436,7 +2545,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>retries = <span class="number">5</span>;
 
         <span class="kw">while let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.execute_one(statement, params.clone()).<span class="kw">await </span>{
-            <span class="macro">tracing::error!</span>(<span class="string">&quot;error in statement execution ({retries} tries remaining): {err}&quot;</span>);
+            <span class="macro">tracing::error!</span>(<span class="string">"error in statement execution ({retries} tries remaining): {err}"</span>);
             <span class="kw">if </span>retries == <span class="number">0 </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(err);
             }
@@ -2460,7 +2569,7 @@
         <span class="kw">let </span>nrows = <span class="self">self</span>.execute(statement, params).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">if </span>nrows == <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(QueryError::Error {
-                message: <span class="string">&quot;statement failed: should have affected one row, but affected 0&quot;</span>.into(),
+                message: <span class="string">"statement failed: should have affected one row, but affected 0"</span>.into(),
             });
         }
 
@@ -2489,7 +2598,7 @@
                 <span class="prelude-val">Ok</span>(nrows) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(nrows),
                 <span class="prelude-val">Err</span>(err) =&gt; {
                     <span class="macro">tracing::error!</span>(
-                        <span class="string">&quot;error in statement execution ({retries} tries remaining): {err}&quot;
+                        <span class="string">"error in statement execution ({retries} tries remaining): {err}"
                     </span>);
                     <span class="kw">if </span>retries == <span class="number">0 </span>{
                         <span class="kw">return </span><span class="prelude-val">Err</span>(err);
@@ -2513,27 +2622,27 @@
     {
         <span class="kw">let </span>set_columns = columns
             .iter()
-            .map(|col| <span class="macro">format!</span>(<span class="string">&quot;{col} = excluded.{col}&quot;</span>))
-            .join(<span class="string">&quot;,&quot;</span>);
-        <span class="kw">let </span>columns = columns.into_iter().join(<span class="string">&quot;,&quot;</span>);
-        <span class="kw">let </span>pk = pk.into_iter().join(<span class="string">&quot;,&quot;</span>);
+            .map(|col| <span class="macro">format!</span>(<span class="string">"{col} = excluded.{col}"</span>))
+            .join(<span class="string">","</span>);
+        <span class="kw">let </span>columns = columns.into_iter().join(<span class="string">","</span>);
+        <span class="kw">let </span>pk = pk.into_iter().join(<span class="string">","</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>values = <span class="macro">vec!</span>[];
         <span class="kw">let </span><span class="kw-2">mut </span>params = <span class="macro">vec!</span>[];
         <span class="kw">for </span>(row, entries) <span class="kw">in </span>rows.into_iter().enumerate() {
             <span class="kw">let </span>start = row * N;
             <span class="kw">let </span>end = (row + <span class="number">1</span>) * N;
-            <span class="kw">let </span>row_params = (start..end).map(|i| <span class="macro">format!</span>(<span class="string">&quot;${}&quot;</span>, i + <span class="number">1</span>)).join(<span class="string">&quot;,&quot;</span>);
+            <span class="kw">let </span>row_params = (start..end).map(|i| <span class="macro">format!</span>(<span class="string">"${}"</span>, i + <span class="number">1</span>)).join(<span class="string">","</span>);
 
-            values.push(<span class="macro">format!</span>(<span class="string">&quot;({row_params})&quot;</span>));
+            values.push(<span class="macro">format!</span>(<span class="string">"({row_params})"</span>));
             params.extend(entries);
         }
-        <span class="kw">let </span>values = values.into_iter().join(<span class="string">&quot;,&quot;</span>);
+        <span class="kw">let </span>values = values.into_iter().join(<span class="string">","</span>);
 
         <span class="kw">let </span>stmt = <span class="macro">format!</span>(
-            <span class="string">&quot;INSERT INTO {table} ({columns})
+            <span class="string">"INSERT INTO {table} ({columns})
                   VALUES {values}
-             ON CONFLICT ({pk}) DO UPDATE SET {set_columns}&quot;
+             ON CONFLICT ({pk}) DO UPDATE SET {set_columns}"
         </span>);
         <span class="self">self</span>.execute_one_with_retries(<span class="kw-2">&amp;</span>stmt, params).<span class="kw">await
     </span>}
@@ -2544,7 +2653,7 @@
 /// The results will reflect the state after the statements thus far added to this transaction have
 /// been applied, even though those effects have not been committed to the database yet.
 </span><span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Query <span class="kw">for </span>Transaction&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Query <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">async fn </span>client(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cow&lt;Arc&lt;Client&gt;&gt; {
         <span class="self">self</span>.client.clone()
     }
@@ -2559,7 +2668,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         query: <span class="kw-2">&amp;</span>T,
         params: P,
-    ) -&gt; QueryResult&lt;BoxStream&lt;<span class="lifetime">&#39;static</span>, QueryResult&lt;Row&gt;&gt;&gt;
+    ) -&gt; QueryResult&lt;BoxStream&lt;<span class="lifetime">'static</span>, QueryResult&lt;Row&gt;&gt;&gt;
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
         P: IntoIterator + Send,
@@ -2577,7 +2686,7 @@
     }
 
     <span class="doccomment">/// Query the underlying SQL database with no parameters.
-    </span><span class="kw">async fn </span>query_static&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T) -&gt; QueryResult&lt;BoxStream&lt;<span class="lifetime">&#39;static</span>, QueryResult&lt;Row&gt;&gt;&gt;
+    </span><span class="kw">async fn </span>query_static&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T) -&gt; QueryResult&lt;BoxStream&lt;<span class="lifetime">'static</span>, QueryResult&lt;Row&gt;&gt;&gt;
     <span class="kw">where
         </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
     {
@@ -2634,19 +2743,19 @@
 <span class="kw">where
     </span>Types: NodeType,
 {
-    <span class="kw">let </span>leaf = row.try_get(<span class="string">&quot;leaf&quot;</span>).map_err(|err| QueryError::Error {
-        message: <span class="macro">format!</span>(<span class="string">&quot;error extracting leaf from query results: {err}&quot;</span>),
+    <span class="kw">let </span>leaf = row.try_get(<span class="string">"leaf"</span>).map_err(|err| QueryError::Error {
+        message: <span class="macro">format!</span>(<span class="string">"error extracting leaf from query results: {err}"</span>),
     })<span class="question-mark">?</span>;
     <span class="kw">let </span>leaf: Leaf&lt;Types&gt; = serde_json::from_value(leaf).map_err(|err| QueryError::Error {
-        message: <span class="macro">format!</span>(<span class="string">&quot;malformed leaf: {err}&quot;</span>),
+        message: <span class="macro">format!</span>(<span class="string">"malformed leaf: {err}"</span>),
     })<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>qc = row.try_get(<span class="string">&quot;qc&quot;</span>).map_err(|err| QueryError::Error {
-        message: <span class="macro">format!</span>(<span class="string">&quot;error extracting QC from query results: {err}&quot;</span>),
+    <span class="kw">let </span>qc = row.try_get(<span class="string">"qc"</span>).map_err(|err| QueryError::Error {
+        message: <span class="macro">format!</span>(<span class="string">"error extracting QC from query results: {err}"</span>),
     })<span class="question-mark">?</span>;
     <span class="kw">let </span>qc: QuorumCertificate&lt;Types&gt; =
         serde_json::from_value(qc).map_err(|err| QueryError::Error {
-            message: <span class="macro">format!</span>(<span class="string">&quot;malformed QC: {err}&quot;</span>),
+            message: <span class="macro">format!</span>(<span class="string">"malformed QC: {err}"</span>),
         })<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(LeafQueryData { leaf, qc })
@@ -2654,16 +2763,16 @@
 
 <span class="kw">fn </span>header_where_clause&lt;Types: NodeType&gt;(
     id: BlockId&lt;Types&gt;,
-) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, Box&lt;<span class="kw">dyn </span>ToSql + Send + Sync&gt;) {
+) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, Box&lt;<span class="kw">dyn </span>ToSql + Send + Sync&gt;) {
     <span class="kw">match </span>id {
-        BlockId::Number(n) =&gt; (<span class="string">&quot;h.height = $1&quot;</span>, Box::new(n <span class="kw">as </span>i64)),
-        BlockId::Hash(h) =&gt; (<span class="string">&quot;h.hash = $1&quot;</span>, Box::new(h.to_string())),
-        BlockId::PayloadHash(h) =&gt; (<span class="string">&quot;h.payload_hash = $1&quot;</span>, Box::new(h.to_string())),
+        BlockId::Number(n) =&gt; (<span class="string">"h.height = $1"</span>, Box::new(n <span class="kw">as </span>i64)),
+        BlockId::Hash(h) =&gt; (<span class="string">"h.hash = $1"</span>, Box::new(h.to_string())),
+        BlockId::PayloadHash(h) =&gt; (<span class="string">"h.payload_hash = $1"</span>, Box::new(h.to_string())),
     }
 }
 
 <span class="kw">const </span>BLOCK_COLUMNS: <span class="kw-2">&amp;</span>str =
-    <span class="string">&quot;h.hash AS hash, h.data AS header_data, p.size AS payload_size, p.data AS payload_data&quot;</span>;
+    <span class="string">"h.hash AS hash, h.data AS header_data, p.size AS payload_size, p.data AS payload_data"</span>;
 
 <span class="kw">fn </span>parse_block&lt;Types&gt;(row: Row) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;
 <span class="kw">where
@@ -2671,38 +2780,38 @@
 {
     <span class="comment">// First, check if we have the payload for this block yet.
     </span><span class="kw">let </span>size: <span class="prelude-ty">Option</span>&lt;i32&gt; = row
-        .try_get(<span class="string">&quot;payload_size&quot;</span>)
+        .try_get(<span class="string">"payload_size"</span>)
         .map_err(|err| QueryError::Error {
-            message: <span class="macro">format!</span>(<span class="string">&quot;error extracting payload size from query results: {err}&quot;</span>),
+            message: <span class="macro">format!</span>(<span class="string">"error extracting payload size from query results: {err}"</span>),
         })<span class="question-mark">?</span>;
     <span class="kw">let </span>payload_data: <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; =
-        row.try_get(<span class="string">&quot;payload_data&quot;</span>)
+        row.try_get(<span class="string">"payload_data"</span>)
             .map_err(|err| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">&quot;error extracting payload data from query results: {err}&quot;</span>),
+                message: <span class="macro">format!</span>(<span class="string">"error extracting payload data from query results: {err}"</span>),
             })<span class="question-mark">?</span>;
     <span class="kw">let </span>(size, payload_data) = size.zip(payload_data).context(MissingSnafu)<span class="question-mark">?</span>;
     <span class="kw">let </span>size = size <span class="kw">as </span>u64;
 
     <span class="comment">// Reconstruct the full header.
     </span><span class="kw">let </span>header_data = row
-        .try_get(<span class="string">&quot;header_data&quot;</span>)
+        .try_get(<span class="string">"header_data"</span>)
         .map_err(|err| QueryError::Error {
-            message: <span class="macro">format!</span>(<span class="string">&quot;error extracting header data from query results: {err}&quot;</span>),
+            message: <span class="macro">format!</span>(<span class="string">"error extracting header data from query results: {err}"</span>),
         })<span class="question-mark">?</span>;
     <span class="kw">let </span>header: Header&lt;Types&gt; =
         serde_json::from_value(header_data).map_err(|err| QueryError::Error {
-            message: <span class="macro">format!</span>(<span class="string">&quot;malformed header: {err}&quot;</span>),
+            message: <span class="macro">format!</span>(<span class="string">"malformed header: {err}"</span>),
         })<span class="question-mark">?</span>;
 
     <span class="comment">// Reconstruct the full block payload.
     </span><span class="kw">let </span>payload = Payload::&lt;Types&gt;::from_bytes(payload_data.into_iter(), header.metadata());
 
     <span class="comment">// Reconstruct the query data by adding metadata.
-    </span><span class="kw">let </span>hash: String = row.try_get(<span class="string">&quot;hash&quot;</span>).map_err(|err| QueryError::Error {
-        message: <span class="macro">format!</span>(<span class="string">&quot;error extracting block hash from query results: {err}&quot;</span>),
+    </span><span class="kw">let </span>hash: String = row.try_get(<span class="string">"hash"</span>).map_err(|err| QueryError::Error {
+        message: <span class="macro">format!</span>(<span class="string">"error extracting block hash from query results: {err}"</span>),
     })<span class="question-mark">?</span>;
     <span class="kw">let </span>hash = hash.parse().map_err(|err| QueryError::Error {
-        message: <span class="macro">format!</span>(<span class="string">&quot;malformed block hash: {err}&quot;</span>),
+        message: <span class="macro">format!</span>(<span class="string">"malformed block hash: {err}"</span>),
     })<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(BlockQueryData {
@@ -2722,18 +2831,18 @@
     parse_block(row).map(PayloadQueryData::from)
 }
 
-<span class="kw">const </span>HEADER_COLUMNS: <span class="kw-2">&amp;</span>str = <span class="string">&quot;h.data AS data&quot;</span>;
+<span class="kw">const </span>HEADER_COLUMNS: <span class="kw-2">&amp;</span>str = <span class="string">"h.data AS data"</span>;
 
 <span class="kw">fn </span>parse_header&lt;Types&gt;(row: Row) -&gt; QueryResult&lt;Header&lt;Types&gt;&gt;
 <span class="kw">where
     </span>Types: NodeType,
 {
     <span class="comment">// Reconstruct the full header.
-    </span><span class="kw">let </span>data = row.try_get(<span class="string">&quot;data&quot;</span>).map_err(|err| QueryError::Error {
-        message: <span class="macro">format!</span>(<span class="string">&quot;error extracting header data from query results: {err}&quot;</span>),
+    </span><span class="kw">let </span>data = row.try_get(<span class="string">"data"</span>).map_err(|err| QueryError::Error {
+        message: <span class="macro">format!</span>(<span class="string">"error extracting header data from query results: {err}"</span>),
     })<span class="question-mark">?</span>;
     serde_json::from_value(data).map_err(|err| QueryError::Error {
-        message: <span class="macro">format!</span>(<span class="string">&quot;malformed header: {err}&quot;</span>),
+        message: <span class="macro">format!</span>(<span class="string">"malformed header: {err}"</span>),
     })
 }
 
@@ -2751,29 +2860,29 @@
     <span class="kw">match </span>range.start_bound() {
         Bound::Included(n) =&gt; {
             params.push(<span class="kw-2">*</span>n <span class="kw">as </span>i64);
-            bounds.push(<span class="macro">format!</span>(<span class="string">&quot;{column} &gt;= ${}&quot;</span>, params.len()));
+            bounds.push(<span class="macro">format!</span>(<span class="string">"{column} &gt;= ${}"</span>, params.len()));
         }
         Bound::Excluded(n) =&gt; {
             params.push(<span class="kw-2">*</span>n <span class="kw">as </span>i64);
-            bounds.push(<span class="macro">format!</span>(<span class="string">&quot;{column} &gt; ${}&quot;</span>, params.len()));
+            bounds.push(<span class="macro">format!</span>(<span class="string">"{column} &gt; ${}"</span>, params.len()));
         }
         Bound::Unbounded =&gt; {}
     }
     <span class="kw">match </span>range.end_bound() {
         Bound::Included(n) =&gt; {
             params.push(<span class="kw-2">*</span>n <span class="kw">as </span>i64);
-            bounds.push(<span class="macro">format!</span>(<span class="string">&quot;{column} &lt;= ${}&quot;</span>, params.len()));
+            bounds.push(<span class="macro">format!</span>(<span class="string">"{column} &lt;= ${}"</span>, params.len()));
         }
         Bound::Excluded(n) =&gt; {
             params.push(<span class="kw-2">*</span>n <span class="kw">as </span>i64);
-            bounds.push(<span class="macro">format!</span>(<span class="string">&quot;{column} &lt; ${}&quot;</span>, params.len()));
+            bounds.push(<span class="macro">format!</span>(<span class="string">"{column} &lt; ${}"</span>, params.len()));
         }
         Bound::Unbounded =&gt; {}
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>where_clause = bounds.join(<span class="string">&quot; AND &quot;</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>where_clause = bounds.join(<span class="string">" AND "</span>);
     <span class="kw">if </span>!where_clause.is_empty() {
-        where_clause = <span class="macro">format!</span>(<span class="string">&quot; WHERE {where_clause}&quot;</span>);
+        where_clause = <span class="macro">format!</span>(<span class="string">" WHERE {where_clause}"</span>);
     }
 
     (where_clause, params)
@@ -2790,7 +2899,7 @@
 ) -&gt; anyhow::Result&lt;(Client, oneshot::Sender&lt;()&gt;)&gt;
 <span class="kw">where
     </span>T: TlsConnect&lt;TcpStream&gt;,
-    T::Stream: Send + <span class="lifetime">&#39;static</span>,
+    T::Stream: Send + <span class="lifetime">'static</span>,
 {
     <span class="kw">let </span>(client, connection) = pgcfg.connect_raw(tcp, tls).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -2803,8 +2912,8 @@
             // returned because the `connection` terminated, we should log something, as that is
             // unusual.
             </span><span class="kw">match </span>res {
-                <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">tracing::warn!</span>(<span class="string">&quot;postgres connection terminated unexpectedly&quot;</span>),
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">tracing::error!</span>(<span class="string">&quot;postgres connection closed with error: {err}&quot;</span>),
+                <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">tracing::warn!</span>(<span class="string">"postgres connection terminated unexpectedly"</span>),
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">tracing::error!</span>(<span class="string">"postgres connection closed with error: {err}"</span>),
             }
         }
     }));
@@ -2833,12 +2942,12 @@
 <span class="kw">impl </span>tokio::io::AsyncRead <span class="kw">for </span>TcpStream {
     <span class="kw">fn </span>poll_read(
         <span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;,
-        cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;,
-        buf: <span class="kw-2">&amp;mut </span>tokio::io::ReadBuf&lt;<span class="lifetime">&#39;_</span>&gt;,
+        cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;,
+        buf: <span class="kw-2">&amp;mut </span>tokio::io::ReadBuf&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; Poll&lt;std::io::Result&lt;()&gt;&gt; {
         <span class="comment">// tokio uses this hyper-optimized `ReadBuf` construct, where there is a filled portion, an
         // unfilled portion where we append new data, and the unfilled portion of the buffer need
-        // not even be initialized. However the async_std implementation we&#39;re delegating to just
+        // not even be initialized. However the async_std implementation we're delegating to just
         // expects a normal `&amp;mut [u8]` buffer which is entirely unfilled. To simplify the
         // conversion, we will abandon the uninitialized buffer optimization and force
         // initialization of the entire buffer, resulting in a plain old `&amp;mut [u8]` representing
@@ -2847,7 +2956,7 @@
         </span><span class="kw">let </span>filled = buf.filled().len();
 
         <span class="comment">// Initialize the buffer and get a slice of the unfilled region. This operation is free
-        // after the first time it is called, so we don&#39;t need to worry about maintaining state
+        // after the first time it is called, so we don't need to worry about maintaining state
         // between subsequent calls to `poll_read`.
         </span><span class="kw">let </span>unfilled = buf.initialize_unfilled();
 
@@ -2868,23 +2977,23 @@
 <span class="kw">impl </span>tokio::io::AsyncWrite <span class="kw">for </span>TcpStream {
     <span class="kw">fn </span>poll_write(
         <span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;,
-        cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;,
+        cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;,
         buf: <span class="kw-2">&amp;</span>[u8],
     ) -&gt; Poll&lt;std::io::Result&lt;usize&gt;&gt; {
         Pin::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>).poll_write(cx, buf)
     }
 
-    <span class="kw">fn </span>poll_flush(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;std::io::Result&lt;()&gt;&gt; {
+    <span class="kw">fn </span>poll_flush(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;std::io::Result&lt;()&gt;&gt; {
         Pin::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>).poll_flush(cx)
     }
 
-    <span class="kw">fn </span>poll_shutdown(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;std::io::Result&lt;()&gt;&gt; {
+    <span class="kw">fn </span>poll_shutdown(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;std::io::Result&lt;()&gt;&gt; {
         Pin::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>).poll_close(cx)
     }
 }
 
-<span class="comment">// These tests run the `postgres` Docker image, which doesn&#39;t work on Windows.
-</span><span class="attr">#[cfg(all(any(test, feature = <span class="string">&quot;testing&quot;</span>), not(target_os = <span class="string">&quot;windows&quot;</span>)))]
+<span class="comment">// These tests run the `postgres` Docker image, which doesn't work on Windows.
+</span><span class="attr">#[cfg(all(any(test, feature = <span class="string">"testing"</span>), not(target_os = <span class="string">"windows"</span>)))]
 </span><span class="kw">pub mod </span>testing {
     <span class="kw">use </span><span class="kw">super</span>::Config;
     <span class="kw">use </span><span class="kw">crate</span>::testing::sleep;
@@ -2905,33 +3014,33 @@
 
     <span class="kw">impl </span>TmpDb {
         <span class="kw">pub async fn </span>init() -&gt; <span class="self">Self </span>{
-            <span class="kw">let </span>docker_hostname = env::var(<span class="string">&quot;DOCKER_HOSTNAME&quot;</span>);
+            <span class="kw">let </span>docker_hostname = env::var(<span class="string">"DOCKER_HOSTNAME"</span>);
             <span class="comment">// This picks an unused port on the current system.  If docker is
             // configured to run on a different host then this may not find a
-            // &quot;free&quot; port on that system.
+            // "free" port on that system.
             // We *might* be able to get away with this as any remote docker
-            // host should hopefully be pretty open with it&#39;s port space.
+            // host should hopefully be pretty open with it's port space.
             </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-            <span class="kw">let </span>host = docker_hostname.unwrap_or(<span class="string">&quot;localhost&quot;</span>.to_string());
+            <span class="kw">let </span>host = docker_hostname.unwrap_or(<span class="string">"localhost"</span>.to_string());
 
-            <span class="kw">let </span>output = Command::new(<span class="string">&quot;docker&quot;</span>)
-                .arg(<span class="string">&quot;run&quot;</span>)
-                .arg(<span class="string">&quot;-d&quot;</span>)
-                .args([<span class="string">&quot;-p&quot;</span>, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{port}:5432&quot;</span>)])
-                .args([<span class="string">&quot;-e&quot;</span>, <span class="string">&quot;POSTGRES_PASSWORD=password&quot;</span>])
-                .arg(<span class="string">&quot;postgres&quot;</span>)
+            <span class="kw">let </span>output = Command::new(<span class="string">"docker"</span>)
+                .arg(<span class="string">"run"</span>)
+                .arg(<span class="string">"-d"</span>)
+                .args([<span class="string">"-p"</span>, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{port}:5432"</span>)])
+                .args([<span class="string">"-e"</span>, <span class="string">"POSTGRES_PASSWORD=password"</span>])
+                .arg(<span class="string">"postgres"</span>)
                 .output()
                 .unwrap();
             <span class="kw">let </span>stdout = str::from_utf8(<span class="kw-2">&amp;</span>output.stdout).unwrap();
             <span class="kw">let </span>stderr = str::from_utf8(<span class="kw-2">&amp;</span>output.stderr).unwrap();
             <span class="kw">if </span>!output.status.success() {
-                <span class="macro">panic!</span>(<span class="string">&quot;failed to start postgres docker: {stderr}&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"failed to start postgres docker: {stderr}"</span>);
             }
 
             <span class="comment">// Create the TmpDb object immediately after starting the Docker container, so if
             // anything panics after this `drop` will be called and we will clean up.
             </span><span class="kw">let </span>container_id = stdout.trim().to_owned();
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;launched postgres docker {container_id}&quot;</span>);
+            <span class="macro">tracing::info!</span>(<span class="string">"launched postgres docker {container_id}"</span>);
             <span class="kw">let </span>db = <span class="self">Self </span>{
                 host,
                 port,
@@ -2939,26 +3048,26 @@
             };
 
             <span class="comment">// Wait for the database to be ready.
-            </span><span class="kw">while </span>!Command::new(<span class="string">&quot;psql&quot;</span>)
+            </span><span class="kw">while </span>!Command::new(<span class="string">"psql"</span>)
                 .args([
-                    <span class="string">&quot;-h&quot;</span>,
+                    <span class="string">"-h"</span>,
                     <span class="kw-2">&amp;</span>(db.host()),
-                    <span class="string">&quot;-p&quot;</span>,
+                    <span class="string">"-p"</span>,
                     <span class="kw-2">&amp;</span>(db.port().to_string()),
-                    <span class="string">&quot;-U&quot;</span>,
-                    <span class="string">&quot;postgres&quot;</span>,
+                    <span class="string">"-U"</span>,
+                    <span class="string">"postgres"</span>,
                 ])
-                .env(<span class="string">&quot;PGPASSWORD&quot;</span>, <span class="string">&quot;password&quot;</span>)
+                .env(<span class="string">"PGPASSWORD"</span>, <span class="string">"password"</span>)
                 <span class="comment">// Null input so the command terminates as soon as it manages to connect.
                 </span>.stdin(Stdio::null())
-                <span class="comment">// Output from this command is not useful, it&#39;s just a prompt.
+                <span class="comment">// Output from this command is not useful, it's just a prompt.
                 </span>.stdout(Stdio::null())
                 .stderr(Stdio::null())
                 .status()
                 .unwrap()
                 .success()
             {
-                <span class="macro">tracing::warn!</span>(<span class="string">&quot;database is not ready&quot;</span>);
+                <span class="macro">tracing::warn!</span>(<span class="string">"database is not ready"</span>);
                 sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
             }
 
@@ -2975,8 +3084,8 @@
 
         <span class="kw">pub fn </span>config(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Config {
             Config::default()
-                .user(<span class="string">&quot;postgres&quot;</span>)
-                .password(<span class="string">&quot;password&quot;</span>)
+                .user(<span class="string">"postgres"</span>)
+                .password(<span class="string">"password"</span>)
                 .host(<span class="self">self</span>.host())
                 .port(<span class="self">self</span>.port())
                 .tls()
@@ -2985,25 +3094,25 @@
 
     <span class="kw">impl </span>Drop <span class="kw">for </span>TmpDb {
         <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-            <span class="kw">let </span>output = Command::new(<span class="string">&quot;docker&quot;</span>)
-                .args([<span class="string">&quot;kill&quot;</span>, <span class="self">self</span>.container_id.as_str()])
+            <span class="kw">let </span>output = Command::new(<span class="string">"docker"</span>)
+                .args([<span class="string">"kill"</span>, <span class="self">self</span>.container_id.as_str()])
                 .output()
                 .unwrap();
             <span class="kw">if </span>!output.status.success() {
                 <span class="macro">tracing::error!</span>(
-                    <span class="string">&quot;error killing postgres docker {}: {}&quot;</span>,
+                    <span class="string">"error killing postgres docker {}: {}"</span>,
                     <span class="self">self</span>.container_id,
                     str::from_utf8(<span class="kw-2">&amp;</span>output.stderr).unwrap()
                 );
             }
 
-            <span class="kw">let </span>output = Command::new(<span class="string">&quot;docker&quot;</span>)
-                .args([<span class="string">&quot;rm&quot;</span>, <span class="self">self</span>.container_id.as_str()])
+            <span class="kw">let </span>output = Command::new(<span class="string">"docker"</span>)
+                .args([<span class="string">"rm"</span>, <span class="self">self</span>.container_id.as_str()])
                 .output()
                 .unwrap();
             <span class="kw">if </span>!output.status.success() {
                 <span class="macro">tracing::error!</span>(
-                    <span class="string">&quot;error removing postgres docker {}: {}&quot;</span>,
+                    <span class="string">"error removing postgres docker {}: {}"</span>,
                     <span class="self">self</span>.container_id,
                     str::from_utf8(<span class="kw-2">&amp;</span>output.stderr).unwrap()
                 );
@@ -3012,8 +3121,8 @@
     }
 }
 
-<span class="comment">// These tests run the `postgres` Docker image, which doesn&#39;t work on Windows.
-</span><span class="attr">#[cfg(all(test, not(target_os = <span class="string">&quot;windows&quot;</span>)))]
+<span class="comment">// These tests run the `postgres` Docker image, which doesn't work on Windows.
+</span><span class="attr">#[cfg(all(test, not(target_os = <span class="string">"windows"</span>)))]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::{testing::TmpDb, <span class="kw-2">*</span>};
     <span class="kw">use </span><span class="kw">crate</span>::testing::setup_test;
@@ -3028,8 +3137,8 @@
 
         <span class="kw">let </span>connect = |migrations: bool, custom_migrations| <span class="kw">async move </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>cfg = Config::default()
-                .user(<span class="string">&quot;postgres&quot;</span>)
-                .password(<span class="string">&quot;password&quot;</span>)
+                .user(<span class="string">"postgres"</span>)
+                .password(<span class="string">"password"</span>)
                 .host(host)
                 .port(port)
                 .migrations(custom_migrations);
@@ -3041,9 +3150,9 @@
         };
 
         <span class="comment">// Connecting with migrations disabled should fail if the database is not already up to date
-        // (since we&#39;ve just created a fresh database, it isn&#39;t).
+        // (since we've just created a fresh database, it isn't).
         </span><span class="kw">let </span>err = connect(<span class="bool-val">false</span>, <span class="macro">vec!</span>[]).<span class="kw">await</span>.unwrap_err();
-        <span class="macro">tracing::info!</span>(<span class="string">&quot;connecting without running migrations failed as expected: {err}&quot;</span>);
+        <span class="macro">tracing::info!</span>(<span class="string">"connecting without running migrations failed as expected: {err}"</span>);
 
         <span class="comment">// Now connect and run migrations to bring the database up to date.
         </span>connect(<span class="bool-val">true</span>, <span class="macro">vec!</span>[]).<span class="kw">await</span>.unwrap();
@@ -3055,18 +3164,18 @@
         // The SQL commands used here will fail if not run in order.
         </span><span class="kw">let </span>migrations = <span class="macro">vec!</span>[
             Migration::unapplied(
-                <span class="string">&quot;V12__create_test_table.sql&quot;</span>,
-                <span class="string">&quot;ALTER TABLE test ADD COLUMN data INTEGER;&quot;</span>,
+                <span class="string">"V12__create_test_table.sql"</span>,
+                <span class="string">"ALTER TABLE test ADD COLUMN data INTEGER;"</span>,
             )
             .unwrap(),
-            Migration::unapplied(<span class="string">&quot;V11__create_test_table.sql&quot;</span>, <span class="string">&quot;CREATE TABLE test ();&quot;</span>).unwrap(),
+            Migration::unapplied(<span class="string">"V11__create_test_table.sql"</span>, <span class="string">"CREATE TABLE test ();"</span>).unwrap(),
         ];
         connect(<span class="bool-val">true</span>, migrations.clone()).<span class="kw">await</span>.unwrap();
 
         <span class="comment">// Connect using the default schema (no custom migrations) and not running migrations. This
         // should fail because the database is _ahead_ of the client in terms of schema.
         </span><span class="kw">let </span>err = connect(<span class="bool-val">false</span>, <span class="macro">vec!</span>[]).<span class="kw">await</span>.unwrap_err();
-        <span class="macro">tracing::info!</span>(<span class="string">&quot;connecting without running migrations failed as expected: {err}&quot;</span>);
+        <span class="macro">tracing::info!</span>(<span class="string">"connecting without running migrations failed as expected: {err}"</span>);
 
         <span class="comment">// Connecting with the customized schema should work even without running migrations.
         </span>connect(<span class="bool-val">true</span>, migrations).<span class="kw">await</span>.unwrap();
@@ -3074,21 +3183,21 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_config_from_str() {
-        <span class="kw">let </span>cfg = Config::from_str(<span class="string">&quot;postgresql://user:password@host:8080&quot;</span>).unwrap();
-        <span class="macro">assert_eq!</span>(cfg.pgcfg.get_user(), <span class="prelude-val">Some</span>(<span class="string">&quot;user&quot;</span>));
-        <span class="macro">assert_eq!</span>(cfg.pgcfg.get_password(), <span class="prelude-val">Some</span>(<span class="string">&quot;password&quot;</span>.as_bytes()));
-        <span class="macro">assert_eq!</span>(cfg.host, <span class="string">&quot;host&quot;</span>);
+        <span class="kw">let </span>cfg = Config::from_str(<span class="string">"postgresql://user:password@host:8080"</span>).unwrap();
+        <span class="macro">assert_eq!</span>(cfg.pgcfg.get_user(), <span class="prelude-val">Some</span>(<span class="string">"user"</span>));
+        <span class="macro">assert_eq!</span>(cfg.pgcfg.get_password(), <span class="prelude-val">Some</span>(<span class="string">"password"</span>.as_bytes()));
+        <span class="macro">assert_eq!</span>(cfg.host, <span class="string">"host"</span>);
         <span class="macro">assert_eq!</span>(cfg.port, <span class="number">8080</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_config_from_pgcfg() {
         <span class="kw">let </span><span class="kw-2">mut </span>pgcfg = postgres::Config::default();
-        pgcfg.dbname(<span class="string">&quot;db&quot;</span>);
+        pgcfg.dbname(<span class="string">"db"</span>);
         <span class="kw">let </span>cfg = Config::from(pgcfg.clone());
         <span class="macro">assert_eq!</span>(cfg.pgcfg, pgcfg);
         <span class="comment">// Default values.
-        </span><span class="macro">assert_eq!</span>(cfg.host, <span class="string">&quot;localhost&quot;</span>);
+        </span><span class="macro">assert_eq!</span>(cfg.host, <span class="string">"localhost"</span>);
         <span class="macro">assert_eq!</span>(cfg.port, <span class="number">5432</span>);
     }
 }

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/metrics.rs`."><title>metrics.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/metrics.rs`."><title>metrics.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -590,7 +591,7 @@
     prometheus: prometheus::Registry,
     <span class="comment">// There is nothing in the Prometheus standard corresponding to our notion of a [Label] (which
     // is like a gauge whose value is text). As a workaround we serialize labels using special
-    // Prometheus comments, like `# LABEL &lt;name&gt; &quot;&lt;text&gt;&quot;`. `labels` collects _all_ labels (as a map
+    // Prometheus comments, like `# LABEL &lt;name&gt; "&lt;text&gt;"`. `labels` collects _all_ labels (as a map
     // from fully-qualified name to label value) in this tree of metric groups.
     //
     // We store all the labels here, rather than storing the labels for each sub-group in the
@@ -620,9 +621,9 @@
             .read()
             .unwrap()
             .iter()
-            .map(|(fq_name, label)| <span class="macro">format!</span>(<span class="string">&quot;# LABEL {} {}&quot;</span>, fq_name.iter().join(<span class="string">&quot;_&quot;</span>), label.get()))
-            .join(<span class="string">&quot;\n&quot;</span>);
-        labels.push(<span class="string">&#39;\n&#39;</span>);
+            .map(|(fq_name, label)| <span class="macro">format!</span>(<span class="string">"# LABEL {} {}"</span>, fq_name.iter().join(<span class="string">"_"</span>), label.get()))
+            .join(<span class="string">"\n"</span>);
+        labels.push(<span class="string">'\n'</span>);
 
         <span class="comment">// Now append the Prometheus metrics.
         </span><span class="kw">let </span><span class="kw-2">mut </span>buffer = labels.into_bytes();
@@ -631,7 +632,7 @@
         encoder.encode(<span class="kw-2">&amp;</span>metric_families, <span class="kw-2">&amp;mut </span>buffer)<span class="question-mark">?</span>;
         String::from_utf8(buffer).map_err(|err| MetricsError::Prometheus {
             source: prometheus::Error::Msg(<span class="macro">format!</span>(
-                <span class="string">&quot;could not convert Prometheus output to UTF-8: {}&quot;</span>,
+                <span class="string">"could not convert Prometheus output to UTF-8: {}"</span>,
                 err
             )),
         })
@@ -744,7 +745,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(namespace) = group_names.next() {
             opts = opts
                 .namespace(namespace.clone())
-                .subsystem(group_names.join(<span class="string">&quot;_&quot;</span>));
+                .subsystem(group_names.join(<span class="string">"_"</span>));
         }
         opts
     }
@@ -906,10 +907,10 @@
         <span class="kw">let </span>label = <span class="self">Self</span>(Default::default());
         <span class="kw">let </span><span class="kw-2">mut </span>fq_name = <span class="macro">vec!</span>[];
         <span class="kw">if </span>!opts.namespace.is_empty() {
-            fq_name.extend(opts.namespace.split(<span class="string">&#39;_&#39;</span>).map(String::from));
+            fq_name.extend(opts.namespace.split(<span class="string">'_'</span>).map(String::from));
         }
         <span class="kw">if </span>!opts.subsystem.is_empty() {
-            fq_name.extend(opts.subsystem.split(<span class="string">&#39;_&#39;</span>).map(String::from));
+            fq_name.extend(opts.subsystem.split(<span class="string">'_'</span>).map(String::from));
         }
         fq_name.push(opts.name.clone());
         registry.register_label(fq_name, label.clone());
@@ -941,54 +942,54 @@
         <span class="kw">let </span>metrics = PrometheusMetrics::default();
 
         <span class="comment">// Register one metric of each type.
-        </span><span class="kw">let </span>counter = metrics.create_counter(<span class="string">&quot;counter&quot;</span>.into(), <span class="prelude-val">None</span>);
-        <span class="kw">let </span>gauge = metrics.create_gauge(<span class="string">&quot;gauge&quot;</span>.into(), <span class="prelude-val">None</span>);
-        <span class="kw">let </span>histogram = metrics.create_histogram(<span class="string">&quot;histogram&quot;</span>.into(), <span class="prelude-val">None</span>);
-        <span class="kw">let </span>label = metrics.create_label(<span class="string">&quot;label&quot;</span>.into());
+        </span><span class="kw">let </span>counter = metrics.create_counter(<span class="string">"counter"</span>.into(), <span class="prelude-val">None</span>);
+        <span class="kw">let </span>gauge = metrics.create_gauge(<span class="string">"gauge"</span>.into(), <span class="prelude-val">None</span>);
+        <span class="kw">let </span>histogram = metrics.create_histogram(<span class="string">"histogram"</span>.into(), <span class="prelude-val">None</span>);
+        <span class="kw">let </span>label = metrics.create_label(<span class="string">"label"</span>.into());
 
         <span class="comment">// Set the metric values.
         </span>counter.add(<span class="number">20</span>);
         gauge.set(<span class="number">42</span>);
         histogram.add_point(<span class="number">20f64</span>);
-        label.set(<span class="string">&quot;value&quot;</span>.into());
+        label.set(<span class="string">"value"</span>.into());
 
         <span class="comment">// Check the values.
-        </span><span class="macro">assert_eq!</span>(metrics.get_counter(<span class="string">&quot;counter&quot;</span>).unwrap().get(), <span class="number">20</span>);
-        <span class="macro">assert_eq!</span>(metrics.get_gauge(<span class="string">&quot;gauge&quot;</span>).unwrap().get(), <span class="number">42</span>);
+        </span><span class="macro">assert_eq!</span>(metrics.get_counter(<span class="string">"counter"</span>).unwrap().get(), <span class="number">20</span>);
+        <span class="macro">assert_eq!</span>(metrics.get_gauge(<span class="string">"gauge"</span>).unwrap().get(), <span class="number">42</span>);
         <span class="macro">assert_eq!</span>(
-            metrics.get_histogram(<span class="string">&quot;histogram&quot;</span>).unwrap().sample_count(),
+            metrics.get_histogram(<span class="string">"histogram"</span>).unwrap().sample_count(),
             <span class="number">1
         </span>);
-        <span class="macro">assert_eq!</span>(metrics.get_histogram(<span class="string">&quot;histogram&quot;</span>).unwrap().sum(), <span class="number">20f64</span>);
-        <span class="macro">assert_eq!</span>(metrics.get_histogram(<span class="string">&quot;histogram&quot;</span>).unwrap().mean(), <span class="number">20f64</span>);
-        <span class="macro">assert_eq!</span>(metrics.get_label(<span class="string">&quot;label&quot;</span>).unwrap().get(), <span class="string">&quot;value&quot;</span>);
+        <span class="macro">assert_eq!</span>(metrics.get_histogram(<span class="string">"histogram"</span>).unwrap().sum(), <span class="number">20f64</span>);
+        <span class="macro">assert_eq!</span>(metrics.get_histogram(<span class="string">"histogram"</span>).unwrap().mean(), <span class="number">20f64</span>);
+        <span class="macro">assert_eq!</span>(metrics.get_label(<span class="string">"label"</span>).unwrap().get(), <span class="string">"value"</span>);
 
         <span class="comment">// Set the metric values again, to be sure they update properly.
         </span>counter.add(<span class="number">22</span>);
         gauge.set(<span class="number">100</span>);
         histogram.add_point(<span class="number">22f64</span>);
-        label.set(<span class="string">&quot;another&quot;</span>.into());
+        label.set(<span class="string">"another"</span>.into());
 
         <span class="comment">// Check the updated values.
-        </span><span class="macro">assert_eq!</span>(metrics.get_counter(<span class="string">&quot;counter&quot;</span>).unwrap().get(), <span class="number">42</span>);
-        <span class="macro">assert_eq!</span>(metrics.get_gauge(<span class="string">&quot;gauge&quot;</span>).unwrap().get(), <span class="number">100</span>);
+        </span><span class="macro">assert_eq!</span>(metrics.get_counter(<span class="string">"counter"</span>).unwrap().get(), <span class="number">42</span>);
+        <span class="macro">assert_eq!</span>(metrics.get_gauge(<span class="string">"gauge"</span>).unwrap().get(), <span class="number">100</span>);
         <span class="macro">assert_eq!</span>(
-            metrics.get_histogram(<span class="string">&quot;histogram&quot;</span>).unwrap().sample_count(),
+            metrics.get_histogram(<span class="string">"histogram"</span>).unwrap().sample_count(),
             <span class="number">2
         </span>);
-        <span class="macro">assert_eq!</span>(metrics.get_histogram(<span class="string">&quot;histogram&quot;</span>).unwrap().sum(), <span class="number">42f64</span>);
-        <span class="macro">assert_eq!</span>(metrics.get_histogram(<span class="string">&quot;histogram&quot;</span>).unwrap().mean(), <span class="number">21f64</span>);
-        <span class="macro">assert_eq!</span>(metrics.get_label(<span class="string">&quot;label&quot;</span>).unwrap().get(), <span class="string">&quot;another&quot;</span>);
+        <span class="macro">assert_eq!</span>(metrics.get_histogram(<span class="string">"histogram"</span>).unwrap().sum(), <span class="number">42f64</span>);
+        <span class="macro">assert_eq!</span>(metrics.get_histogram(<span class="string">"histogram"</span>).unwrap().mean(), <span class="number">21f64</span>);
+        <span class="macro">assert_eq!</span>(metrics.get_label(<span class="string">"label"</span>).unwrap().get(), <span class="string">"another"</span>);
 
         <span class="comment">// Export to a Prometheus string.
         </span><span class="kw">let </span>string = metrics.export().unwrap();
         <span class="comment">// Make sure the output makes sense.
         </span><span class="kw">let </span>lines = string.lines().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-        <span class="macro">assert!</span>(lines.contains(<span class="kw-2">&amp;</span><span class="string">&quot;counter 42&quot;</span>));
-        <span class="macro">assert!</span>(lines.contains(<span class="kw-2">&amp;</span><span class="string">&quot;gauge 100&quot;</span>));
-        <span class="macro">assert!</span>(lines.contains(<span class="kw-2">&amp;</span><span class="string">&quot;histogram_sum 42&quot;</span>));
-        <span class="macro">assert!</span>(lines.contains(<span class="kw-2">&amp;</span><span class="string">&quot;histogram_count 2&quot;</span>));
-        <span class="macro">assert!</span>(lines.contains(<span class="kw-2">&amp;</span><span class="string">&quot;# LABEL label another&quot;</span>));
+        <span class="macro">assert!</span>(lines.contains(<span class="kw-2">&amp;</span><span class="string">"counter 42"</span>));
+        <span class="macro">assert!</span>(lines.contains(<span class="kw-2">&amp;</span><span class="string">"gauge 100"</span>));
+        <span class="macro">assert!</span>(lines.contains(<span class="kw-2">&amp;</span><span class="string">"histogram_sum 42"</span>));
+        <span class="macro">assert!</span>(lines.contains(<span class="kw-2">&amp;</span><span class="string">"histogram_count 2"</span>));
+        <span class="macro">assert!</span>(lines.contains(<span class="kw-2">&amp;</span><span class="string">"# LABEL label another"</span>));
     }
 
     <span class="attr">#[test]
@@ -996,52 +997,52 @@
         setup_test();
 
         <span class="kw">let </span>metrics = PrometheusMetrics::default();
-        <span class="kw">let </span>subgroup1 = metrics.subgroup(<span class="string">&quot;subgroup1&quot;</span>.into());
-        <span class="kw">let </span>subgroup2 = subgroup1.subgroup(<span class="string">&quot;subgroup2&quot;</span>.into());
-        <span class="kw">let </span>counter = subgroup2.create_counter(<span class="string">&quot;counter&quot;</span>.into(), <span class="prelude-val">None</span>);
-        <span class="kw">let </span>label = subgroup2.create_label(<span class="string">&quot;label&quot;</span>.into());
+        <span class="kw">let </span>subgroup1 = metrics.subgroup(<span class="string">"subgroup1"</span>.into());
+        <span class="kw">let </span>subgroup2 = subgroup1.subgroup(<span class="string">"subgroup2"</span>.into());
+        <span class="kw">let </span>counter = subgroup2.create_counter(<span class="string">"counter"</span>.into(), <span class="prelude-val">None</span>);
+        <span class="kw">let </span>label = subgroup2.create_label(<span class="string">"label"</span>.into());
         counter.add(<span class="number">42</span>);
-        label.set(<span class="string">&quot;value&quot;</span>.into());
+        label.set(<span class="string">"value"</span>.into());
 
         <span class="comment">// Check namespacing.
         </span><span class="macro">assert_eq!</span>(
-            metrics.get_subgroup([<span class="string">&quot;subgroup1&quot;</span>]).unwrap().namespace,
-            [<span class="string">&quot;subgroup1&quot;</span>]
+            metrics.get_subgroup([<span class="string">"subgroup1"</span>]).unwrap().namespace,
+            [<span class="string">"subgroup1"</span>]
         );
         <span class="macro">assert_eq!</span>(
             metrics
-                .get_subgroup([<span class="string">&quot;subgroup1&quot;</span>, <span class="string">&quot;subgroup2&quot;</span>])
+                .get_subgroup([<span class="string">"subgroup1"</span>, <span class="string">"subgroup2"</span>])
                 .unwrap()
                 .namespace,
-            [<span class="string">&quot;subgroup1&quot;</span>, <span class="string">&quot;subgroup2&quot;</span>]
+            [<span class="string">"subgroup1"</span>, <span class="string">"subgroup2"</span>]
         );
         <span class="macro">assert_eq!</span>(
             metrics
-                .get_subgroup([<span class="string">&quot;subgroup1&quot;</span>])
+                .get_subgroup([<span class="string">"subgroup1"</span>])
                 .unwrap()
-                .get_subgroup([<span class="string">&quot;subgroup2&quot;</span>])
+                .get_subgroup([<span class="string">"subgroup2"</span>])
                 .unwrap()
                 .namespace,
-            [<span class="string">&quot;subgroup1&quot;</span>, <span class="string">&quot;subgroup2&quot;</span>]
+            [<span class="string">"subgroup1"</span>, <span class="string">"subgroup2"</span>]
         );
 
         <span class="comment">// Check different ways of accessing the counter.
         </span><span class="macro">assert_eq!</span>(
             metrics
-                .get_subgroup([<span class="string">&quot;subgroup1&quot;</span>, <span class="string">&quot;subgroup2&quot;</span>])
+                .get_subgroup([<span class="string">"subgroup1"</span>, <span class="string">"subgroup2"</span>])
                 .unwrap()
-                .get_counter(<span class="string">&quot;counter&quot;</span>)
+                .get_counter(<span class="string">"counter"</span>)
                 .unwrap()
                 .get(),
             <span class="number">42
         </span>);
         <span class="macro">assert_eq!</span>(
             metrics
-                .get_subgroup([<span class="string">&quot;subgroup1&quot;</span>])
+                .get_subgroup([<span class="string">"subgroup1"</span>])
                 .unwrap()
-                .get_subgroup([<span class="string">&quot;subgroup2&quot;</span>])
+                .get_subgroup([<span class="string">"subgroup2"</span>])
                 .unwrap()
-                .get_counter(<span class="string">&quot;counter&quot;</span>)
+                .get_counter(<span class="string">"counter"</span>)
                 .unwrap()
                 .get(),
             <span class="number">42
@@ -1052,28 +1053,28 @@
             .export()
             .unwrap()
             .lines()
-            .contains(<span class="kw-2">&amp;</span><span class="string">&quot;subgroup1_subgroup2_counter 42&quot;</span>));
+            .contains(<span class="kw-2">&amp;</span><span class="string">"subgroup1_subgroup2_counter 42"</span>));
 
         <span class="comment">// Check different ways of accessing the label.
         </span><span class="macro">assert_eq!</span>(
             metrics
-                .get_subgroup([<span class="string">&quot;subgroup1&quot;</span>, <span class="string">&quot;subgroup2&quot;</span>])
+                .get_subgroup([<span class="string">"subgroup1"</span>, <span class="string">"subgroup2"</span>])
                 .unwrap()
-                .get_label(<span class="string">&quot;label&quot;</span>)
+                .get_label(<span class="string">"label"</span>)
                 .unwrap()
                 .get(),
-            <span class="string">&quot;value&quot;
+            <span class="string">"value"
         </span>);
         <span class="macro">assert_eq!</span>(
             metrics
-                .get_subgroup([<span class="string">&quot;subgroup1&quot;</span>])
+                .get_subgroup([<span class="string">"subgroup1"</span>])
                 .unwrap()
-                .get_subgroup([<span class="string">&quot;subgroup2&quot;</span>])
+                .get_subgroup([<span class="string">"subgroup2"</span>])
                 .unwrap()
-                .get_label(<span class="string">&quot;label&quot;</span>)
+                .get_label(<span class="string">"label"</span>)
                 .unwrap()
                 .get(),
-            <span class="string">&quot;value&quot;
+            <span class="string">"value"
         </span>);
 
         <span class="comment">// Check fully-qualified label name in export.
@@ -1081,7 +1082,7 @@
             .export()
             .unwrap()
             .lines()
-            .contains(<span class="kw-2">&amp;</span><span class="string">&quot;# LABEL subgroup1_subgroup2_label value&quot;</span>));
+            .contains(<span class="kw-2">&amp;</span><span class="string">"# LABEL subgroup1_subgroup2_label value"</span>));
     }
 }
 </code></pre></div></section></main></body></html>

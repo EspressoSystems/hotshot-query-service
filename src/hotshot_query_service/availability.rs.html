@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/availability.rs`."><title>availability.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/availability.rs`."><title>availability.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -765,7 +766,7 @@
 
 <span class="attr">#[derive(Args, Default)]
 </span><span class="kw">pub struct </span>Options {
-    <span class="attr">#[arg(long = <span class="string">&quot;availability-api-path&quot;</span>, env = <span class="string">&quot;HOTSHOT_AVAILABILITY_API_PATH&quot;</span>)]
+    <span class="attr">#[arg(long = <span class="string">"availability-api-path"</span>, env = <span class="string">"HOTSHOT_AVAILABILITY_API_PATH"</span>)]
     </span><span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
 
     <span class="doccomment">/// Timeout for failing requests due to missing data.
@@ -774,9 +775,9 @@
     /// external provider. This parameter controls how long the request handler will wait for
     /// missing data to be fetched before giving up and failing the request.
     </span><span class="attr">#[arg(
-        long = <span class="string">&quot;availability-fetch-timeout&quot;</span>,
-        env = <span class="string">&quot;HOTSHOT_AVAILABILITY_FETCH_TIMEOUT&quot;</span>,
-        default_value = <span class="string">&quot;500ms&quot;</span>,
+        long = <span class="string">"availability-fetch-timeout"</span>,
+        env = <span class="string">"HOTSHOT_AVAILABILITY_FETCH_TIMEOUT"</span>,
+        default_value = <span class="string">"500ms"</span>,
         value_parser = parse_duration,
     )]
     </span><span class="kw">pub </span>fetch_timeout: Duration,
@@ -786,9 +787,9 @@
     /// These optional files may contain route definitions for application-specific routes that have
     /// been added as extensions to the basic availability API.
     </span><span class="attr">#[arg(
-        long = <span class="string">&quot;availability-extension&quot;</span>,
-        env = <span class="string">&quot;HOTSHOT_AVAILABILITY_EXTENSIONS&quot;</span>,
-        value_delimiter = <span class="string">&#39;,&#39;
+        long = <span class="string">"availability-extension"</span>,
+        env = <span class="string">"HOTSHOT_AVAILABILITY_EXTENSIONS"</span>,
+        value_delimiter = <span class="string">','
     </span>)]
     </span><span class="kw">pub </span>extensions: Vec&lt;toml::Value&gt;,
 }
@@ -812,22 +813,22 @@
     Request {
         source: RequestError,
     },
-    <span class="attr">#[snafu(display(<span class="string">&quot;leaf {resource} missing or not available&quot;</span>))]
+    <span class="attr">#[snafu(display(<span class="string">"leaf {resource} missing or not available"</span>))]
     #[from(ignore)]
     </span>FetchLeaf {
         resource: String,
     },
-    <span class="attr">#[snafu(display(<span class="string">&quot;block {resource} missing or not available&quot;</span>))]
+    <span class="attr">#[snafu(display(<span class="string">"block {resource} missing or not available"</span>))]
     #[from(ignore)]
     </span>FetchBlock {
         resource: String,
     },
-    <span class="attr">#[snafu(display(<span class="string">&quot;transaction {resource} missing or not available&quot;</span>))]
+    <span class="attr">#[snafu(display(<span class="string">"transaction {resource} missing or not available"</span>))]
     #[from(ignore)]
     </span>FetchTransaction {
         resource: String,
     },
-    <span class="attr">#[snafu(display(<span class="string">&quot;transaction index {index} out of range for block {height}&quot;</span>))]
+    <span class="attr">#[snafu(display(<span class="string">"transaction index {index} out of range for block {height}"</span>))]
     #[from(ignore)]
     </span>InvalidTransactionIndex {
         height: u64,
@@ -861,23 +862,23 @@
 
 <span class="kw">pub fn </span>define_api&lt;State, Types: NodeType&gt;(options: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt;
 <span class="kw">where
-    </span>State: <span class="lifetime">&#39;static </span>+ Send + Sync + ReadState,
+    </span>State: <span class="lifetime">'static </span>+ Send + Sync + ReadState,
     &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + AvailabilityDataSource&lt;Types&gt;,
     Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error&gt;(
         options.api_path.as_ref(),
-        <span class="macro">include_str!</span>(<span class="string">&quot;../api/availability.toml&quot;</span>),
+        <span class="macro">include_str!</span>(<span class="string">"../api/availability.toml"</span>),
         options.extensions.clone(),
     )<span class="question-mark">?</span>;
     <span class="kw">let </span>timeout = options.fetch_timeout;
 
-    api.with_version(<span class="string">&quot;0.0.1&quot;</span>.parse().unwrap())
-        .get(<span class="string">&quot;get_leaf&quot;</span>, <span class="kw">move </span>|req, state| {
+    api.with_version(<span class="string">"0.0.1"</span>.parse().unwrap())
+        .get(<span class="string">"get_leaf"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>id = <span class="kw">match </span>req.opt_integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">? </span>{
+                <span class="kw">let </span>id = <span class="kw">match </span>req.opt_integer_param(<span class="string">"height"</span>)<span class="question-mark">? </span>{
                     <span class="prelude-val">Some</span>(height) =&gt; LeafId::Number(height),
-                    <span class="prelude-val">None </span>=&gt; LeafId::Hash(req.blob_param(<span class="string">&quot;hash&quot;</span>)<span class="question-mark">?</span>),
+                    <span class="prelude-val">None </span>=&gt; LeafId::Hash(req.blob_param(<span class="string">"hash"</span>)<span class="question-mark">?</span>),
                 };
                 state
                     .get_leaf(id)
@@ -890,9 +891,9 @@
             }
             .boxed()
         })<span class="question-mark">?
-        </span>.stream(<span class="string">&quot;stream_leaves&quot;</span>, <span class="kw">move </span>|req, state| {
+        </span>.stream(<span class="string">"stream_leaves"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>height = req.integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>height = req.integer_param(<span class="string">"height"</span>)<span class="question-mark">?</span>;
                 state
                     .read(|state| {
                         <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(state.subscribe_leaves(height).<span class="kw">await</span>.map(<span class="prelude-val">Ok</span>)) }.boxed()
@@ -902,14 +903,14 @@
             .try_flatten_stream()
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">&quot;get_header&quot;</span>, <span class="kw">move </span>|req, state| {
+        </span>.get(<span class="string">"get_header"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(height) = req.opt_integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">? </span>{
+                <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(height) = req.opt_integer_param(<span class="string">"height"</span>)<span class="question-mark">? </span>{
                     BlockId::Number(height)
-                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(hash) = req.opt_blob_param(<span class="string">&quot;hash&quot;</span>)<span class="question-mark">? </span>{
+                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(hash) = req.opt_blob_param(<span class="string">"hash"</span>)<span class="question-mark">? </span>{
                     BlockId::Hash(hash)
                 } <span class="kw">else </span>{
-                    BlockId::PayloadHash(req.blob_param(<span class="string">&quot;payload-hash&quot;</span>)<span class="question-mark">?</span>)
+                    BlockId::PayloadHash(req.blob_param(<span class="string">"payload-hash"</span>)<span class="question-mark">?</span>)
                 };
                 <span class="prelude-val">Ok</span>(state
                     .get_block(id)
@@ -924,9 +925,9 @@
             }
             .boxed()
         })<span class="question-mark">?
-        </span>.stream(<span class="string">&quot;stream_headers&quot;</span>, <span class="kw">move </span>|req, state| {
+        </span>.stream(<span class="string">"stream_headers"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>height = req.integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>height = req.integer_param(<span class="string">"height"</span>)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(state
                     .read(|state| {
                         <span class="kw">async move </span>{
@@ -942,14 +943,14 @@
             .try_flatten_stream()
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">&quot;get_block&quot;</span>, <span class="kw">move </span>|req, state| {
+        </span>.get(<span class="string">"get_block"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(height) = req.opt_integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">? </span>{
+                <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(height) = req.opt_integer_param(<span class="string">"height"</span>)<span class="question-mark">? </span>{
                     BlockId::Number(height)
-                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(hash) = req.opt_blob_param(<span class="string">&quot;hash&quot;</span>)<span class="question-mark">? </span>{
+                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(hash) = req.opt_blob_param(<span class="string">"hash"</span>)<span class="question-mark">? </span>{
                     BlockId::Hash(hash)
                 } <span class="kw">else </span>{
-                    BlockId::PayloadHash(req.blob_param(<span class="string">&quot;payload-hash&quot;</span>)<span class="question-mark">?</span>)
+                    BlockId::PayloadHash(req.blob_param(<span class="string">"payload-hash"</span>)<span class="question-mark">?</span>)
                 };
                 state
                     .get_block(id)
@@ -962,9 +963,9 @@
             }
             .boxed()
         })<span class="question-mark">?
-        </span>.stream(<span class="string">&quot;stream_blocks&quot;</span>, <span class="kw">move </span>|req, state| {
+        </span>.stream(<span class="string">"stream_blocks"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>height = req.integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>height = req.integer_param(<span class="string">"height"</span>)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(state
                     .read(|state| {
                         <span class="kw">async move </span>{ state.subscribe_blocks(height).<span class="kw">await</span>.map(<span class="prelude-val">Ok</span>) }.boxed()
@@ -974,14 +975,14 @@
             .try_flatten_stream()
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">&quot;get_payload&quot;</span>, <span class="kw">move </span>|req, state| {
+        </span>.get(<span class="string">"get_payload"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(height) = req.opt_integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">? </span>{
+                <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(height) = req.opt_integer_param(<span class="string">"height"</span>)<span class="question-mark">? </span>{
                     BlockId::Number(height)
-                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(hash) = req.opt_blob_param(<span class="string">&quot;hash&quot;</span>)<span class="question-mark">? </span>{
+                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(hash) = req.opt_blob_param(<span class="string">"hash"</span>)<span class="question-mark">? </span>{
                     BlockId::PayloadHash(hash)
                 } <span class="kw">else </span>{
-                    BlockId::Hash(req.blob_param(<span class="string">&quot;block-hash&quot;</span>)<span class="question-mark">?</span>)
+                    BlockId::Hash(req.blob_param(<span class="string">"block-hash"</span>)<span class="question-mark">?</span>)
                 };
                 state
                     .get_payload(id)
@@ -994,9 +995,9 @@
             }
             .boxed()
         })<span class="question-mark">?
-        </span>.stream(<span class="string">&quot;stream_payloads&quot;</span>, <span class="kw">move </span>|req, state| {
+        </span>.stream(<span class="string">"stream_payloads"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>height = req.integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>height = req.integer_param(<span class="string">"height"</span>)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(state
                     .read(|state| {
                         <span class="kw">async move </span>{ state.subscribe_payloads(height).<span class="kw">await</span>.map(<span class="prelude-val">Ok</span>) }.boxed()
@@ -1006,9 +1007,9 @@
             .try_flatten_stream()
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">&quot;get_transaction&quot;</span>, <span class="kw">move </span>|req, state| {
+        </span>.get(<span class="string">"get_transaction"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>(block, index) = <span class="kw">match </span>req.opt_blob_param(<span class="string">&quot;hash&quot;</span>)<span class="question-mark">? </span>{
+                <span class="kw">let </span>(block, index) = <span class="kw">match </span>req.opt_blob_param(<span class="string">"hash"</span>)<span class="question-mark">? </span>{
                     <span class="prelude-val">Some</span>(hash) =&gt; state
                         .get_block_with_transaction(hash)
                         .<span class="kw">await
@@ -1018,7 +1019,7 @@
                             resource: hash.to_string(),
                         })<span class="question-mark">?</span>,
                     <span class="prelude-val">None </span>=&gt; {
-                        <span class="kw">let </span>height = req.integer_param(<span class="string">&quot;height&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>height = req.integer_param(<span class="string">"height"</span>)<span class="question-mark">?</span>;
                         <span class="kw">let </span>id = BlockId::Number(height);
                         <span class="kw">let </span>block = state
                             .get_block(id)
@@ -1028,7 +1029,7 @@
                             </span>.context(FetchBlockSnafu {
                                 resource: id.to_string(),
                             })<span class="question-mark">?</span>;
-                        <span class="kw">let </span>i = req.integer_param(<span class="string">&quot;index&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>i = req.integer_param(<span class="string">"index"</span>)<span class="question-mark">?</span>;
                         <span class="kw">let </span>index = block.payload().nth(block.metadata(), i).context(
                             InvalidTransactionIndexSnafu {
                                 height: height <span class="kw">as </span>u64,
@@ -1084,13 +1085,13 @@
         <span class="comment">// Ignore the genesis block (start from height 1).
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>.. {
             <span class="kw">match </span>client
-                .get::&lt;BlockQueryData&lt;MockTypes&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;block/{}&quot;</span>, i))
+                .get::&lt;BlockQueryData&lt;MockTypes&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"block/{}"</span>, i))
                 .send()
                 .<span class="kw">await
             </span>{
                 <span class="prelude-val">Ok</span>(block) =&gt; {
                     <span class="kw">if </span>!block.is_empty() {
-                        <span class="kw">let </span>leaf = client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;leaf/{}&quot;</span>, i)).send().<span class="kw">await</span>.unwrap();
+                        <span class="kw">let </span>leaf = client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"leaf/{}"</span>, i)).send().<span class="kw">await</span>.unwrap();
                         blocks.push((leaf, block));
                     }
                 }
@@ -1098,11 +1099,11 @@
                     source: <span class="kw">super</span>::Error::FetchBlock { .. },
                 }) =&gt; {
                     <span class="macro">tracing::info!</span>(
-                        <span class="string">&quot;found end of ledger at height {i}, non-empty blocks are {blocks:?}&quot;</span>,
+                        <span class="string">"found end of ledger at height {i}, non-empty blocks are {blocks:?}"</span>,
                     );
                     <span class="kw">return </span>(i, blocks);
                 }
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;unexpected error {}&quot;</span>, err),
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">panic!</span>(<span class="string">"unexpected error {}"</span>, err),
             }
         }
         <span class="macro">unreachable!</span>()
@@ -1116,16 +1117,16 @@
             </span><span class="kw">if </span>![<span class="number">0</span>, <span class="number">1</span>, height / <span class="number">2</span>, height - <span class="number">1</span>].contains(<span class="kw-2">&amp;</span>i) {
                 <span class="kw">continue</span>;
             }
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;validate block {i}/{height}&quot;</span>);
+            <span class="macro">tracing::info!</span>(<span class="string">"validate block {i}/{height}"</span>);
 
             <span class="comment">// Check that looking up the leaf various ways returns the correct leaf.
             </span><span class="kw">let </span>leaf: LeafQueryData&lt;MockTypes&gt; =
-                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;leaf/{}&quot;</span>, i)).send().<span class="kw">await</span>.unwrap();
+                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"leaf/{}"</span>, i)).send().<span class="kw">await</span>.unwrap();
             <span class="macro">assert_eq!</span>(leaf.height(), i);
             <span class="macro">assert_eq!</span>(
                 leaf,
                 client
-                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;leaf/hash/{}&quot;</span>, leaf.hash()))
+                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"leaf/hash/{}"</span>, leaf.hash()))
                     .send()
                     .<span class="kw">await
                     </span>.unwrap()
@@ -1133,51 +1134,51 @@
 
             <span class="comment">// Check that looking up the block various ways returns the correct block.
             </span><span class="kw">let </span>block: BlockQueryData&lt;MockTypes&gt; =
-                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;block/{}&quot;</span>, i)).send().<span class="kw">await</span>.unwrap();
+                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"block/{}"</span>, i)).send().<span class="kw">await</span>.unwrap();
             <span class="kw">let </span>expected_payload = PayloadQueryData::from(block.clone());
             <span class="macro">assert_eq!</span>(leaf.block_hash(), block.hash());
             <span class="macro">assert_eq!</span>(block.height(), i);
             <span class="macro">assert_eq!</span>(
                 block,
                 client
-                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;block/hash/{}&quot;</span>, block.hash()))
+                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"block/hash/{}"</span>, block.hash()))
                     .send()
                     .<span class="kw">await
                     </span>.unwrap()
             );
             <span class="macro">assert_eq!</span>(
                 <span class="kw-2">*</span>block.header(),
-                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;header/{i}&quot;</span>)).send().<span class="kw">await</span>.unwrap()
+                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"header/{i}"</span>)).send().<span class="kw">await</span>.unwrap()
             );
             <span class="macro">assert_eq!</span>(
                 <span class="kw-2">*</span>block.header(),
                 client
-                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;header/hash/{}&quot;</span>, block.hash()))
+                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"header/hash/{}"</span>, block.hash()))
                     .send()
                     .<span class="kw">await
                     </span>.unwrap()
             );
             <span class="macro">assert_eq!</span>(
                 expected_payload,
-                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;payload/{i}&quot;</span>)).send().<span class="kw">await</span>.unwrap(),
+                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"payload/{i}"</span>)).send().<span class="kw">await</span>.unwrap(),
             );
             <span class="macro">assert_eq!</span>(
                 expected_payload,
                 client
-                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;payload/block-hash/{}&quot;</span>, block.hash()))
+                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"payload/block-hash/{}"</span>, block.hash()))
                     .send()
                     .<span class="kw">await
                     </span>.unwrap(),
             );
             <span class="comment">// We should be able to look up the block by payload hash. Note that for duplicate
             // payloads, these endpoints may return a different block with the same payload, which
-            // is acceptable. Therefore, we don&#39;t check equivalence of the entire `BlockQueryData`
+            // is acceptable. Therefore, we don't check equivalence of the entire `BlockQueryData`
             // response, only its payload.
             </span><span class="macro">assert_eq!</span>(
                 block.payload(),
                 client
                     .get::&lt;BlockQueryData&lt;MockTypes&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                        <span class="string">&quot;block/payload-hash/{}&quot;</span>,
+                        <span class="string">"block/payload-hash/{}"</span>,
                         block.payload_hash()
                     ))
                     .send()
@@ -1189,7 +1190,7 @@
                 block.payload_hash(),
                 client
                     .get::&lt;Header&lt;MockTypes&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                        <span class="string">&quot;header/payload-hash/{}&quot;</span>,
+                        <span class="string">"header/payload-hash/{}"</span>,
                         block.payload_hash()
                     ))
                     .send()
@@ -1201,7 +1202,7 @@
                 block.payload(),
                 client
                     .get::&lt;PayloadQueryData&lt;MockTypes&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                        <span class="string">&quot;payload/hash/{}&quot;</span>,
+                        <span class="string">"payload/hash/{}"</span>,
                         block.payload_hash()
                     ))
                     .send()
@@ -1214,7 +1215,7 @@
             // transaction.
             </span><span class="kw">for </span>(j, txn_from_block) <span class="kw">in </span>block.enumerate() {
                 <span class="kw">let </span>txn: TransactionQueryData&lt;MockTypes&gt; = client
-                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;transaction/{}/{}&quot;</span>, i, j))
+                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"transaction/{}/{}"</span>, i, j))
                     .send()
                     .<span class="kw">await
                     </span>.unwrap();
@@ -1224,13 +1225,13 @@
                 <span class="macro">assert_eq!</span>(txn.transaction(), <span class="kw-2">&amp;</span>txn_from_block);
                 <span class="comment">// We should be able to look up the transaction by hash. Note that for duplicate
                 // transactions, this endpoint may return a different transaction with the same
-                // hash, which is acceptable. Therefore, we don&#39;t check equivalence of the entire
+                // hash, which is acceptable. Therefore, we don't check equivalence of the entire
                 // `TransactionQueryData` response, only its commitment.
                 </span><span class="macro">assert_eq!</span>(
                     txn.hash(),
                     client
                         .get::&lt;TransactionQueryData&lt;MockTypes&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                            <span class="string">&quot;transaction/hash/{}&quot;</span>,
+                            <span class="string">"transaction/hash/{}"</span>,
                             txn.hash()
                         ))
                         .send()
@@ -1247,8 +1248,8 @@
         test_api_helper::&lt;MockDataSource&gt;(Duration::from_millis(<span class="number">500</span>)).<span class="kw">await</span>;
     }
 
-    <span class="comment">// This test runs the `postgres` Docker image, which doesn&#39;t work on Windows.
-    </span><span class="attr">#[cfg(not(target_os = <span class="string">&quot;windows&quot;</span>))]
+    <span class="comment">// This test runs the `postgres` Docker image, which doesn't work on Windows.
+    </span><span class="attr">#[cfg(not(target_os = <span class="string">"windows"</span>))]
     #[async_std::test]
     </span><span class="kw">async fn </span>test_api_no_storage() {
         <span class="comment">// With a long enough fetch timeout, we can run the API without any local storage and it
@@ -1272,7 +1273,7 @@
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
-            <span class="string">&quot;availability&quot;</span>,
+            <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Options {
                 fetch_timeout,
                 ..Default::default()
@@ -1280,11 +1281,11 @@
             .unwrap(),
         )
         .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, port)));
+        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
         <span class="comment">// Start a client.
         </span><span class="kw">let </span>client = Client::&lt;Error&gt;::new(
-            <span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}/availability&quot;</span>, port)
+            <span class="macro">format!</span>(<span class="string">"http://localhost:{}/availability"</span>, port)
                 .parse()
                 .unwrap(),
         );
@@ -1294,17 +1295,17 @@
         <span class="comment">// Submit a few blocks and make sure each one gets reflected in the query service and
         // preserves the consistency of the data and indices.
         </span><span class="kw">let </span>leaves = client
-            .socket(<span class="string">&quot;stream/leaves/0&quot;</span>)
+            .socket(<span class="string">"stream/leaves/0"</span>)
             .subscribe::&lt;LeafQueryData&lt;MockTypes&gt;&gt;()
             .<span class="kw">await
             </span>.unwrap();
         <span class="kw">let </span>headers = client
-            .socket(<span class="string">&quot;stream/headers/0&quot;</span>)
+            .socket(<span class="string">"stream/headers/0"</span>)
             .subscribe::&lt;Header&lt;MockTypes&gt;&gt;()
             .<span class="kw">await
             </span>.unwrap();
         <span class="kw">let </span>blocks = client
-            .socket(<span class="string">&quot;stream/blocks/0&quot;</span>)
+            .socket(<span class="string">"stream/blocks/0"</span>)
             .subscribe::&lt;BlockQueryData&lt;MockTypes&gt;&gt;()
             .<span class="kw">await
             </span>.unwrap();
@@ -1315,10 +1316,10 @@
 
             <span class="comment">// Wait for the transaction to be finalized.
             </span><span class="kw">let </span>(i, leaf, block) = <span class="kw">loop </span>{
-                <span class="macro">tracing::info!</span>(<span class="string">&quot;waiting for block with transaction {}&quot;</span>, nonce);
+                <span class="macro">tracing::info!</span>(<span class="string">"waiting for block with transaction {}"</span>, nonce);
                 <span class="kw">let </span>(i, (leaf, (header, block))) = chain.next().<span class="kw">await</span>.unwrap();
                 <span class="macro">tracing::info!</span>(
-                    <span class="string">&quot;got block {}\nLeaf: {:?}\nHeader: {:?}\nBlock: {:?}&quot;</span>,
+                    <span class="string">"got block {}\nLeaf: {:?}\nHeader: {:?}\nBlock: {:?}"</span>,
                     i,
                     leaf,
                     header,
@@ -1336,11 +1337,11 @@
             };
             <span class="macro">assert_eq!</span>(
                 leaf,
-                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;leaf/{}&quot;</span>, i)).send().<span class="kw">await</span>.unwrap()
+                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"leaf/{}"</span>, i)).send().<span class="kw">await</span>.unwrap()
             );
             <span class="macro">assert_eq!</span>(
                 block,
-                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;block/{}&quot;</span>, i)).send().<span class="kw">await</span>.unwrap()
+                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"block/{}"</span>, i)).send().<span class="kw">await</span>.unwrap()
             );
             validate(<span class="kw-2">&amp;</span>client, (i + <span class="number">1</span>) <span class="kw">as </span>u64).<span class="kw">await</span>;
         }
@@ -1352,7 +1353,7 @@
     </span><span class="kw">async fn </span>test_extensions() {
         setup_test();
 
-        <span class="kw">let </span>dir = TempDir::new(<span class="string">&quot;test_availability_extensions&quot;</span>).unwrap();
+        <span class="kw">let </span>dir = TempDir::new(<span class="string">"test_availability_extensions"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = ExtensibleDataSource::new(
             MockDataSource::create(dir.path(), Default::default())
                 .<span class="kw">await
@@ -1379,13 +1380,13 @@
         <span class="comment">// Create the API extensions specification.
         </span><span class="kw">let </span>extensions = <span class="macro">toml! </span>{
             [route.post_ext]
-            PATH = [<span class="string">&quot;/ext/:val&quot;</span>]
-            METHOD = <span class="string">&quot;POST&quot;
-            &quot;:val&quot; </span>= <span class="string">&quot;Integer&quot;
+            PATH = [<span class="string">"/ext/:val"</span>]
+            METHOD = <span class="string">"POST"
+            ":val" </span>= <span class="string">"Integer"
 
             </span>[route.get_ext]
-            PATH = [<span class="string">&quot;/ext&quot;</span>]
-            METHOD = <span class="string">&quot;GET&quot;
+            PATH = [<span class="string">"/ext"</span>]
+            METHOD = <span class="string">"GET"
         </span>};
 
         <span class="kw">let </span><span class="kw-2">mut </span>api =
@@ -1394,13 +1395,13 @@
                 ..Default::default()
             })
             .unwrap();
-        api.get(<span class="string">&quot;get_ext&quot;</span>, |<span class="kw">_</span>, state| {
+        api.get(<span class="string">"get_ext"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>state.as_ref()) }.boxed()
         })
         .unwrap()
-        .post(<span class="string">&quot;post_ext&quot;</span>, |req, state| {
+        .post(<span class="string">"post_ext"</span>, |req, state| {
             <span class="kw">async move </span>{
-                <span class="kw-2">*</span>state.as_mut() = req.integer_param(<span class="string">&quot;val&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw-2">*</span>state.as_mut() = req.integer_param(<span class="string">"val"</span>)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(())
             }
             .boxed()
@@ -1408,26 +1409,26 @@
         .unwrap();
 
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(RwLock::new(data_source));
-        app.register_module(<span class="string">&quot;availability&quot;</span>, api).unwrap();
+        app.register_module(<span class="string">"availability"</span>, api).unwrap();
 
         <span class="kw">let </span>port = pick_unused_port().unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, port)));
+        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
         <span class="kw">let </span>client = Client::&lt;Error&gt;::new(
-            <span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}/availability&quot;</span>, port)
+            <span class="macro">format!</span>(<span class="string">"http://localhost:{}/availability"</span>, port)
                 .parse()
                 .unwrap(),
         );
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
-        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
-        client.post::&lt;()&gt;(<span class="string">&quot;ext/42&quot;</span>).send().<span class="kw">await</span>.unwrap();
-        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">&quot;ext&quot;</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
+        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"ext"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
+        client.post::&lt;()&gt;(<span class="string">"ext/42"</span>).send().<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"ext"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
 
         <span class="comment">// Ensure we can still access the built-in functionality.
         </span><span class="macro">assert_eq!</span>(
             client
-                .get::&lt;MockHeader&gt;(<span class="string">&quot;header/0&quot;</span>)
+                .get::&lt;MockHeader&gt;(<span class="string">"header/0"</span>)
                 .send()
                 .<span class="kw">await
                 </span>.unwrap()
