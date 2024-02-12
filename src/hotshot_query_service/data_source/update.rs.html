@@ -129,6 +129,10 @@
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
 <a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -142,9 +146,12 @@
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
 </span><span class="doccomment">//! A generic algorithm for updating a HotShot Query Service data source with new data.
-</span><span class="kw">use </span><span class="kw">crate</span>::availability::{BlockQueryData, LeafQueryData, UpdateAvailabilityData};
+</span><span class="kw">use </span><span class="kw">crate</span>::availability::{
+    BlockQueryData, LeafQueryData, QueryablePayload, UpdateAvailabilityData,
+};
 <span class="kw">use </span><span class="kw">crate</span>::node::UpdateNodeData;
 <span class="kw">use </span><span class="kw">crate</span>::status::UpdateStatusData;
+<span class="kw">use </span><span class="kw">crate</span>::Payload;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>hotshot::types::{Event, EventType};
 <span class="kw">use </span>hotshot_types::traits::{block_contents::BlockHeader, node_implementation::NodeType};
@@ -190,6 +197,7 @@
         + UpdateNodeData&lt;Types, Error = &lt;<span class="self">Self </span><span class="kw">as </span>UpdateAvailabilityData&lt;Types&gt;&gt;::Error&gt;
         + UpdateStatusData
         + Send,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">async fn </span>update(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,

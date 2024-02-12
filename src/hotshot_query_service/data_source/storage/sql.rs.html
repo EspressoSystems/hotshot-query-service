@@ -1600,6 +1600,10 @@
 <a href="#1599" id="1599">1599</a>
 <a href="#1600" id="1600">1600</a>
 <a href="#1601" id="1601">1601</a>
+<a href="#1602" id="1602">1602</a>
+<a href="#1603" id="1603">1603</a>
+<a href="#1604" id="1604">1604</a>
+<a href="#1605" id="1605">1605</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1617,8 +1621,8 @@
 </span><span class="kw">use </span><span class="kw">super</span>::AvailabilityStorage;
 <span class="kw">use crate</span>::{
     availability::{
-        BlockId, BlockQueryData, LeafId, LeafQueryData, PayloadQueryData, QueryablePayload,
-        TransactionHash, TransactionIndex, UpdateAvailabilityData,
+        get_proposer, BlockId, BlockQueryData, LeafId, LeafQueryData, PayloadQueryData,
+        QueryablePayload, TransactionHash, TransactionIndex, UpdateAvailabilityData,
     },
     data_source::VersionedDataSource,
     node::{NodeDataSource, SyncStatus, UpdateNodeData},
@@ -2777,6 +2781,7 @@
 <span class="kw">fn </span>parse_block&lt;Types&gt;(row: Row) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;
 <span class="kw">where
     </span>Types: NodeType,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="comment">// First, check if we have the payload for this block yet.
     </span><span class="kw">let </span>size: <span class="prelude-ty">Option</span>&lt;i32&gt; = row
@@ -2815,6 +2820,8 @@
     })<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(BlockQueryData {
+        num_transactions: payload.len(header.metadata()) <span class="kw">as </span>u64,
+        proposer_id: get_proposer::&lt;Types&gt;(header.clone()),
         header,
         payload,
         size,
@@ -2827,6 +2834,7 @@
 <span class="kw">fn </span>parse_payload&lt;Types&gt;(row: Row) -&gt; QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt;
 <span class="kw">where
     </span>Types: NodeType,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     parse_block(row).map(PayloadQueryData::from)
 }
