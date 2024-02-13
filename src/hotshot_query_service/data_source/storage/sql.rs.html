@@ -1604,6 +1604,29 @@
 <a href="#1603" id="1603">1603</a>
 <a href="#1604" id="1604">1604</a>
 <a href="#1605" id="1605">1605</a>
+<a href="#1606" id="1606">1606</a>
+<a href="#1607" id="1607">1607</a>
+<a href="#1608" id="1608">1608</a>
+<a href="#1609" id="1609">1609</a>
+<a href="#1610" id="1610">1610</a>
+<a href="#1611" id="1611">1611</a>
+<a href="#1612" id="1612">1612</a>
+<a href="#1613" id="1613">1613</a>
+<a href="#1614" id="1614">1614</a>
+<a href="#1615" id="1615">1615</a>
+<a href="#1616" id="1616">1616</a>
+<a href="#1617" id="1617">1617</a>
+<a href="#1618" id="1618">1618</a>
+<a href="#1619" id="1619">1619</a>
+<a href="#1620" id="1620">1620</a>
+<a href="#1621" id="1621">1621</a>
+<a href="#1622" id="1622">1622</a>
+<a href="#1623" id="1623">1623</a>
+<a href="#1624" id="1624">1624</a>
+<a href="#1625" id="1625">1625</a>
+<a href="#1626" id="1626">1626</a>
+<a href="#1627" id="1627">1627</a>
+<a href="#1628" id="1628">1628</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1654,6 +1677,7 @@
 <span class="kw">use </span>snafu::OptionExt;
 <span class="kw">use </span>std::{
     borrow::Cow,
+    fmt::Display,
     ops::{Bound, RangeBounds},
     pin::Pin,
     str::FromStr,
@@ -2515,7 +2539,7 @@
     /// Returns an error if the database is not modified.
     </span><span class="kw">pub async fn </span>execute_one&lt;T, P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: <span class="kw-2">&amp;</span>T, params: P) -&gt; QueryResult&lt;()&gt;
     <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement,
+        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Display,
         P: IntoIterator,
         P::IntoIter: ExactSizeIterator,
         P::Item: BorrowToSql,
@@ -2526,7 +2550,10 @@
             // _something_ happened and modified the database. So we don't necessarily want the
             // caller to retry. But we do log an error, because it seems the query did something
             // different than the caller intended.
-            </span><span class="macro">tracing::error!</span>(<span class="string">"statement modified more rows ({nrows}) than expected (1)"</span>);
+            </span><span class="macro">tracing::error!</span>(
+                %statement,
+                <span class="string">"statement modified more rows ({nrows}) than expected (1)"
+            </span>);
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -2540,7 +2567,7 @@
         params: P,
     ) -&gt; QueryResult&lt;()&gt;
     <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement,
+        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Display,
         P: IntoIterator + Clone,
         P::IntoIter: ExactSizeIterator,
         P::Item: BorrowToSql,
@@ -2549,7 +2576,10 @@
         <span class="kw">let </span><span class="kw-2">mut </span>retries = <span class="number">5</span>;
 
         <span class="kw">while let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.execute_one(statement, params.clone()).<span class="kw">await </span>{
-            <span class="macro">tracing::error!</span>(<span class="string">"error in statement execution ({retries} tries remaining): {err}"</span>);
+            <span class="macro">tracing::error!</span>(
+                %statement,
+                <span class="string">"error in statement execution ({retries} tries remaining): {err}"
+            </span>);
             <span class="kw">if </span>retries == <span class="number">0 </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(err);
             }
@@ -2565,7 +2595,7 @@
     /// Returns an error if the database is not modified.
     </span><span class="kw">pub async fn </span>execute_many&lt;T, P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: <span class="kw-2">&amp;</span>T, params: P) -&gt; QueryResult&lt;u64&gt;
     <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement,
+        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Display,
         P: IntoIterator,
         P::IntoIter: ExactSizeIterator,
         P::Item: BorrowToSql,
@@ -2573,7 +2603,7 @@
         <span class="kw">let </span>nrows = <span class="self">self</span>.execute(statement, params).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">if </span>nrows == <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(QueryError::Error {
-                message: <span class="string">"statement failed: should have affected one row, but affected 0"</span>.into(),
+                message: <span class="macro">format!</span>(<span class="string">"statement failed: 0 rows affected. Statement: {statement}"</span>),
             });
         }
 
@@ -2589,7 +2619,7 @@
         params: P,
     ) -&gt; QueryResult&lt;u64&gt;
     <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement,
+        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Display,
         P: IntoIterator + Clone,
         P::IntoIter: ExactSizeIterator,
         P::Item: BorrowToSql,
@@ -2602,6 +2632,7 @@
                 <span class="prelude-val">Ok</span>(nrows) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(nrows),
                 <span class="prelude-val">Err</span>(err) =&gt; {
                     <span class="macro">tracing::error!</span>(
+                        %statement,
                         <span class="string">"error in statement execution ({retries} tries remaining): {err}"
                     </span>);
                     <span class="kw">if </span>retries == <span class="number">0 </span>{
@@ -2633,6 +2664,7 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>values = <span class="macro">vec!</span>[];
         <span class="kw">let </span><span class="kw-2">mut </span>params = <span class="macro">vec!</span>[];
+        <span class="kw">let </span><span class="kw-2">mut </span>num_rows = <span class="number">0</span>;
         <span class="kw">for </span>(row, entries) <span class="kw">in </span>rows.into_iter().enumerate() {
             <span class="kw">let </span>start = row * N;
             <span class="kw">let </span>end = (row + <span class="number">1</span>) * N;
@@ -2640,16 +2672,30 @@
 
             values.push(<span class="macro">format!</span>(<span class="string">"({row_params})"</span>));
             params.extend(entries);
+            num_rows += <span class="number">1</span>;
         }
-        <span class="kw">let </span>values = values.into_iter().join(<span class="string">","</span>);
 
+        <span class="kw">if </span>num_rows == <span class="number">0 </span>{
+            <span class="macro">tracing::warn!</span>(<span class="string">"trying to upsert 0 rows, this has no effect"</span>);
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
+        <span class="macro">tracing::debug!</span>(<span class="string">"upserting {num_rows} rows"</span>);
+
+        <span class="kw">let </span>values = values.into_iter().join(<span class="string">","</span>);
         <span class="kw">let </span>stmt = <span class="macro">format!</span>(
             <span class="string">"INSERT INTO {table} ({columns})
                   VALUES {values}
              ON CONFLICT ({pk}) DO UPDATE SET {set_columns}"
         </span>);
-        <span class="self">self</span>.execute_one_with_retries(<span class="kw-2">&amp;</span>stmt, params).<span class="kw">await
-    </span>}
+        <span class="kw">let </span>rows_modified = <span class="self">self</span>.execute_many_with_retries(<span class="kw-2">&amp;</span>stmt, params).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">if </span>rows_modified != num_rows {
+            <span class="macro">tracing::error!</span>(
+                stmt,
+                <span class="string">"unexpected number of rows modified: expected {num_rows} but got {rows_modified}"
+            </span>);
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
 }
 
 <span class="doccomment">/// Query the underlying SQL database.
