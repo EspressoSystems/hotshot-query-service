@@ -35,6 +35,14 @@
 <a href="#34" id="34">34</a>
 <a href="#35" id="35">35</a>
 <a href="#36" id="36">36</a>
+<a href="#37" id="37">37</a>
+<a href="#38" id="38">38</a>
+<a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
+<a href="#41" id="41">41</a>
+<a href="#42" id="42">42</a>
+<a href="#43" id="43">43</a>
+<a href="#44" id="44">44</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -47,12 +55,24 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
+</span><span class="doccomment">//! Data for the [`node`](super) API.
+//!
+//! This module is just an alternative view of the same data provided by the
+//! [`availability`](crate::availability) API. It provides more insight into what data the node
+//! actually has at present, as opposed to trying to present a perfect view of an abstract chain,
+//! fetching data from other sources as needed. It is also more liberal with provided aggregate
+//! counts and statistics which may be inaccurate if data is missing.
+//!
+//! Due to this relationship with the availability module, this module has its own [data source
+//! trait](`NodeDataSource`) but not its own update trait. The node data source is expected to read
+//! its data from the same underlying database as the availability API, and as such the data is
+//! updated implicitly via the [availability API update
+//! trait](crate::availability::UpdateAvailabilityData).
+
 </span><span class="kw">use </span><span class="kw">super</span>::query_data::{LeafQueryData, SyncStatus};
 <span class="kw">use crate</span>::{QueryResult, SignatureKey};
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
-<span class="kw">use </span>std::error::Error;
-<span class="kw">use </span>std::fmt::Debug;
 
 <span class="attr">#[async_trait]
 </span><span class="kw">pub trait </span>NodeDataSource&lt;Types: NodeType&gt; {
@@ -63,12 +83,8 @@
         limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt;;
     <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt;;
+    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt;;
+    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt;;
     <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt;;
-}
-
-<span class="attr">#[async_trait]
-</span><span class="kw">pub trait </span>UpdateNodeData&lt;Types: NodeType&gt; {
-    <span class="kw">type </span>Error: Error + Debug + Send + Sync + <span class="lifetime">'static</span>;
-    <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
 }
 </code></pre></div></section></main></body></html>

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["fetching","sql","storage"],"struct":["ExtensibleDataSource","MetricsDataSource"],"trait":["UpdateDataSource","VersionedDataSource"],"type":["FileSystemDataSource"]};
+window.SIDEBAR_ITEMS = {"mod":["availability_tests","fetching","node_tests","persistence_tests","sql","status_tests","storage"],"struct":["ExtensibleDataSource","MetricsDataSource"],"trait":["UpdateDataSource","VersionedDataSource"],"type":["FileSystemDataSource"]};

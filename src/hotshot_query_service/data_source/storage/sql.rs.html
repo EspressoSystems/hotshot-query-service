@@ -1627,6 +1627,8 @@
 <a href="#1626" id="1626">1626</a>
 <a href="#1627" id="1627">1627</a>
 <a href="#1628" id="1628">1628</a>
+<a href="#1629" id="1629">1629</a>
+<a href="#1630" id="1630">1630</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1648,7 +1650,7 @@
         QueryablePayload, TransactionHash, TransactionIndex, UpdateAvailabilityData,
     },
     data_source::VersionedDataSource,
-    node::{NodeDataSource, SyncStatus, UpdateNodeData},
+    node::{NodeDataSource, SyncStatus},
     Header, Leaf, MissingSnafu, NotFoundSnafu, Payload, QueryError, QueryResult, SignatureKey,
 };
 <span class="kw">use </span>async_std::{
@@ -2403,6 +2405,22 @@
         <span class="prelude-val">Ok</span>(count <span class="kw">as </span>usize)
     }
 
+    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">let </span>row = <span class="self">self
+            </span>.query_one_static(<span class="string">"SELECT count(*) FROM transaction"</span>)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>count: i64 = row.get(<span class="number">0</span>);
+        <span class="prelude-val">Ok</span>(count <span class="kw">as </span>usize)
+    }
+
+    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">let </span>row = <span class="self">self
+            </span>.query_one_static(<span class="string">"SELECT sum(size) FROM payload"</span>)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>sum: <span class="prelude-ty">Option</span>&lt;i64&gt; = row.get(<span class="number">0</span>);
+        <span class="prelude-val">Ok</span>(sum.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>usize)
+    }
+
     <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
         <span class="comment">// A leaf can only be missing if there is no row for it in the database (all its columns are
         // non-nullable). A block can be missing if its corresponding leaf is missing or if the
@@ -2457,20 +2475,6 @@
             missing_leaves,
             missing_blocks,
         })
-    }
-}
-
-<span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types&gt; UpdateNodeData&lt;Types&gt; <span class="kw">for </span>SqlStorage
-<span class="kw">where
-    </span>Types: NodeType,
-{
-    <span class="kw">type </span>Error = QueryError;
-
-    <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _leaf: LeafQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
-        <span class="comment">// The node data source borrows data that is populated by the availability source, so
-        // there's nothing more to do here.
-        </span><span class="prelude-val">Ok</span>(())
     }
 }
 

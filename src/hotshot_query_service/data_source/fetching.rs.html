@@ -1685,26 +1685,6 @@
 <a href="#1684" id="1684">1684</a>
 <a href="#1685" id="1685">1685</a>
 <a href="#1686" id="1686">1686</a>
-<a href="#1687" id="1687">1687</a>
-<a href="#1688" id="1688">1688</a>
-<a href="#1689" id="1689">1689</a>
-<a href="#1690" id="1690">1690</a>
-<a href="#1691" id="1691">1691</a>
-<a href="#1692" id="1692">1692</a>
-<a href="#1693" id="1693">1693</a>
-<a href="#1694" id="1694">1694</a>
-<a href="#1695" id="1695">1695</a>
-<a href="#1696" id="1696">1696</a>
-<a href="#1697" id="1697">1697</a>
-<a href="#1698" id="1698">1698</a>
-<a href="#1699" id="1699">1699</a>
-<a href="#1700" id="1700">1700</a>
-<a href="#1701" id="1701">1701</a>
-<a href="#1702" id="1702">1702</a>
-<a href="#1703" id="1703">1703</a>
-<a href="#1704" id="1704">1704</a>
-<a href="#1705" id="1705">1705</a>
-<a href="#1706" id="1706">1706</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1793,7 +1773,7 @@
         Callback, Provider,
     },
     metrics::PrometheusMetrics,
-    node::{NodeDataSource, SyncStatus, UpdateNodeData},
+    node::{NodeDataSource, SyncStatus},
     status::StatusDataSource,
     task::BackgroundTask,
     Header, Payload, QueryResult, SignatureKey,
@@ -1921,11 +1901,7 @@
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
-    S: NodeDataSource&lt;Types&gt;
-        + UpdateNodeData&lt;Types&gt;
-        + AvailabilityStorage&lt;Types&gt;
-        + VersionedDataSource
-        + <span class="lifetime">'static</span>,
+    S: NodeDataSource&lt;Types&gt; + AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="doccomment">/// Build a [`FetchingDataSource`] with these options.
@@ -1971,11 +1947,7 @@
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
-    S: NodeDataSource&lt;Types&gt;
-        + UpdateNodeData&lt;Types&gt;
-        + AvailabilityStorage&lt;Types&gt;
-        + VersionedDataSource
-        + <span class="lifetime">'static</span>,
+    S: NodeDataSource&lt;Types&gt; + AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="doccomment">/// Build a [`FetchingDataSource`] with the given `storage` and `provider`.
@@ -2203,28 +2175,16 @@
         <span class="self">self</span>.storage().<span class="kw">await</span>.count_proposals(proposer).<span class="kw">await
     </span>}
 
+    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="self">self</span>.storage().<span class="kw">await</span>.count_transactions().<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="self">self</span>.storage().<span class="kw">await</span>.payload_size().<span class="kw">await
+    </span>}
+
     <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
         <span class="self">self</span>.storage().<span class="kw">await</span>.sync_status().<span class="kw">await
-    </span>}
-}
-
-<span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types, S, P&gt; UpdateNodeData&lt;Types&gt; <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
-<span class="kw">where
-    </span>Types: NodeType,
-    S: UpdateNodeData&lt;Types&gt; + Send + Sync,
-    P: Send + Sync,
-{
-    <span class="kw">type </span>Error = S::Error;
-
-    <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
-        <span class="self">self</span>.fetcher
-            .storage
-            .write()
-            .<span class="kw">await
-            </span>.storage
-            .insert_leaf(leaf)
-            .<span class="kw">await
     </span>}
 }
 

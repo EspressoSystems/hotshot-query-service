@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["AnyProvider","NoFetching","QueryServiceProvider"],"trait":["Provider"]};
+window.SIDEBAR_ITEMS = {"struct":["AnyProvider","NoFetching","QueryServiceProvider","TestProvider"],"trait":["Provider"]};
