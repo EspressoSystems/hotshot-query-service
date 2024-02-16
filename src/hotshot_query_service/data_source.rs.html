@@ -1251,7 +1251,7 @@
         Leaf,
     };
     <span class="kw">use </span>commit::Committable;
-    <span class="kw">use </span>hotshot_testing::state_types::TestInstanceState;
+    <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
     <span class="kw">use </span>hotshot_types::simple_certificate::QuorumCertificate;
 
     <span class="attr">#[async_std::test]
@@ -1363,7 +1363,7 @@
         },
     };
     <span class="kw">use </span>futures::stream::StreamExt;
-    <span class="kw">use </span>hotshot_testing::state_types::TestInstanceState;
+    <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
     <span class="kw">use </span>std::collections::HashSet;
 
     <span class="kw">async fn </span>validate(ds: <span class="kw-2">&amp;</span><span class="kw">impl </span>TestableDataSource) {

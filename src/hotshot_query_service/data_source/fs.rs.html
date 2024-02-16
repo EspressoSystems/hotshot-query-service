@@ -384,7 +384,7 @@
 ///
 /// async fn init_server(
 ///     storage_path: &amp;Path,
-///     mut hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl&gt;,
+///     hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl&gt;,
 /// ) -&gt; Result&lt;App&lt;Arc&lt;RwLock&lt;AppState&gt;&gt;, Error&gt;, Error&gt; {
 ///     let mut loader = AtomicStoreLoader::create(storage_path, "my_app") // or `open`
 ///         .map_err(Error::internal)?;
@@ -403,7 +403,7 @@
 ///     // Register API modules.
 ///
 ///     spawn(async move {
-///         let mut events = hotshot.get_event_stream(Default::default()).await.0;
+///         let mut events = hotshot.get_event_stream();
 ///         while let Some(event) = events.next().await {
 ///             let mut state = state.write().await;
 ///             state.hotshot_qs.update(&amp;event).await.unwrap();

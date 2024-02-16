@@ -27,10 +27,10 @@ extensible library, which makes it easy to add additional, application-specific 
     </span>.map_err(Error::internal)<span class="question-mark">?</span>;
 
 <span class="comment">// Create hotshot, giving it a handle to the status metrics.
-</span><span class="kw">let </span>(<span class="kw-2">mut </span>hotshot, <span class="kw">_</span>) = SystemContext::&lt;AppTypes, AppNodeImpl&gt;::init(
+</span><span class="kw">let </span>hotshot = SystemContext::&lt;AppTypes, AppNodeImpl&gt;::init(
     ConsensusMetricsValue::new(<span class="kw-2">&amp;*</span>data_source.populate_metrics()),
     <span class="comment">// Other fields omitted
-</span>).<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
+</span>).<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>.<span class="number">0</span>;
 
 <span class="comment">// Create API modules.
 </span><span class="kw">let </span>availability_api = availability::define_api(<span class="kw-2">&amp;</span>Default::default())
@@ -55,7 +55,7 @@ app
 </span>spawn(app.serve(<span class="string">"0.0.0.0:8080"</span>));
 
 <span class="comment">// Update query data using HotShot events.
-</span><span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.get_event_stream(Default::default()).<span class="kw">await</span>.<span class="number">0</span>;
+</span><span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.get_event_stream();
 <span class="kw">while let </span><span class="prelude-val">Some</span>(event) = events.next().<span class="kw">await </span>{
     <span class="comment">// Re-lock the mutex each time we get a new event.
     </span><span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source.write().<span class="kw">await</span>;

@@ -799,11 +799,11 @@
 //!     .map_err(Error::internal)?;
 //!
 //! // Create hotshot, giving it a handle to the status metrics.
-//! let (mut hotshot, _) = SystemContext::&lt;AppTypes, AppNodeImpl&gt;::init(
+//! let hotshot = SystemContext::&lt;AppTypes, AppNodeImpl&gt;::init(
 //! #   panic!(), panic!(), panic!(), panic!(), panic!(), panic!(), panic!(), panic!(),
 //!     ConsensusMetricsValue::new(&amp;*data_source.populate_metrics()),
 //!     // Other fields omitted
-//! ).await.map_err(Error::internal)?;
+//! ).await.map_err(Error::internal)?.0;
 //!
 //! // Create API modules.
 //! let availability_api = availability::define_api(&amp;Default::default())
@@ -828,7 +828,7 @@
 //! spawn(app.serve("0.0.0.0:8080"));
 //!
 //! // Update query data using HotShot events.
-//! let mut events = hotshot.get_event_stream(Default::default()).await.0;
+//! let mut events = hotshot.get_event_stream();
 //! while let Some(event) = events.next().await {
 //!     // Re-lock the mutex each time we get a new event.
 //!     let mut data_source = data_source.write().await;
@@ -1209,7 +1209,7 @@
 </span><span class="kw">pub async fn </span>run_standalone_service&lt;Types: NodeType, I: NodeImplementation&lt;Types&gt;, D&gt;(
     options: Options,
     data_source: D,
-    <span class="kw-2">mut </span>hotshot: SystemContextHandle&lt;Types, I&gt;,
+    hotshot: SystemContextHandle&lt;Types, I&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: availability::QueryablePayload,
@@ -1243,7 +1243,7 @@
     spawn(<span class="kw">async move </span>{ app.serve(<span class="kw-2">&amp;</span>url).<span class="kw">await </span>});
 
     <span class="comment">// Subscribe to events before starting consensus, so we don't miss any events.
-    </span><span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.get_event_stream(Default::default()).<span class="kw">await</span>.<span class="number">0</span>;
+    </span><span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.get_event_stream();
     hotshot.hotshot.start_consensus().<span class="kw">await</span>;
 
     <span class="comment">// Update query data using HotShot events.
@@ -1281,7 +1281,7 @@
 
     <span class="kw">use </span>futures::FutureExt;
     <span class="kw">use </span>hotshot::types::SignatureKey <span class="kw">as _</span>;
-    <span class="kw">use </span>hotshot_testing::state_types::TestInstanceState;
+    <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
     <span class="kw">use </span>hotshot_types::signature_key::BLSPubKey;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::ops::RangeBounds;

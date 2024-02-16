@@ -157,11 +157,11 @@
 /// # use hotshot_types::consensus::ConsensusMetricsValue;
 /// # async fn doc() -&gt; Result&lt;(), hotshot_query_service::Error&gt; {
 /// let data_source = MetricsDataSource::default();
-/// let (mut hotshot, _) = SystemContext::&lt;AppTypes, AppNodeImpl&gt;::init(
+/// let hotshot = SystemContext::&lt;AppTypes, AppNodeImpl&gt;::init(
 /// #   panic!(), panic!(), panic!(), panic!(), panic!(), panic!(), panic!(), panic!(),
 ///     ConsensusMetricsValue::new(&amp;*data_source.populate_metrics()),
 ///     // Other fields omitted
-/// ).await.map_err(Error::internal)?;
+/// ).await.map_err(Error::internal)?.0;
 /// # Ok(())
 /// # }
 /// ```
