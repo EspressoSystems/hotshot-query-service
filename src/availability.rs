@@ -26,15 +26,18 @@
 //! chain which is tabulated by this specific node and not subject to full consensus agreement, try
 //! the [node](crate::node) API.
 
-use crate::{api::load_api, Payload};
+use crate::{api::load_api, Payload, Transaction};
 use clap::Args;
 use cld::ClDuration;
 use derive_more::From;
-use futures::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
+use futures::{FutureExt, Stream, StreamExt, TryFutureExt, TryStreamExt};
 use hotshot_types::traits::node_implementation::NodeType;
 use serde::{Deserialize, Serialize};
 use snafu::{OptionExt, Snafu};
-use std::{fmt::Display, path::PathBuf, str::FromStr, time::Duration};
+use std::{
+    cmp::max, fmt::Display, num::NonZeroUsize, ops::Range, path::PathBuf, str::FromStr,
+    time::Duration,
+};
 use tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
 
 pub(crate) mod data_source;
@@ -472,8 +475,105 @@ where
                 Ok(result)
             }
             .boxed()
+        })?
+        .get("get_transaction_range_rev", move |req, state| {
+            async move {
+                let height: usize = req.integer_param("height")?;
+                let offset: usize = req.integer_param("offset")?;
+                let limit: usize = req.integer_param("limit")?;
+                let batch_size = NonZeroUsize::new(10).unwrap();
+
+                let step1 = build_range_stream_rev(height, batch_size);
+                let step2 = step1.flat_map(|range| {
+                    expand_range_to_block_range_stream::<State, Types>(range, state, timeout)
+                });
+
+                let step3 = step2.flat_map(|result| {
+                    futures::stream::iter(match result {
+                        Ok(block) => expand_block_data_to_transaction_vec(block)
+                            .into_iter()
+                            .rev()
+                            .map(Some)
+                            .collect(),
+
+                        _ => vec![None],
+                    })
+                });
+
+                let result = step3
+                    .skip(offset)
+                    .take(limit)
+                    .collect::<Vec<Option<Transaction<Types>>>>()
+                    .await;
+
+                Ok(result)
+            }
+            .boxed()
         })?;
     Ok(api)
+}
+
+// build_range_stream_rev is a helper function that builds a stream of ranges
+// to query for.  It construcs thes streams starting from the end going toward
+// 0.
+fn build_range_stream_rev(
+    end: usize,
+    chunk_size: NonZeroUsize,
+) -> impl Stream<Item = Range<usize>> {
+    let chunk_size = chunk_size.get();
+    let steps = end / chunk_size;
+
+    futures::stream::iter((0..steps).map(move |chunk| {
+        // We start at the back such that step 0 *should* have it's
+        // end being the overall desired end size.
+        let end = end - ((steps - chunk) * chunk_size);
+        let start = max(0, end - chunk_size);
+
+        start..end
+    }))
+}
+
+// expand_range_to_block_range_stream is a helper function that takes a range,
+// and a given state, and will expand the range into a stream of BlockQueryData.
+fn expand_range_to_block_range_stream<State, Types: NodeType>(
+    range: Range<usize>,
+    state: &<State as ReadState>::State,
+    timeout: Duration,
+) -> impl Stream<Item = Result<BlockQueryData<Types>, Error>> + '_
+where
+    State: 'static + Send + Sync + ReadState,
+    <State as ReadState>::State: Send + Sync + AvailabilityDataSource<Types>,
+    Payload<Types>: QueryablePayload,
+{
+    state
+        .get_block_range(range.clone())
+        .into_stream()
+        .enumerate()
+        .map(move |(index, stream)| {
+            stream.then(move |fetch| async move {
+                fetch.with_timeout(timeout).await.context(FetchBlockSnafu {
+                    resource: format!("block {}", range.start + index),
+                })
+            })
+        })
+        .flatten()
+}
+
+// expand_block_data_to_transaction_vec is a helper function that ultimately
+// takes a BlockQueryData and expands it into a collection of Transactions
+fn expand_block_data_to_transaction_vec<Types: NodeType>(
+    block_data: BlockQueryData<Types>,
+) -> Vec<Transaction<Types>>
+where
+    Payload<Types>: QueryablePayload,
+{
+    let data = block_data.clone();
+
+    block_data
+        .payload
+        .enumerate(data.metadata())
+        .map(|(_, txn)| txn)
+        .collect()
 }
 
 #[cfg(test)]
