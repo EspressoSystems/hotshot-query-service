@@ -99,6 +99,13 @@
 <a href="#98" id="98">98</a>
 <a href="#99" id="99">99</a>
 <a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -128,7 +135,7 @@
 </span><span class="kw">use crate</span>::{
     availability::{
         BlockId, BlockQueryData, LeafId, LeafQueryData, PayloadQueryData, QueryablePayload,
-        TransactionHash, TransactionIndex, UpdateAvailabilityData,
+        TransactionHash, TransactionIndex, UpdateAvailabilityData, VidCommonQueryData,
     },
     data_source::VersionedDataSource,
     Header, Payload, QueryResult,
@@ -174,6 +181,7 @@
     <span class="kw">async fn </span>get_block(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;;
     <span class="kw">async fn </span>get_header(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;Header&lt;Types&gt;&gt;;
     <span class="kw">async fn </span>get_payload(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt;;
+    <span class="kw">async fn </span>get_vid_common(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;VidCommonQueryData&lt;Types&gt;&gt;;
 
     <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -191,6 +199,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         range: R,
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt;&gt;&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
+    <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        range: R,
+    ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;VidCommonQueryData&lt;Types&gt;&gt;&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 

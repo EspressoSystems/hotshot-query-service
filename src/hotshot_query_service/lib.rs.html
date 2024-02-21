@@ -764,6 +764,52 @@
 <a href="#763" id="763">763</a>
 <a href="#764" id="764">764</a>
 <a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1024,10 +1070,10 @@
 //!
 //! ```
 //! # use async_trait::async_trait;
-//! # use hotshot_query_service::{QueryResult, SignatureKey};
+//! # use hotshot_query_service::{QueryResult, SignatureKey, VidShare};
 //! # use hotshot_query_service::availability::{
 //! #   AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
-//! #   PayloadQueryData, TransactionHash, TransactionIndex,
+//! #   PayloadQueryData, TransactionHash, TransactionIndex, VidCommonQueryData,
 //! # };
 //! # use hotshot_query_service::metrics::PrometheusMetrics;
 //! # use hotshot_query_service::node::{NodeDataSource, SyncStatus};
@@ -1056,6 +1102,9 @@
 //!     type PayloadRange&lt;R&gt; = D::PayloadRange&lt;R&gt;
 //!     where
 //!         R: RangeBounds&lt;usize&gt; + Send;
+//!     type VidCommonRange&lt;R&gt; = D::VidCommonRange&lt;R&gt;
+//!     where
+//!         R: RangeBounds&lt;usize&gt; + Send;
 //!
 //!     async fn get_leaf&lt;ID&gt;(&amp;self, id: ID) -&gt; Fetch&lt;LeafQueryData&lt;AppTypes&gt;&gt;
 //!     where
@@ -1071,6 +1120,9 @@
 //! #   async fn get_payload&lt;ID&gt;(&amp;self, id: ID) -&gt; Fetch&lt;PayloadQueryData&lt;AppTypes&gt;&gt;
 //! #   where
 //! #       ID: Into&lt;BlockId&lt;AppTypes&gt;&gt; + Send + Sync { todo!() }
+//! #   async fn get_vid_common&lt;ID&gt;(&amp;self, id: ID) -&gt; Fetch&lt;VidCommonQueryData&lt;AppTypes&gt;&gt;
+//! #   where
+//! #       ID: Into&lt;BlockId&lt;AppTypes&gt;&gt; + Send + Sync { todo!() }
 //! #   async fn get_block_with_transaction(&amp;self, hash: TransactionHash&lt;AppTypes&gt;) -&gt; Fetch&lt;(BlockQueryData&lt;AppTypes&gt;, TransactionIndex&lt;AppTypes&gt;)&gt; { todo!() }
 //! #   async fn get_leaf_range&lt;R&gt;(&amp;self, range: R) -&gt; Self::LeafRange&lt;R&gt;
 //! #   where
@@ -1079,6 +1131,9 @@
 //! #   where
 //! #       R: RangeBounds&lt;usize&gt; + Send { todo!() }
 //! #   async fn get_payload_range&lt;R&gt;(&amp;self, range: R) -&gt; Self::PayloadRange&lt;R&gt;
+//! #   where
+//! #       R: RangeBounds&lt;usize&gt; + Send { todo!() }
+//! #   async fn get_vid_common_range&lt;R&gt;(&amp;self, range: R) -&gt; Self::VidCommonRange&lt;R&gt;
 //! #   where
 //! #       R: RangeBounds&lt;usize&gt; + Send { todo!() }
 //! }
@@ -1108,6 +1163,13 @@
 //!
 //!     async fn payload_size(&amp;self) -&gt; QueryResult&lt;usize&gt; {
 //!         self.hotshot_qs.payload_size().await
+//!     }
+//!
+//!     async fn vid_share&lt;ID&gt;(&amp;self, id: ID) -&gt; QueryResult&lt;VidShare&gt;
+//!     where
+//!         ID: Into&lt;BlockId&lt;AppTypes&gt;&gt; + Send + Sync,
+//!     {
+//!         self.hotshot_qs.vid_share(id).await
 //!     }
 //!
 //!     async fn sync_status(&amp;self) -&gt; QueryResult&lt;SyncStatus&gt; {
@@ -1173,9 +1235,12 @@
 };
 <span class="kw">use </span>futures::StreamExt;
 <span class="kw">use </span>hotshot::types::SystemContextHandle;
-<span class="kw">use </span>hotshot_types::traits::{
-    node_implementation::{NodeImplementation, NodeType},
-    BlockPayload,
+<span class="kw">use </span>hotshot_types::{
+    data::{VidScheme, VidSchemeTrait},
+    traits::{
+        node_implementation::{NodeImplementation, NodeType},
+        BlockPayload,
+    },
 };
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::Snafu;
@@ -1189,6 +1254,8 @@
 <span class="doccomment">/// Item within a [`Payload`].
 </span><span class="kw">pub type </span>Transaction&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>BlockPayload&gt;::Transaction;
 <span class="kw">pub type </span>SignatureKey&lt;Types&gt; = &lt;Types <span class="kw">as </span>NodeType&gt;::SignatureKey;
+<span class="kw">pub type </span>VidCommon = &lt;VidScheme <span class="kw">as </span>VidSchemeTrait&gt;::Common;
+<span class="kw">pub type </span>VidShare = &lt;VidScheme <span class="kw">as </span>VidSchemeTrait&gt;::Share;
 
 <span class="attr">#[derive(Clone, Debug, Snafu, Deserialize, Serialize)]
 #[snafu(visibility(<span class="kw">pub</span>))]
@@ -1288,6 +1355,7 @@
         availability::{
             AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
             PayloadQueryData, TransactionHash, TransactionIndex, UpdateAvailabilityData,
+            VidCommonQueryData,
         },
         metrics::PrometheusMetrics,
         node::{NodeDataSource, SyncStatus},
@@ -1339,6 +1407,12 @@
             &gt;&gt;::PayloadRange&lt;R&gt;
         <span class="kw">where
             </span>R: RangeBounds&lt;usize&gt; + Send;
+        <span class="kw">type </span>VidCommonRange&lt;R&gt; =
+            &lt;MockDataSource <span class="kw">as </span>AvailabilityDataSource&lt;
+                MockTypes,
+            &gt;&gt;::VidCommonRange&lt;R&gt;
+        <span class="kw">where
+            </span>R: RangeBounds&lt;usize&gt; + Send;
 
         <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;LeafQueryData&lt;MockTypes&gt;&gt;
         <span class="kw">where
@@ -1358,6 +1432,12 @@
         {
             <span class="self">self</span>.hotshot_qs.get_payload(id).<span class="kw">await
         </span>}
+        <span class="kw">async fn </span>get_vid_common&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;VidCommonQueryData&lt;MockTypes&gt;&gt;
+        <span class="kw">where
+            </span>ID: Into&lt;BlockId&lt;MockTypes&gt;&gt; + Send + Sync,
+        {
+            <span class="self">self</span>.hotshot_qs.get_vid_common(id).<span class="kw">await
+        </span>}
         <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::LeafRange&lt;R&gt;
         <span class="kw">where
             </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
@@ -1375,6 +1455,12 @@
             </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         {
             <span class="self">self</span>.hotshot_qs.get_payload_range(range).<span class="kw">await
+        </span>}
+        <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::VidCommonRange&lt;R&gt;
+        <span class="kw">where
+            </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
+        {
+            <span class="self">self</span>.hotshot_qs.get_vid_common_range(range).<span class="kw">await
         </span>}
         <span class="kw">async fn </span>get_block_with_transaction(
             <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -1405,6 +1491,12 @@
         </span>}
         <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
             <span class="self">self</span>.hotshot_qs.payload_size().<span class="kw">await
+        </span>}
+        <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
+        <span class="kw">where
+            </span>ID: Into&lt;BlockId&lt;MockTypes&gt;&gt; + Send + Sync,
+        {
+            <span class="self">self</span>.hotshot_qs.vid_share(id).<span class="kw">await
         </span>}
         <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
             <span class="self">self</span>.hotshot_qs.sync_status().<span class="kw">await

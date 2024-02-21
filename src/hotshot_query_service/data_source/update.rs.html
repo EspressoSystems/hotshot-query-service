@@ -126,6 +126,23 @@
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
 <a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -140,7 +157,7 @@
 
 </span><span class="doccomment">//! A generic algorithm for updating a HotShot Query Service data source with new data.
 </span><span class="kw">use </span><span class="kw">crate</span>::availability::{
-    BlockQueryData, LeafQueryData, QueryablePayload, UpdateAvailabilityData,
+    BlockQueryData, LeafQueryData, QueryablePayload, UpdateAvailabilityData, VidCommonQueryData,
 };
 <span class="kw">use </span><span class="kw">crate</span>::status::UpdateStatusData;
 <span class="kw">use </span><span class="kw">crate</span>::Payload;
@@ -201,13 +218,30 @@
                 <span class="comment">// The oldest QC is the `justify_qc` of the oldest leaf, which does not justify any
                 // leaf in the new chain, so we don't need it.
                 </span>.skip(<span class="number">1</span>);
-            <span class="kw">for </span>(qc, (leaf, <span class="kw">_</span>)) <span class="kw">in </span>qcs.zip(leaf_chain.iter().rev()) {
+            <span class="kw">for </span>(qc, (leaf, vid)) <span class="kw">in </span>qcs.zip(leaf_chain.iter().rev()) {
                 <span class="comment">// `LeafQueryData::new` only fails if `qc` does not reference `leaf`. We have just
                 // gotten `leaf` and `qc` directly from a consensus `Decide` event, so they are
                 // guaranteed to correspond, and this should never panic.
                 </span><span class="kw">let </span>leaf_data =
                     LeafQueryData::new(leaf.clone(), qc.clone()).expect(<span class="string">"inconsistent leaf"</span>);
                 <span class="self">self</span>.insert_leaf(leaf_data.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
+
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(vid) = vid {
+                    <span class="self">self</span>.insert_vid(
+                        VidCommonQueryData::new(leaf.block_header.clone(), vid.common.clone()),
+                        <span class="comment">// TODO we should get just a single share from VID dispersal, but currently
+                        // HotShot sends us _all_ shares, and we don't know which one is for us. For
+                        // no we arbitrarily take the first share, this should be fixed in HotShot
+                        // soon.
+                        </span><span class="prelude-val">Some</span>(vid.shares.first_key_value().unwrap().<span class="number">1</span>.clone()),
+                    )
+                    .<span class="kw">await</span><span class="question-mark">?</span>;
+                } <span class="kw">else </span>{
+                    <span class="macro">tracing::error!</span>(
+                        <span class="string">"VID info for block {} not available at decide"</span>,
+                        leaf.block_header.block_number()
+                    );
+                }
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(block) = leaf.get_block_payload() {
                     <span class="self">self</span>.insert_block(BlockQueryData::new(leaf.block_header.clone(), block))

@@ -188,6 +188,32 @@
 <a href="#187" id="187">187</a>
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -204,10 +230,10 @@
     fetch::Fetch,
     query_data::{
         BlockHash, BlockQueryData, LeafHash, LeafQueryData, PayloadQueryData, QueryablePayload,
-        TransactionHash, TransactionIndex,
+        TransactionHash, TransactionIndex, VidCommonQueryData,
     },
 };
-<span class="kw">use </span><span class="kw">crate</span>::Payload;
+<span class="kw">use crate</span>::{Payload, VidShare};
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>derive_more::{Display, From};
@@ -317,6 +343,9 @@
     <span class="kw">type </span>PayloadRange&lt;R&gt;: Stream&lt;Item = Fetch&lt;PayloadQueryData&lt;Types&gt;&gt;&gt; + Unpin + Send + <span class="lifetime">'static
     </span><span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>VidCommonRange&lt;R&gt;: Stream&lt;Item = Fetch&lt;VidCommonQueryData&lt;Types&gt;&gt;&gt; + Unpin + Send + <span class="lifetime">'static
+    </span><span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send;
 
     <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;LeafQueryData&lt;Types&gt;&gt;
     <span class="kw">where
@@ -330,6 +359,10 @@
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync;
 
+    <span class="kw">async fn </span>get_vid_common&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;VidCommonQueryData&lt;Types&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync;
+
     <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::LeafRange&lt;R&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
@@ -339,6 +372,10 @@
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 
     <span class="kw">async fn </span>get_payload_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::PayloadRange&lt;R&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
+
+    <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::VidCommonRange&lt;R&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 
@@ -369,6 +406,16 @@
             </span>.then(Fetch::resolve)
             .boxed()
     }
+
+    <span class="kw">async fn </span>subscribe_vid_common(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        from: usize,
+    ) -&gt; BoxStream&lt;<span class="lifetime">'static</span>, VidCommonQueryData&lt;Types&gt;&gt; {
+        <span class="self">self</span>.get_vid_common_range(from..)
+            .<span class="kw">await
+            </span>.then(Fetch::resolve)
+            .boxed()
+    }
 }
 
 <span class="attr">#[async_trait]
@@ -376,5 +423,10 @@
     <span class="kw">type </span>Error: Error + Debug + Send + Sync + <span class="lifetime">'static</span>;
     <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
     <span class="kw">async fn </span>insert_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: BlockQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
+    <span class="kw">async fn </span>insert_vid(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        common: VidCommonQueryData&lt;Types&gt;,
+        share: <span class="prelude-ty">Option</span>&lt;VidShare&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
 }
 </code></pre></div></section></main></body></html>

@@ -253,6 +253,29 @@
 <a href="#252" id="252">252</a>
 <a href="#253" id="253">253</a>
 <a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -268,8 +291,9 @@
 </span><span class="kw">use super</span>::{Provider, Request};
 <span class="kw">use crate</span>::{
     availability::LeafQueryData,
-    fetching::request::{LeafRequest, PayloadRequest},
-    Payload,
+    data_source::AvailabilityProvider,
+    fetching::request::{LeafRequest, PayloadRequest, VidCommonRequest},
+    Payload, VidCommon,
 };
 <span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>async_trait::async_trait;
@@ -299,6 +323,7 @@
 
 <span class="kw">type </span>PayloadProvider&lt;Types&gt; = Arc&lt;<span class="kw">dyn </span>DebugProvider&lt;Types, PayloadRequest&gt;&gt;;
 <span class="kw">type </span>LeafProvider&lt;Types&gt; = Arc&lt;<span class="kw">dyn </span>DebugProvider&lt;Types, LeafRequest&gt;&gt;;
+<span class="kw">type </span>VidCommonProvider&lt;Types&gt; = Arc&lt;<span class="kw">dyn </span>DebugProvider&lt;Types, VidCommonRequest&gt;&gt;;
 
 <span class="doccomment">/// Adaptor combining multiple data availability providers.
 ///
@@ -342,6 +367,7 @@
 {
     payload_providers: Vec&lt;PayloadProvider&lt;Types&gt;&gt;,
     leaf_providers: Vec&lt;LeafProvider&lt;Types&gt;&gt;,
+    vid_common_providers: Vec&lt;VidCommonProvider&lt;Types&gt;&gt;,
 }
 
 <span class="attr">#[async_trait]
@@ -364,6 +390,16 @@
     </span>}
 }
 
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;Types&gt; Provider&lt;Types, VidCommonRequest&gt; <span class="kw">for </span>AnyProvider&lt;Types&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+{
+    <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, req: VidCommonRequest) -&gt; <span class="prelude-ty">Option</span>&lt;VidCommon&gt; {
+        any_fetch(<span class="kw-2">&amp;</span><span class="self">self</span>.vid_common_providers, req).<span class="kw">await
+    </span>}
+}
+
 <span class="kw">impl</span>&lt;Types&gt; AnyProvider&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
@@ -371,11 +407,12 @@
     <span class="doccomment">/// Add a sub-provider which fetches both blocks and leaves.
     </span><span class="kw">pub fn </span>with_provider&lt;P&gt;(<span class="kw-2">mut </span><span class="self">self</span>, provider: P) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>P: Provider&lt;Types, PayloadRequest&gt; + Provider&lt;Types, LeafRequest&gt; + Debug + <span class="lifetime">'static</span>,
+        </span>P: AvailabilityProvider&lt;Types&gt; + Debug + <span class="lifetime">'static</span>,
     {
         <span class="kw">let </span>provider = Arc::new(provider);
         <span class="self">self</span>.payload_providers.push(provider.clone());
-        <span class="self">self</span>.leaf_providers.push(provider);
+        <span class="self">self</span>.leaf_providers.push(provider.clone());
+        <span class="self">self</span>.vid_common_providers.push(provider);
         <span class="self">self
     </span>}
 
@@ -394,6 +431,15 @@
         </span>P: Provider&lt;Types, LeafRequest&gt; + Debug + <span class="lifetime">'static</span>,
     {
         <span class="self">self</span>.leaf_providers.push(Arc::new(provider));
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Add a sub-provider which fetches VID common data.
+    </span><span class="kw">pub fn </span>with_vid_common_provider&lt;P&gt;(<span class="kw-2">mut </span><span class="self">self</span>, provider: P) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>P: Provider&lt;Types, VidCommonRequest&gt; + Debug + <span class="lifetime">'static</span>,
+    {
+        <span class="self">self</span>.vid_common_providers.push(Arc::new(provider));
         <span class="self">self
     </span>}
 }

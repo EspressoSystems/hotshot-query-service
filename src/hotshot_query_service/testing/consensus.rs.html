@@ -488,12 +488,12 @@
 <span class="kw">impl</span>&lt;D: DataSourceLifeCycle&gt; MockNetwork&lt;D&gt; {
     <span class="kw">pub async fn </span>start(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="comment">// Spawn the update tasks.
-        </span><span class="kw">for </span>node <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.nodes {
+        </span><span class="kw">for </span>(i, node) <span class="kw">in </span><span class="self">self</span>.nodes.iter_mut().enumerate() {
             <span class="kw">let </span>ds = node.data_source.clone();
             <span class="kw">let </span><span class="kw-2">mut </span>events = node.hotshot.get_event_stream();
             spawn(<span class="kw">async move </span>{
                 <span class="kw">while let </span><span class="prelude-val">Some</span>(event) = events.next().<span class="kw">await </span>{
-                    <span class="macro">tracing::info!</span>(<span class="string">"EVENT {:?}"</span>, event.event);
+                    <span class="macro">tracing::info!</span>(node = i, event = <span class="question-mark">?</span>event.event, <span class="string">"EVENT"</span>);
                     <span class="kw">let </span><span class="kw-2">mut </span>ds = ds.write().<span class="kw">await</span>;
                     ds.handle_event(<span class="kw-2">&amp;</span>event).<span class="kw">await</span>;
                 }

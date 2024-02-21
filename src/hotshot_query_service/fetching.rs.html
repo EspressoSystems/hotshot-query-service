@@ -202,6 +202,7 @@
 <a href="#201" id="201">201</a>
 <a href="#202" id="202">202</a>
 <a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -233,6 +234,7 @@
 <span class="kw">use </span>std::{
     cmp::min,
     collections::{hash_map::Entry, BTreeSet, HashMap},
+    fmt::Debug,
     time::Duration,
 };
 
@@ -275,7 +277,7 @@
 /// instance of each distinct callback which was registered. Callbacks will run in the order
 /// determined by `Ord`.
 </span><span class="attr">#[trait_variant::make(Callback: Send)]
-</span><span class="kw">pub trait </span>LocalCallback&lt;T&gt;: Ord {
+</span><span class="kw">pub trait </span>LocalCallback&lt;T&gt;: Debug + Ord {
     <span class="kw">async fn </span>run(<span class="self">self</span>, response: T);
 }
 
@@ -347,7 +349,7 @@
                         <span class="comment">// If the object is already being fetched, add our callback for the fetching
                         // task to execute upon completion.
                         </span>e.get_mut().extend(callbacks);
-                        <span class="macro">tracing::info!</span>(<span class="string">"resource {req:?} is already being fetched"</span>);
+                        <span class="macro">tracing::info!</span>(<span class="question-mark">?</span>req, callbacks = <span class="question-mark">?</span>e.get(), <span class="string">"resource is already being fetched"</span>);
                         <span class="kw">return</span>;
                     }
                     Entry::Vacant(e) =&gt; {
