@@ -74,7 +74,7 @@ derivative = "2.2"
 derive_more = "0.99"
 either = "1.10"
 futures = "0.3"
-hotshot = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.14" }
+hotshot = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.15" }
 hotshot-types = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.14" }
 hotshot-utils = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.14" }
 itertools = "0.12.1"
