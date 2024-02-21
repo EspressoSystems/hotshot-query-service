@@ -35,7 +35,7 @@ use hotshot_types::traits::node_implementation::NodeType;
 use serde::{Deserialize, Serialize};
 use snafu::{OptionExt, Snafu};
 use std::{
-    cmp::max, fmt::Display, num::NonZeroUsize, ops::Range, path::PathBuf, str::FromStr,
+    cmp::min, fmt::Display, num::NonZeroUsize, ops::Range, path::PathBuf, str::FromStr,
     time::Duration,
 };
 use tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
@@ -483,28 +483,43 @@ where
                 let limit: usize = req.integer_param("limit")?;
                 let batch_size = NonZeroUsize::new(10).unwrap();
 
-                let step1 = build_range_stream_rev(height, batch_size);
-                let step2 = step1.flat_map(|range| {
-                    expand_range_to_block_range_stream::<State, Types>(range, state, timeout)
-                });
+                let chunked_ranges = build_range_iterator_rev(height, batch_size);
+                let stream_of_chunked_blocks = futures::stream::iter(chunked_ranges)
+                    .then(move |range| async move {
+                        let stream = expand_range_to_block_range_stream::<State, Types>(
+                            range, state, timeout,
+                        )
+                        .await;
 
-                let step3 = step2.flat_map(|result| {
-                    futures::stream::iter(match result {
-                        Ok(block) => expand_block_data_to_transaction_vec(block)
+                        let vec_of_blocks = stream
+                            .collect::<Vec<Result<BlockQueryData<Types>, Error>>>()
+                            .await;
+
+                        // We need to reverse here, otherwise we're not in the correct order.
+                        vec_of_blocks.into_iter().rev()
+                    })
+                    .flat_map(|iter| futures::stream::iter(iter));
+
+                let chunked_transactions = stream_of_chunked_blocks.map(|result| match result {
+                    Ok(block) => {
+                        let transactions = expand_block_data_to_transaction_vec(block);
+                        transactions
                             .into_iter()
                             .rev()
-                            .map(Some)
-                            .collect(),
-
-                        _ => vec![None],
-                    })
+                            .map(Ok)
+                            .collect::<Vec<Result<Transaction<Types>, Error>>>()
+                    }
+                    Err(err) => vec![Err(err)],
                 });
 
-                let result = step3
+                let streamed_transactions =
+                    chunked_transactions.flat_map(|vec| futures::stream::iter(vec.into_iter()));
+
+                let result = streamed_transactions
                     .skip(offset)
                     .take(limit)
-                    .collect::<Vec<Option<Transaction<Types>>>>()
-                    .await;
+                    .try_collect::<Vec<Transaction<Types>>>()
+                    .await?;
 
                 Ok(result)
             }
@@ -513,29 +528,31 @@ where
     Ok(api)
 }
 
-// build_range_stream_rev is a helper function that builds a stream of ranges
-// to query for.  It construcs thes streams starting from the end going toward
+// build_range_iterator_rev is a helper function that builds iterator of ranges
+// to query for.  It constructs these streams starting from the end going toward
 // 0.
-fn build_range_stream_rev(
+fn build_range_iterator_rev(
     end: usize,
     chunk_size: NonZeroUsize,
-) -> impl Stream<Item = Range<usize>> {
+) -> impl Iterator<Item = Range<usize>> {
     let chunk_size = chunk_size.get();
-    let steps = end / chunk_size;
+    let steps = end.div_ceil(chunk_size);
 
-    futures::stream::iter((0..steps).map(move |chunk| {
-        // We start at the back such that step 0 *should* have it's
-        // end being the overall desired end size.
-        let end = end - ((steps - chunk) * chunk_size);
-        let start = max(0, end - chunk_size);
+    (0..steps)
+        .map(move |chunk| {
+            // We start at the back such that step 0 *should* have it's
+            // end being the overall desired end size.
+            let start = chunk * chunk_size;
+            let end = min(end, start + chunk_size);
 
-        start..end
-    }))
+            start..end
+        })
+        .rev()
 }
 
 // expand_range_to_block_range_stream is a helper function that takes a range,
 // and a given state, and will expand the range into a stream of BlockQueryData.
-fn expand_range_to_block_range_stream<State, Types: NodeType>(
+async fn expand_range_to_block_range_stream<State, Types: NodeType>(
     range: Range<usize>,
     state: &<State as ReadState>::State,
     timeout: Duration,
@@ -547,16 +564,13 @@ where
 {
     state
         .get_block_range(range.clone())
-        .into_stream()
+        .await
         .enumerate()
-        .map(move |(index, stream)| {
-            stream.then(move |fetch| async move {
-                fetch.with_timeout(timeout).await.context(FetchBlockSnafu {
-                    resource: format!("block {}", range.start + index),
-                })
+        .then(move |(index, fetch)| async move {
+            fetch.with_timeout(timeout).await.context(FetchBlockSnafu {
+                resource: format!("block {}", range.start + index),
             })
         })
-        .flatten()
 }
 
 // expand_block_data_to_transaction_vec is a helper function that ultimately
@@ -567,11 +581,9 @@ fn expand_block_data_to_transaction_vec<Types: NodeType>(
 where
     Payload<Types>: QueryablePayload,
 {
-    let data = block_data.clone();
-
     block_data
         .payload
-        .enumerate(data.metadata())
+        .enumerate(block_data.metadata())
         .map(|(_, txn)| txn)
         .collect()
 }
