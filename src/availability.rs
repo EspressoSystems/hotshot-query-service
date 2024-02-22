@@ -498,7 +498,7 @@ where
                         // We need to reverse here, otherwise we're not in the correct order.
                         vec_of_blocks.into_iter().rev()
                     })
-                    .flat_map(|iter| futures::stream::iter(iter));
+                    .flat_map(futures::stream::iter);
 
                 let chunked_transactions = stream_of_chunked_blocks.map(|result| match result {
                     Ok(block) => {
