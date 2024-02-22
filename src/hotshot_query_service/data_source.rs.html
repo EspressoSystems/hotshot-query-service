@@ -1096,6 +1096,31 @@
 <a href="#1095" id="1095">1095</a>
 <a href="#1096" id="1096">1096</a>
 <a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -2087,6 +2112,15 @@
             <span class="comment">// With consensus paused, check that the success rate returns NAN (since the block
             // height, the numerator, is 0, and the view number, the denominator, is 0).
             </span><span class="macro">assert!</span>(ds.success_rate().<span class="kw">await</span>.unwrap().is_nan());
+            <span class="comment">// Since there is no block produced, "last_decided_time" metric is 0.
+            // Therefore, the elapsed time since the last block should be close to the time elapsed since the Unix epoch.
+            </span><span class="macro">assert!</span>(
+                (ds.elapsed_time_since_last_decide().<span class="kw">await</span>.unwrap() <span class="kw">as </span>i64
+                    - chrono::Utc::now().timestamp())
+                .abs()
+                    &lt;= <span class="number">1</span>,
+                <span class="string">"time elapsed since last_decided_time is not within 1s"
+            </span>);
         }
 
         <span class="comment">// Submit a transaction, and check that it is reflected in the mempool.
@@ -2176,6 +2210,22 @@
                     memory_footprint: <span class="number">0</span>,
                 }
             );
+        }
+
+        {
+            <span class="comment">// Shutting down the consensus to halt block production
+            // Introducing a delay of 3 seconds to ensure that elapsed time since last block is atleast 3seconds
+            </span>network.shut_down().<span class="kw">await</span>;
+            sleep(Duration::from_secs(<span class="number">3</span>)).<span class="kw">await</span>;
+            <span class="comment">// Asserting that the elapsed time since the last block is at least 3 seconds
+            </span><span class="macro">assert!</span>(
+                ds.read()
+                    .<span class="kw">await
+                    </span>.elapsed_time_since_last_decide()
+                    .<span class="kw">await
+                    </span>.unwrap()
+                    &gt;= <span class="number">3
+            </span>);
         }
     }
 }
