@@ -540,8 +540,6 @@ fn build_range_iterator_rev(
 
     (0..steps)
         .map(move |chunk| {
-            // We start at the back such that step 0 *should* have it's
-            // end being the overall desired end size.
             let start = chunk * chunk_size;
             let end = min(end, start + chunk_size);
 
