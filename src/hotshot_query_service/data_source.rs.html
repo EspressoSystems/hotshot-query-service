@@ -1792,7 +1792,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Set up a mock VID scheme to use for generating test data.
-        </span><span class="kw">let </span>vid = VidScheme::new(<span class="number">2</span>, <span class="number">2</span>, test_srs(<span class="number">2</span>)).unwrap();
+        </span><span class="kw">let </span>vid = VidScheme::new(<span class="number">2</span>, <span class="number">2</span>, <span class="number">1</span>, test_srs(<span class="number">2</span>)).unwrap();
 
         <span class="comment">// Generate some mock leaves and blocks to insert.
         </span><span class="kw">let </span><span class="kw-2">mut </span>leaves = <span class="macro">vec!</span>[LeafQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {})];
@@ -1990,7 +1990,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Generate some test VID data.
-        </span><span class="kw">let </span>vid = VidScheme::new(<span class="number">2</span>, <span class="number">2</span>, test_srs(<span class="number">2</span>)).unwrap();
+        </span><span class="kw">let </span>vid = VidScheme::new(<span class="number">2</span>, <span class="number">2</span>, <span class="number">1</span>, test_srs(<span class="number">2</span>)).unwrap();
         <span class="kw">let </span>disperse = vid.disperse([]).unwrap();
 
         <span class="comment">// Insert test data with VID common and a share. We use height `FIRST_VID_VIEW` to avoid
@@ -2053,7 +2053,7 @@
 
         <span class="comment">// Set up a test VID scheme.
         </span><span class="kw">let </span>num_nodes = network.num_nodes();
-        <span class="kw">let </span>vid = VidScheme::new(num_nodes, num_nodes, test_srs(num_nodes)).unwrap();
+        <span class="kw">let </span>vid = VidScheme::new(num_nodes, num_nodes, <span class="number">1</span>, test_srs(num_nodes)).unwrap();
 
         <span class="comment">// Get VID common data and verify it.
         </span><span class="macro">tracing::info!</span>(<span class="string">"fetching common data"</span>);

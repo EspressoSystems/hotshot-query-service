@@ -423,7 +423,7 @@
                             MemoryStorage::empty(),
                             memberships,
                             networks,
-                            HotShotInitializer::from_genesis(<span class="kw-2">&amp;</span>TestInstanceState {}).unwrap(),
+                            HotShotInitializer::from_genesis(TestInstanceState {}).unwrap(),
                             ConsensusMetricsValue::new(<span class="kw-2">&amp;*</span>data_source.populate_metrics()),
                         )
                         .<span class="kw">await

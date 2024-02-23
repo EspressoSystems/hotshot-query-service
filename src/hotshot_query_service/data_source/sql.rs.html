@@ -896,7 +896,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ds = &lt;D <span class="kw">as </span>DataSourceLifeCycle&gt;::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Generate some test VID data.
-        </span><span class="kw">let </span>vid = VidScheme::new(<span class="number">2</span>, <span class="number">2</span>, test_srs(<span class="number">2</span>)).unwrap();
+        </span><span class="kw">let </span>vid = VidScheme::new(<span class="number">2</span>, <span class="number">2</span>, <span class="number">1</span>, test_srs(<span class="number">2</span>)).unwrap();
         <span class="kw">let </span>disperse = vid.disperse([]).unwrap();
 
         <span class="comment">// Insert test data with VID common but no share. We use height `FIRST_VID_VIEW` to avoid
