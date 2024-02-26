@@ -868,6 +868,26 @@ mod test {
                 .unwrap();
 
             assert_eq!(header_range.len() as u64, i);
+
+            let transactions: Vec<Transaction<MockTypes>> = client
+                .get(&format!(
+                    "transaction/range/rev/{}/{}/{}",
+                    block.height(),
+                    0,
+                    block.num_transactions
+                ))
+                .send()
+                .await
+                .unwrap();
+
+            assert_eq!(transactions.len() as u64, block.num_transactions);
+            transactions
+                .into_iter()
+                .rev()
+                .zip(block.enumerate().map(|(_, txn)| txn))
+                .for_each(|(txn, txn_from_block)| {
+                    assert_eq!(txn, txn_from_block);
+                });
         }
     }
 
