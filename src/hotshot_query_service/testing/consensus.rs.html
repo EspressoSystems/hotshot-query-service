@@ -275,6 +275,7 @@
 <a href="#274" id="274">274</a>
 <a href="#275" id="275">275</a>
 <a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -313,7 +314,7 @@
     light_client::StateKeyPair,
     signature_key::BLSPubKey,
     traits::{election::Membership, signature_key::SignatureKey <span class="kw">as _</span>},
-    ExecutionType, HotShotConfig, ValidatorConfig,
+    ExecutionType, HotShotConfig, PeerConfig, ValidatorConfig,
 };
 <span class="kw">use </span>std::num::NonZeroUsize;
 <span class="kw">use </span>std::time::Duration;
@@ -341,13 +342,17 @@
             .map(|i| BLSPubKey::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], i <span class="kw">as </span>u64))
             .unzip();
         <span class="kw">let </span>total_nodes = NonZeroUsize::new(pub_keys.len()).unwrap();
+        <span class="kw">let </span>state_key_pairs = (<span class="number">0</span>..total_nodes.into())
+            .map(|i| StateKeyPair::generate_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], i <span class="kw">as </span>u64))
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="kw">let </span>master_map = MasterMap::new();
         <span class="kw">let </span>stake = <span class="number">1u64</span>;
-        <span class="kw">let </span>known_nodes_with_stake: Vec&lt;
-            &lt;BLSPubKey <span class="kw">as </span>hotshot::types::SignatureKey&gt;::StakeTableEntry,
-        &gt; = (<span class="number">0</span>..total_nodes.into())
-            .map(|id| pub_keys[id].get_stake_table_entry(stake))
-            .collect();
+        <span class="kw">let </span>known_nodes_with_stake = (<span class="number">0</span>..total_nodes.into())
+            .map(|id| PeerConfig {
+                stake_table_entry: pub_keys[id].get_stake_table_entry(stake),
+                state_ver_key: state_key_pairs[id].ver_key(),
+            })
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="kw">let </span>nodes = join_all(
             priv_keys
                 .into_iter()
@@ -357,10 +362,7 @@
                         public_key: pub_keys[node_id],
                         private_key: priv_key.clone(),
                         stake_value: stake,
-                        state_key_pair: StateKeyPair::generate_from_seed_indexed(
-                            [<span class="number">0</span>; <span class="number">32</span>],
-                            node_id <span class="kw">as </span>u64,
-                        ),
+                        state_key_pair: state_key_pairs[node_id].clone(),
                     };
                     <span class="kw">let </span>config = HotShotConfig {
                         total_nodes,
