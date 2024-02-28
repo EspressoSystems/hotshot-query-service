@@ -77,7 +77,7 @@ either = "1.10"
 futures = "0.3"
 hotshot = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.17" }
 hotshot-types = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.17" }
-hotshot-utils = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.17" }
+hotshot-utils = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.18" }
 itertools = "0.12.1"
 prometheus = "0.13"
 serde = { version = "1.0", features = ["derive"] }
