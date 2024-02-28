@@ -1531,18 +1531,6 @@ pub mod testing {
                     str::from_utf8(&output.stderr).unwrap()
                 );
             }
-
-            let output = Command::new("docker")
-                .args(["rm", self.container_id.as_str()])
-                .output()
-                .unwrap();
-            if !output.status.success() {
-                tracing::error!(
-                    "error removing postgres docker {}: {}",
-                    self.container_id,
-                    str::from_utf8(&output.stderr).unwrap()
-                );
-            }
         }
     }
 }
