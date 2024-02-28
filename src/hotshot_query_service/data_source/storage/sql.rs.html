@@ -1772,17 +1772,6 @@
 <a href="#1771" id="1771">1771</a>
 <a href="#1772" id="1772">1772</a>
 <a href="#1773" id="1773">1773</a>
-<a href="#1774" id="1774">1774</a>
-<a href="#1775" id="1775">1775</a>
-<a href="#1776" id="1776">1776</a>
-<a href="#1777" id="1777">1777</a>
-<a href="#1778" id="1778">1778</a>
-<a href="#1779" id="1779">1779</a>
-<a href="#1780" id="1780">1780</a>
-<a href="#1781" id="1781">1781</a>
-<a href="#1782" id="1782">1782</a>
-<a href="#1783" id="1783">1783</a>
-<a href="#1784" id="1784">1784</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -3391,6 +3380,7 @@
 
             <span class="kw">let </span>output = Command::new(<span class="string">"docker"</span>)
                 .arg(<span class="string">"run"</span>)
+                .arg(<span class="string">"--rm"</span>)
                 .arg(<span class="string">"-d"</span>)
                 .args([<span class="string">"-p"</span>, <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{port}:5432"</span>)])
                 .args([<span class="string">"-e"</span>, <span class="string">"POSTGRES_PASSWORD=password"</span>])
@@ -3461,24 +3451,12 @@
     <span class="kw">impl </span>Drop <span class="kw">for </span>TmpDb {
         <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
             <span class="kw">let </span>output = Command::new(<span class="string">"docker"</span>)
-                .args([<span class="string">"kill"</span>, <span class="self">self</span>.container_id.as_str()])
+                .args([<span class="string">"stop"</span>, <span class="self">self</span>.container_id.as_str()])
                 .output()
                 .unwrap();
             <span class="kw">if </span>!output.status.success() {
                 <span class="macro">tracing::error!</span>(
                     <span class="string">"error killing postgres docker {}: {}"</span>,
-                    <span class="self">self</span>.container_id,
-                    str::from_utf8(<span class="kw-2">&amp;</span>output.stderr).unwrap()
-                );
-            }
-
-            <span class="kw">let </span>output = Command::new(<span class="string">"docker"</span>)
-                .args([<span class="string">"rm"</span>, <span class="self">self</span>.container_id.as_str()])
-                .output()
-                .unwrap();
-            <span class="kw">if </span>!output.status.success() {
-                <span class="macro">tracing::error!</span>(
-                    <span class="string">"error removing postgres docker {}: {}"</span>,
                     <span class="self">self</span>.container_id,
                     str::from_utf8(<span class="kw-2">&amp;</span>output.stderr).unwrap()
                 );
