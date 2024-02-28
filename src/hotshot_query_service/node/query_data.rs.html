@@ -37,6 +37,8 @@
 <a href="#36" id="36">36</a>
 <a href="#37" id="37">37</a>
 <a href="#38" id="38">38</a>
+<a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -59,6 +61,7 @@
     <span class="kw">pub </span>missing_leaves: usize,
     <span class="kw">pub </span>missing_vid_common: usize,
     <span class="kw">pub </span>missing_vid_shares: usize,
+    <span class="kw">pub </span>pruned_height: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 }
 
 <span class="kw">impl </span>SyncStatus {
@@ -68,6 +71,7 @@
             missing_leaves: <span class="number">0</span>,
             missing_vid_common: <span class="number">0</span>,
             missing_vid_shares: <span class="number">0</span>,
+            pruned_height: <span class="prelude-val">None</span>,
         }
     }
 

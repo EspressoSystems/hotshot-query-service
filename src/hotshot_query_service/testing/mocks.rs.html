@@ -92,6 +92,13 @@
 <a href="#91" id="91">91</a>
 <a href="#92" id="92">92</a>
 <a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -104,7 +111,8 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use </span><span class="kw">crate</span>::availability::QueryablePayload;
+</span><span class="kw">use </span><span class="kw">crate</span>::availability::{QueryableHeader, QueryablePayload};
+<span class="kw">use </span>chrono::Utc;
 <span class="kw">use </span>hotshot::traits::{
     election::static_committee::{GeneralStaticCommittee, StaticElectionConfig},
     implementations::{MemoryNetwork, MemoryStorage},
@@ -129,6 +137,12 @@
 
 <span class="kw">pub fn </span>mock_transaction(payload: Vec&lt;u8&gt;) -&gt; MockTransaction {
     TestTransaction(payload)
+}
+
+<span class="kw">impl </span>QueryableHeader <span class="kw">for </span>MockHeader {
+    <span class="kw">fn </span>timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        Utc::now().timestamp() <span class="kw">as </span>u64
+    }
 }
 
 <span class="kw">impl </span>QueryablePayload <span class="kw">for </span>MockPayload {

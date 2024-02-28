@@ -263,8 +263,8 @@
 <span class="kw">where
     </span>Types: NodeType,
 {
-    <span class="kw">fn </span>might_exist(<span class="self">self</span>, block_height: usize) -&gt; bool {
-        <span class="self">self</span>.<span class="number">0</span>.might_exist(block_height)
+    <span class="kw">fn </span>might_exist(<span class="self">self</span>, block_height: usize, pruned_height: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; bool {
+        <span class="self">self</span>.<span class="number">0</span>.might_exist(block_height, pruned_height)
     }
 }
 

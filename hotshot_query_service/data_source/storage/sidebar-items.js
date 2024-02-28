@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["fs","no_storage","sql"],"trait":["AvailabilityStorage"]};
+window.SIDEBAR_ITEMS = {"mod":["fs","no_storage","pruning","sql"],"trait":["AvailabilityStorage"]};

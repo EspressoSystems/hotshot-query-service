@@ -581,6 +581,10 @@
 <a href="#580" id="580">580</a>
 <a href="#581" id="581">581</a>
 <a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -621,6 +625,10 @@
 <span class="kw">pub type </span>TransactionInclusionProof&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>QueryablePayload&gt;::InclusionProof;
 
 <span class="kw">pub type </span>Timestamp = time::OffsetDateTime;
+
+<span class="kw">pub trait </span>QueryableHeader: BlockHeader {
+    <span class="kw">fn </span>timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64;
+}
 
 <span class="doccomment">/// A block payload whose contents (e.g. individual transactions) can be examined.
 ///

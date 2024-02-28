@@ -847,6 +847,8 @@
 <a href="#846" id="846">846</a>
 <a href="#847" id="847">847</a>
 <a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -860,6 +862,7 @@
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
 </span><span class="kw">use </span><span class="kw">super</span>::Provider;
+
 <span class="kw">use crate</span>::{
     availability::{LeafQueryData, PayloadQueryData, VidCommonQueryData},
     fetching::request::{LeafRequest, PayloadRequest, VidCommonRequest},
@@ -1010,6 +1013,7 @@
 </span><span class="attr">#[cfg(all(test, not(target_os = <span class="string">"windows"</span>)))]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
     <span class="kw">use crate</span>::{
         api::load_api,
         availability::{define_api, AvailabilityDataSource, Fetch, UpdateAvailabilityData},

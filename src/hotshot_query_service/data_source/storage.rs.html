@@ -106,6 +106,9 @@
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
 <a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -147,6 +150,7 @@
 <span class="kw">pub mod </span>fs;
 <span class="kw">mod </span>ledger_log;
 <span class="kw">pub mod </span>no_storage;
+<span class="kw">pub mod </span>pruning;
 <span class="kw">pub mod </span>sql;
 
 <span class="attr">#[cfg(feature = <span class="string">"file-system-data-source"</span>)]
@@ -155,6 +159,8 @@
 </span><span class="kw">pub use </span>no_storage::NoStorage;
 <span class="attr">#[cfg(feature = <span class="string">"sql-data-source"</span>)]
 </span><span class="kw">pub use </span>sql::SqlStorage;
+
+<span class="kw">use </span><span class="self">self</span>::pruning::PruneStorage;
 
 <span class="doccomment">/// Persistent storage for a HotShot blockchain.
 ///
@@ -172,7 +178,7 @@
 /// better interface.
 </span><span class="attr">#[async_trait]
 </span><span class="kw">pub trait </span>AvailabilityStorage&lt;Types&gt;:
-    UpdateAvailabilityData&lt;Types&gt; + VersionedDataSource + Send + Sync
+    UpdateAvailabilityData&lt;Types&gt; + VersionedDataSource + PruneStorage + Send + Sync
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,

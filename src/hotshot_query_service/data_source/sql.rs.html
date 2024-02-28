@@ -456,6 +456,11 @@
 <a href="#455" id="455">455</a>
 <a href="#456" id="456">456</a>
 <a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
+<a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -475,17 +480,17 @@
     storage::sql::{<span class="self">self</span>, SqlStorage},
     AvailabilityProvider, FetchingDataSource,
 };
-<span class="kw">use crate</span>::{availability::QueryablePayload, Payload, QueryResult};
+<span class="kw">use </span><span class="kw">crate</span>::availability::QueryableHeader;
+<span class="kw">pub use </span><span class="kw">crate</span>::include_migrations;
+<span class="kw">use crate</span>::{availability::QueryablePayload, Header, Payload, QueryResult};
+<span class="kw">pub use </span>anyhow::Error;
 <span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
-<span class="kw">use </span>std::borrow::Cow;
-<span class="kw">use </span>tokio_postgres::Client;
-
-<span class="kw">pub use </span><span class="kw">crate</span>::include_migrations;
-<span class="kw">pub use </span>anyhow::Error;
 <span class="kw">pub use </span>refinery::Migration;
+<span class="kw">use </span>std::borrow::Cow;
 <span class="kw">pub use </span>tokio_postgres <span class="kw">as </span>postgres;
+<span class="kw">use </span>tokio_postgres::Client;
 
 <span class="kw">pub use </span>sql::{Config, Query, Transaction};
 
@@ -499,6 +504,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SqlDataSource&lt;Types, P&gt;, Error&gt;
     <span class="kw">where
         </span>Types: NodeType,
+        Header&lt;Types&gt;: QueryableHeader,
         Payload&lt;Types&gt;: QueryablePayload,
     {
         <span class="self">self</span>.builder(provider).<span class="kw">await</span><span class="question-mark">?</span>.build().<span class="kw">await
@@ -512,6 +518,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Builder&lt;Types, P&gt;, Error&gt;
     <span class="kw">where
         </span>Types: NodeType,
+        Header&lt;Types&gt;: QueryableHeader,
         Payload&lt;Types&gt;: QueryablePayload,
     {
         SqlDataSource::connect(<span class="self">self</span>, provider).<span class="kw">await
@@ -764,6 +771,7 @@
 <span class="kw">impl</span>&lt;Types, P: AvailabilityProvider&lt;Types&gt;&gt; SqlDataSource&lt;Types, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
+    Header&lt;Types&gt;: QueryableHeader,
     Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="doccomment">/// Connect to a remote database.
@@ -773,7 +781,9 @@
     /// [`build`](fetching::Builder::build). For a convenient constructor that uses the default
     /// fetching options, see [`Config::connect`].
     </span><span class="kw">pub async fn </span>connect(config: Config, provider: P) -&gt; <span class="prelude-ty">Result</span>&lt;Builder&lt;Types, P&gt;, Error&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::builder(SqlStorage::connect(config).<span class="kw">await</span><span class="question-mark">?</span>, provider))
+        <span class="kw">let </span>builder = <span class="self">Self</span>::builder(SqlStorage::connect(config).<span class="kw">await</span><span class="question-mark">?</span>, provider);
+
+        <span class="prelude-val">Ok</span>(builder)
     }
 }
 

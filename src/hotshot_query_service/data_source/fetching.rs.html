@@ -1138,6 +1138,93 @@
 <a href="#1137" id="1137">1137</a>
 <a href="#1138" id="1138">1138</a>
 <a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
+<a href="#1148" id="1148">1148</a>
+<a href="#1149" id="1149">1149</a>
+<a href="#1150" id="1150">1150</a>
+<a href="#1151" id="1151">1151</a>
+<a href="#1152" id="1152">1152</a>
+<a href="#1153" id="1153">1153</a>
+<a href="#1154" id="1154">1154</a>
+<a href="#1155" id="1155">1155</a>
+<a href="#1156" id="1156">1156</a>
+<a href="#1157" id="1157">1157</a>
+<a href="#1158" id="1158">1158</a>
+<a href="#1159" id="1159">1159</a>
+<a href="#1160" id="1160">1160</a>
+<a href="#1161" id="1161">1161</a>
+<a href="#1162" id="1162">1162</a>
+<a href="#1163" id="1163">1163</a>
+<a href="#1164" id="1164">1164</a>
+<a href="#1165" id="1165">1165</a>
+<a href="#1166" id="1166">1166</a>
+<a href="#1167" id="1167">1167</a>
+<a href="#1168" id="1168">1168</a>
+<a href="#1169" id="1169">1169</a>
+<a href="#1170" id="1170">1170</a>
+<a href="#1171" id="1171">1171</a>
+<a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
+<a href="#1176" id="1176">1176</a>
+<a href="#1177" id="1177">1177</a>
+<a href="#1178" id="1178">1178</a>
+<a href="#1179" id="1179">1179</a>
+<a href="#1180" id="1180">1180</a>
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a>
+<a href="#1210" id="1210">1210</a>
+<a href="#1211" id="1211">1211</a>
+<a href="#1212" id="1212">1212</a>
+<a href="#1213" id="1213">1213</a>
+<a href="#1214" id="1214">1214</a>
+<a href="#1215" id="1215">1215</a>
+<a href="#1216" id="1216">1216</a>
+<a href="#1217" id="1217">1217</a>
+<a href="#1218" id="1218">1218</a>
+<a href="#1219" id="1219">1219</a>
+<a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
+<a href="#1222" id="1222">1222</a>
+<a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1213,7 +1300,9 @@
 //! different request for the same object, one that permitted an active fetch. Or it may have been
 //! fetched [proactively](#proactive-fetching).
 
-</span><span class="kw">use super</span>::{notifier::Notifier, storage::AvailabilityStorage, VersionedDataSource};
+</span><span class="kw">use </span><span class="kw">super</span>::storage::pruning::PruneStorage;
+<span class="kw">use super</span>::{notifier::Notifier, storage::AvailabilityStorage, VersionedDataSource};
+<span class="kw">use </span><span class="kw">crate</span>::availability::QueryableHeader;
 <span class="kw">use crate</span>::{
     availability::{
         AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
@@ -1225,7 +1314,7 @@
     node::{NodeDataSource, SyncStatus},
     status::StatusDataSource,
     task::BackgroundTask,
-    Payload, QueryResult, SignatureKey, VidShare,
+    Header, Payload, QueryResult, SignatureKey, VidShare,
 };
 <span class="kw">use </span>anyhow::Context;
 <span class="kw">use </span>async_std::{
@@ -1240,6 +1329,7 @@
     stream::{<span class="self">self</span>, BoxStream, Stream, StreamExt},
 };
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
+
 <span class="kw">use </span>std::{
     cmp::min,
     fmt::{Debug, Display},
@@ -1359,6 +1449,7 @@
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
+    Header&lt;Types&gt;: QueryableHeader,
     S: NodeDataSource&lt;Types&gt; + AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
@@ -1399,12 +1490,77 @@
     </span>metrics: PrometheusMetrics,
     <span class="comment">// The proactive scanner task. This is only saved here so that we can cancel it on drop.
     </span>scanner: <span class="prelude-ty">Option</span>&lt;BackgroundTask&gt;,
+    pruner: Pruner&lt;Types, S, P&gt;,
+}
+
+<span class="attr">#[derive(Derivative)]
+#[derivative(Clone(bound = <span class="string">""</span>), Debug(bound = <span class="string">"S: Debug, P: Debug"</span>))]
+</span><span class="kw">pub struct </span>Pruner&lt;Types, S, P&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+{
+    handle: <span class="prelude-ty">Option</span>&lt;BackgroundTask&gt;,
+    _types: PhantomData&lt;(Types, S, P)&gt;,
+}
+
+<span class="kw">impl</span>&lt;Types, S, P&gt; Pruner&lt;Types, S, P&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+    Payload&lt;Types&gt;: QueryablePayload,
+    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
+    P: AvailabilityProvider&lt;Types&gt;,
+{
+    <span class="kw">async fn </span>new(fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>cfg = fetcher.storage.read().<span class="kw">await</span>.storage.get_pruning_config();
+        <span class="kw">let </span><span class="prelude-val">Some</span>(cfg) = cfg <span class="kw">else </span>{
+            <span class="kw">return </span><span class="self">Self </span>{
+                handle: <span class="prelude-val">None</span>,
+                _types: Default::default(),
+            };
+        };
+
+        <span class="kw">let </span>task = {
+            BackgroundTask::spawn(<span class="string">"pruner"</span>, <span class="kw">async move </span>{
+                <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>.. {
+                    sleep(cfg.interval()).<span class="kw">await</span>;
+                    <span class="macro">tracing::info!</span>(<span class="string">"pruner woke up for the {i}th time"</span>,);
+
+                    {
+                        <span class="kw">let </span><span class="kw-2">mut </span>storage = fetcher.storage.write().<span class="kw">await</span>;
+
+                        <span class="kw">match </span>storage.storage.prune().<span class="kw">await </span>{
+                            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(height)) =&gt; {
+                                storage.pruned_height = <span class="prelude-val">Some</span>(height);
+                                <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = storage.storage.save_pruned_height(height).<span class="kw">await </span>{
+                                    <span class="macro">tracing::error!</span>(<span class="string">"failed to save pruned height: {e:?}"</span>);
+                                    <span class="kw">continue</span>;
+                                }
+                                <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = storage.commit().<span class="kw">await </span>{
+                                    <span class="macro">tracing::error!</span>(<span class="string">"failed to commit: {e:?}"</span>)
+                                }
+                            }
+                            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; (),
+                            <span class="prelude-val">Err</span>(e) =&gt; {
+                                <span class="macro">tracing::error!</span>(<span class="string">"pruning failed: {e:?}"</span>);
+                            }
+                        }
+                    }
+                }
+            })
+        };
+
+        <span class="self">Self </span>{
+            handle: <span class="prelude-val">Some</span>(task),
+            _types: Default::default(),
+        }
+    }
 }
 
 <span class="kw">impl</span>&lt;Types, S, P&gt; FetchingDataSource&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
+    Header&lt;Types&gt;: QueryableHeader,
     S: NodeDataSource&lt;Types&gt; + AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
@@ -1435,9 +1591,11 @@
             <span class="prelude-val">None
         </span>};
 
+        <span class="kw">let </span>pruner = Pruner::new(fetcher.clone()).<span class="kw">await</span>;
         <span class="kw">let </span>ds = <span class="self">Self </span>{
             fetcher,
             scanner,
+            pruner,
             metrics: Default::default(),
         };
 
@@ -1724,6 +1882,7 @@
     height: u64,
     <span class="comment">// The block height at the last commit, which we will roll back to on `revert`.
     </span>committed_height: u64,
+    pruned_height: <span class="prelude-ty">Option</span>&lt;u64&gt;,
     block_notifier: Notifier&lt;BlockQueryData&lt;Types&gt;&gt;,
     leaf_notifier: Notifier&lt;LeafQueryData&lt;Types&gt;&gt;,
     vid_common_notifier: Notifier&lt;VidCommonQueryData&lt;Types&gt;&gt;,
@@ -1783,7 +1942,7 @@
 <span class="kw">impl</span>&lt;Types, S, P&gt; Fetcher&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    S: NodeDataSource&lt;Types&gt;,
+    S: NodeDataSource&lt;Types&gt; + PruneStorage + Sync + Send,
 {
     <span class="kw">async fn </span>new(builder: Builder&lt;Types, S, P&gt;) -&gt; anyhow::Result&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>payload_fetcher = fetching::Fetcher::default();
@@ -1796,10 +1955,12 @@
         }
 
         <span class="kw">let </span>height = builder.storage.block_height().<span class="kw">await</span><span class="question-mark">? </span><span class="kw">as </span>u64;
+        <span class="kw">let </span>pruned_height = builder.storage.load_pruned_height().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             storage: RwLock::new(NotifyStorage {
                 height,
                 committed_height: height,
+                pruned_height,
                 storage: builder.storage,
                 block_notifier: Notifier::new(),
                 leaf_notifier: Notifier::new(),
@@ -1832,8 +1993,10 @@
         // necessary, since sending notifications requires a write lock. Hence, we will not miss a
         // notification.
         </span><span class="kw">let </span>storage = <span class="self">self</span>.storage.read().<span class="kw">await</span>;
+        <span class="kw">let </span>pruned_height = storage.pruned_height.map(|h| h <span class="kw">as </span>usize);
+
         <span class="comment">// Fall back to fetching early and quietly if it is impossible for the object to exist.
-        </span><span class="kw">if </span>!req.might_exist(storage.height <span class="kw">as </span>usize) {
+        </span><span class="kw">if </span>!req.might_exist(storage.height <span class="kw">as </span>usize, pruned_height) {
             <span class="macro">tracing::debug!</span>(
                 <span class="string">"not loading object {req:?} that cannot exist at height {}"</span>,
                 storage.height
@@ -1892,12 +2055,13 @@
         </span>T: RangedFetchable&lt;Types&gt;,
     {
         <span class="kw">let </span>storage = <span class="self">self</span>.storage.read().<span class="kw">await</span>;
+        <span class="kw">let </span>pruned_height = storage.pruned_height.map(|h| h <span class="kw">as </span>usize);
         <span class="comment">// We can avoid touching storage if it is not possible for any entry in the entire range to
         // exist given the current block height. In this case, we know storage would return an empty
         // range.
         </span><span class="kw">let </span>ts = <span class="kw">if </span>chunk
             .clone()
-            .any(|i| T::Request::from(i).might_exist(storage.height <span class="kw">as </span>usize))
+            .any(|i| T::Request::from(i).might_exist(storage.height <span class="kw">as </span>usize, pruned_height))
         {
             T::load_range(<span class="kw-2">&amp;</span>storage, chunk.clone())
                 .<span class="kw">await
@@ -2042,7 +2206,10 @@
         //   can never release the _original_ read lock we had on `storage`, and so we can never
         //   unblock the task waiting for a write lock, which in turn means we can never become
         //   unblocked ourselves.
-        </span><span class="kw">if </span>req.might_exist(storage.height <span class="kw">as </span>usize) {
+
+        </span><span class="kw">let </span>pruned_height = storage.pruned_height.map(|h| h <span class="kw">as </span>usize);
+
+        <span class="kw">if </span>req.might_exist(storage.height <span class="kw">as </span>usize, pruned_height) {
             T::active_fetch(<span class="self">self</span>.clone(), storage, req).<span class="kw">await</span>;
         } <span class="kw">else </span>{
             <span class="macro">tracing::debug!</span>(
@@ -2069,14 +2236,21 @@
         <span class="kw">let </span><span class="kw-2">mut </span>prev_height = <span class="number">0</span>;
 
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>.. {
-            <span class="comment">// Get the block height; we will look for any missing blocks up to `block_height`.
-            </span><span class="kw">let </span>block_height = { <span class="self">self</span>.storage.read().<span class="kw">await</span>.height } <span class="kw">as </span>usize;
+            <span class="kw">let </span>(minimum_block_height, block_height) = {
+                <span class="kw">let </span>storage = <span class="self">self</span>.storage.read().<span class="kw">await</span>;
+                <span class="comment">// Get the pruned height or default to 0 if it is not set.
+                // We will start looking for missing blocks from the pruned height.
+                </span><span class="kw">let </span>pruned_height = storage.pruned_height.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>usize;
+                <span class="comment">// Get the block height; we will look for any missing blocks up to `block_height`.
+                </span><span class="kw">let </span>block_height = storage.height <span class="kw">as </span>usize;
+                (pruned_height, block_height)
+            };
 
             <span class="comment">// In a major scan, we fetch all blocks between 0 and `block_height`. In minor scans
             // (much more frequent) we fetch blocks that are missing since the last scan.
             </span><span class="kw">let </span>start = <span class="kw">if </span>i % major_interval == <span class="number">0 </span>{
-                <span class="number">0
-            </span>} <span class="kw">else </span>{
+                minimum_block_height
+            } <span class="kw">else </span>{
                 prev_height
             };
             <span class="macro">tracing::info!</span>(<span class="string">"starting proactive scan {i} of blocks from {start}-{block_height}"</span>);
@@ -2143,7 +2317,7 @@
     ///
     /// This method is conservative: it returns `true` if it cannot tell whether the given object
     /// could exist or not.
-    </span><span class="kw">fn </span>might_exist(<span class="self">self</span>, _block_height: usize) -&gt; bool {
+    </span><span class="kw">fn </span>might_exist(<span class="self">self</span>, _block_height: usize, _pruned_height: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; bool {
         <span class="bool-val">true
     </span>}
 }

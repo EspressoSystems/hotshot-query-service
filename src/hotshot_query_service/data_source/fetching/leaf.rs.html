@@ -269,9 +269,9 @@
 <span class="kw">where
     </span>Types: NodeType,
 {
-    <span class="kw">fn </span>might_exist(<span class="self">self</span>, block_height: usize) -&gt; bool {
+    <span class="kw">fn </span>might_exist(<span class="self">self</span>, block_height: usize, pruned_height: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; bool {
         <span class="kw">if let </span>LeafId::Number(n) = <span class="self">self </span>{
-            n &lt; block_height
+            n &lt; block_height &amp;&amp; pruned_height.map_or(<span class="bool-val">true</span>, |ph| n &gt; ph)
         } <span class="kw">else </span>{
             <span class="bool-val">true
         </span>}

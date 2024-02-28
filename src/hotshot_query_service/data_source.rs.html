@@ -1099,6 +1099,10 @@
 <a href="#1098" id="1098">1098</a>
 <a href="#1099" id="1099">1099</a>
 <a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1805,6 +1809,7 @@
                 missing_vid_common: <span class="number">1</span>,
                 missing_vid_shares: <span class="number">1</span>,
                 missing_leaves: <span class="number">0</span>,
+                pruned_height: <span class="prelude-val">None</span>,
             }
         );
 
@@ -1819,6 +1824,7 @@
                 missing_vid_common: <span class="number">3</span>,
                 missing_vid_shares: <span class="number">3</span>,
                 missing_leaves: <span class="number">1</span>,
+                pruned_height: <span class="prelude-val">None</span>,
             }
         );
 
@@ -1832,6 +1838,7 @@
                 missing_vid_common: <span class="number">2</span>,
                 missing_vid_shares: <span class="number">3</span>,
                 missing_leaves: <span class="number">1</span>,
+                pruned_height: <span class="prelude-val">None</span>,
             }
         );
 
@@ -1868,6 +1875,7 @@
             missing_leaves: expected_missing,
             missing_vid_common: <span class="number">0</span>,
             missing_vid_shares: expected_missing,
+            pruned_height: <span class="prelude-val">None</span>,
         };
         <span class="macro">assert_eq!</span>(ds.sync_status().<span class="kw">await</span>.unwrap(), expected_sync_status);
 
