@@ -15,11 +15,11 @@ use std::path::Path;
 use tide_disco::api::{Api, ApiError};
 use toml::{map::Entry, Value};
 
-pub(crate) fn load_api<State, Error>(
+pub(crate) fn load_api<State, Error, const MAJOR_VERSION: u16, const MINOR_VERSION: u16>(
     path: Option<impl AsRef<Path>>,
     default: &str,
     extensions: impl IntoIterator<Item = Value>,
-) -> Result<Api<State, Error>, ApiError> {
+) -> Result<Api<State, Error, MAJOR_VERSION, MINOR_VERSION>, ApiError> {
     let mut toml = match path {
         Some(path) => load_toml(path.as_ref())?,
         None => toml::from_str(default).map_err(|err| ApiError::CannotReadToml {

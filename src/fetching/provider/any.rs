@@ -211,6 +211,7 @@ mod test {
     };
     use async_std::task::spawn;
     use futures::stream::StreamExt;
+    use hotshot_constants::STATIC_VER_0_1;
     use portpicker::pick_unused_port;
     use tide_disco::App;
 
@@ -225,19 +226,19 @@ mod test {
 
         // Start a web server that the non-consensus node can use to fetch blocks.
         let port = pick_unused_port().unwrap();
-        let mut app = App::<_, Error>::with_state(network.data_source());
-        app.register_module("availability", define_api(&Default::default()).unwrap())
-            .unwrap();
+        let mut app = App::<_, Error, 0, 1>::with_state(network.data_source());
+        app.register_module(
+            "availability",
+            define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
+        )
+        .unwrap();
         spawn(app.serve(format!("0.0.0.0:{port}")));
 
         // Start a data source which is not receiving events from consensus, only from a peer.
         let db = TmpDb::init().await;
-        let provider =
-            Provider::default()
-                .with_provider(NoFetching)
-                .with_provider(QueryServiceProvider::new(
-                    format!("http://localhost:{port}").parse().unwrap(),
-                ));
+        let provider = Provider::default().with_provider(NoFetching).with_provider(
+            QueryServiceProvider::<0, 1>::new(format!("http://localhost:{port}").parse().unwrap()),
+        );
         let mut data_source = db.config().connect(provider.clone()).await.unwrap();
 
         // Start consensus.

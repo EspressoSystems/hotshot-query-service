@@ -38,6 +38,7 @@
 //!
 //! use async_std::{sync::{Arc, RwLock}, task::spawn};
 //! use futures::StreamExt;
+//! use hotshot_constants::STATIC_VER_0_1;
 //! use hotshot::SystemContext;
 //! use tide_disco::App;
 //!
@@ -54,16 +55,16 @@
 //! ).await.map_err(Error::internal)?.0;
 //!
 //! // Create API modules.
-//! let availability_api = availability::define_api(&Default::default())
+//! let availability_api = availability::define_api(&Default::default(), STATIC_VER_0_1)
 //!     .map_err(Error::internal)?;
-//! let node_api = node::define_api(&Default::default())
+//! let node_api = node::define_api(&Default::default(), STATIC_VER_0_1)
 //!     .map_err(Error::internal)?;
-//! let status_api = status::define_api(&Default::default())
+//! let status_api = status::define_api(&Default::default(), STATIC_VER_0_1)
 //!     .map_err(Error::internal)?;
 //!
 //! // Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
 //! let data_source = Arc::new(RwLock::new(data_source));
-//! let mut app = App::<_, Error>::with_state(data_source.clone());
+//! let mut app = App::<_, Error, 0, 1>::with_state(data_source.clone());
 //! app
 //!     .register_module("availability", availability_api)
 //!     .map_err(Error::internal)?
@@ -175,6 +176,7 @@
 //! # use async_std::sync::RwLock;
 //! # use async_trait::async_trait;
 //! # use futures::FutureExt;
+//! # use hotshot_constants::STATIC_VER_0_1;
 //! # use hotshot_query_service::availability::{
 //! #   self, AvailabilityDataSource, FetchBlockSnafu, TransactionIndex,
 //! # };
@@ -194,7 +196,7 @@
 //!     State: 'static + Send + Sync + ReadState,
 //!     <State as ReadState>::State: UtxoDataSource + Send + Sync,
 //! {
-//!     let mut api = availability::define_api(options)?;
+//!     let mut api = availability::define_api(options, STATIC_VER_0_1)?;
 //!     api.get("get_utxo", |req, state: &<State as ReadState>::State| async move {
 //!         let utxo_index = req.integer_param("index")?;
 //!         let (block_index, txn_index, output_index) = state
@@ -430,6 +432,7 @@ use hotshot_types::traits::{
 use serde::{Deserialize, Serialize};
 use snafu::Snafu;
 use tide_disco::{App, StatusCode};
+use versioned_binary_serialization::version::StaticVersion;
 
 pub use hotshot_types::{
     data::Leaf,
@@ -481,10 +484,17 @@ pub struct Options {
 }
 
 /// Run an instance of the HotShot Query service with no customization.
-pub async fn run_standalone_service<Types: NodeType, I: NodeImplementation<Types>, D>(
+pub async fn run_standalone_service<
+    Types: NodeType,
+    I: NodeImplementation<Types>,
+    D,
+    const MAJOR_VERSION: u16,
+    const MINOR_VERSION: u16,
+>(
     options: Options,
     data_source: D,
     hotshot: SystemContextHandle<Types, I>,
+    bind_version: StaticVersion<MAJOR_VERSION, MINOR_VERSION>,
 ) -> Result<(), Error>
 where
     Payload<Types>: availability::QueryablePayload,
@@ -499,13 +509,13 @@ where
 {
     // Create API modules.
     let availability_api =
-        availability::define_api(&options.availability).map_err(Error::internal)?;
-    let node_api = node::define_api(&options.node).map_err(Error::internal)?;
-    let status_api = status::define_api(&options.status).map_err(Error::internal)?;
+        availability::define_api(&options.availability, bind_version).map_err(Error::internal)?;
+    let node_api = node::define_api(&options.node, bind_version).map_err(Error::internal)?;
+    let status_api = status::define_api(&options.status, bind_version).map_err(Error::internal)?;
 
     // Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
     let data_source = Arc::new(RwLock::new(data_source));
-    let mut app = App::<_, Error>::with_state(data_source.clone());
+    let mut app = App::<_, Error, MAJOR_VERSION, MINOR_VERSION>::with_state(data_source.clone());
     app.register_module("availability", availability_api)
         .map_err(Error::internal)?
         .register_module("node", node_api)
@@ -557,6 +567,7 @@ mod test {
 
     use futures::FutureExt;
     use hotshot::types::SignatureKey as _;
+    use hotshot_constants::STATIC_VER_0_1;
     use hotshot_example_types::state_types::TestInstanceState;
     use hotshot_types::signature_key::BLSPubKey;
     use portpicker::pick_unused_port;
@@ -732,15 +743,21 @@ mod test {
             METHOD = "GET"
         };
 
-        let mut app = App::<_, Error>::with_state(RwLock::new(state));
+        let mut app = App::<_, Error, 0, 1>::with_state(RwLock::new(state));
         app.register_module(
             "availability",
-            availability::define_api(&Default::default()).unwrap(),
+            availability::define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
         )
         .unwrap()
-        .register_module("node", node::define_api(&Default::default()).unwrap())
+        .register_module(
+            "node",
+            node::define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
+        )
         .unwrap()
-        .register_module("status", status::define_api(&Default::default()).unwrap())
+        .register_module(
+            "status",
+            status::define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
+        )
         .unwrap()
         .module::<Error>("mod", module_spec)
         .unwrap()
@@ -772,7 +789,8 @@ mod test {
         let port = pick_unused_port().unwrap();
         spawn(app.serve(format!("0.0.0.0:{}", port)));
 
-        let client = Client::<Error>::new(format!("http://localhost:{}", port).parse().unwrap());
+        let client =
+            Client::<Error, 0, 1>::new(format!("http://localhost:{}", port).parse().unwrap());
         assert!(client.connect(Some(Duration::from_secs(60))).await);
 
         client.post::<()>("mod/ext/42").send().await.unwrap();

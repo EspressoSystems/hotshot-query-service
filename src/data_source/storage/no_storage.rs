@@ -205,6 +205,7 @@ pub mod testing {
     use async_std::task::spawn;
     use futures::stream::{BoxStream, StreamExt};
     use hotshot::types::Event;
+    use hotshot_constants::STATIC_VER_0_1;
     use portpicker::pick_unused_port;
     use std::{fmt::Display, time::Duration};
     use tide_disco::App;
@@ -225,7 +226,7 @@ pub mod testing {
 
     pub enum DataSource {
         Sql(SqlDataSource<MockTypes, NoFetching>),
-        NoStorage(FetchingDataSource<MockTypes, NoStorage, QueryServiceProvider>),
+        NoStorage(FetchingDataSource<MockTypes, NoStorage, QueryServiceProvider<0, 1>>),
     }
 
     #[async_trait]
@@ -294,9 +295,12 @@ pub mod testing {
             };
             tracing::info!("spawning server for missing data on port {fetch_from_port}");
             let api_data_source = network.data_source_index(1);
-            let mut app = App::<_, Error>::with_state(api_data_source);
-            app.register_module("availability", define_api(&Default::default()).unwrap())
-                .unwrap();
+            let mut app = App::<_, Error, 0, 1>::with_state(api_data_source);
+            app.register_module(
+                "availability",
+                define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
+            )
+            .unwrap();
             spawn(app.serve(format!("0.0.0.0:{fetch_from_port}")));
         }
 

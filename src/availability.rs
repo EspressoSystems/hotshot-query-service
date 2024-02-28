@@ -36,6 +36,7 @@ use serde::{Deserialize, Serialize};
 use snafu::{OptionExt, Snafu};
 use std::{fmt::Display, path::PathBuf, str::FromStr, time::Duration};
 use tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
+use versioned_binary_serialization::version::StaticVersion;
 
 pub(crate) mod data_source;
 mod fetch;
@@ -140,13 +141,16 @@ impl Error {
     }
 }
 
-pub fn define_api<State, Types: NodeType>(options: &Options) -> Result<Api<State, Error>, ApiError>
+pub fn define_api<State, Types: NodeType, const MAJOR_VERSION: u16, const MINOR_VERSION: u16>(
+    options: &Options,
+    _: StaticVersion<MAJOR_VERSION, MINOR_VERSION>,
+) -> Result<Api<State, Error, MAJOR_VERSION, MINOR_VERSION>, ApiError>
 where
     State: 'static + Send + Sync + ReadState,
     <State as ReadState>::State: Send + Sync + AvailabilityDataSource<Types>,
     Payload<Types>: QueryablePayload,
 {
-    let mut api = load_api::<State, Error>(
+    let mut api = load_api::<State, Error, MAJOR_VERSION, MINOR_VERSION>(
         options.api_path.as_ref(),
         include_str!("../api/availability.toml"),
         options.extensions.clone(),
@@ -492,6 +496,7 @@ mod test {
     use async_std::{sync::RwLock, task::spawn};
     use commit::Committable;
     use futures::future::FutureExt;
+    use hotshot_constants::STATIC_VER_0_1;
     use hotshot_example_types::state_types::TestInstanceState;
     use hotshot_types::data::Leaf;
     use portpicker::pick_unused_port;
@@ -503,7 +508,7 @@ mod test {
 
     /// Get the current ledger height and a list of non-empty leaf/block pairs.
     async fn get_non_empty_blocks(
-        client: &Client<Error>,
+        client: &Client<Error, 0, 1>,
     ) -> (
         u64,
         Vec<(LeafQueryData<MockTypes>, BlockQueryData<MockTypes>)>,
@@ -536,7 +541,7 @@ mod test {
         unreachable!()
     }
 
-    async fn validate(client: &Client<Error>, height: u64) {
+    async fn validate(client: &Client<Error, 0, 1>, height: u64) {
         // Check the consistency of every block/leaf pair.
         for i in 0..height {
             // Limit the number of blocks we validate in order to
@@ -781,20 +786,23 @@ mod test {
 
         // Start the web server.
         let port = pick_unused_port().unwrap();
-        let mut app = App::<_, Error>::with_state(network.data_source());
+        let mut app = App::<_, Error, 0, 1>::with_state(network.data_source());
         app.register_module(
             "availability",
-            define_api(&Options {
-                fetch_timeout,
-                ..Default::default()
-            })
+            define_api(
+                &Options {
+                    fetch_timeout,
+                    ..Default::default()
+                },
+                STATIC_VER_0_1,
+            )
             .unwrap(),
         )
         .unwrap();
         spawn(app.serve(format!("0.0.0.0:{}", port)));
 
         // Start a client.
-        let client = Client::<Error>::new(
+        let client = Client::<Error, 0, 1>::new(
             format!("http://localhost:{}/availability", port)
                 .parse()
                 .unwrap(),
@@ -906,10 +914,13 @@ mod test {
         };
 
         let mut api =
-            define_api::<RwLock<ExtensibleDataSource<MockDataSource, u64>>, MockTypes>(&Options {
-                extensions: vec![extensions.into()],
-                ..Default::default()
-            })
+            define_api::<RwLock<ExtensibleDataSource<MockDataSource, u64>>, MockTypes, 0, 1>(
+                &Options {
+                    extensions: vec![extensions.into()],
+                    ..Default::default()
+                },
+                STATIC_VER_0_1,
+            )
             .unwrap();
         api.get("get_ext", |_, state| {
             async move { Ok(*state.as_ref()) }.boxed()
@@ -924,13 +935,13 @@ mod test {
         })
         .unwrap();
 
-        let mut app = App::<_, Error>::with_state(RwLock::new(data_source));
+        let mut app = App::<_, Error, 0, 1>::with_state(RwLock::new(data_source));
         app.register_module("availability", api).unwrap();
 
         let port = pick_unused_port().unwrap();
         spawn(app.serve(format!("0.0.0.0:{}", port)));
 
-        let client = Client::<Error>::new(
+        let client = Client::<Error, 0, 1>::new(
             format!("http://localhost:{}/availability", port)
                 .parse()
                 .unwrap(),

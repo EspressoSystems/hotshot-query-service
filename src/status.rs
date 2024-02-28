@@ -34,6 +34,7 @@ use std::borrow::Cow;
 use std::fmt::Display;
 use std::path::PathBuf;
 use tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
+use versioned_binary_serialization::version::StaticVersion;
 
 pub(crate) mod data_source;
 pub(crate) mod query_data;
@@ -78,12 +79,15 @@ fn internal<M: Display>(msg: M) -> Error {
     }
 }
 
-pub fn define_api<State>(options: &Options) -> Result<Api<State, Error>, ApiError>
+pub fn define_api<State, const MAJOR_VERSION: u16, const MINOR_VERSION: u16>(
+    options: &Options,
+    _: StaticVersion<MAJOR_VERSION, MINOR_VERSION>,
+) -> Result<Api<State, Error, MAJOR_VERSION, MINOR_VERSION>, ApiError>
 where
     State: 'static + Send + Sync + ReadState,
     <State as ReadState>::State: Send + Sync + StatusDataSource,
 {
-    let mut api = load_api::<State, Error>(
+    let mut api = load_api::<State, Error, MAJOR_VERSION, MINOR_VERSION>(
         options.api_path.as_ref(),
         include_str!("../api/status.toml"),
         options.extensions.clone(),
@@ -128,6 +132,7 @@ mod test {
     use async_std::{sync::RwLock, task::spawn};
     use bincode::Options as _;
     use futures::FutureExt;
+    use hotshot_constants::STATIC_VER_0_1;
     use hotshot_utils::bincode::bincode_opts;
     use portpicker::pick_unused_port;
     use std::str::FromStr;
@@ -146,14 +151,17 @@ mod test {
 
         // Start the web server.
         let port = pick_unused_port().unwrap();
-        let mut app = App::<_, Error>::with_state(network.data_source());
-        app.register_module("status", define_api(&Default::default()).unwrap())
-            .unwrap();
+        let mut app = App::<_, Error, 0, 1>::with_state(network.data_source());
+        app.register_module(
+            "status",
+            define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
+        )
+        .unwrap();
         spawn(app.serve(format!("0.0.0.0:{}", port)));
 
         // Start a client.
         let url = Url::from_str(&format!("http://localhost:{}/status", port)).unwrap();
-        let client = Client::<Error>::new(url.clone());
+        let client = Client::<Error, 0, 1>::new(url.clone());
         assert!(client.connect(Some(Duration::from_secs(60))).await);
 
         // Submit a transaction. We have not yet started the validators, so this transaction will
@@ -259,10 +267,13 @@ mod test {
             METHOD = "GET"
         };
 
-        let mut api = define_api::<RwLock<ExtensibleDataSource<MockDataSource, u64>>>(&Options {
-            extensions: vec![extensions.into()],
-            ..Default::default()
-        })
+        let mut api = define_api::<RwLock<ExtensibleDataSource<MockDataSource, u64>>, 0, 1>(
+            &Options {
+                extensions: vec![extensions.into()],
+                ..Default::default()
+            },
+            STATIC_VER_0_1,
+        )
         .unwrap();
         api.get("get_ext", |_, state| {
             async move { Ok(*state.as_ref()) }.boxed()
@@ -277,14 +288,15 @@ mod test {
         })
         .unwrap();
 
-        let mut app = App::<_, Error>::with_state(RwLock::new(data_source));
+        let mut app = App::<_, Error, 0, 1>::with_state(RwLock::new(data_source));
         app.register_module("status", api).unwrap();
 
         let port = pick_unused_port().unwrap();
         spawn(app.serve(format!("0.0.0.0:{}", port)));
 
-        let client =
-            Client::<Error>::new(format!("http://localhost:{}/status", port).parse().unwrap());
+        let client = Client::<Error, 0, 1>::new(
+            format!("http://localhost:{}/status", port).parse().unwrap(),
+        );
         assert!(client.connect(Some(Duration::from_secs(60))).await);
 
         assert_eq!(client.get::<u64>("ext").send().await.unwrap(), 0);
