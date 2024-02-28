@@ -1450,6 +1450,7 @@ pub mod testing {
 
             let output = Command::new("docker")
                 .arg("run")
+                .arg("--rm")
                 .arg("-d")
                 .args(["-p", &format!("{port}:5432")])
                 .args(["-e", "POSTGRES_PASSWORD=password"])
@@ -1520,7 +1521,7 @@ pub mod testing {
     impl Drop for TmpDb {
         fn drop(&mut self) {
             let output = Command::new("docker")
-                .args(["kill", self.container_id.as_str()])
+                .args(["stop", self.container_id.as_str()])
                 .output()
                 .unwrap();
             if !output.status.success() {
