@@ -954,22 +954,6 @@
 <a href="#953" id="953">953</a>
 <a href="#954" id="954">954</a>
 <a href="#955" id="955">955</a>
-<a href="#956" id="956">956</a>
-<a href="#957" id="957">957</a>
-<a href="#958" id="958">958</a>
-<a href="#959" id="959">959</a>
-<a href="#960" id="960">960</a>
-<a href="#961" id="961">961</a>
-<a href="#962" id="962">962</a>
-<a href="#963" id="963">963</a>
-<a href="#964" id="964">964</a>
-<a href="#965" id="965">965</a>
-<a href="#966" id="966">966</a>
-<a href="#967" id="967">967</a>
-<a href="#968" id="968">968</a>
-<a href="#969" id="969">969</a>
-<a href="#970" id="970">970</a>
-<a href="#971" id="971">971</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1456,15 +1440,14 @@
         status::StatusDataSource,
         testing::{
             consensus::{MockDataSource, MockNetwork, TestableDataSource},
-            has_vid,
             mocks::{mock_transaction, MockHeader, MockPayload, MockTypes},
-            setup_test, FIRST_VID_VIEW,
+            setup_test,
         },
         Error, Header,
     };
     <span class="kw">use </span>async_std::{sync::RwLock, task::spawn};
     <span class="kw">use </span>commit::Committable;
-    <span class="kw">use </span>futures::{future::FutureExt, stream};
+    <span class="kw">use </span>futures::future::FutureExt;
     <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
     <span class="kw">use </span>hotshot_types::data::Leaf;
     <span class="kw">use </span>portpicker::pick_unused_port;
@@ -1571,27 +1554,22 @@
                     </span>.unwrap(),
             );
             <span class="comment">// Look up the common VID data.
-            </span><span class="kw">let </span>common = <span class="kw">if </span>has_vid(i <span class="kw">as </span>usize) {
-                <span class="kw">let </span>common: VidCommonQueryData&lt;MockTypes&gt; = client
-                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"vid/common/{}"</span>, block.height()))
+            </span><span class="kw">let </span>common: VidCommonQueryData&lt;MockTypes&gt; = client
+                .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"vid/common/{}"</span>, block.height()))
+                .send()
+                .<span class="kw">await
+                </span>.unwrap();
+            <span class="macro">assert_eq!</span>(common.height(), block.height());
+            <span class="macro">assert_eq!</span>(common.block_hash(), block.hash());
+            <span class="macro">assert_eq!</span>(common.payload_hash(), block.payload_hash());
+            <span class="macro">assert_eq!</span>(
+                common,
+                client
+                    .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"vid/common/hash/{}"</span>, block.hash()))
                     .send()
                     .<span class="kw">await
-                    </span>.unwrap();
-                <span class="macro">assert_eq!</span>(common.height(), block.height());
-                <span class="macro">assert_eq!</span>(common.block_hash(), block.hash());
-                <span class="macro">assert_eq!</span>(common.payload_hash(), block.payload_hash());
-                <span class="macro">assert_eq!</span>(
-                    common,
-                    client
-                        .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"vid/common/hash/{}"</span>, block.hash()))
-                        .send()
-                        .<span class="kw">await
-                        </span>.unwrap()
-                );
-                <span class="prelude-val">Some</span>(common)
-            } <span class="kw">else </span>{
-                <span class="prelude-val">None
-            </span>};
+                    </span>.unwrap()
+            );
 
             <span class="kw">let </span>block_summary = client
                 .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"block/summary/{}"</span>, i))
@@ -1654,20 +1632,18 @@
                     </span>.unwrap()
                     .data(),
             );
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(common) = common {
-                <span class="macro">assert_eq!</span>(
-                    common.common(),
-                    client
-                        .get::&lt;VidCommonQueryData&lt;MockTypes&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                            <span class="string">"vid/common/payload-hash/{}"</span>,
-                            block.payload_hash()
-                        ))
-                        .send()
-                        .<span class="kw">await
-                        </span>.unwrap()
-                        .common()
-                );
-            }
+            <span class="macro">assert_eq!</span>(
+                common.common(),
+                client
+                    .get::&lt;VidCommonQueryData&lt;MockTypes&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                        <span class="string">"vid/common/payload-hash/{}"</span>,
+                        block.payload_hash()
+                    ))
+                    .send()
+                    .<span class="kw">await
+                    </span>.unwrap()
+                    .common()
+            );
 
             <span class="comment">// Check that looking up each transaction in the block various ways returns the correct
             // transaction.
@@ -1799,16 +1775,11 @@
             .subscribe::&lt;BlockQueryData&lt;MockTypes&gt;&gt;()
             .<span class="kw">await
             </span>.unwrap();
-        <span class="comment">// Skip block 0 in the VID stream, as there is not VID for the genesis block.
-        </span><span class="kw">const </span>MISSING_VID: <span class="prelude-ty">Option</span>&lt;VidCommonQueryData&lt;MockTypes&gt;&gt; = <span class="prelude-val">None</span>;
-        <span class="kw">let </span>vid_common = stream::iter([MISSING_VID; FIRST_VID_VIEW]).chain(
-            client
-                .socket(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"stream/vid/common/{FIRST_VID_VIEW}"</span>))
-                .subscribe::&lt;VidCommonQueryData&lt;MockTypes&gt;&gt;()
-                .<span class="kw">await
-                </span>.unwrap()
-                .map(|res| res.ok()),
-        );
+        <span class="kw">let </span>vid_common = client
+            .socket(<span class="string">"stream/vid/common/0"</span>)
+            .subscribe::&lt;VidCommonQueryData&lt;MockTypes&gt;&gt;()
+            .<span class="kw">await
+            </span>.unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>chain = leaves.zip(headers.zip(blocks.zip(vid_common))).enumerate();
         <span class="kw">for </span>nonce <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
             <span class="kw">let </span>txn = mock_transaction(<span class="macro">vec!</span>[nonce]);
@@ -1822,12 +1793,11 @@
                 <span class="kw">let </span>leaf = leaf.unwrap();
                 <span class="kw">let </span>header = header.unwrap();
                 <span class="kw">let </span>block = block.unwrap();
+                <span class="kw">let </span>common = common.unwrap();
                 <span class="macro">assert_eq!</span>(leaf.height() <span class="kw">as </span>usize, i);
                 <span class="macro">assert_eq!</span>(leaf.block_hash(), block.hash());
                 <span class="macro">assert_eq!</span>(block.header(), <span class="kw-2">&amp;</span>header);
-                <span class="kw">if </span>has_vid(i) {
-                    <span class="macro">assert!</span>(common.is_some());
-                }
+                <span class="macro">assert_eq!</span>(common.height() <span class="kw">as </span>usize, i);
                 <span class="kw">if </span>!block.is_empty() {
                     <span class="kw">break </span>(i, leaf, block, common);
                 }
@@ -1840,12 +1810,10 @@
                 block,
                 client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"block/{}"</span>, i)).send().<span class="kw">await</span>.unwrap()
             );
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(common) = common {
-                <span class="macro">assert_eq!</span>(
-                    common,
-                    client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"vid/common/{i}"</span>)).send().<span class="kw">await</span>.unwrap()
-                );
-            }
+            <span class="macro">assert_eq!</span>(
+                common,
+                client.get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"vid/common/{i}"</span>)).send().<span class="kw">await</span>.unwrap()
+            );
 
             validate(<span class="kw-2">&amp;</span>client, (i + <span class="number">1</span>) <span class="kw">as </span>u64).<span class="kw">await</span>;
         }

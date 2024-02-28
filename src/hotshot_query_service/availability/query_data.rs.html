@@ -561,6 +561,26 @@
 <a href="#560" id="560">560</a>
 <a href="#561" id="561">561</a>
 <a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -576,14 +596,16 @@
 </span><span class="kw">use crate</span>::{Header, Metadata, Payload, SignatureKey, Transaction, VidCommon};
 <span class="kw">use </span>commit::{Commitment, Committable};
 <span class="kw">use </span>hotshot_types::{
-    data::{Leaf, VidCommitment},
+    data::Leaf,
     simple_certificate::QuorumCertificate,
     traits::{
         <span class="self">self</span>,
-        block_contents::{BlockHeader, BlockPayload},
+        block_contents::{BlockHeader, BlockPayload, GENESIS_VID_NUM_STORAGE_NODES},
         node_implementation::NodeType,
     },
+    vid::{vid_scheme, VidCommitment},
 };
+<span class="kw">use </span>jf_primitives::vid::VidScheme;
 <span class="kw">use </span>serde::{de::DeserializeOwned, Deserialize, Serialize};
 <span class="kw">use </span>snafu::{ensure, Snafu};
 <span class="kw">use </span>std::fmt::Debug;
@@ -848,8 +870,8 @@
     </span><span class="kw">where
         </span>Payload&lt;Types&gt;: QueryablePayload,
     {
-        <span class="kw">let </span>(header, payload, <span class="kw">_</span>) = Types::BlockHeader::genesis(instance_state);
-        <span class="self">Self</span>::new(header, payload)
+        <span class="kw">let </span>leaf = Leaf::&lt;Types&gt;::genesis(instance_state);
+        <span class="self">Self</span>::new(leaf.block_header, leaf.block_payload.unwrap())
     }
 
     <span class="kw">pub fn </span>header(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Header&lt;Types&gt; {
@@ -949,6 +971,13 @@
 }
 
 <span class="kw">impl</span>&lt;Types: NodeType&gt; PayloadQueryData&lt;Types&gt; {
+    <span class="kw">pub fn </span>genesis(instance_state: <span class="kw-2">&amp;</span>Types::InstanceState) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>Payload&lt;Types&gt;: QueryablePayload,
+    {
+        BlockQueryData::genesis(instance_state).into()
+    }
+
     <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
         <span class="self">self</span>.height
     }
@@ -987,6 +1016,17 @@
             payload_hash: header.payload_commitment(),
             common,
         }
+    }
+
+    <span class="kw">pub fn </span>genesis(instance_state: <span class="kw-2">&amp;</span>Types::InstanceState) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>leaf = Leaf::&lt;Types&gt;::genesis(instance_state);
+        <span class="kw">let </span>payload = leaf.block_payload.unwrap();
+        <span class="kw">let </span>bytes = payload.encode().unwrap().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        <span class="kw">let </span>disperse = vid_scheme(GENESIS_VID_NUM_STORAGE_NODES)
+            .disperse(bytes)
+            .unwrap();
+
+        <span class="self">Self</span>::new(leaf.block_header, disperse.common)
     }
 
     <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {

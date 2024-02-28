@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["FIRST_VID_VIEW"],"fn":["has_vid","setup_test","sleep"],"mod":["consensus","mocks"]};
+window.SIDEBAR_ITEMS = {"fn":["setup_test","sleep"],"mod":["consensus","mocks"]};

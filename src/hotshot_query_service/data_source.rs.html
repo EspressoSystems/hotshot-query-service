@@ -1099,28 +1099,6 @@
 <a href="#1098" id="1098">1098</a>
 <a href="#1099" id="1099">1099</a>
 <a href="#1100" id="1100">1100</a>
-<a href="#1101" id="1101">1101</a>
-<a href="#1102" id="1102">1102</a>
-<a href="#1103" id="1103">1103</a>
-<a href="#1104" id="1104">1104</a>
-<a href="#1105" id="1105">1105</a>
-<a href="#1106" id="1106">1106</a>
-<a href="#1107" id="1107">1107</a>
-<a href="#1108" id="1108">1108</a>
-<a href="#1109" id="1109">1109</a>
-<a href="#1110" id="1110">1110</a>
-<a href="#1111" id="1111">1111</a>
-<a href="#1112" id="1112">1112</a>
-<a href="#1113" id="1113">1113</a>
-<a href="#1114" id="1114">1114</a>
-<a href="#1115" id="1115">1115</a>
-<a href="#1116" id="1116">1116</a>
-<a href="#1117" id="1117">1117</a>
-<a href="#1118" id="1118">1118</a>
-<a href="#1119" id="1119">1119</a>
-<a href="#1120" id="1120">1120</a>
-<a href="#1121" id="1121">1121</a>
-<a href="#1122" id="1122">1122</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1247,7 +1225,6 @@
         node::NodeDataSource,
         testing::{
             consensus::{MockNetwork, TestableDataSource},
-            has_vid,
             mocks::{mock_transaction, MockTypes},
             setup_test,
         },
@@ -1341,33 +1318,31 @@
                     </span>.<span class="kw">await</span>;
             }
 
-            <span class="comment">// Look up the common VID data. Skip the genesis block, as there is no VID for it.
-            </span><span class="kw">if </span>has_vid(i) {
-                <span class="macro">tracing::info!</span>(<span class="string">"looking up VID common {i} various ways"</span>);
-                <span class="kw">let </span>common = ds.get_vid_common(block.height() <span class="kw">as </span>usize).<span class="kw">await</span>.<span class="kw">await</span>;
-                <span class="macro">assert_eq!</span>(common, ds.get_vid_common(block.hash()).<span class="kw">await</span>.<span class="kw">await</span>);
-                <span class="comment">// Similar to the above, we can't guarantee which index we will get when passively
-                // fetching this data, so only check the index if the data is available locally.
-                </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(res) = ds
+            <span class="comment">// Look up the common VID data.
+            </span><span class="macro">tracing::info!</span>(<span class="string">"looking up VID common {i} various ways"</span>);
+            <span class="kw">let </span>common = ds.get_vid_common(block.height() <span class="kw">as </span>usize).<span class="kw">await</span>.<span class="kw">await</span>;
+            <span class="macro">assert_eq!</span>(common, ds.get_vid_common(block.hash()).<span class="kw">await</span>.<span class="kw">await</span>);
+            <span class="comment">// Similar to the above, we can't guarantee which index we will get when passively
+            // fetching this data, so only check the index if the data is available locally.
+            </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(res) = ds
+                .get_vid_common(BlockId::PayloadHash(block.payload_hash()))
+                .<span class="kw">await
+                </span>.try_resolve()
+            {
+                <span class="kw">if </span><span class="kw-2">*</span>ix == i <span class="kw">as </span>u64 {
+                    <span class="macro">assert_eq!</span>(res, common);
+                }
+            } <span class="kw">else </span>{
+                <span class="macro">tracing::warn!</span>(
+                    <span class="string">"skipping VID common index check for missing data {:?}"</span>,
+                    block.header()
+                );
+                <span class="comment">// At least check that _some_ data can be fetched.
+                </span><span class="kw">let </span>res = ds
                     .get_vid_common(BlockId::PayloadHash(block.payload_hash()))
                     .<span class="kw">await
-                    </span>.try_resolve()
-                {
-                    <span class="kw">if </span><span class="kw-2">*</span>ix == i <span class="kw">as </span>u64 {
-                        <span class="macro">assert_eq!</span>(res, common);
-                    }
-                } <span class="kw">else </span>{
-                    <span class="macro">tracing::warn!</span>(
-                        <span class="string">"skipping VID common index check for missing data {:?}"</span>,
-                        block.header()
-                    );
-                    <span class="comment">// At least check that _some_ data can be fetched.
-                    </span><span class="kw">let </span>res = ds
-                        .get_vid_common(BlockId::PayloadHash(block.payload_hash()))
-                        .<span class="kw">await
-                        </span>.<span class="kw">await</span>;
-                    <span class="macro">assert_eq!</span>(res.payload_hash(), common.payload_hash());
-                }
+                    </span>.<span class="kw">await</span>;
+                <span class="macro">assert_eq!</span>(res.payload_hash(), common.payload_hash());
             }
 
             <span class="kw">for </span>(j, txn) <span class="kw">in </span>block.enumerate() {
@@ -1523,14 +1498,10 @@
             <span class="macro">tracing::info!</span>(i, <span class="string">"check entries"</span>);
             <span class="kw">let </span>leaf = leaves.next().<span class="kw">await</span>.unwrap().<span class="kw">await</span>;
             <span class="kw">let </span>block = blocks.next().<span class="kw">await</span>.unwrap().<span class="kw">await</span>;
-            <span class="kw">let </span>common = vid_common.next().<span class="kw">await</span>.unwrap();
+            <span class="kw">let </span>common = vid_common.next().<span class="kw">await</span>.unwrap().<span class="kw">await</span>;
             <span class="macro">assert_eq!</span>(leaf.height(), i);
             <span class="macro">assert_eq!</span>(block.height(), i);
-            <span class="kw">if </span>has_vid(i <span class="kw">as </span>usize) {
-                <span class="macro">assert_eq!</span>(common.<span class="kw">await</span>, ds.get_vid_common(i <span class="kw">as </span>usize).<span class="kw">await</span>.<span class="kw">await</span>);
-            } <span class="kw">else </span>{
-                common.try_resolve().unwrap_err();
-            }
+            <span class="macro">assert_eq!</span>(common, ds.get_vid_common(i <span class="kw">as </span>usize).<span class="kw">await</span>.<span class="kw">await</span>);
         }
 
         <span class="kw">if </span>range.end_bound() == Bound::Unbounded {
@@ -1688,7 +1659,7 @@
         testing::{
             consensus::{MockNetwork, TestableDataSource},
             mocks::{mock_transaction, MockPayload, MockTypes},
-            setup_test, FIRST_VID_VIEW,
+            setup_test,
         },
         VidShare,
     };
@@ -1698,9 +1669,10 @@
         state_types::TestInstanceState,
     };
     <span class="kw">use </span>hotshot_types::{
-        data::{test_srs, VidScheme, VidSchemeTrait},
         traits::block_contents::{vid_commitment, BlockPayload},
+        vid::{vid_scheme, VidSchemeType},
     };
+    <span class="kw">use </span>jf_primitives::vid::VidScheme;
     <span class="kw">use </span>std::collections::HashSet;
 
     <span class="kw">async fn </span>validate(ds: <span class="kw-2">&amp;</span><span class="kw">impl </span>TestableDataSource) {
@@ -1792,7 +1764,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Set up a mock VID scheme to use for generating test data.
-        </span><span class="kw">let </span>vid = VidScheme::new(<span class="number">2</span>, <span class="number">2</span>, <span class="number">1</span>, test_srs(<span class="number">2</span>)).unwrap();
+        </span><span class="kw">let </span>vid = vid_scheme(<span class="number">2</span>);
 
         <span class="comment">// Generate some mock leaves and blocks to insert.
         </span><span class="kw">let </span><span class="kw-2">mut </span>leaves = <span class="macro">vec!</span>[LeafQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {})];
@@ -1959,15 +1931,8 @@
 
         network.start().<span class="kw">await</span>;
 
-        <span class="comment">// Check VID shares for a few blocks. We skip the genesis leaf as there is no VID for the
-        // genesis block.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>leaves = {
-            ds.read()
-                .<span class="kw">await
-                </span>.subscribe_leaves(FIRST_VID_VIEW)
-                .<span class="kw">await
-                </span>.take(<span class="number">2</span>)
-        };
+        <span class="comment">// Check VID shares for a few blocks.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>leaves = { ds.read().<span class="kw">await</span>.subscribe_leaves(<span class="number">0</span>).<span class="kw">await</span>.take(<span class="number">3</span>) };
         <span class="kw">while let </span><span class="prelude-val">Some</span>(leaf) = leaves.next().<span class="kw">await </span>{
             <span class="macro">tracing::info!</span>(<span class="string">"got leaf {}"</span>, leaf.height());
             <span class="kw">let </span>ds = ds.read().<span class="kw">await</span>;
@@ -1990,13 +1955,11 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Generate some test VID data.
-        </span><span class="kw">let </span>vid = VidScheme::new(<span class="number">2</span>, <span class="number">2</span>, <span class="number">1</span>, test_srs(<span class="number">2</span>)).unwrap();
+        </span><span class="kw">let </span>vid = vid_scheme(<span class="number">2</span>);
         <span class="kw">let </span>disperse = vid.disperse([]).unwrap();
 
-        <span class="comment">// Insert test data with VID common and a share. We use height `FIRST_VID_VIEW` to avoid
-        // confusing the data source, which assumes VID cannot exist at lower heights.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
-        leaf.leaf.block_header.block_number = FIRST_VID_VIEW <span class="kw">as </span>u64;
+        <span class="comment">// Insert test data with VID common and a share.
+        </span><span class="kw">let </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
         <span class="kw">let </span>common = VidCommonQueryData::new(leaf.header().clone(), disperse.common);
         ds.insert_leaf(leaf).<span class="kw">await</span>.unwrap();
         ds.insert_vid(common.clone(), <span class="prelude-val">Some</span>(disperse.shares[<span class="number">0</span>].clone()))
@@ -2004,21 +1967,15 @@
             </span>.unwrap();
         ds.commit().<span class="kw">await</span>.unwrap();
 
-        <span class="macro">assert_eq!</span>(ds.get_vid_common(FIRST_VID_VIEW).<span class="kw">await</span>.<span class="kw">await</span>, common);
-        <span class="macro">assert_eq!</span>(
-            ds.vid_share(FIRST_VID_VIEW).<span class="kw">await</span>.unwrap(),
-            disperse.shares[<span class="number">0</span>]
-        );
+        <span class="macro">assert_eq!</span>(ds.get_vid_common(<span class="number">0</span>).<span class="kw">await</span>.<span class="kw">await</span>, common);
+        <span class="macro">assert_eq!</span>(ds.vid_share(<span class="number">0</span>).<span class="kw">await</span>.unwrap(), disperse.shares[<span class="number">0</span>]);
 
         <span class="comment">// Re-insert the common data, without a share. This should not overwrite the share we
         // already have.
         </span>ds.insert_vid(common.clone(), <span class="prelude-val">None</span>).<span class="kw">await</span>.unwrap();
         ds.commit().<span class="kw">await</span>.unwrap();
-        <span class="macro">assert_eq!</span>(ds.get_vid_common(FIRST_VID_VIEW).<span class="kw">await</span>.<span class="kw">await</span>, common);
-        <span class="macro">assert_eq!</span>(
-            ds.vid_share(FIRST_VID_VIEW).<span class="kw">await</span>.unwrap(),
-            disperse.shares[<span class="number">0</span>]
-        );
+        <span class="macro">assert_eq!</span>(ds.get_vid_common(<span class="number">0</span>).<span class="kw">await</span>.<span class="kw">await</span>, common);
+        <span class="macro">assert_eq!</span>(ds.vid_share(<span class="number">0</span>).<span class="kw">await</span>.unwrap(), disperse.shares[<span class="number">0</span>]);
     }
 
     <span class="comment">// This test is currently ignored, as all nodes are temporarily storing the same share, so
@@ -2052,14 +2009,13 @@
         <span class="kw">let </span>commit = block.payload_hash();
 
         <span class="comment">// Set up a test VID scheme.
-        </span><span class="kw">let </span>num_nodes = network.num_nodes();
-        <span class="kw">let </span>vid = VidScheme::new(num_nodes, num_nodes, <span class="number">1</span>, test_srs(num_nodes)).unwrap();
+        </span><span class="kw">let </span>vid = vid_scheme(network.num_nodes());
 
         <span class="comment">// Get VID common data and verify it.
         </span><span class="macro">tracing::info!</span>(<span class="string">"fetching common data"</span>);
         <span class="kw">let </span>common = { ds.read().<span class="kw">await</span>.get_vid_common(height).<span class="kw">await</span>.<span class="kw">await </span>};
         <span class="kw">let </span>common = common.common();
-        VidScheme::is_consistent(<span class="kw-2">&amp;</span>commit, common).unwrap();
+        VidSchemeType::is_consistent(<span class="kw-2">&amp;</span>commit, common).unwrap();
 
         <span class="comment">// Collect shares from each node.
         </span><span class="macro">tracing::info!</span>(<span class="string">"fetching shares"</span>);

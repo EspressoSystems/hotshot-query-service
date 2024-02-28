@@ -426,14 +426,6 @@
 <a href="#425" id="425">425</a>
 <a href="#426" id="426">426</a>
 <a href="#427" id="427">427</a>
-<a href="#428" id="428">428</a>
-<a href="#429" id="429">429</a>
-<a href="#430" id="430">430</a>
-<a href="#431" id="431">431</a>
-<a href="#432" id="432">432</a>
-<a href="#433" id="433">433</a>
-<a href="#434" id="434">434</a>
-<a href="#435" id="435">435</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -620,9 +612,8 @@
         data_source::ExtensibleDataSource,
         testing::{
             consensus::{MockDataSource, MockNetwork},
-            has_vid,
             mocks::MockTypes,
-            setup_test, FIRST_VID_VIEW,
+            setup_test,
         },
         Error, VidShare,
     };
@@ -662,12 +653,10 @@
             Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
-        <span class="comment">// Wait until the block height is high enough that:
-        // * each node has proposed a block
-        // * there is more than one block for which VID is available
+        <span class="comment">// Wait until the block height is high enough that each node has proposed a block.
         </span><span class="kw">let </span>block_height = <span class="kw">loop </span>{
             <span class="kw">let </span>block_height = client.get::&lt;usize&gt;(<span class="string">"block-height"</span>).send().<span class="kw">await</span>.unwrap();
-            <span class="kw">if </span>block_height &gt; network.num_nodes() &amp;&amp; block_height &gt; FIRST_VID_VIEW + <span class="number">1 </span>{
+            <span class="kw">if </span>block_height &gt; network.num_nodes() {
                 <span class="kw">break </span>block_height;
             }
             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
@@ -746,10 +735,6 @@
                 <span class="kw">continue</span>;
             };
             <span class="kw">for </span>(leaf, vid) <span class="kw">in </span>leaf_chain.iter().rev() {
-                <span class="kw">if </span>!has_vid(leaf.block_header.block_number <span class="kw">as </span>usize) {
-                    <span class="comment">// Skip the genesis leaf, it has no VID.
-                    </span><span class="kw">continue</span>;
-                }
                 <span class="kw">if </span>leaf.block_header.block_number &gt;= block_height <span class="kw">as </span>u64 {
                     <span class="kw">break </span><span class="lifetime">'outer</span>;
                 }
@@ -760,10 +745,9 @@
                     .send()
                     .<span class="kw">await
                     </span>.unwrap();
-                <span class="macro">assert_eq!</span>(
-                    share,
-                    <span class="kw-2">*</span>vid.as_ref().unwrap().shares.first_key_value().unwrap().<span class="number">1
-                </span>);
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(vid) = vid.as_ref() {
+                    <span class="macro">assert_eq!</span>(share, <span class="kw-2">*</span>vid.shares.first_key_value().unwrap().<span class="number">1</span>);
+                }
 
                 <span class="comment">// Query various other ways.
                 </span><span class="macro">assert_eq!</span>(

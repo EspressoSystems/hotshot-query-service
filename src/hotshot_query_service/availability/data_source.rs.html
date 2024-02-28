@@ -233,12 +233,12 @@
         TransactionHash, TransactionIndex, VidCommonQueryData,
     },
 };
-<span class="kw">use crate</span>::{Payload, VidShare};
+<span class="kw">use crate</span>::{Payload, VidCommitment, VidShare};
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>derive_more::{Display, From};
 <span class="kw">use </span>futures::stream::{BoxStream, Stream, StreamExt};
-<span class="kw">use </span>hotshot_types::{data::VidCommitment, traits::node_implementation::NodeType};
+<span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>std::{cmp::Ordering, error::Error, fmt::Debug, ops::RangeBounds};
 
 <span class="attr">#[derive(Derivative, From, Display)]

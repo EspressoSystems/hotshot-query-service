@@ -743,6 +743,110 @@
 <a href="#742" id="742">742</a>
 <a href="#743" id="743">743</a>
 <a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -762,7 +866,12 @@
     Error, Payload, VidCommon,
 };
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
+<span class="kw">use </span>futures::try_join;
+<span class="kw">use </span>hotshot_types::{
+    traits::{node_implementation::NodeType, BlockPayload},
+    vid::{vid_scheme, VidSchemeType},
+};
+<span class="kw">use </span>jf_primitives::vid::VidScheme;
 <span class="kw">use </span>surf_disco::{Client, Url};
 
 <span class="doccomment">/// Data availability provider backed by another instance of this query service.
@@ -788,16 +897,48 @@
     </span>Types: NodeType,
 {
     <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, req: PayloadRequest) -&gt; <span class="prelude-ty">Option</span>&lt;Payload&lt;Types&gt;&gt; {
-        <span class="kw">match </span><span class="self">self
-            </span>.client
-            .get::&lt;PayloadQueryData&lt;Types&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"availability/payload/hash/{}"</span>, req.<span class="number">0</span>))
-            .send()
-            .<span class="kw">await
-        </span>{
-            <span class="prelude-val">Ok</span>(payload) =&gt; {
-                <span class="comment">// TODO Verify that the data we retrieved is consistent with the request we made.
-                // https://github.com/EspressoSystems/hotshot-query-service/issues/355
-                </span><span class="prelude-val">Some</span>(payload.data)
+        <span class="comment">// Fetch the payload and the VID common data. We need the common data to recompute the VID
+        // commitment, to ensure the payload we received is consistent with the commitment we
+        // requested.
+        </span><span class="kw">let </span>res = <span class="macro">try_join!</span>(
+            <span class="self">self</span>.client
+                .get::&lt;PayloadQueryData&lt;Types&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"availability/payload/hash/{}"</span>, req.<span class="number">0</span>))
+                .send(),
+            <span class="self">self</span>.client
+                .get::&lt;VidCommonQueryData&lt;Types&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    <span class="string">"availability/vid/common/payload-hash/{}"</span>,
+                    req.<span class="number">0
+                </span>))
+                .send()
+        );
+        <span class="kw">match </span>res {
+            <span class="prelude-val">Ok</span>((payload, common)) =&gt; {
+                <span class="comment">// Verify that the data we retrieved is consistent with the request we made.
+                </span><span class="kw">let </span>num_storage_nodes = VidSchemeType::get_num_storage_nodes(common.common());
+                <span class="kw">let </span>bytes = <span class="kw">match </span>payload.data().encode() {
+                    <span class="prelude-val">Ok</span>(bytes) =&gt; bytes.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
+                    <span class="prelude-val">Err</span>(err) =&gt; {
+                        <span class="macro">tracing::error!</span>(
+                            %err,
+                            <span class="question-mark">?</span>payload,
+                            <span class="string">"received malformed payload (unable to encode to bytes)"</span>,
+                        );
+                        <span class="kw">return </span><span class="prelude-val">None</span>;
+                    }
+                };
+                <span class="kw">let </span>commit = <span class="kw">match </span>vid_scheme(num_storage_nodes).commit_only(bytes) {
+                    <span class="prelude-val">Ok</span>(commit) =&gt; commit,
+                    <span class="prelude-val">Err</span>(err) =&gt; {
+                        <span class="macro">tracing::error!</span>(%err, <span class="string">"unable to compute VID commitment"</span>);
+                        <span class="kw">return </span><span class="prelude-val">None</span>;
+                    }
+                };
+                <span class="kw">if </span>commit != req.<span class="number">0 </span>{
+                    <span class="macro">tracing::error!</span>(<span class="question-mark">?</span>req, <span class="question-mark">?</span>commit, <span class="string">"received inconsistent payload"</span>);
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
+                }
+
+                <span class="prelude-val">Some</span>(payload.data)
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
                 <span class="macro">tracing::error!</span>(<span class="string">"failed to fetch payload {req:?}: {err}"</span>);
@@ -850,11 +991,13 @@
             .send()
             .<span class="kw">await
         </span>{
-            <span class="prelude-val">Ok</span>(res) =&gt; {
-                <span class="comment">// TODO Verify that the data we retrieved is consistent with the request we made.
-                // https://github.com/EspressoSystems/hotshot-query-service/issues/355
-                </span><span class="prelude-val">Some</span>(res.common)
+            <span class="prelude-val">Ok</span>(res) <span class="kw">if </span>VidSchemeType::is_consistent(<span class="kw-2">&amp;</span>req.<span class="number">0</span>, <span class="kw-2">&amp;</span>res.common).is_ok() =&gt; {
+                <span class="prelude-val">Some</span>(res.common)
             }
+            <span class="prelude-val">Ok</span>(res) =&gt; {
+                <span class="macro">tracing::error!</span>(<span class="question-mark">?</span>req, <span class="question-mark">?</span>res, <span class="string">"fetched inconsistent VID common data"</span>);
+                <span class="prelude-val">None
+            </span>}
             <span class="prelude-val">Err</span>(err) =&gt; {
                 <span class="macro">tracing::error!</span>(<span class="string">"failed to fetch VID common {req:?}: {err}"</span>);
                 <span class="prelude-val">None
@@ -868,25 +1011,33 @@
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
+        api::load_api,
         availability::{define_api, AvailabilityDataSource, Fetch, UpdateAvailabilityData},
         data_source::{
             sql::{<span class="self">self</span>, SqlDataSource},
             storage::sql::testing::TmpDb,
             AvailabilityProvider, VersionedDataSource,
         },
-        fetching::provider::{NoFetching, TestProvider},
+        fetching::provider::{NoFetching, Provider <span class="kw">as </span>ProviderTrait, TestProvider},
+        task::BackgroundTask,
         testing::{
             consensus::{MockDataSource, MockNetwork},
             mocks::{mock_transaction, MockTypes},
-            setup_test, sleep, FIRST_VID_VIEW,
+            setup_test, sleep,
         },
+        VidCommitment,
     };
     <span class="kw">use </span>async_std::task::spawn;
     <span class="kw">use </span>commit::Committable;
-    <span class="kw">use </span>futures::{future::join, stream::StreamExt};
+    <span class="kw">use </span>futures::{
+        future::{join, FutureExt},
+        stream::StreamExt,
+    };
+    <span class="kw">use </span>generic_array::GenericArray;
     <span class="kw">use </span>portpicker::pick_unused_port;
+    <span class="kw">use </span>rand::RngCore;
     <span class="kw">use </span>std::{future::IntoFuture, time::Duration};
-    <span class="kw">use </span>tide_disco::App;
+    <span class="kw">use </span>tide_disco::{error::ServerError, App};
 
     <span class="kw">type </span>Provider = TestProvider&lt;QueryServiceProvider&gt;;
 
@@ -1269,7 +1420,7 @@
         <span class="comment">// Subscribe to objects from the future.
         </span><span class="kw">let </span>blocks = data_source.subscribe_blocks(<span class="number">0</span>).<span class="kw">await</span>;
         <span class="kw">let </span>leaves = data_source.subscribe_leaves(<span class="number">0</span>).<span class="kw">await</span>;
-        <span class="kw">let </span>common = data_source.subscribe_vid_common(FIRST_VID_VIEW).<span class="kw">await</span>;
+        <span class="kw">let </span>common = data_source.subscribe_vid_common(<span class="number">0</span>).<span class="kw">await</span>;
 
         <span class="comment">// Wait for a few blocks to be finalized.
         </span><span class="kw">let </span>finalized_leaves = { network.data_source().read().<span class="kw">await</span>.subscribe_leaves(<span class="number">0</span>).<span class="kw">await </span>};
@@ -1286,17 +1437,12 @@
         <span class="comment">// Check the subscriptions.
         </span><span class="kw">let </span>blocks = blocks.take(<span class="number">5</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
         <span class="kw">let </span>leaves = leaves.take(<span class="number">5</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
-        <span class="kw">let </span>common = common.take(<span class="number">5 </span>- FIRST_VID_VIEW).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
+        <span class="kw">let </span>common = common.take(<span class="number">5</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">5 </span>{
             <span class="macro">tracing::info!</span>(<span class="string">"checking block {i}"</span>);
             <span class="macro">assert_eq!</span>(leaves[i], finalized_leaves[i]);
             <span class="macro">assert_eq!</span>(blocks[i].header(), finalized_leaves[i].header());
-            <span class="kw">if </span>i &gt;= FIRST_VID_VIEW {
-                <span class="macro">assert_eq!</span>(
-                    common[i - FIRST_VID_VIEW],
-                    data_source.get_vid_common(i).<span class="kw">await</span>.<span class="kw">await
-                </span>);
-            }
+            <span class="macro">assert_eq!</span>(common[i], data_source.get_vid_common(i).<span class="kw">await</span>.<span class="kw">await</span>);
         }
     }
 
@@ -1485,6 +1631,68 @@
                 </span>.<span class="kw">await</span>,
             <span class="kw-2">*</span>test_leaf
         );
+    }
+
+    <span class="kw">fn </span>random_vid_commit() -&gt; VidCommitment {
+        <span class="kw">let </span><span class="kw-2">mut </span>bytes = [<span class="number">0</span>; <span class="number">32</span>];
+        rand::thread_rng().fill_bytes(<span class="kw-2">&amp;mut </span>bytes);
+        VidCommitment::from(GenericArray::from(bytes))
+    }
+
+    <span class="kw">async fn </span>malicious_server(port: u16) {
+        <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;(), ServerError&gt;(
+            <span class="prelude-val">None</span>::&lt;std::path::PathBuf&gt;,
+            <span class="macro">include_str!</span>(<span class="string">"../../../api/availability.toml"</span>),
+            <span class="macro">vec!</span>[],
+        )
+        .unwrap();
+
+        api.get(<span class="string">"get_payload"</span>, <span class="kw">move </span>|<span class="kw">_</span>, <span class="kw">_</span>| {
+            <span class="kw">async move </span>{
+                <span class="comment">// No matter what data we are asked for, always respond with dummy data.
+                </span><span class="prelude-val">Ok</span>(PayloadQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>Default::default()))
+            }
+            .boxed()
+        })
+        .unwrap()
+        .get(<span class="string">"get_vid_common"</span>, <span class="kw">move </span>|<span class="kw">_</span>, <span class="kw">_</span>| {
+            <span class="kw">async move </span>{
+                <span class="comment">// No matter what data we are asked for, always respond with dummy data.
+                </span><span class="prelude-val">Ok</span>(VidCommonQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>Default::default()))
+            }
+            .boxed()
+        })
+        .unwrap();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;(), ServerError&gt;::with_state(());
+        app.register_module(<span class="string">"availability"</span>, api).unwrap();
+        app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)).<span class="kw">await</span>.ok();
+    }
+
+    <span class="attr">#[async_std::test]
+    </span><span class="kw">async fn </span>test_fetch_from_malicious_server() {
+        setup_test();
+
+        <span class="kw">let </span>port = pick_unused_port().unwrap();
+        <span class="kw">let </span>_server = BackgroundTask::spawn(<span class="string">"malicious server"</span>, malicious_server(port));
+
+        <span class="kw">let </span>provider =
+            QueryServiceProvider::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap());
+        provider.client.connect(<span class="prelude-val">None</span>).<span class="kw">await</span>;
+
+        <span class="comment">// Query for a random payload, the server will respond with a different payload, and we
+        // should detect the error.
+        </span><span class="kw">let </span>res =
+            ProviderTrait::&lt;MockTypes, <span class="kw">_</span>&gt;::fetch(<span class="kw-2">&amp;</span>provider, PayloadRequest(random_vid_commit()))
+                .<span class="kw">await</span>;
+        <span class="macro">assert_eq!</span>(res, <span class="prelude-val">None</span>);
+
+        <span class="comment">// Query for a random VID common, the server will respond with a different one, and we
+        // should detect the error.
+        </span><span class="kw">let </span>res =
+            ProviderTrait::&lt;MockTypes, <span class="kw">_</span>&gt;::fetch(<span class="kw-2">&amp;</span>provider, VidCommonRequest(random_vid_commit()))
+                .<span class="kw">await</span>;
+        <span class="macro">assert_eq!</span>(res, <span class="prelude-val">None</span>);
     }
 }
 </code></pre></div></section></main></body></html>

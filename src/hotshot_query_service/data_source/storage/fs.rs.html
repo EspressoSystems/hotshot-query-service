@@ -571,6 +571,7 @@
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -599,13 +600,14 @@
     },
     data_source::VersionedDataSource,
     node::{NodeDataSource, SyncStatus},
-    Header, MissingSnafu, NotFoundSnafu, Payload, QueryResult, SignatureKey, VidShare,
+    Header, MissingSnafu, NotFoundSnafu, Payload, QueryResult, SignatureKey, VidCommitment,
+    VidShare,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>atomic_store::{AtomicStore, AtomicStoreLoader, PersistenceError};
 <span class="kw">use </span>commit::Committable;
 <span class="kw">use </span>futures::stream::{<span class="self">self</span>, StreamExt, TryStreamExt};
-<span class="kw">use </span>hotshot_types::{data::VidCommitment, traits::node_implementation::NodeType};
+<span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>serde::{de::DeserializeOwned, Serialize};
 <span class="kw">use </span>snafu::OptionExt;
 <span class="kw">use </span>std::collections::hash_map::{Entry, HashMap};
