@@ -430,7 +430,7 @@
 <span class="kw">impl</span>&lt;Types: NodeType, P&gt; FileSystemDataSource&lt;Types, P&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload,
-    Header&lt;Types&gt;: QueryableHeader,
+    Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="doccomment">/// Create a new [FileSystemDataSource] with storage at `path`.

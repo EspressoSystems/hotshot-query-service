@@ -139,7 +139,7 @@
     TestTransaction(payload)
 }
 
-<span class="kw">impl </span>QueryableHeader <span class="kw">for </span>MockHeader {
+<span class="kw">impl</span>&lt;Types: NodeType&lt;BlockPayload = TestBlockPayload&gt;&gt; QueryableHeader&lt;Types&gt; <span class="kw">for </span>MockHeader {
     <span class="kw">fn </span>timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
         Utc::now().timestamp() <span class="kw">as </span>u64
     }

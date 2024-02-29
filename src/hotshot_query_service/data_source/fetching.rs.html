@@ -1449,7 +1449,7 @@
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
-    Header&lt;Types&gt;: QueryableHeader,
+    Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
     S: NodeDataSource&lt;Types&gt; + AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
@@ -1560,7 +1560,7 @@
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
-    Header&lt;Types&gt;: QueryableHeader,
+    Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
     S: NodeDataSource&lt;Types&gt; + AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {

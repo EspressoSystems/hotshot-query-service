@@ -1299,7 +1299,7 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: availability::QueryablePayload,
-    Header&lt;Types&gt;: availability::QueryableHeader,
+    Header&lt;Types&gt;: availability::QueryableHeader&lt;Types&gt;,
     D: availability::AvailabilityDataSource&lt;Types&gt;
         + node::NodeDataSource&lt;Types&gt;
         + status::StatusDataSource

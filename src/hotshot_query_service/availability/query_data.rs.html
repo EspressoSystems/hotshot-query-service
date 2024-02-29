@@ -626,7 +626,7 @@
 
 <span class="kw">pub type </span>Timestamp = time::OffsetDateTime;
 
-<span class="kw">pub trait </span>QueryableHeader: BlockHeader {
+<span class="kw">pub trait </span>QueryableHeader&lt;Types: NodeType&gt;: BlockHeader&lt;Types&gt; {
     <span class="kw">fn </span>timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64;
 }
 

@@ -504,7 +504,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SqlDataSource&lt;Types, P&gt;, Error&gt;
     <span class="kw">where
         </span>Types: NodeType,
-        Header&lt;Types&gt;: QueryableHeader,
+        Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
         Payload&lt;Types&gt;: QueryablePayload,
     {
         <span class="self">self</span>.builder(provider).<span class="kw">await</span><span class="question-mark">?</span>.build().<span class="kw">await
@@ -518,7 +518,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Builder&lt;Types, P&gt;, Error&gt;
     <span class="kw">where
         </span>Types: NodeType,
-        Header&lt;Types&gt;: QueryableHeader,
+        Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
         Payload&lt;Types&gt;: QueryablePayload,
     {
         SqlDataSource::connect(<span class="self">self</span>, provider).<span class="kw">await
@@ -771,7 +771,7 @@
 <span class="kw">impl</span>&lt;Types, P: AvailabilityProvider&lt;Types&gt;&gt; SqlDataSource&lt;Types, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Header&lt;Types&gt;: QueryableHeader,
+    Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
     Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="doccomment">/// Connect to a remote database.
