@@ -295,17 +295,17 @@
 <span class="kw">impl </span>Default <span class="kw">for </span>PrunerCfg {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            <span class="comment">// 100 GB
-            </span>pruning_threshold: <span class="prelude-val">Some</span>(<span class="number">100 </span>* <span class="number">1024 </span>* <span class="number">1024 </span>* <span class="number">1024</span>),
-            <span class="comment">// 24 hours
-            </span>minimum_retention: Duration::from_secs(<span class="number">24 </span>* <span class="number">60 </span>* <span class="number">60</span>),
-            <span class="comment">// 30 days
-            </span>target_retention: Duration::from_secs(<span class="number">30 </span>* <span class="number">24 </span>* <span class="number">60 </span>* <span class="number">60</span>),
+            <span class="comment">// 3 TB
+            </span>pruning_threshold: <span class="prelude-val">Some</span>(<span class="number">3 </span>* <span class="number">10_u64</span>.pow(<span class="number">12</span>)),
+            <span class="comment">// 1 day
+            </span>minimum_retention: Duration::from_secs(<span class="number">24 </span>* <span class="number">3600</span>),
+            <span class="comment">// 7 days
+            </span>target_retention: Duration::from_secs(<span class="number">7 </span>* <span class="number">24 </span>* <span class="number">3600</span>),
             batch_size: <span class="number">1000</span>,
             <span class="comment">// 80%
             </span>max_usage: <span class="number">8000</span>,
-            <span class="comment">// 15 minutes
-            </span>interval: Duration::from_secs(<span class="number">15 </span>* <span class="number">60</span>),
+            <span class="comment">// 1 hour
+            </span>interval: Duration::from_secs(<span class="number">3600</span>),
         }
     }
 }
