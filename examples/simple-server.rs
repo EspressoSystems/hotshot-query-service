@@ -42,6 +42,7 @@ use hotshot_types::{
     traits::election::Membership, ExecutionType, HotShotConfig, PeerConfig, ValidatorConfig,
 };
 use std::{num::NonZeroUsize, time::Duration};
+use versioned_binary_serialization::version::StaticVersion;
 
 const NUM_NODES: usize = 2;
 
@@ -109,6 +110,9 @@ async fn main() -> Result<(), Error> {
     // Start consensus.
     let nodes = init_consensus(&data_sources).await;
 
+    // Use version 0.1, for no particular reason
+    let bind_version: StaticVersion<0, 1> = StaticVersion {};
+
     // Start the servers.
     try_join_all(
         data_sources
@@ -120,7 +124,7 @@ async fn main() -> Result<(), Error> {
                     port,
                     ..Default::default()
                 };
-                run_standalone_service(opt, data_source, node).await
+                run_standalone_service(opt, data_source, node, bind_version).await
             }),
     )
     .await?;

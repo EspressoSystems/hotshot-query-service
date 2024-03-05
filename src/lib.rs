@@ -96,6 +96,7 @@
 //! ```
 //! # use async_std::task::spawn;
 //! # use hotshot::types::SystemContextHandle;
+//! # use hotshot_constants::STATIC_VER_0_1;
 //! # use hotshot_query_service::{data_source::FileSystemDataSource, Error, Options};
 //! # use hotshot_query_service::fetching::provider::NoFetching;
 //! # use hotshot_query_service::testing::mocks::{MockNodeImpl, MockTypes};
@@ -104,7 +105,7 @@
 //! use hotshot_query_service::run_standalone_service;
 //!
 //! let data_source = FileSystemDataSource::create(storage_path, NoFetching).await.map_err(Error::internal)?;
-//! spawn(run_standalone_service(options, data_source, hotshot));
+//! spawn(run_standalone_service(options, data_source, hotshot, STATIC_VER_0_1));
 //! # Ok(())
 //! # }
 //! ```
@@ -184,19 +185,21 @@
 //! # use hotshot_query_service::Error;
 //! # use snafu::ResultExt;
 //! # use tide_disco::{api::ApiError, method::ReadState, Api, App, StatusCode};
+//! # use versioned_binary_serialization::version::StaticVersion;
 //! # #[async_trait]
 //! # trait UtxoDataSource: AvailabilityDataSource<AppTypes> {
 //! #   async fn find_utxo(&self, utxo: u64) -> Option<(usize, TransactionIndex<AppTypes>, usize)>;
 //! # }
 //!
-//! fn define_app_specific_availability_api<State>(
+//! fn define_app_specific_availability_api<State, const MAJOR_VERSION: u16, const MINOR_VERSION: u16>(
 //!     options: &availability::Options,
-//! ) -> Result<Api<State, availability::Error>, ApiError>
+//!     bind_version: StaticVersion<MAJOR_VERSION, MINOR_VERSION>,
+//! ) -> Result<Api<State, availability::Error, MAJOR_VERSION, MINOR_VERSION>, ApiError>
 //! where
 //!     State: 'static + Send + Sync + ReadState,
 //!     <State as ReadState>::State: UtxoDataSource + Send + Sync,
 //! {
-//!     let mut api = availability::define_api(options, STATIC_VER_0_1)?;
+//!     let mut api = availability::define_api(options, bind_version)?;
 //!     api.get("get_utxo", |req, state: &<State as ReadState>::State| async move {
 //!         let utxo_index = req.integer_param("index")?;
 //!         let (block_index, txn_index, output_index) = state
@@ -218,11 +221,12 @@
 //!     Ok(api)
 //! }
 //!
-//! fn init_server<D: UtxoDataSource + Send + Sync + 'static>(
+//! fn init_server<D: UtxoDataSource + Send + Sync + 'static, const MAJOR_VERSION: u16, const MINOR_VERSION: u16>(
 //!     options: &availability::Options,
 //!     data_source: D,
-//! ) -> Result<App<RwLock<D>, Error>, availability::Error> {
-//!     let api = define_app_specific_availability_api(options)
+//!     bind_version: StaticVersion<MAJOR_VERSION, MINOR_VERSION>,
+//! ) -> Result<App<RwLock<D>, Error, MAJOR_VERSION, MINOR_VERSION>, availability::Error> {
+//!     let api = define_app_specific_availability_api(options, bind_version)
 //!         .map_err(availability::Error::internal)?;
 //!     let mut app = App::with_state(RwLock::new(data_source));
 //!     app.register_module("availability", api).map_err(availability::Error::internal)?;

@@ -66,6 +66,7 @@ type VidCommonProvider<Types> = Arc<dyn DebugProvider<Types, VidCommonRequest>>;
 /// Fetching from multiple query services, for resiliency.
 ///
 /// ```
+/// # use hotshot_constants::STATIC_VER_0_1;
 /// # use hotshot_types::traits::node_implementation::NodeType;
 /// # async fn doc<Types>() -> anyhow::Result<()>
 /// # where
@@ -73,8 +74,8 @@ type VidCommonProvider<Types> = Arc<dyn DebugProvider<Types, VidCommonRequest>>;
 /// # {
 /// use hotshot_query_service::fetching::provider::{AnyProvider, QueryServiceProvider};
 ///
-/// let qs1 = QueryServiceProvider::new("https://backup.query-service.1".parse()?);
-/// let qs2 = QueryServiceProvider::new("https://backup.query-service.2".parse()?);
+/// let qs1 = QueryServiceProvider::new("https://backup.query-service.1".parse()?, STATIC_VER_0_1);
+/// let qs2 = QueryServiceProvider::new("https://backup.query-service.2".parse()?, STATIC_VER_0_1);
 /// let provider = AnyProvider::<Types>::default()
 ///     .with_provider(qs1)
 ///     .with_provider(qs2);
@@ -236,9 +237,13 @@ mod test {
 
         // Start a data source which is not receiving events from consensus, only from a peer.
         let db = TmpDb::init().await;
-        let provider = Provider::default().with_provider(NoFetching).with_provider(
-            QueryServiceProvider::<0, 1>::new(format!("http://localhost:{port}").parse().unwrap()),
-        );
+        let provider =
+            Provider::default()
+                .with_provider(NoFetching)
+                .with_provider(QueryServiceProvider::new(
+                    format!("http://localhost:{port}").parse().unwrap(),
+                    STATIC_VER_0_1,
+                ));
         let mut data_source = db.config().connect(provider.clone()).await.unwrap();
 
         // Start consensus.

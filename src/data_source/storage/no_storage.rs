@@ -261,6 +261,7 @@ pub mod testing {
                         format!("http://localhost:{fetch_from_port}")
                             .parse()
                             .unwrap(),
+                        STATIC_VER_0_1,
                     );
                     Self::NoStorage(
                         FetchingDataSource::builder(NoStorage, provider)

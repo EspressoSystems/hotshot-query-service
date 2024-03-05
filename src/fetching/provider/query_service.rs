@@ -25,6 +25,7 @@ use hotshot_types::{
 };
 use jf_primitives::vid::VidScheme;
 use surf_disco::{Client, Url};
+use versioned_binary_serialization::version::StaticVersion;
 
 /// Data availability provider backed by another instance of this query service.
 ///
@@ -38,7 +39,7 @@ pub struct QueryServiceProvider<const MAJOR_VERSION: u16, const MINOR_VERSION: u
 impl<const MAJOR_VERSION: u16, const MINOR_VERSION: u16>
     QueryServiceProvider<MAJOR_VERSION, MINOR_VERSION>
 {
-    pub fn new(url: Url) -> Self {
+    pub fn new(url: Url, _: StaticVersion<MAJOR_VERSION, MINOR_VERSION>) -> Self {
         Self {
             client: Client::new(url),
         }
@@ -245,6 +246,7 @@ mod test {
         let db = TmpDb::init().await;
         let provider = Provider::new(QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
+            STATIC_VER_0_1,
         ));
         let mut data_source = data_source(&db, &provider).await;
 
@@ -468,6 +470,7 @@ mod test {
         let db = TmpDb::init().await;
         let provider = Provider::new(QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
+            STATIC_VER_0_1,
         ));
         let mut data_source = data_source(&db, &provider).await;
 
@@ -523,6 +526,7 @@ mod test {
         let db = TmpDb::init().await;
         let provider = Provider::new(QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
+            STATIC_VER_0_1,
         ));
         let mut data_source = data_source(&db, &provider).await;
 
@@ -582,6 +586,7 @@ mod test {
         let db = TmpDb::init().await;
         let provider = Provider::new(QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
+            STATIC_VER_0_1,
         ));
         let mut data_source = data_source(&db, &provider).await;
 
@@ -638,6 +643,7 @@ mod test {
         let db = TmpDb::init().await;
         let provider = Provider::new(QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
+            STATIC_VER_0_1,
         ));
         let mut data_source = data_source(&db, &provider).await;
 
@@ -766,6 +772,7 @@ mod test {
         let db = TmpDb::init().await;
         let provider = Provider::new(QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
+            STATIC_VER_0_1,
         ));
         let mut data_source = builder(&db, &provider)
             .await
@@ -856,8 +863,10 @@ mod test {
         let port = pick_unused_port().unwrap();
         let _server = BackgroundTask::spawn("malicious server", malicious_server(port));
 
-        let provider =
-            QueryServiceProvider::<0, 1>::new(format!("http://localhost:{port}").parse().unwrap());
+        let provider = QueryServiceProvider::new(
+            format!("http://localhost:{port}").parse().unwrap(),
+            STATIC_VER_0_1,
+        );
         provider.client.connect(None).await;
 
         // Query for a random payload, the server will respond with a different payload, and we

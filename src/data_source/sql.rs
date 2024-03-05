@@ -263,15 +263,17 @@ impl Config {
 /// #   MockNodeImpl as AppNodeImpl, MockTypes as AppTypes,
 /// # };
 /// # use tide_disco::App;
+/// # use versioned_binary_serialization::version::StaticVersion;
 /// struct AppState {
 ///     hotshot_qs: SqlDataSource<AppTypes, NoFetching>,
 ///     // additional state for other modules
 /// }
 ///
-/// async fn init_server(
+/// async fn init_server<const MAJOR_VERSION: u16, const MINOR_VERSION: u16>(
 ///     config: Config,
 ///     hotshot: SystemContextHandle<AppTypes, AppNodeImpl>,
-/// ) -> Result<App<Arc<RwLock<AppState>>, Error>, Error> {
+///     _: StaticVersion<MAJOR_VERSION, MINOR_VERSION>,
+/// ) -> Result<App<Arc<RwLock<AppState>>, Error, MAJOR_VERSION, MINOR_VERSION>, Error> {
 ///     let mut hotshot_qs = config.connect(NoFetching).await.map_err(Error::internal)?;
 ///     // Initialize storage for other modules, using `hotshot_qs` to access the database.
 ///     let tx = hotshot_qs.transaction().await.map_err(Error::internal)?;
