@@ -11,6 +11,7 @@
 // see <https://www.gnu.org/licenses/>.
 
 use super::Provider;
+
 use crate::{
     availability::{LeafQueryData, PayloadQueryData, VidCommonQueryData},
     fetching::request::{LeafRequest, PayloadRequest, VidCommonRequest},
@@ -166,6 +167,7 @@ where
 #[cfg(all(test, not(target_os = "windows")))]
 mod test {
     use super::*;
+
     use crate::{
         api::load_api,
         availability::{define_api, AvailabilityDataSource, Fetch, UpdateAvailabilityData},

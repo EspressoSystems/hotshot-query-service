@@ -2834,8 +2834,8 @@ dependencies = [
 
 [[package]]
 name = "hotshot"
-version = "0.3.3"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#719a409c3b43628a0ee6c3d5c3666548fe8ff02c"
+version = "0.5.21"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#5ebeeee87264ec4f5629ad727f8174c105e80291"
 dependencies = [
  "async-broadcast",
  "async-compatibility-layer",
@@ -2843,7 +2843,6 @@ dependencies = [
  "async-std",
  "async-trait",
  "bimap",
- "bincode",
  "commit",
  "custom_debug 0.5.1",
  "dashmap",
@@ -2874,8 +2873,8 @@ dependencies = [
 
 [[package]]
 name = "hotshot-constants"
-version = "0.3.3"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#719a409c3b43628a0ee6c3d5c3666548fe8ff02c"
+version = "0.5.21"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#5ebeeee87264ec4f5629ad727f8174c105e80291"
 dependencies = [
  "serde",
  "versioned-binary-serialization",
@@ -2883,14 +2882,13 @@ dependencies = [
 
 [[package]]
 name = "hotshot-example-types"
-version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#719a409c3b43628a0ee6c3d5c3666548fe8ff02c"
+version = "0.5.21"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#5ebeeee87264ec4f5629ad727f8174c105e80291"
 dependencies = [
  "async-broadcast",
  "async-compatibility-layer",
  "async-lock 2.8.0",
  "async-std",
- "bincode",
  "bitvec",
  "commit",
  "either",
@@ -2914,8 +2912,8 @@ dependencies = [
 
 [[package]]
 name = "hotshot-orchestrator"
-version = "0.1.1"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#719a409c3b43628a0ee6c3d5c3666548fe8ff02c"
+version = "0.5.21"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#5ebeeee87264ec4f5629ad727f8174c105e80291"
 dependencies = [
  "async-compatibility-layer",
  "async-lock 2.8.0",
@@ -2991,8 +2989,8 @@ dependencies = [
 
 [[package]]
 name = "hotshot-task"
-version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#719a409c3b43628a0ee6c3d5c3666548fe8ff02c"
+version = "0.5.21"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#5ebeeee87264ec4f5629ad727f8174c105e80291"
 dependencies = [
  "async-broadcast",
  "async-compatibility-layer",
@@ -3004,8 +3002,8 @@ dependencies = [
 
 [[package]]
 name = "hotshot-task-impls"
-version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#719a409c3b43628a0ee6c3d5c3666548fe8ff02c"
+version = "0.5.21"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#5ebeeee87264ec4f5629ad727f8174c105e80291"
 dependencies = [
  "async-broadcast",
  "async-compatibility-layer",
@@ -3033,8 +3031,8 @@ dependencies = [
 
 [[package]]
 name = "hotshot-types"
-version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#719a409c3b43628a0ee6c3d5c3666548fe8ff02c"
+version = "0.5.21"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#5ebeeee87264ec4f5629ad727f8174c105e80291"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -3082,8 +3080,8 @@ dependencies = [
 
 [[package]]
 name = "hotshot-utils"
-version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#719a409c3b43628a0ee6c3d5c3666548fe8ff02c"
+version = "0.5.21"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#5ebeeee87264ec4f5629ad727f8174c105e80291"
 dependencies = [
  "bincode",
  "hotshot-constants",
@@ -3091,8 +3089,8 @@ dependencies = [
 
 [[package]]
 name = "hotshot-web-server"
-version = "0.1.1"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#719a409c3b43628a0ee6c3d5c3666548fe8ff02c"
+version = "0.5.21"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#5ebeeee87264ec4f5629ad727f8174c105e80291"
 dependencies = [
  "async-compatibility-layer",
  "async-lock 2.8.0",
@@ -3241,7 +3239,7 @@ dependencies = [
  "iana-time-zone-haiku",
  "js-sys",
  "wasm-bindgen",
- "windows-core 0.52.0",
+ "windows-core",
 ]
 
 [[package]]
@@ -4015,15 +4013,14 @@ dependencies = [
 
 [[package]]
 name = "libp2p-networking"
-version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#719a409c3b43628a0ee6c3d5c3666548fe8ff02c"
+version = "0.5.21"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=adding_vbs_support#5ebeeee87264ec4f5629ad727f8174c105e80291"
 dependencies = [
  "anyhow",
  "async-compatibility-layer",
  "async-lock 2.8.0",
  "async-std",
  "async-trait",
- "bincode",
  "blake3",
  "custom_debug 0.5.1",
  "dashmap",
@@ -6724,8 +6721,8 @@ dependencies = [
 
 [[package]]
 name = "surf-disco"
-version = "0.4.6"
-source = "git+https://github.com/EspressoSystems/surf-disco.git?branch=adding_vbs_support#e5cfa4b81b7d2dececb7ed20933067d73c80105e"
+version = "0.4.7"
+source = "git+https://github.com/EspressoSystems/surf-disco.git?tag=v0.4.7#070e18d1daf0c9783e009a1a3b7f8b28b4546e24"
 dependencies = [
  "async-std",
  "async-tungstenite",
@@ -7003,8 +7000,8 @@ dependencies = [
 
 [[package]]
 name = "tide-disco"
-version = "0.4.6"
-source = "git+https://github.com/EspressoSystems/tide-disco.git?branch=adding_vbs_support#7173ae0db08f37e5b9ca84c8004f4f15195cbbf8"
+version = "0.4.7"
+source = "git+https://github.com/EspressoSystems/tide-disco.git?tag=v0.4.7#1f8515bde918b9e2c50875a68dfa0e23b8167579"
 dependencies = [
  "anyhow",
  "async-std",
@@ -7713,7 +7710,7 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 [[package]]
 name = "versioned-binary-serialization"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/versioned-binary-serialization.git?branch=main#4e4695bf0b77ab43700bf625fd4489151f189527"
+source = "git+https://github.com/EspressoSystems/versioned-binary-serialization.git?tag=0.1.0#6b5bf0c0b74f8384c940880d5a988d5ec757de3e"
 dependencies = [
  "anyhow",
  "bincode",
@@ -7921,7 +7918,7 @@ version = "0.51.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca229916c5ee38c2f2bc1e9d8f04df975b4bd93f9955dc69fabb5d91270045c9"
 dependencies = [
- "windows-core 0.51.1",
+ "windows-core",
  "windows-targets 0.48.5",
 ]
 
@@ -7932,15 +7929,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1f8cf84f35d2db49a46868f947758c7a1138116f7fac3bc844f43ade1292e64"
 dependencies = [
  "windows-targets 0.48.5",
-]
-
-[[package]]
-name = "windows-core"
-version = "0.52.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33ab640c8d7e35bf8ba19b884ba838ceb4fba93a4e8c65a9059d08afcfc683d9"
-dependencies = [
- "windows-targets 0.52.0",
 ]
 
 [[package]]
