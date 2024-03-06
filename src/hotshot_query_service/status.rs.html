@@ -431,7 +431,7 @@
     <span class="kw">use </span>std::str::FromStr;
     <span class="kw">use </span>std::time::Duration;
     <span class="kw">use </span>surf_disco::Client;
-    <span class="kw">use </span>tempdir::TempDir;
+    <span class="kw">use </span>tempfile::TempDir;
     <span class="kw">use </span>tide_disco::{App, Url};
     <span class="kw">use </span>toml::toml;
 
@@ -538,7 +538,7 @@
     </span><span class="kw">async fn </span>test_extensions() {
         setup_test();
 
-        <span class="kw">let </span>dir = TempDir::new(<span class="string">"test_status_extensions"</span>).unwrap();
+        <span class="kw">let </span>dir = TempDir::new().unwrap();
         <span class="kw">let </span>data_source = ExtensibleDataSource::new(
             MockDataSource::create(dir.path(), Default::default())
                 .<span class="kw">await
