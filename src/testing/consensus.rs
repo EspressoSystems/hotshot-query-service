@@ -87,7 +87,7 @@ impl<D: DataSourceLifeCycle + UpdateStatusData> MockNetwork<D> {
                         state_key_pair: state_key_pairs[node_id].clone(),
                     };
                     let config = HotShotConfig {
-                        num_nodes_with_stake,
+                        num_nodes_with_stake: num_staked_nodes,
                         num_nodes_without_stake: 0,
                         known_nodes_with_stake: known_nodes_with_stake.clone(),
                         known_nodes_without_stake: vec![],
