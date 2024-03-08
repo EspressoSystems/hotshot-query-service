@@ -808,6 +808,7 @@ pub mod node_tests {
             let header = TestBlockHeader {
                 block_number: i,
                 payload_commitment,
+                timestamp: 1,
             };
 
             let mut leaf = LeafQueryData::<MockTypes>::genesis(&TestInstanceState {});
