@@ -138,7 +138,7 @@ mod test {
     use std::str::FromStr;
     use std::time::Duration;
     use surf_disco::Client;
-    use tempdir::TempDir;
+    use tempfile::TempDir;
     use tide_disco::{App, Url};
     use toml::toml;
 
@@ -248,7 +248,7 @@ mod test {
     async fn test_extensions() {
         setup_test();
 
-        let dir = TempDir::new("test_status_extensions").unwrap();
+        let dir = TempDir::new().unwrap();
         let data_source = ExtensibleDataSource::new(
             MockDataSource::create(dir.path(), Default::default())
                 .await
