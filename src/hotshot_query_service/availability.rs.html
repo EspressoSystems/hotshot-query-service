@@ -954,6 +954,7 @@
 <a href="#953" id="953">953</a>
 <a href="#954" id="954">954</a>
 <a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1443,6 +1444,7 @@
             mocks::{mock_transaction, MockHeader, MockPayload, MockTypes},
             setup_test,
         },
+        types::HeightIndexed,
         Error, Header,
     };
     <span class="kw">use </span>async_std::{sync::RwLock, task::spawn};

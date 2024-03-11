@@ -406,26 +406,6 @@
 <a href="#405" id="405">405</a>
 <a href="#406" id="406">406</a>
 <a href="#407" id="407">407</a>
-<a href="#408" id="408">408</a>
-<a href="#409" id="409">409</a>
-<a href="#410" id="410">410</a>
-<a href="#411" id="411">411</a>
-<a href="#412" id="412">412</a>
-<a href="#413" id="413">413</a>
-<a href="#414" id="414">414</a>
-<a href="#415" id="415">415</a>
-<a href="#416" id="416">416</a>
-<a href="#417" id="417">417</a>
-<a href="#418" id="418">418</a>
-<a href="#419" id="419">419</a>
-<a href="#420" id="420">420</a>
-<a href="#421" id="421">421</a>
-<a href="#422" id="422">422</a>
-<a href="#423" id="423">423</a>
-<a href="#424" id="424">424</a>
-<a href="#425" id="425">425</a>
-<a href="#426" id="426">426</a>
-<a href="#427" id="427">427</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -444,11 +424,11 @@
 //! one particular node. It provides access to information that the
 //! [availability](crate::availability) API does not, because this information depends on the
 //! perspective of the node observing it, and may be subject to eventual consistency. For example,
-//! `/node/block-height` and `/node/proposals/:proposer_id/count` may both return smaller counts
-//! than expected, if the node being queried is not fully synced with the entire history of the
-//! chain. However, the node will _eventually_ sync and return the expected counts.
+//! `/node/block-height` may return smaller counts than expected, if the node being queried is not
+//! fully synced with the entire history of the chain. However, the node will _eventually_ sync and
+//! return the expected counts.
 
-</span><span class="kw">use crate</span>::{api::load_api, QueryError, SignatureKey};
+</span><span class="kw">use crate</span>::{api::load_api, QueryError};
 <span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::FutureExt;
@@ -457,7 +437,7 @@
 <span class="kw">use </span>snafu::{ResultExt, Snafu};
 <span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::path::PathBuf;
-<span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, RequestParams, StatusCode};
+<span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>data_source;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>query_data;
@@ -491,21 +471,21 @@
     </span>Query {
         source: QueryError,
     },
-    <span class="attr">#[snafu(display(<span class="string">"error fetching proposals by {proposer}: {source}"</span>))]
-    #[from(ignore)]
-    </span>QueryProposals {
-        source: QueryError,
-        proposer: String,
-    },
     <span class="attr">#[snafu(display(<span class="string">"error fetching VID share for block {block}: {source}"</span>))]
     #[from(ignore)]
     </span>QueryVid {
         source: QueryError,
         block: String,
     },
-    <span class="attr">#[snafu(display(<span class="string">"malformed signature key"</span>))]
+    <span class="attr">#[snafu(display(
+        <span class="string">"error fetching window starting from {start} and ending at time {end}: {source}"
+    </span>))]
     #[from(ignore)]
-    </span>InvalidSignatureKey,
+    </span>QueryWindow {
+        source: QueryError,
+        start: String,
+        end: u64,
+    },
     Custom {
         message: String,
         status: StatusCode,
@@ -522,10 +502,10 @@
 
     <span class="kw">pub fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Request { .. } | <span class="self">Self</span>::InvalidSignatureKey =&gt; StatusCode::BadRequest,
+            <span class="self">Self</span>::Request { .. } =&gt; StatusCode::BadRequest,
             <span class="self">Self</span>::Query { source, .. }
-            | <span class="self">Self</span>::QueryProposals { source, .. }
-            | <span class="self">Self</span>::QueryVid { source, .. } =&gt; source.status(),
+            | <span class="self">Self</span>::QueryVid { source, .. }
+            | <span class="self">Self</span>::QueryWindow { source, .. } =&gt; source.status(),
             <span class="self">Self</span>::Custom { status, .. } =&gt; <span class="kw-2">*</span>status,
         }
     }
@@ -544,31 +524,6 @@
     api.with_version(<span class="string">"0.0.1"</span>.parse().unwrap())
         .get(<span class="string">"block_height"</span>, |_req, state| {
             <span class="kw">async move </span>{ state.block_height().<span class="kw">await</span>.context(QuerySnafu) }.boxed()
-        })<span class="question-mark">?
-        </span>.get(<span class="string">"count_proposals"</span>, |req, state| {
-            <span class="kw">async move </span>{
-                <span class="kw">let </span>proposer = proposer_param::&lt;Types&gt;(<span class="kw-2">&amp;</span>req, <span class="string">"proposer_id"</span>)<span class="question-mark">?</span>;
-                state
-                    .count_proposals(<span class="kw-2">&amp;</span>proposer)
-                    .<span class="kw">await
-                    </span>.context(QueryProposalsSnafu {
-                        proposer: proposer.to_string(),
-                    })
-            }
-            .boxed()
-        })<span class="question-mark">?
-        </span>.get(<span class="string">"get_proposals"</span>, |req, state| {
-            <span class="kw">async move </span>{
-                <span class="kw">let </span>proposer = proposer_param::&lt;Types&gt;(<span class="kw-2">&amp;</span>req, <span class="string">"proposer_id"</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>limit = req.opt_integer_param(<span class="string">"count"</span>)<span class="question-mark">?</span>;
-                state
-                    .get_proposals(<span class="kw-2">&amp;</span>proposer, limit)
-                    .<span class="kw">await
-                    </span>.context(QueryProposalsSnafu {
-                        proposer: proposer.to_string(),
-                    })
-            }
-            .boxed()
         })<span class="question-mark">?
         </span>.get(<span class="string">"count_transactions"</span>, |_req, state| {
             <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(state.count_transactions().<span class="kw">await</span><span class="question-mark">?</span>) }.boxed()
@@ -593,16 +548,28 @@
         })<span class="question-mark">?
         </span>.get(<span class="string">"sync_status"</span>, |_req, state| {
             <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(state.sync_status().<span class="kw">await</span><span class="question-mark">?</span>) }.boxed()
+        })<span class="question-mark">?
+        </span>.get(<span class="string">"get_header_window"</span>, |req, state| {
+            <span class="kw">async move </span>{
+                <span class="kw">let </span>start = <span class="kw">if let </span><span class="prelude-val">Some</span>(height) = req.opt_integer_param(<span class="string">"height"</span>)<span class="question-mark">? </span>{
+                    WindowStart::Height(height)
+                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(hash) = req.opt_blob_param(<span class="string">"hash"</span>)<span class="question-mark">? </span>{
+                    WindowStart::Hash(hash)
+                } <span class="kw">else </span>{
+                    WindowStart::Time(req.integer_param(<span class="string">"start"</span>)<span class="question-mark">?</span>)
+                };
+                <span class="kw">let </span>end = req.integer_param(<span class="string">"end"</span>)<span class="question-mark">?</span>;
+                state
+                    .get_header_window(start, end)
+                    .<span class="kw">await
+                    </span>.context(QueryWindowSnafu {
+                        start: <span class="macro">format!</span>(<span class="string">"{start:?}"</span>),
+                        end,
+                    })
+            }
+            .boxed()
         })<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(api)
-}
-
-<span class="kw">fn </span>proposer_param&lt;Types: NodeType&gt;(
-    req: <span class="kw-2">&amp;</span>RequestParams,
-    param: <span class="kw-2">&amp;</span>str,
-) -&gt; <span class="prelude-ty">Result</span>&lt;SignatureKey&lt;Types&gt;, Error&gt; {
-    <span class="kw">let </span>encoded = req.tagged_base64_param(param)<span class="question-mark">?</span>;
-    encoded.try_into().map_err(|<span class="kw">_</span>| Error::InvalidSignatureKey)
 }
 
 <span class="attr">#[cfg(test)]
@@ -615,7 +582,7 @@
             mocks::MockTypes,
             setup_test,
         },
-        Error, VidShare,
+        Error, Header, VidShare,
     };
     <span class="kw">use </span>async_std::{
         sync::RwLock,
@@ -623,8 +590,7 @@
     };
     <span class="kw">use </span>commit::Committable;
     <span class="kw">use </span>futures::{FutureExt, StreamExt};
-    <span class="kw">use </span>hotshot::types::SignatureKey;
-    <span class="kw">use </span>hotshot_types::{event::EventType, signature_key::BLSPubKey};
+    <span class="kw">use </span>hotshot_types::event::EventType;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::time::Duration;
     <span class="kw">use </span>surf_disco::Client;
@@ -653,7 +619,7 @@
             Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
-        <span class="comment">// Wait until the block height is high enough that each node has proposed a block.
+        <span class="comment">// Wait until a few blocks have been sequenced.
         </span><span class="kw">let </span>block_height = <span class="kw">loop </span>{
             <span class="kw">let </span>block_height = client.get::&lt;usize&gt;(<span class="string">"block-height"</span>).send().<span class="kw">await</span>.unwrap();
             <span class="kw">if </span>block_height &gt; network.num_nodes() {
@@ -661,53 +627,6 @@
             }
             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
         };
-
-        <span class="comment">// Check proposals for node 0.
-        </span><span class="kw">let </span>proposals: Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt; = client
-            .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"proposals/{}"</span>, network.proposer(<span class="number">0</span>)))
-            .send()
-            .<span class="kw">await
-            </span>.unwrap();
-        <span class="macro">assert!</span>(!proposals.is_empty());
-        <span class="kw">for </span>proposal <span class="kw">in </span><span class="kw-2">&amp;</span>proposals {
-            <span class="macro">assert_eq!</span>(proposal.proposer(), network.proposer(<span class="number">0</span>));
-        }
-        <span class="comment">// Check the `proposals/limit` and `proposals/count` features.
-        </span><span class="macro">assert!</span>(
-            client
-                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"proposals/{}/count"</span>, network.proposer(<span class="number">0</span>)))
-                .send()
-                .<span class="kw">await
-                </span>.unwrap()
-                &gt;= proposals.len() <span class="kw">as </span>u64
-        );
-        <span class="comment">// For the limit queries, we just check the count. We don't know exactly which blocks to
-        // expect in the response, since it returns the most recent `count` blocks which may
-        // include new empty blocks committed since we started checking.
-        </span><span class="macro">assert_eq!</span>(
-            client
-                .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                    <span class="string">"proposals/{}/limit/1"</span>,
-                    network.proposer(<span class="number">0</span>)
-                ))
-                .send()
-                .<span class="kw">await
-                </span>.unwrap()
-                .len(),
-            <span class="number">1
-        </span>);
-        <span class="macro">assert_eq!</span>(
-            client
-                .get::&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                    <span class="string">"proposals/{}/limit/0"</span>,
-                    network.proposer(<span class="number">0</span>)
-                ))
-                .send()
-                .<span class="kw">await
-                </span>.unwrap()
-                .len(),
-            <span class="number">0
-        </span>);
 
         <span class="comment">// We test these counters with non-trivial values in `data_source.rs`, here we just want to
         // make sure the API handlers are working, so a response of 0 is fine.
@@ -728,6 +647,8 @@
             <span class="number">0
         </span>);
 
+        <span class="kw">let </span><span class="kw-2">mut </span>headers = <span class="macro">vec!</span>[];
+
         <span class="comment">// Get VID share for each block.
         </span><span class="macro">tracing::info!</span>(block_height, <span class="string">"checking VID shares"</span>);
         <span class="lifetime">'outer</span>: <span class="kw">while let </span><span class="prelude-val">Some</span>(event) = events.next().<span class="kw">await </span>{
@@ -735,6 +656,7 @@
                 <span class="kw">continue</span>;
             };
             <span class="kw">for </span>(leaf, vid) <span class="kw">in </span>leaf_chain.iter().rev() {
+                headers.push(leaf.block_header.clone());
                 <span class="kw">if </span>leaf.block_header.block_number &gt;= block_height <span class="kw">as </span>u64 {
                     <span class="kw">break </span><span class="lifetime">'outer</span>;
                 }
@@ -771,6 +693,51 @@
                 );
             }
         }
+
+        <span class="comment">// Check time window queries. The various edge cases are thoroughly tested for each
+        // individual data source. In this test, we just smoketest API parameter handling. Sleep 2
+        // seconds to ensure a new header is produced with a timestamp after the latest one in
+        // `headers`
+        </span>sleep(Duration::from_secs(<span class="number">2</span>)).<span class="kw">await</span>;
+        <span class="kw">let </span>first_header = <span class="kw-2">&amp;</span>headers[<span class="number">0</span>];
+        <span class="kw">let </span>last_header = <span class="kw-2">&amp;</span>headers.last().unwrap();
+        <span class="kw">let </span>window: TimeWindowQueryData&lt;Header&lt;MockTypes&gt;&gt; = client
+            .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                <span class="string">"header/window/{}/{}"</span>,
+                first_header.timestamp,
+                last_header.timestamp + <span class="number">1
+            </span>))
+            .send()
+            .<span class="kw">await
+            </span>.unwrap();
+        <span class="macro">assert!</span>(window.window.contains(first_header));
+        <span class="macro">assert!</span>(window.window.contains(last_header));
+        <span class="macro">assert!</span>(window.next.is_some());
+
+        <span class="comment">// Query for the same window other ways.
+        </span><span class="macro">assert_eq!</span>(
+            window,
+            client
+                .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    <span class="string">"header/window/from/0/{}"</span>,
+                    last_header.timestamp + <span class="number">1
+                </span>))
+                .send()
+                .<span class="kw">await
+                </span>.unwrap()
+        );
+        <span class="macro">assert_eq!</span>(
+            window,
+            client
+                .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    <span class="string">"header/window/from/hash/{}/{}"</span>,
+                    first_header.commit(),
+                    last_header.timestamp + <span class="number">1
+                </span>))
+                .send()
+                .<span class="kw">await
+                </span>.unwrap()
+        );
 
         <span class="comment">// In this simple test, the node should be fully synchronized.
         </span><span class="kw">let </span>sync_status = client
@@ -842,15 +809,8 @@
         <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"ext"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">42</span>);
 
         <span class="comment">// Ensure we can still access the built-in functionality.
-        </span><span class="kw">let </span>(key, <span class="kw">_</span>) = BLSPubKey::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], <span class="number">0</span>);
-        <span class="macro">assert_eq!</span>(
-            client
-                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"proposals/{key}/count"</span>))
-                .send()
-                .<span class="kw">await
-                </span>.unwrap(),
-            <span class="number">0
-        </span>);
+        </span><span class="kw">let </span>sync_status: SyncStatus = client.get(<span class="string">"sync-status"</span>).send().<span class="kw">await</span>.unwrap();
+        <span class="macro">assert!</span>(sync_status.is_fully_synced(), <span class="string">"{sync_status:?}"</span>);
     }
 }
 </code></pre></div></section></main></body></html>

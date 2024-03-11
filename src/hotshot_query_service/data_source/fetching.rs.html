@@ -1219,12 +1219,6 @@
 <a href="#1218" id="1218">1218</a>
 <a href="#1219" id="1219">1219</a>
 <a href="#1220" id="1220">1220</a>
-<a href="#1221" id="1221">1221</a>
-<a href="#1222" id="1222">1222</a>
-<a href="#1223" id="1223">1223</a>
-<a href="#1224" id="1224">1224</a>
-<a href="#1225" id="1225">1225</a>
-<a href="#1226" id="1226">1226</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1302,19 +1296,19 @@
 
 </span><span class="kw">use </span><span class="kw">super</span>::storage::pruning::PruneStorage;
 <span class="kw">use super</span>::{notifier::Notifier, storage::AvailabilityStorage, VersionedDataSource};
-<span class="kw">use </span><span class="kw">crate</span>::availability::QueryableHeader;
 <span class="kw">use crate</span>::{
     availability::{
         AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
-        PayloadQueryData, QueryablePayload, TransactionHash, TransactionIndex,
+        PayloadQueryData, QueryableHeader, QueryablePayload, TransactionHash, TransactionIndex,
         UpdateAvailabilityData, VidCommonQueryData,
     },
     fetching::{<span class="self">self</span>, request, Provider},
     metrics::PrometheusMetrics,
-    node::{NodeDataSource, SyncStatus},
+    node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
     status::StatusDataSource,
     task::BackgroundTask,
-    Header, Payload, QueryResult, SignatureKey, VidShare,
+    types::HeightIndexed,
+    Header, Payload, QueryResult, VidShare,
 };
 <span class="kw">use </span>anyhow::Context;
 <span class="kw">use </span>async_std::{
@@ -1809,18 +1803,6 @@
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.fetcher.storage.read().<span class="kw">await</span>.height <span class="kw">as </span>usize)
     }
 
-    <span class="kw">async fn </span>get_proposals(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;,
-        limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt; {
-        <span class="self">self</span>.storage().<span class="kw">await</span>.get_proposals(proposer, limit).<span class="kw">await
-    </span>}
-
-    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
-        <span class="self">self</span>.storage().<span class="kw">await</span>.count_proposals(proposer).<span class="kw">await
-    </span>}
-
     <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="self">self</span>.storage().<span class="kw">await</span>.count_transactions().<span class="kw">await
     </span>}
@@ -1838,6 +1820,14 @@
 
     <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
         <span class="self">self</span>.storage().<span class="kw">await</span>.sync_status().<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>get_header_window(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
+        end: u64,
+    ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
+        <span class="self">self</span>.storage().<span class="kw">await</span>.get_header_window(start, end).<span class="kw">await
     </span>}
 }
 
@@ -2086,7 +2076,7 @@
         </span><span class="kw">let </span><span class="kw-2">mut </span>fetches = Vec::with_capacity(chunk.len());
         <span class="kw">for </span>t <span class="kw">in </span>ts {
             <span class="comment">// Fetch missing objects that should come before `t`.
-            </span><span class="kw">while </span>chunk.start + fetches.len() &lt; t.height() {
+            </span><span class="kw">while </span>chunk.start + fetches.len() &lt; t.height() <span class="kw">as </span>usize {
                 <span class="macro">tracing::debug!</span>(
                     <span class="string">"item {} in chunk not available, will be fetched"</span>,
                     fetches.len()
@@ -2382,7 +2372,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">trait </span>RangedFetchable&lt;Types&gt;: Fetchable&lt;Types, Request = <span class="self">Self</span>::RangedRequest&gt;
+</span><span class="kw">trait </span>RangedFetchable&lt;Types&gt;: Fetchable&lt;Types, Request = <span class="self">Self</span>::RangedRequest&gt; + HeightIndexed
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
@@ -2397,8 +2387,6 @@
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
         R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
-
-    <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
 }
 
 <span class="doccomment">/// Break a range into fixed-size chunks.

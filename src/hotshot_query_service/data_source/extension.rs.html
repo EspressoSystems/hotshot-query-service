@@ -327,9 +327,6 @@
 <a href="#326" id="326">326</a>
 <a href="#327" id="327">327</a>
 <a href="#328" id="328">328</a>
-<a href="#329" id="329">329</a>
-<a href="#330" id="330">330</a>
-<a href="#331" id="331">331</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -350,9 +347,9 @@
         UpdateAvailabilityData, VidCommonQueryData,
     },
     metrics::PrometheusMetrics,
-    node::{NodeDataSource, SyncStatus},
+    node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
     status::StatusDataSource,
-    Payload, QueryResult, SignatureKey, VidShare,
+    Header, Payload, QueryResult, VidShare,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
@@ -569,16 +566,6 @@
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="self">self</span>.data_source.block_height().<span class="kw">await
     </span>}
-    <span class="kw">async fn </span>get_proposals(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;,
-        limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt; {
-        <span class="self">self</span>.data_source.get_proposals(proposer, limit).<span class="kw">await
-    </span>}
-    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
-        <span class="self">self</span>.data_source.count_proposals(proposer).<span class="kw">await
-    </span>}
     <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="self">self</span>.data_source.count_transactions().<span class="kw">await
     </span>}
@@ -593,6 +580,13 @@
     </span>}
     <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
         <span class="self">self</span>.data_source.sync_status().<span class="kw">await
+    </span>}
+    <span class="kw">async fn </span>get_header_window(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
+        end: u64,
+    ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
+        <span class="self">self</span>.data_source.get_header_window(start, end).<span class="kw">await
     </span>}
 }
 

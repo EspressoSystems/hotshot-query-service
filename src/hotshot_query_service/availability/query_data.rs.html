@@ -568,23 +568,6 @@
 <a href="#567" id="567">567</a>
 <a href="#568" id="568">568</a>
 <a href="#569" id="569">569</a>
-<a href="#570" id="570">570</a>
-<a href="#571" id="571">571</a>
-<a href="#572" id="572">572</a>
-<a href="#573" id="573">573</a>
-<a href="#574" id="574">574</a>
-<a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a>
-<a href="#577" id="577">577</a>
-<a href="#578" id="578">578</a>
-<a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a>
-<a href="#581" id="581">581</a>
-<a href="#582" id="582">582</a>
-<a href="#583" id="583">583</a>
-<a href="#584" id="584">584</a>
-<a href="#585" id="585">585</a>
-<a href="#586" id="586">586</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -597,7 +580,7 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use crate</span>::{Header, Metadata, Payload, SignatureKey, Transaction, VidCommon};
+</span><span class="kw">use crate</span>::{types::HeightIndexed, Header, Metadata, Payload, Transaction, VidCommon};
 <span class="kw">use </span>commit::{Commitment, Committable};
 <span class="kw">use </span>hotshot_types::{
     data::Leaf,
@@ -827,10 +810,6 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.leaf.block_header
     }
 
-    <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        <span class="self">self</span>.header().block_number()
-    }
-
     <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LeafHash&lt;Types&gt; {
         <span class="self">self</span>.leaf.commit()
     }
@@ -842,9 +821,11 @@
     <span class="kw">pub fn </span>payload_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VidCommitment {
         <span class="self">self</span>.header().payload_commitment()
     }
+}
 
-    <span class="kw">pub fn </span>proposer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SignatureKey&lt;Types&gt; {
-        <span class="self">self</span>.leaf.get_proposer_id()
+<span class="kw">impl</span>&lt;Types: NodeType&gt; HeightIndexed <span class="kw">for </span>LeafQueryData&lt;Types&gt; {
+    <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.header().block_number()
     }
 }
 
@@ -856,7 +837,6 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) hash: BlockHash&lt;Types&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) size: u64,
     <span class="kw">pub</span>(<span class="kw">crate</span>) num_transactions: u64,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) proposer_id: SignatureKey&lt;Types&gt;,
 }
 
 <span class="kw">impl</span>&lt;Types: NodeType&gt; BlockQueryData&lt;Types&gt; {
@@ -868,7 +848,6 @@
             hash: header.commit(),
             size: payload_size::&lt;Types&gt;(<span class="kw-2">&amp;</span>payload),
             num_transactions: payload.len(header.metadata()) <span class="kw">as </span>u64,
-            proposer_id: get_proposer::&lt;Types&gt;(header.clone()),
             header,
             payload,
         }
@@ -902,20 +881,12 @@
         <span class="self">self</span>.hash
     }
 
-    <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        <span class="self">self</span>.header.block_number()
-    }
-
     <span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
         <span class="self">self</span>.size
     }
 
     <span class="kw">pub fn </span>num_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
         <span class="self">self</span>.num_transactions
-    }
-
-    <span class="kw">pub fn </span>proposer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SignatureKey&lt;Types&gt; {
-        <span class="self">self</span>.proposer_id.clone()
     }
 }
 
@@ -956,6 +927,12 @@
     }
 }
 
+<span class="kw">impl</span>&lt;Types: NodeType&gt; HeightIndexed <span class="kw">for </span>BlockQueryData&lt;Types&gt; {
+    <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.header.block_number()
+    }
+}
+
 <span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(bound = <span class="string">""</span>)]
 </span><span class="kw">pub struct </span>PayloadQueryData&lt;Types: NodeType&gt; {
@@ -986,10 +963,6 @@
         BlockQueryData::genesis(instance_state).into()
     }
 
-    <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        <span class="self">self</span>.height
-    }
-
     <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VidCommitment {
         <span class="self">self</span>.hash
     }
@@ -1004,6 +977,12 @@
 
     <span class="kw">pub fn </span>data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Payload&lt;Types&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.data
+    }
+}
+
+<span class="kw">impl</span>&lt;Types: NodeType&gt; HeightIndexed <span class="kw">for </span>PayloadQueryData&lt;Types&gt; {
+    <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.height
     }
 }
 
@@ -1037,10 +1016,6 @@
         <span class="self">Self</span>::new(leaf.block_header, disperse.common)
     }
 
-    <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        <span class="self">self</span>.height
-    }
-
     <span class="kw">pub fn </span>block_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BlockHash&lt;Types&gt; {
         <span class="self">self</span>.block_hash
     }
@@ -1051,6 +1026,12 @@
 
     <span class="kw">pub fn </span>common(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>VidCommon {
         <span class="kw-2">&amp;</span><span class="self">self</span>.common
+    }
+}
+
+<span class="kw">impl</span>&lt;Types: NodeType&gt; HeightIndexed <span class="kw">for </span>VidCommonQueryData&lt;Types&gt; {
+    <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.height
     }
 }
 
@@ -1102,7 +1083,6 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) hash: BlockHash&lt;Types&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) size: u64,
     <span class="kw">pub</span>(<span class="kw">crate</span>) num_transactions: u64,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) proposer_id: SignatureKey&lt;Types&gt;,
 }
 
 <span class="comment">// Add some basic getters to the BlockSummaryQueryData type.
@@ -1115,10 +1095,6 @@
         <span class="self">self</span>.hash
     }
 
-    <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        <span class="self">self</span>.header.block_number()
-    }
-
     <span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
         <span class="self">self</span>.size
     }
@@ -1126,21 +1102,12 @@
     <span class="kw">pub fn </span>num_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
         <span class="self">self</span>.num_transactions
     }
-
-    <span class="kw">pub fn </span>proposer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SignatureKey&lt;Types&gt; {
-        <span class="self">self</span>.proposer_id.clone()
-    }
 }
 
-<span class="comment">// Get the Proposer from the given header.  At the moment the proposer cannot
-// be determined from the header, however it is intended to in the future.
-// For now we will just generate one with dummy data.
-// TODO update this function to retrieve the proposer from the Header type once
-//      the Header type has been updated to include the proposer.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_proposer&lt;Types: NodeType&gt;(_header: Header&lt;Types&gt;) -&gt; SignatureKey&lt;Types&gt; {
-    <span class="kw">use </span>hotshot::types::SignatureKey;
-    <span class="kw">let </span>(key, <span class="kw">_</span>) = SignatureKey::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], <span class="number">0</span>);
-    key
+<span class="kw">impl</span>&lt;Types: NodeType&gt; HeightIndexed <span class="kw">for </span>BlockSummaryQueryData&lt;Types&gt; {
+    <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.header.block_number()
+    }
 }
 
 <span class="attr">#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -1167,7 +1134,6 @@
             hash: value.hash,
             size: value.size,
             num_transactions: value.num_transactions,
-            proposer_id: value.proposer_id,
         }
     }
 }

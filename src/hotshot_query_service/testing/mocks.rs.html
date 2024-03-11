@@ -99,6 +99,14 @@
 <a href="#98" id="98">98</a>
 <a href="#99" id="99">99</a>
 <a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -111,8 +119,10 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use </span><span class="kw">crate</span>::availability::{QueryableHeader, QueryablePayload};
-<span class="kw">use </span>chrono::Utc;
+</span><span class="kw">use crate</span>::{
+    availability::{QueryableHeader, QueryablePayload},
+    types::HeightIndexed,
+};
 <span class="kw">use </span>hotshot::traits::{
     election::static_committee::{GeneralStaticCommittee, StaticElectionConfig},
     implementations::{MemoryNetwork, MemoryStorage},
@@ -139,9 +149,15 @@
     TestTransaction(payload)
 }
 
-<span class="kw">impl</span>&lt;Types: NodeType&lt;BlockPayload = TestBlockPayload&gt;&gt; QueryableHeader&lt;Types&gt; <span class="kw">for </span>MockHeader {
+<span class="kw">impl </span>QueryableHeader&lt;MockTypes&gt; <span class="kw">for </span>MockHeader {
     <span class="kw">fn </span>timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        Utc::now().timestamp() <span class="kw">as </span>u64
+        <span class="self">self</span>.timestamp
+    }
+}
+
+<span class="kw">impl </span>HeightIndexed <span class="kw">for </span>MockHeader {
+    <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.block_number
     }
 }
 

@@ -227,9 +227,6 @@
 <a href="#226" id="226">226</a>
 <a href="#227" id="227">227</a>
 <a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -252,6 +249,7 @@
     availability::{LeafId, LeafQueryData, QueryablePayload, UpdateAvailabilityData},
     data_source::{storage::AvailabilityStorage, VersionedDataSource},
     fetching::{<span class="self">self</span>, request, Callback},
+    types::HeightIndexed,
     Payload, QueryResult,
 };
 <span class="kw">use </span>async_std::sync::{Arc, RwLockReadGuard};
@@ -388,10 +386,6 @@
     {
         storage.storage.get_leaf_range(range).<span class="kw">await
     </span>}
-
-    <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.height() <span class="kw">as </span>usize
-    }
 }
 
 <span class="attr">#[derive(Derivative, From)]

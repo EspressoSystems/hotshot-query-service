@@ -212,9 +212,6 @@
 <a href="#211" id="211">211</a>
 <a href="#212" id="212">212</a>
 <a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -237,6 +234,7 @@
     availability::{BlockId, QueryablePayload, UpdateAvailabilityData, VidCommonQueryData},
     data_source::{storage::AvailabilityStorage, VersionedDataSource},
     fetching::{<span class="self">self</span>, request, Callback},
+    types::HeightIndexed,
     Header, Payload, QueryResult, VidCommon,
 };
 <span class="kw">use </span>async_std::sync::{Arc, RwLockReadGuard};
@@ -336,10 +334,6 @@
     {
         storage.storage.get_vid_common_range(range).<span class="kw">await
     </span>}
-
-    <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.height() <span class="kw">as </span>usize
-    }
 }
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>fetch_vid_common_with_header&lt;Types, S, P&gt;(

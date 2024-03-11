@@ -572,24 +572,6 @@
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
 <a href="#573" id="573">573</a>
-<a href="#574" id="574">574</a>
-<a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a>
-<a href="#577" id="577">577</a>
-<a href="#578" id="578">578</a>
-<a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a>
-<a href="#581" id="581">581</a>
-<a href="#582" id="582">582</a>
-<a href="#583" id="583">583</a>
-<a href="#584" id="584">584</a>
-<a href="#585" id="585">585</a>
-<a href="#586" id="586">586</a>
-<a href="#587" id="587">587</a>
-<a href="#588" id="588">588</a>
-<a href="#589" id="589">589</a>
-<a href="#590" id="590">590</a>
-<a href="#591" id="591">591</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -613,23 +595,25 @@
     availability::{
         data_source::{BlockId, LeafId, UpdateAvailabilityData},
         query_data::{
-            BlockHash, BlockQueryData, LeafHash, LeafQueryData, PayloadQueryData, QueryablePayload,
-            TransactionHash, TransactionIndex, VidCommonQueryData,
+            BlockHash, BlockQueryData, LeafHash, LeafQueryData, PayloadQueryData, QueryableHeader,
+            QueryablePayload, TransactionHash, TransactionIndex, VidCommonQueryData,
         },
     },
     data_source::VersionedDataSource,
-    node::{NodeDataSource, SyncStatus},
-    Header, MissingSnafu, NotFoundSnafu, Payload, QueryResult, SignatureKey, VidCommitment,
-    VidShare,
+    node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
+    types::HeightIndexed,
+    Header, MissingSnafu, NotFoundSnafu, Payload, QueryResult, VidCommitment, VidShare,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>atomic_store::{AtomicStore, AtomicStoreLoader, PersistenceError};
 <span class="kw">use </span>commit::Committable;
-<span class="kw">use </span>futures::stream::{<span class="self">self</span>, StreamExt, TryStreamExt};
-<span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
+<span class="kw">use </span>hotshot_types::traits::{block_contents::BlockHeader, node_implementation::NodeType};
 <span class="kw">use </span>serde::{de::DeserializeOwned, Serialize};
 <span class="kw">use </span>snafu::OptionExt;
-<span class="kw">use </span>std::collections::hash_map::{Entry, HashMap};
+<span class="kw">use </span>std::collections::{
+    hash_map::{Entry, HashMap},
+    BTreeMap,
+};
 <span class="kw">use </span>std::convert::Infallible;
 <span class="kw">use </span>std::hash::Hash;
 <span class="kw">use </span>std::ops::{Bound, RangeBounds};
@@ -649,12 +633,7 @@
     index_by_block_hash: HashMap&lt;BlockHash&lt;Types&gt;, u64&gt;,
     index_by_payload_hash: HashMap&lt;VidCommitment, u64&gt;,
     index_by_txn_hash: HashMap&lt;TransactionHash&lt;Types&gt;, (u64, TransactionIndex&lt;Types&gt;)&gt;,
-    index_by_proposer_id: HashMap&lt;SignatureKey&lt;Types&gt;, Vec&lt;u64&gt;&gt;,
-    <span class="comment">// We have separate indexes for VID than for other data, because of the special case where VID
-    // information does not exist for the genesis block. This means that VID data for blocks that
-    // are duplicates of the genesis block may exist but not be findable through the block indexes.
-    </span>index_vid_by_block_hash: HashMap&lt;BlockHash&lt;Types&gt;, u64&gt;,
-    index_vid_by_payload_hash: HashMap&lt;VidCommitment, u64&gt;,
+    index_by_time: BTreeMap&lt;u64, Vec&lt;u64&gt;&gt;,
     num_transactions: usize,
     payload_size: usize,
     <span class="attr">#[debug(skip)]
@@ -682,6 +661,7 @@
 <span class="kw">impl</span>&lt;Types: NodeType&gt; FileSystemStorage&lt;Types&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload,
+    Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
 {
     <span class="doccomment">/// Create a new [FileSystemStorage] with storage at `path`.
     ///
@@ -723,9 +703,7 @@
             index_by_block_hash: Default::default(),
             index_by_payload_hash: Default::default(),
             index_by_txn_hash: Default::default(),
-            index_by_proposer_id: Default::default(),
-            index_vid_by_block_hash: Default::default(),
-            index_vid_by_payload_hash: Default::default(),
+            index_by_time: Default::default(),
             num_transactions: <span class="number">0</span>,
             payload_size: <span class="number">0</span>,
             top_storage: <span class="prelude-val">None</span>,
@@ -754,23 +732,23 @@
             CACHED_VID_COMMON_COUNT,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>index_by_proposer_id = HashMap::new();
         <span class="kw">let </span><span class="kw-2">mut </span>index_by_block_hash = HashMap::new();
         <span class="kw">let </span><span class="kw-2">mut </span>index_by_payload_hash = HashMap::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>index_by_time = BTreeMap::&lt;u64, Vec&lt;u64&gt;&gt;::new();
         <span class="kw">let </span>index_by_leaf_hash = leaf_storage
             .iter()
             .flatten()
             .map(|leaf| {
-                index_by_proposer_id
-                    .entry(leaf.proposer())
-                    .or_insert_with(Vec::new)
-                    .push(leaf.height());
                 update_index_by_hash(<span class="kw-2">&amp;mut </span>index_by_block_hash, leaf.block_hash(), leaf.height());
                 update_index_by_hash(
                     <span class="kw-2">&amp;mut </span>index_by_payload_hash,
                     leaf.payload_hash(),
                     leaf.height(),
                 );
+                index_by_time
+                    .entry(leaf.header().timestamp())
+                    .or_default()
+                    .push(leaf.height());
                 (leaf.hash(), leaf.height())
             })
             .collect();
@@ -788,29 +766,12 @@
             }
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>index_vid_by_block_hash = HashMap::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>index_vid_by_payload_hash = HashMap::new();
-        <span class="kw">for </span>(common, <span class="kw">_</span>) <span class="kw">in </span>vid_storage.iter().flatten() {
-            update_index_by_hash(
-                <span class="kw-2">&amp;mut </span>index_vid_by_block_hash,
-                common.block_hash(),
-                common.height(),
-            );
-            update_index_by_hash(
-                <span class="kw-2">&amp;mut </span>index_vid_by_payload_hash,
-                common.payload_hash(),
-                common.height(),
-            );
-        }
-
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             index_by_leaf_hash,
             index_by_block_hash,
             index_by_payload_hash,
             index_by_txn_hash,
-            index_by_proposer_id,
-            index_vid_by_block_hash,
-            index_vid_by_payload_hash,
+            index_by_time,
             num_transactions,
             payload_size,
             leaf_storage,
@@ -840,20 +801,6 @@
             BlockId::PayloadHash(h) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="self">self</span>.index_by_payload_hash.get(<span class="kw-2">&amp;</span>h).context(NotFoundSnafu)<span class="question-mark">? </span><span class="kw">as </span>usize)
             }
-        }
-    }
-
-    <span class="kw">fn </span>get_vid_index(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">match </span>id {
-            BlockId::Number(n) =&gt; <span class="prelude-val">Ok</span>(n),
-            BlockId::Hash(h) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="self">self
-                </span>.index_vid_by_block_hash
-                .get(<span class="kw-2">&amp;</span>h)
-                .context(NotFoundSnafu)<span class="question-mark">? </span><span class="kw">as </span>usize),
-            BlockId::PayloadHash(h) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="self">self
-                </span>.index_vid_by_payload_hash
-                .get(<span class="kw-2">&amp;</span>h)
-                .context(NotFoundSnafu)<span class="question-mark">? </span><span class="kw">as </span>usize),
         }
     }
 }
@@ -927,6 +874,7 @@
 </span><span class="kw">impl</span>&lt;Types: NodeType&gt; AvailabilityStorage&lt;Types&gt; <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload,
+    Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
 {
     <span class="kw">async fn </span>get_leaf(<span class="kw-2">&amp;</span><span class="self">self</span>, id: LeafId&lt;Types&gt;) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt; {
         <span class="kw">let </span>n = <span class="kw">match </span>id {
@@ -960,7 +908,7 @@
         <span class="prelude-val">Ok</span>(<span class="self">self
             </span>.vid_storage
             .iter()
-            .nth(<span class="self">self</span>.get_vid_index(id)<span class="question-mark">?</span>)
+            .nth(<span class="self">self</span>.get_block_index(id)<span class="question-mark">?</span>)
             .context(NotFoundSnafu)<span class="question-mark">?
             </span>.context(MissingSnafu)<span class="question-mark">?
             </span>.<span class="number">0</span>)
@@ -1024,6 +972,7 @@
 </span><span class="kw">impl</span>&lt;Types: NodeType&gt; UpdateAvailabilityData&lt;Types&gt; <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload,
+    Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
 {
     <span class="kw">type </span>Error = PersistenceError;
 
@@ -1031,10 +980,6 @@
         <span class="self">self</span>.leaf_storage
             .insert(leaf.height() <span class="kw">as </span>usize, leaf.clone())<span class="question-mark">?</span>;
         <span class="self">self</span>.index_by_leaf_hash.insert(leaf.hash(), leaf.height());
-        <span class="self">self</span>.index_by_proposer_id
-            .entry(leaf.proposer())
-            .or_default()
-            .push(leaf.height());
         update_index_by_hash(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.index_by_block_hash,
             leaf.block_hash(),
@@ -1045,6 +990,10 @@
             leaf.payload_hash(),
             leaf.height(),
         );
+        <span class="self">self</span>.index_by_time
+            .entry(leaf.header().timestamp())
+            .or_default()
+            .push(leaf.height());
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1073,12 +1022,8 @@
         common: VidCommonQueryData&lt;Types&gt;,
         share: <span class="prelude-ty">Option</span>&lt;VidShare&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
-        <span class="kw">let </span>height = common.height();
-        <span class="kw">let </span>block_hash = common.block_hash();
-        <span class="kw">let </span>payload_hash = common.payload_hash();
-        <span class="self">self</span>.vid_storage.insert(height <span class="kw">as </span>usize, (common, share))<span class="question-mark">?</span>;
-        update_index_by_hash(<span class="kw-2">&amp;mut </span><span class="self">self</span>.index_vid_by_block_hash, block_hash, height);
-        update_index_by_hash(<span class="kw-2">&amp;mut </span><span class="self">self</span>.index_vid_by_payload_hash, payload_hash, height);
+        <span class="self">self</span>.vid_storage
+            .insert(common.height() <span class="kw">as </span>usize, (common, share))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
@@ -1105,37 +1050,10 @@
 </span><span class="kw">impl</span>&lt;Types: NodeType&gt; NodeDataSource&lt;Types&gt; <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload,
+    Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
 {
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.leaf_storage.iter().len())
-    }
-
-    <span class="kw">async fn </span>get_proposals(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;,
-        limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt; {
-        <span class="kw">let </span>all_ids = <span class="self">self
-            </span>.index_by_proposer_id
-            .get(id)
-            .cloned()
-            .unwrap_or_default();
-        <span class="kw">let </span>start_from = <span class="kw">match </span>limit {
-            <span class="prelude-val">Some</span>(count) =&gt; all_ids.len().saturating_sub(count),
-            <span class="prelude-val">None </span>=&gt; <span class="number">0</span>,
-        };
-        stream::iter(all_ids)
-            .skip(start_from)
-            .then(|height| <span class="self">self</span>.get_leaf((height <span class="kw">as </span>usize).into()))
-            .try_collect()
-            .<span class="kw">await
-    </span>}
-
-    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
-        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self</span>.index_by_proposer_id.get(id) {
-            <span class="prelude-val">Some</span>(ids) =&gt; ids.len(),
-            <span class="prelude-val">None </span>=&gt; <span class="number">0</span>,
-        })
     }
 
     <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
@@ -1152,7 +1070,7 @@
     {
         <span class="self">self</span>.vid_storage
             .iter()
-            .nth(<span class="self">self</span>.get_vid_index(id.into())<span class="question-mark">?</span>)
+            .nth(<span class="self">self</span>.get_block_index(id.into())<span class="question-mark">?</span>)
             .context(NotFoundSnafu)<span class="question-mark">?
             </span>.context(MissingSnafu)<span class="question-mark">?
             </span>.<span class="number">1
@@ -1179,6 +1097,52 @@
             missing_vid_shares: missing_vid + null_vid_shares,
             pruned_height: <span class="prelude-val">None</span>,
         })
+    }
+
+    <span class="kw">async fn </span>get_header_window(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
+        end: u64,
+    ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
+        <span class="kw">let </span>first_block = <span class="kw">match </span>start.into() {
+            WindowStart::Height(h) =&gt; h,
+            WindowStart::Hash(h) =&gt; <span class="self">self</span>.get_header(h.into()).<span class="kw">await</span><span class="question-mark">?</span>.block_number(),
+            WindowStart::Time(t) =&gt; {
+                <span class="comment">// Find the minimum timestamp which is at least `t`, and all the blocks with that
+                // timestamp.
+                </span><span class="kw">let </span>blocks = <span class="self">self
+                    </span>.index_by_time
+                    .range(t..)
+                    .next()
+                    .context(NotFoundSnafu)<span class="question-mark">?
+                    </span>.<span class="number">1</span>;
+                <span class="comment">// Multiple blocks can have the same timestamp (when truncated to seconds); we want
+                // the first one. It is an invariant that any timestamp which has an entry in
+                // `index_by_time` has a non-empty list associated with it, so this indexing is
+                // safe.
+                </span>blocks[<span class="number">0</span>]
+            }
+        } <span class="kw">as </span>usize;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>res = TimeWindowQueryData::default();
+
+        <span class="comment">// Include the block just before the start of the window, if there is one.
+        </span><span class="kw">if </span>first_block &gt; <span class="number">0 </span>{
+            res.prev = <span class="prelude-val">Some</span>(<span class="self">self</span>.get_header((first_block - <span class="number">1</span>).into()).<span class="kw">await</span><span class="question-mark">?</span>);
+        }
+
+        <span class="comment">// Add blocks to the window, starting from `first_block`, until we reach the end of the
+        // requested time window.
+        </span><span class="kw">for </span>block <span class="kw">in </span><span class="self">self</span>.get_block_range(first_block..).<span class="kw">await</span><span class="question-mark">? </span>{
+            <span class="kw">let </span>header = block<span class="question-mark">?</span>.header().clone();
+            <span class="kw">if </span>header.timestamp() &gt;= end {
+                res.next = <span class="prelude-val">Some</span>(header);
+                <span class="kw">break</span>;
+            }
+            res.window.push(header);
+        }
+
+        <span class="prelude-val">Ok</span>(res)
     }
 }
 </code></pre></div></section></main></body></html>

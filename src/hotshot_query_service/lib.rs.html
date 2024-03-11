@@ -796,19 +796,6 @@
 <a href="#795" id="795">795</a>
 <a href="#796" id="796">796</a>
 <a href="#797" id="797">797</a>
-<a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a>
-<a href="#800" id="800">800</a>
-<a href="#801" id="801">801</a>
-<a href="#802" id="802">802</a>
-<a href="#803" id="803">803</a>
-<a href="#804" id="804">804</a>
-<a href="#805" id="805">805</a>
-<a href="#806" id="806">806</a>
-<a href="#807" id="807">807</a>
-<a href="#808" id="808">808</a>
-<a href="#809" id="809">809</a>
-<a href="#810" id="810">810</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1069,13 +1056,15 @@
 //!
 //! ```
 //! # use async_trait::async_trait;
-//! # use hotshot_query_service::{QueryResult, SignatureKey, VidShare};
+//! # use hotshot_query_service::{Header, QueryResult, VidShare};
 //! # use hotshot_query_service::availability::{
 //! #   AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
 //! #   PayloadQueryData, TransactionHash, TransactionIndex, VidCommonQueryData,
 //! # };
 //! # use hotshot_query_service::metrics::PrometheusMetrics;
-//! # use hotshot_query_service::node::{NodeDataSource, SyncStatus};
+//! # use hotshot_query_service::node::{
+//! #   NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart,
+//! # };
 //! # use hotshot_query_service::status::StatusDataSource;
 //! # use hotshot_query_service::testing::mocks::MockTypes as AppTypes;
 //! # use std::ops::RangeBounds;
@@ -1144,18 +1133,6 @@
 //!         self.hotshot_qs.block_height().await
 //!     }
 //!
-//!     async fn get_proposals(
-//!         &amp;self,
-//!         id: &amp;SignatureKey&lt;AppTypes&gt;,
-//!         limit: Option&lt;usize&gt;,
-//!     ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;AppTypes&gt;&gt;&gt; {
-//!         self.hotshot_qs.get_proposals(id, limit).await
-//!     }
-//!
-//!     async fn count_proposals(&amp;self, id: &amp;SignatureKey&lt;AppTypes&gt;) -&gt; QueryResult&lt;usize&gt; {
-//!         self.hotshot_qs.count_proposals(id).await
-//!     }
-//!
 //!     async fn count_transactions(&amp;self) -&gt; QueryResult&lt;usize&gt; {
 //!         self.hotshot_qs.count_transactions().await
 //!     }
@@ -1173,6 +1150,14 @@
 //!
 //!     async fn sync_status(&amp;self) -&gt; QueryResult&lt;SyncStatus&gt; {
 //!         self.hotshot_qs.sync_status().await
+//!     }
+//!
+//!     async fn get_header_window(
+//!         &amp;self,
+//!         start: impl Into&lt;WindowStart&lt;AppTypes&gt;&gt; + Send + Sync,
+//!         end: u64,
+//!     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;AppTypes&gt;&gt;&gt; {
+//!         self.hotshot_qs.get_header_window(start, end).await
 //!     }
 //! }
 //!
@@ -1224,6 +1209,7 @@
 <span class="kw">pub mod </span>status;
 <span class="kw">mod </span>task;
 <span class="kw">pub mod </span>testing;
+<span class="kw">pub mod </span>types;
 
 <span class="kw">pub use </span>error::Error;
 <span class="kw">pub use </span>resolvable::Resolvable;
@@ -1356,7 +1342,7 @@
             VidCommonQueryData,
         },
         metrics::PrometheusMetrics,
-        node::{NodeDataSource, SyncStatus},
+        node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
         status::StatusDataSource,
         testing::{
             consensus::MockDataSource,
@@ -1368,9 +1354,7 @@
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
 
     <span class="kw">use </span>futures::FutureExt;
-    <span class="kw">use </span>hotshot::types::SignatureKey <span class="kw">as _</span>;
     <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
-    <span class="kw">use </span>hotshot_types::signature_key::BLSPubKey;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::ops::RangeBounds;
     <span class="kw">use </span>std::time::Duration;
@@ -1474,16 +1458,6 @@
         <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
             StatusDataSource::block_height(<span class="self">self</span>).<span class="kw">await
         </span>}
-        <span class="kw">async fn </span>get_proposals(
-            <span class="kw-2">&amp;</span><span class="self">self</span>,
-            proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;MockTypes&gt;,
-            limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-        ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt; {
-            <span class="self">self</span>.hotshot_qs.get_proposals(proposer, limit).<span class="kw">await
-        </span>}
-        <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;MockTypes&gt;) -&gt; QueryResult&lt;usize&gt; {
-            <span class="self">self</span>.hotshot_qs.count_proposals(proposer).<span class="kw">await
-        </span>}
         <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
             <span class="self">self</span>.hotshot_qs.count_transactions().<span class="kw">await
         </span>}
@@ -1498,6 +1472,13 @@
         </span>}
         <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
             <span class="self">self</span>.hotshot_qs.sync_status().<span class="kw">await
+        </span>}
+        <span class="kw">async fn </span>get_header_window(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            start: <span class="kw">impl </span>Into&lt;WindowStart&lt;MockTypes&gt;&gt; + Send + Sync,
+            end: u64,
+        ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;MockTypes&gt;&gt;&gt; {
+            <span class="self">self</span>.hotshot_qs.get_header_window(start, end).<span class="kw">await
         </span>}
     }
 
@@ -1599,15 +1580,8 @@
                 </span>.unwrap(),
             <span class="number">1
         </span>);
-        <span class="kw">let </span>(key, <span class="kw">_</span>) = BLSPubKey::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], <span class="number">0</span>);
-        <span class="macro">assert_eq!</span>(
-            client
-                .get::&lt;u64&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"node/proposals/{key}/count"</span>))
-                .send()
-                .<span class="kw">await
-                </span>.unwrap(),
-            <span class="number">0
-        </span>);
+        <span class="kw">let </span>sync_status: SyncStatus = client.get(<span class="string">"node/sync-status"</span>).send().<span class="kw">await</span>.unwrap();
+        <span class="macro">assert!</span>(sync_status.is_fully_synced(), <span class="string">"{sync_status:?}"</span>);
         <span class="macro">assert_eq!</span>(
             client
                 .get::&lt;MockHeader&gt;(<span class="string">"availability/header/0"</span>)

@@ -356,13 +356,6 @@
 <a href="#355" id="355">355</a>
 <a href="#356" id="356">356</a>
 <a href="#357" id="357">357</a>
-<a href="#358" id="358">358</a>
-<a href="#359" id="359">359</a>
-<a href="#360" id="360">360</a>
-<a href="#361" id="361">361</a>
-<a href="#362" id="362">362</a>
-<a href="#363" id="363">363</a>
-<a href="#364" id="364">364</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -392,6 +385,7 @@
         request::{<span class="self">self</span>, PayloadRequest},
         Callback,
     },
+    types::HeightIndexed,
     Header, Payload, QueryResult,
 };
 <span class="kw">use </span>async_std::sync::{Arc, RwLockReadGuard};
@@ -554,10 +548,6 @@
     {
         storage.storage.get_block_range(range).<span class="kw">await
     </span>}
-
-    <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.height() <span class="kw">as </span>usize
-    }
 }
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>fetch_block_with_header&lt;Types, S, P&gt;(
@@ -670,10 +660,6 @@
     {
         storage.storage.get_payload_range(range).<span class="kw">await
     </span>}
-
-    <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.height() <span class="kw">as </span>usize
-    }
 }
 
 <span class="attr">#[derive(Derivative)]

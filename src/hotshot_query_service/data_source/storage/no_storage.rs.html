@@ -571,17 +571,6 @@
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
-<a href="#573" id="573">573</a>
-<a href="#574" id="574">574</a>
-<a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a>
-<a href="#577" id="577">577</a>
-<a href="#578" id="578">578</a>
-<a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a>
-<a href="#581" id="581">581</a>
-<a href="#582" id="582">582</a>
-<a href="#583" id="583">583</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -605,8 +594,8 @@
         TransactionHash, TransactionIndex, UpdateAvailabilityData, VidCommonQueryData,
     },
     data_source::VersionedDataSource,
-    node::{NodeDataSource, SyncStatus},
-    Header, Payload, QueryError, QueryResult, SignatureKey, VidShare,
+    node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
+    Header, Payload, QueryError, QueryResult, VidShare,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
@@ -742,18 +731,6 @@
         <span class="prelude-val">Ok</span>(<span class="number">0</span>)
     }
 
-    <span class="kw">async fn </span>get_proposals(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        _id: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;,
-        _limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;Types&gt;&gt;&gt; {
-        <span class="prelude-val">Err</span>(QueryError::Missing)
-    }
-
-    <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, _id: <span class="kw-2">&amp;</span>SignatureKey&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
-        <span class="prelude-val">Err</span>(QueryError::Missing)
-    }
-
     <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="prelude-val">Err</span>(QueryError::Missing)
     }
@@ -770,6 +747,14 @@
     }
 
     <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+        <span class="prelude-val">Err</span>(QueryError::Missing)
+    }
+
+    <span class="kw">async fn </span>get_header_window(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        _start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
+        _end: u64,
+    ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
         <span class="prelude-val">Err</span>(QueryError::Missing)
     }
 }
@@ -1078,24 +1063,6 @@
             }
         }
 
-        <span class="kw">async fn </span>get_proposals(
-            <span class="kw-2">&amp;</span><span class="self">self</span>,
-            proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;MockTypes&gt;,
-            limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-        ) -&gt; QueryResult&lt;Vec&lt;LeafQueryData&lt;MockTypes&gt;&gt;&gt; {
-            <span class="kw">match </span><span class="self">self </span>{
-                <span class="self">Self</span>::Sql(data_source) =&gt; data_source.get_proposals(proposer, limit).<span class="kw">await</span>,
-                <span class="self">Self</span>::NoStorage(data_source) =&gt; data_source.get_proposals(proposer, limit).<span class="kw">await</span>,
-            }
-        }
-
-        <span class="kw">async fn </span>count_proposals(<span class="kw-2">&amp;</span><span class="self">self</span>, proposer: <span class="kw-2">&amp;</span>SignatureKey&lt;MockTypes&gt;) -&gt; QueryResult&lt;usize&gt; {
-            <span class="kw">match </span><span class="self">self </span>{
-                <span class="self">Self</span>::Sql(data_source) =&gt; data_source.count_proposals(proposer).<span class="kw">await</span>,
-                <span class="self">Self</span>::NoStorage(data_source) =&gt; data_source.count_proposals(proposer).<span class="kw">await</span>,
-            }
-        }
-
         <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
             <span class="kw">match </span><span class="self">self </span>{
                 <span class="self">Self</span>::Sql(data_source) =&gt; data_source.count_transactions().<span class="kw">await</span>,
@@ -1124,6 +1091,17 @@
             <span class="kw">match </span><span class="self">self </span>{
                 <span class="self">Self</span>::Sql(data_source) =&gt; data_source.sync_status().<span class="kw">await</span>,
                 <span class="self">Self</span>::NoStorage(data_source) =&gt; data_source.sync_status().<span class="kw">await</span>,
+            }
+        }
+
+        <span class="kw">async fn </span>get_header_window(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            start: <span class="kw">impl </span>Into&lt;WindowStart&lt;MockTypes&gt;&gt; + Send + Sync,
+            end: u64,
+        ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;MockTypes&gt;&gt;&gt; {
+            <span class="kw">match </span><span class="self">self </span>{
+                <span class="self">Self</span>::Sql(data_source) =&gt; data_source.get_header_window(start, end).<span class="kw">await</span>,
+                <span class="self">Self</span>::NoStorage(data_source) =&gt; data_source.get_header_window(start, end).<span class="kw">await</span>,
             }
         }
     }
