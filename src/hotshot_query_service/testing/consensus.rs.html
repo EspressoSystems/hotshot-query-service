@@ -276,6 +276,26 @@
 <a href="#275" id="275">275</a>
 <a href="#276" id="276">276</a>
 <a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -295,14 +315,15 @@
     fetching::provider::NoFetching,
     node::NodeDataSource,
     status::{StatusDataSource, UpdateStatusData},
+    task::BackgroundTask,
     SignatureKey,
 };
-<span class="kw">use </span>async_std::{
-    sync::{Arc, RwLock},
-    task::spawn,
-};
+<span class="kw">use </span>async_std::sync::{Arc, RwLock};
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>futures::{future::join_all, stream::StreamExt};
+<span class="kw">use </span>futures::{
+    future::{join_all, Future},
+    stream::StreamExt,
+};
 <span class="kw">use </span>hotshot::{
     traits::implementations::{MasterMap, MemoryNetwork, MemoryStorage, NetworkingMetricsValue},
     types::{Event, SystemContextHandle},
@@ -316,8 +337,10 @@
     traits::{election::Membership, signature_key::SignatureKey <span class="kw">as _</span>},
     ExecutionType, HotShotConfig, PeerConfig, ValidatorConfig,
 };
+<span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::num::NonZeroUsize;
 <span class="kw">use </span>std::time::Duration;
+<span class="kw">use </span>tracing::{info_span, Instrument};
 
 <span class="kw">struct </span>MockNode&lt;D: DataSourceLifeCycle&gt; {
     hotshot: SystemContextHandle&lt;MockTypes, MockNodeImpl&gt;,
@@ -326,6 +349,7 @@
 }
 
 <span class="kw">pub struct </span>MockNetwork&lt;D: DataSourceLifeCycle&gt; {
+    tasks: Vec&lt;BackgroundTask&gt;,
     nodes: Vec&lt;MockNode&lt;D&gt;&gt;,
     pub_keys: Vec&lt;BLSPubKey&gt;,
 }
@@ -389,6 +413,7 @@
                     <span class="kw">let </span>election_config =
                         MockMembership::default_election_config(total_nodes.get() <span class="kw">as </span>u64);
 
+                    <span class="kw">let </span>span = <span class="macro">info_span!</span>(<span class="string">"initialize node"</span>, node_id);
                     <span class="kw">async move </span>{
                         <span class="kw">let </span>storage = D::create(node_id).<span class="kw">await</span>;
                         <span class="kw">let </span>data_source = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
@@ -437,12 +462,17 @@
                             storage,
                         }
                     }
+                    .instrument(span)
                 }),
         )
         .<span class="kw">await</span>;
 
-        <span class="kw">let </span>network = <span class="self">Self </span>{ nodes, pub_keys };
-        D::setup(<span class="kw-2">&amp;</span>network).<span class="kw">await</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>network = <span class="self">Self </span>{
+            nodes,
+            pub_keys,
+            tasks: Default::default(),
+        };
+        D::setup(<span class="kw-2">&amp;mut </span>network).<span class="kw">await</span>;
         network
     }
 }
@@ -476,12 +506,16 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.nodes[<span class="number">0</span>].storage
     }
 
+    <span class="kw">pub fn </span>spawn(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw">impl </span>Display, task: <span class="kw">impl </span>Future + Send + <span class="lifetime">'static</span>) {
+        <span class="self">self</span>.tasks.push(BackgroundTask::spawn(name, task));
+    }
+
     <span class="kw">pub async fn </span>shut_down(<span class="kw-2">mut </span><span class="self">self</span>) {
         <span class="self">self</span>.shut_down_impl().<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>shut_down_impl(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">for </span><span class="kw-2">mut </span>node <span class="kw">in </span>std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.nodes) {
+        <span class="kw">for </span>node <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.nodes {
             node.hotshot.shut_down().<span class="kw">await</span>;
         }
     }
@@ -493,13 +527,19 @@
         </span><span class="kw">for </span>(i, node) <span class="kw">in </span><span class="self">self</span>.nodes.iter_mut().enumerate() {
             <span class="kw">let </span>ds = node.data_source.clone();
             <span class="kw">let </span><span class="kw-2">mut </span>events = node.hotshot.get_event_stream();
-            spawn(<span class="kw">async move </span>{
-                <span class="kw">while let </span><span class="prelude-val">Some</span>(event) = events.next().<span class="kw">await </span>{
-                    <span class="macro">tracing::info!</span>(node = i, event = <span class="question-mark">?</span>event.event, <span class="string">"EVENT"</span>);
-                    <span class="kw">let </span><span class="kw-2">mut </span>ds = ds.write().<span class="kw">await</span>;
-                    ds.handle_event(<span class="kw-2">&amp;</span>event).<span class="kw">await</span>;
-                }
-            });
+            <span class="self">self</span>.tasks.push(BackgroundTask::spawn(
+                <span class="macro">format!</span>(<span class="string">"update node {i}"</span>),
+                <span class="kw">async move </span>{
+                    <span class="kw">while let </span><span class="prelude-val">Some</span>(event) = events.next().<span class="kw">await </span>{
+                        <span class="macro">tracing::info!</span>(node = i, event = <span class="question-mark">?</span>event.event, <span class="string">"EVENT"</span>);
+                        {
+                            <span class="kw">let </span><span class="kw-2">mut </span>ds = ds.write().<span class="kw">await</span>;
+                            ds.handle_event(<span class="kw-2">&amp;</span>event).<span class="kw">await</span>;
+                        }
+                        async_std::task::yield_now().<span class="kw">await</span>;
+                    }
+                },
+            ));
         }
 
         join_all(
@@ -531,7 +571,7 @@
     <span class="kw">async fn </span>handle_event(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;MockTypes&gt;);
 
     <span class="doccomment">/// Setup runs after setting up the network but before starting a test.
-    </span><span class="kw">async fn </span>setup(_network: <span class="kw-2">&amp;</span>MockNetwork&lt;<span class="self">Self</span>&gt;) {}
+    </span><span class="kw">async fn </span>setup(_network: <span class="kw-2">&amp;mut </span>MockNetwork&lt;<span class="self">Self</span>&gt;) {}
 }
 
 <span class="kw">pub trait </span>TestableDataSource:

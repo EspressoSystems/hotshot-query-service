@@ -794,8 +794,6 @@
 <a href="#793" id="793">793</a>
 <a href="#794" id="794">794</a>
 <a href="#795" id="795">795</a>
-<a href="#796" id="796">796</a>
-<a href="#797" id="797">797</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1214,10 +1212,7 @@
 <span class="kw">pub use </span>error::Error;
 <span class="kw">pub use </span>resolvable::Resolvable;
 
-<span class="kw">use </span>async_std::{
-    sync::{Arc, RwLock},
-    task::spawn,
-};
+<span class="kw">use </span>async_std::sync::{Arc, RwLock};
 <span class="kw">use </span>futures::StreamExt;
 <span class="kw">use </span>hotshot::types::SystemContextHandle;
 <span class="kw">use </span>hotshot_types::traits::{
@@ -1226,6 +1221,7 @@
 };
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::Snafu;
+<span class="kw">use </span>task::BackgroundTask;
 <span class="kw">use </span>tide_disco::{App, StatusCode};
 
 <span class="kw">pub use </span>hotshot_types::{
@@ -1313,7 +1309,7 @@
 
     <span class="comment">// Serve app.
     </span><span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, options.port);
-    spawn(<span class="kw">async move </span>{ app.serve(<span class="kw-2">&amp;</span>url).<span class="kw">await </span>});
+    <span class="kw">let </span>_server = BackgroundTask::spawn(<span class="string">"server"</span>, <span class="kw">async move </span>{ app.serve(<span class="kw-2">&amp;</span>url).<span class="kw">await </span>});
 
     <span class="comment">// Subscribe to events before starting consensus, so we don't miss any events.
     </span><span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.get_event_stream();
@@ -1349,7 +1345,7 @@
             mocks::{MockHeader, MockPayload, MockTypes},
         },
     };
-    <span class="kw">use </span>async_std::{sync::RwLock, task::spawn};
+    <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>async_trait::async_trait;
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
 
@@ -1495,7 +1491,7 @@
 
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_composition() {
-        <span class="kw">let </span>dir = TempDir::new().unwrap();
+        <span class="kw">let </span>dir = TempDir::with_prefix(<span class="string">"test_composition"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">"test_composition"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>hotshot_qs = MockDataSource::create_with_store(<span class="kw-2">&amp;mut </span>loader, Default::default())
             .<span class="kw">await
@@ -1563,7 +1559,7 @@
         .unwrap();
 
         <span class="kw">let </span>port = pick_unused_port().unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
+        <span class="kw">let </span>_server = BackgroundTask::spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
         <span class="kw">let </span>client = Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}"</span>, port).parse().unwrap());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);

@@ -570,7 +570,6 @@
 <a href="#569" id="569">569</a>
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a>
-<a href="#572" id="572">572</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -778,7 +777,6 @@
         },
         Error,
     };
-    <span class="kw">use </span>async_std::task::spawn;
     <span class="kw">use </span>futures::stream::{BoxStream, StreamExt};
     <span class="kw">use </span>hotshot::types::Event;
     <span class="kw">use </span>portpicker::pick_unused_port;
@@ -863,7 +861,7 @@
             }
         }
 
-        <span class="kw">async fn </span>setup(network: <span class="kw-2">&amp;</span>MockNetwork&lt;<span class="self">Self</span>&gt;) {
+        <span class="kw">async fn </span>setup(network: <span class="kw-2">&amp;mut </span>MockNetwork&lt;<span class="self">Self</span>&gt;) {
             <span class="comment">// Spawn the web server on node 1 that node 0 will use to fetch missing data.
             </span><span class="kw">let </span>Storage::NoStorage { fetch_from_port } = network.storage() <span class="kw">else </span>{
                 <span class="macro">panic!</span>(<span class="string">"node 0 should always be NoStorage node"</span>);
@@ -873,7 +871,7 @@
             <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(api_data_source);
             app.register_module(<span class="string">"availability"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
                 .unwrap();
-            spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{fetch_from_port}"</span>)));
+            network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{fetch_from_port}"</span>)));
         }
 
         <span class="kw">async fn </span>handle_event(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;MockTypes&gt;) {

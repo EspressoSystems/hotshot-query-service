@@ -655,7 +655,7 @@
     </span><span class="kw">async fn </span>test_ledger_log_creation() {
         setup_test();
 
-        <span class="kw">let </span>dir = TempDir::new().unwrap();
+        <span class="kw">let </span>dir = TempDir::with_prefix(<span class="string">"test_ledger_log"</span>).unwrap();
 
         <span class="comment">// Create and populuate a log.
         </span>{
@@ -685,7 +685,7 @@
     </span><span class="kw">async fn </span>test_ledger_log_insert() {
         setup_test();
 
-        <span class="kw">let </span>dir = TempDir::new().unwrap();
+        <span class="kw">let </span>dir = TempDir::with_prefix(<span class="string">"test_ledger_log"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">"test_ledger_log"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>log = LedgerLog::&lt;u64&gt;::create(<span class="kw-2">&amp;mut </span>loader, <span class="string">"ledger"</span>, <span class="number">3</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>store = AtomicStore::open(loader).unwrap();
@@ -729,7 +729,7 @@
     </span><span class="kw">async fn </span>test_ledger_log_iter() {
         setup_test();
 
-        <span class="kw">let </span>dir = TempDir::new().unwrap();
+        <span class="kw">let </span>dir = TempDir::with_prefix(<span class="string">"test_ledger_log"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">"test_ledger_log"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>log = LedgerLog::&lt;u64&gt;::create(<span class="kw-2">&amp;mut </span>loader, <span class="string">"ledger"</span>, <span class="number">3</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>store = AtomicStore::open(loader).unwrap();

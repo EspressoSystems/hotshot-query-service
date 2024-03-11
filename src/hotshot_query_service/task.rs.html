@@ -76,6 +76,18 @@
 <a href="#75" id="75">75</a>
 <a href="#76" id="76">76</a>
 <a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -96,6 +108,7 @@
 };
 <span class="kw">use </span>futures::future::Future;
 <span class="kw">use </span>std::fmt::Display;
+<span class="kw">use </span>tracing::{info_span, Instrument};
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>BackgroundTaskInner {
@@ -118,18 +131,28 @@
 
 <span class="kw">impl </span>BackgroundTask {
     <span class="doccomment">/// Spawn a background task, which will be cancelled when every clone is dropped.
+    ///
+    /// The caller should ensure that `future` yields back to the executor fairly frequently, to
+    /// ensure timely cancellation in case the task is dropped. If an operation in `future` may run
+    /// for a long time without blocking or yielding, consider using
+    /// [`yield_now`](async_std::task::yield_now) periodically, or using
+    /// [`spawn`](async_std::task::spawn) or [`spawn_blocking`](async_std::task::spawn_blocking) to
+    /// run long operations in a sub-task.
     </span><span class="kw">pub fn </span>spawn&lt;F&gt;(name: <span class="kw">impl </span>Display, future: F) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>F: Future + Send + <span class="lifetime">'static</span>,
     {
         <span class="kw">let </span>name = name.to_string();
         <span class="kw">let </span>handle = {
-            <span class="kw">let </span>name = name.clone();
-            spawn(<span class="kw">async move </span>{
-                <span class="macro">tracing::info!</span>(<span class="string">"spawning background task {name}"</span>);
-                future.<span class="kw">await</span>;
-                <span class="macro">tracing::info!</span>(<span class="string">"background task {name} completed"</span>);
-            })
+            <span class="kw">let </span>span = <span class="macro">info_span!</span>(<span class="string">"task"</span>, name);
+            spawn(
+                <span class="kw">async move </span>{
+                    <span class="macro">tracing::info!</span>(<span class="string">"spawning background task"</span>);
+                    future.<span class="kw">await</span>;
+                    <span class="macro">tracing::info!</span>(<span class="string">"completed background task"</span>);
+                }
+                .instrument(span),
+            )
         };
 
         <span class="self">Self </span>{
@@ -147,8 +170,9 @@
             <span class="comment">// Check if this is the last instance of the [`Arc`] and, if so, cancel the underlying
             // task.
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(inner) = Arc::into_inner(inner) {
-                <span class="macro">tracing::info!</span>(<span class="string">"cancelling background task {}"</span>, inner.name);
+                <span class="macro">tracing::info!</span>(name = inner.name, <span class="string">"cancelling background task"</span>);
                 async_std::task::block_on(inner.handle.cancel());
+                <span class="macro">tracing::info!</span>(name = inner.name, <span class="string">"cancelled background task"</span>);
             }
         }
     }

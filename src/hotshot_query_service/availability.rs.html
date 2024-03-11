@@ -955,6 +955,7 @@
 <a href="#954" id="954">954</a>
 <a href="#955" id="955">955</a>
 <a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1439,6 +1440,7 @@
     <span class="kw">use crate</span>::{
         data_source::{storage::no_storage, ExtensibleDataSource},
         status::StatusDataSource,
+        task::BackgroundTask,
         testing::{
             consensus::{MockDataSource, MockNetwork, TestableDataSource},
             mocks::{mock_transaction, MockHeader, MockPayload, MockTypes},
@@ -1447,7 +1449,7 @@
         types::HeightIndexed,
         Error, Header,
     };
-    <span class="kw">use </span>async_std::{sync::RwLock, task::spawn};
+    <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>commit::Committable;
     <span class="kw">use </span>futures::future::FutureExt;
     <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
@@ -1749,7 +1751,7 @@
             .unwrap(),
         )
         .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
+        network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
         <span class="comment">// Start a client.
         </span><span class="kw">let </span>client = Client::&lt;Error&gt;::new(
@@ -1827,7 +1829,7 @@
     </span><span class="kw">async fn </span>test_extensions() {
         setup_test();
 
-        <span class="kw">let </span>dir = TempDir::new().unwrap();
+        <span class="kw">let </span>dir = TempDir::with_prefix(<span class="string">"test_availability_extensions"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = ExtensibleDataSource::new(
             MockDataSource::create(dir.path(), Default::default())
                 .<span class="kw">await
@@ -1886,7 +1888,7 @@
         app.register_module(<span class="string">"availability"</span>, api).unwrap();
 
         <span class="kw">let </span>port = pick_unused_port().unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
+        <span class="kw">let </span>_server = BackgroundTask::spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
         <span class="kw">let </span>client = Client::&lt;Error&gt;::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{}/availability"</span>, port)

@@ -849,7 +849,6 @@
 <a href="#848" id="848">848</a>
 <a href="#849" id="849">849</a>
 <a href="#850" id="850">850</a>
-<a href="#851" id="851">851</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1033,7 +1032,6 @@
         types::HeightIndexed,
         VidCommitment,
     };
-    <span class="kw">use </span>async_std::task::spawn;
     <span class="kw">use </span>commit::Committable;
     <span class="kw">use </span>futures::{
         future::{join, FutureExt},
@@ -1083,7 +1081,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(<span class="string">"availability"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
             .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
+        network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
@@ -1303,7 +1301,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(<span class="string">"availability"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
             .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
+        network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
@@ -1355,7 +1353,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(<span class="string">"availability"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
             .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
+        network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
@@ -1411,7 +1409,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(<span class="string">"availability"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
             .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
+        network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
@@ -1464,7 +1462,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(<span class="string">"availability"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
             .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
+        network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
@@ -1518,7 +1516,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(<span class="string">"availability"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
             .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
+        network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
 
         <span class="comment">// Start a data source which is not receiving events from consensus. We don't give it a
         // fetcher since transactions are always fetched passively anyways.
@@ -1586,7 +1584,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(<span class="string">"availability"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
             .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
+        network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
 
         <span class="comment">// Start a data source which is not receiving events from consensus.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;

@@ -481,6 +481,7 @@
         availability::{define_api, AvailabilityDataSource, UpdateAvailabilityData},
         data_source::{storage::sql::testing::TmpDb, VersionedDataSource},
         fetching::provider::{NoFetching, QueryServiceProvider},
+        task::BackgroundTask,
         testing::{
             consensus::{MockDataSource, MockNetwork},
             mocks::MockTypes,
@@ -489,7 +490,6 @@
         types::HeightIndexed,
         Error,
     };
-    <span class="kw">use </span>async_std::task::spawn;
     <span class="kw">use </span>futures::stream::StreamExt;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>tide_disco::App;
@@ -508,7 +508,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(<span class="string">"availability"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
             .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
+        <span class="kw">let </span>_server = BackgroundTask::spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;

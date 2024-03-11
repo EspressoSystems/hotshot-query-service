@@ -296,6 +296,7 @@
 <a href="#295" id="295">295</a>
 <a href="#296" id="296">296</a>
 <a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -416,6 +417,7 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
         data_source::ExtensibleDataSource,
+        task::BackgroundTask,
         testing::{
             consensus::{MockDataSource, MockNetwork},
             mocks::MockTransaction,
@@ -423,7 +425,7 @@
         },
         Error,
     };
-    <span class="kw">use </span>async_std::{sync::RwLock, task::spawn};
+    <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>bincode::Options <span class="kw">as _</span>;
     <span class="kw">use </span>futures::FutureExt;
     <span class="kw">use </span>hotshot_utils::bincode::bincode_opts;
@@ -447,7 +449,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(<span class="string">"status"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
             .unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
+        network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
         <span class="comment">// Start a client.
         </span><span class="kw">let </span>url = Url::from_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"http://localhost:{}/status"</span>, port)).unwrap();
@@ -538,7 +540,7 @@
     </span><span class="kw">async fn </span>test_extensions() {
         setup_test();
 
-        <span class="kw">let </span>dir = TempDir::new().unwrap();
+        <span class="kw">let </span>dir = TempDir::with_prefix(<span class="string">"test_status_extensions"</span>).unwrap();
         <span class="kw">let </span>data_source = ExtensibleDataSource::new(
             MockDataSource::create(dir.path(), Default::default())
                 .<span class="kw">await
@@ -579,7 +581,7 @@
         app.register_module(<span class="string">"status"</span>, api).unwrap();
 
         <span class="kw">let </span>port = pick_unused_port().unwrap();
-        spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
+        <span class="kw">let </span>_server = BackgroundTask::spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
         <span class="kw">let </span>client =
             Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}/status"</span>, port).parse().unwrap());

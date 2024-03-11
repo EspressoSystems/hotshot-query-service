@@ -2213,33 +2213,6 @@
 <a href="#2212" id="2212">2212</a>
 <a href="#2213" id="2213">2213</a>
 <a href="#2214" id="2214">2214</a>
-<a href="#2215" id="2215">2215</a>
-<a href="#2216" id="2216">2216</a>
-<a href="#2217" id="2217">2217</a>
-<a href="#2218" id="2218">2218</a>
-<a href="#2219" id="2219">2219</a>
-<a href="#2220" id="2220">2220</a>
-<a href="#2221" id="2221">2221</a>
-<a href="#2222" id="2222">2222</a>
-<a href="#2223" id="2223">2223</a>
-<a href="#2224" id="2224">2224</a>
-<a href="#2225" id="2225">2225</a>
-<a href="#2226" id="2226">2226</a>
-<a href="#2227" id="2227">2227</a>
-<a href="#2228" id="2228">2228</a>
-<a href="#2229" id="2229">2229</a>
-<a href="#2230" id="2230">2230</a>
-<a href="#2231" id="2231">2231</a>
-<a href="#2232" id="2232">2232</a>
-<a href="#2233" id="2233">2233</a>
-<a href="#2234" id="2234">2234</a>
-<a href="#2235" id="2235">2235</a>
-<a href="#2236" id="2236">2236</a>
-<a href="#2237" id="2237">2237</a>
-<a href="#2238" id="2238">2238</a>
-<a href="#2239" id="2239">2239</a>
-<a href="#2240" id="2240">2240</a>
-<a href="#2241" id="2241">2241</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -2265,17 +2238,11 @@
 };
 
 <span class="kw">pub use </span>anyhow::Error;
-<span class="kw">use </span>async_std::{
-    net::ToSocketAddrs,
-    sync::Arc,
-    task::{sleep, spawn},
-};
+<span class="kw">use </span>async_std::{net::ToSocketAddrs, sync::Arc, task::sleep};
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>chrono::Utc;
 <span class="kw">use </span>commit::Committable;
 <span class="kw">use </span>futures::{
-    channel::oneshot,
-    future::{select, Either, FutureExt},
     stream::{BoxStream, StreamExt, TryStreamExt},
     task::{Context, Poll},
     AsyncRead, AsyncWrite,
@@ -2316,6 +2283,7 @@
         VersionedDataSource,
     },
     node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
+    task::BackgroundTask,
     types::HeightIndexed,
     Header, Leaf, MissingSnafu, NotFoundSnafu, Payload, QueryError, QueryResult, VidShare,
 };
@@ -2581,8 +2549,8 @@
 </span><span class="kw">pub struct </span>SqlStorage {
     client: Arc&lt;Client&gt;,
     tx_in_progress: bool,
-    kill: <span class="prelude-ty">Option</span>&lt;oneshot::Sender&lt;()&gt;&gt;,
     pruner_cfg: <span class="prelude-ty">Option</span>&lt;PrunerCfg&gt;,
+    _connection: BackgroundTask,
 }
 
 <span class="kw">impl </span>SqlStorage {
@@ -2592,7 +2560,7 @@
         </span><span class="kw">let </span>tcp = TcpStream::connect((config.host.as_str(), config.port)).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Convert the TCP connection into a postgres connection.
-        </span><span class="kw">let </span>(<span class="kw-2">mut </span>client, kill) = <span class="kw">if </span>config.tls {
+        </span><span class="kw">let </span>(<span class="kw-2">mut </span>client, connection) = <span class="kw">if </span>config.tls {
             <span class="kw">let </span>tls = TlsConnector::new(native_tls::TlsConnector::new()<span class="question-mark">?</span>, config.host.as_str());
             connect(config.pgcfg, tcp, tls).<span class="kw">await</span><span class="question-mark">?
         </span>} <span class="kw">else </span>{
@@ -2647,8 +2615,8 @@
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             client: Arc::new(client),
             tx_in_progress: <span class="bool-val">false</span>,
-            kill: <span class="prelude-val">Some</span>(kill),
             pruner_cfg: config.pruner_cfg,
+            _connection: connection,
         })
     }
 
@@ -2850,15 +2818,6 @@
 </span><span class="kw">impl </span>Query <span class="kw">for </span>SqlStorage {
     <span class="kw">async fn </span>client(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cow&lt;Arc&lt;Client&gt;&gt; {
         Cow::Borrowed(<span class="kw-2">&amp;</span><span class="self">self</span>.client)
-    }
-}
-
-<span class="kw">impl </span>Drop <span class="kw">for </span>SqlStorage {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(kill) = <span class="self">self</span>.kill.take() {
-            <span class="comment">// Ignore errors, they just mean the task has already exited.
-            </span>kill.send(()).ok();
-        }
     }
 }
 
@@ -4008,35 +3967,22 @@
 
 <span class="doccomment">/// Connect to a Postgres database with a TLS implementation.
 ///
-/// Spawns a background task to run the connection. Returns a client and a channel to kill the
-/// connection task.
+/// Spawns a background task to run the connection. Returns a client and a handle to the spawned
+/// task.
 </span><span class="kw">async fn </span>connect&lt;T&gt;(
     pgcfg: postgres::Config,
     tcp: TcpStream,
     tls: T,
-) -&gt; anyhow::Result&lt;(Client, oneshot::Sender&lt;()&gt;)&gt;
+) -&gt; anyhow::Result&lt;(Client, BackgroundTask)&gt;
 <span class="kw">where
     </span>T: TlsConnect&lt;TcpStream&gt;,
     T::Stream: Send + <span class="lifetime">'static</span>,
 {
     <span class="kw">let </span>(client, connection) = pgcfg.connect_raw(tcp, tls).<span class="kw">await</span><span class="question-mark">?</span>;
-
-    <span class="comment">// Spawn a task to drive the connection, with a channel to kill it when this data source is
-    // dropped.
-    </span><span class="kw">let </span>(kill, killed) = oneshot::channel();
-    spawn(select(killed, connection).inspect(|res| {
-        <span class="kw">if let </span>Either::Right((res, <span class="kw">_</span>)) = res {
-            <span class="comment">// If we were killed, do nothing. That is the normal shutdown path. But if the `select`
-            // returned because the `connection` terminated, we should log something, as that is
-            // unusual.
-            </span><span class="kw">match </span>res {
-                <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">tracing::warn!</span>(<span class="string">"postgres connection terminated unexpectedly"</span>),
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">tracing::error!</span>(<span class="string">"postgres connection closed with error: {err}"</span>),
-            }
-        }
-    }));
-
-    <span class="prelude-val">Ok</span>((client, kill))
+    <span class="prelude-val">Ok</span>((
+        client,
+        BackgroundTask::spawn(<span class="string">"postgres connection"</span>, connection),
+    ))
 }
 
 <span class="kw">fn </span>sql_param&lt;T: ToSql + Sync&gt;(param: <span class="kw-2">&amp;</span>T) -&gt; <span class="kw-2">&amp;</span>(<span class="kw">dyn </span>ToSql + Sync) {
