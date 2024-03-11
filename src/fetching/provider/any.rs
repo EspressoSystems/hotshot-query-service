@@ -208,6 +208,7 @@ mod test {
             mocks::MockTypes,
             setup_test,
         },
+        types::HeightIndexed,
         Error,
     };
     use async_std::task::spawn;
