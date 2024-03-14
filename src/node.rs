@@ -24,7 +24,7 @@ use crate::{api::load_api, QueryError};
 use clap::Args;
 use derive_more::From;
 use futures::FutureExt;
-use hotshot_types::{event::LeafInfo, traits::node_implementation::NodeType};
+use hotshot_types::traits::node_implementation::NodeType;
 use serde::{Deserialize, Serialize};
 use snafu::{ResultExt, Snafu};
 use std::fmt::Display;
@@ -181,6 +181,7 @@ mod test {
     use commit::Committable;
     use futures::{FutureExt, StreamExt};
     use hotshot_types::event::EventType;
+    use hotshot_types::event::LeafInfo;
     use portpicker::pick_unused_port;
     use std::time::Duration;
     use surf_disco::Client;
