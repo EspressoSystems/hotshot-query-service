@@ -404,6 +404,7 @@
 <a href="#403" id="403">403</a>
 <a href="#404" id="404">404</a>
 <a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -587,6 +588,7 @@
     <span class="kw">use </span>commit::Committable;
     <span class="kw">use </span>futures::{FutureExt, StreamExt};
     <span class="kw">use </span>hotshot_types::event::EventType;
+    <span class="kw">use </span>hotshot_types::event::LeafInfo;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::time::Duration;
     <span class="kw">use </span>surf_disco::Client;
@@ -651,7 +653,7 @@
             <span class="kw">let </span>EventType::Decide { leaf_chain, .. } = event.event <span class="kw">else </span>{
                 <span class="kw">continue</span>;
             };
-            <span class="kw">for </span>(leaf, vid) <span class="kw">in </span>leaf_chain.iter().rev() {
+            <span class="kw">for </span>LeafInfo { leaf, vid, .. } <span class="kw">in </span>leaf_chain.iter().rev() {
                 headers.push(leaf.block_header.clone());
                 <span class="kw">if </span>leaf.block_header.block_number &gt;= block_height <span class="kw">as </span>u64 {
                     <span class="kw">break </span><span class="lifetime">'outer</span>;

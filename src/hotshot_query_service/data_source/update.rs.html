@@ -215,6 +215,8 @@
 <a href="#214" id="214">214</a>
 <a href="#215" id="215">215</a>
 <a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -293,17 +295,19 @@
             </span><span class="kw">let </span>qcs = once((<span class="kw-2">**</span>qc).clone())
                 <span class="comment">// ...and each leaf in the chain justifies the subsequent leaf (its parent) through
                 // `leaf.justify_qc`.
-                </span>.chain(leaf_chain.iter().map(|(leaf, <span class="kw">_</span>)| leaf.get_justify_qc()))
+                </span>.chain(leaf_chain.iter().map(|leaf| leaf.leaf.get_justify_qc()))
                 <span class="comment">// Put the QCs in chronological order.
                 </span>.rev()
                 <span class="comment">// The oldest QC is the `justify_qc` of the oldest leaf, which does not justify any
                 // leaf in the new chain, so we don't need it.
                 </span>.skip(<span class="number">1</span>);
-            <span class="kw">for </span>(qc, (leaf, vid)) <span class="kw">in </span>qcs.zip(leaf_chain.iter().rev()) {
+            <span class="kw">for </span>(qc, leaf_info) <span class="kw">in </span>qcs.zip(leaf_chain.iter().rev()) {
                 <span class="comment">// `LeafQueryData::new` only fails if `qc` does not reference `leaf`. We have just
                 // gotten `leaf` and `qc` directly from a consensus `Decide` event, so they are
                 // guaranteed to correspond, and this should never panic.
-                </span><span class="kw">let </span>leaf_data =
+                </span><span class="kw">let </span>leaf = leaf_info.leaf.clone();
+                <span class="kw">let </span>vid = leaf_info.vid.clone();
+                <span class="kw">let </span>leaf_data =
                     LeafQueryData::new(leaf.clone(), qc.clone()).expect(<span class="string">"inconsistent leaf"</span>);
                 <span class="self">self</span>.insert_leaf(leaf_data.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -324,7 +328,7 @@
                     // these cases, the block payload is guaranteed to always be empty, so VID isn't
                     // really necessary. But for consistency, we will still store the VID dispersal
                     // data, computing it ourselves based on the well-known genesis VID commitment.
-                    </span>store_genesis_vid(<span class="self">self</span>, leaf).<span class="kw">await</span>;
+                    </span>store_genesis_vid(<span class="self">self</span>, <span class="kw-2">&amp;</span>leaf).<span class="kw">await</span>;
                 } <span class="kw">else </span>{
                     <span class="macro">tracing::error!</span>(
                         <span class="string">"VID info for block {} not available at decide"</span>,

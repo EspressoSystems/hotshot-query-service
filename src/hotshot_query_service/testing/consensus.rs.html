@@ -296,6 +296,9 @@
 <a href="#295" id="295">295</a>
 <a href="#296" id="296">296</a>
 <a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -365,13 +368,13 @@
         <span class="kw">let </span>(pub_keys, priv_keys): (Vec&lt;<span class="kw">_</span>&gt;, Vec&lt;<span class="kw">_</span>&gt;) = (<span class="number">0</span>..NUM_NODES)
             .map(|i| BLSPubKey::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], i <span class="kw">as </span>u64))
             .unzip();
-        <span class="kw">let </span>total_nodes = NonZeroUsize::new(pub_keys.len()).unwrap();
-        <span class="kw">let </span>state_key_pairs = (<span class="number">0</span>..total_nodes.into())
+        <span class="kw">let </span>num_staked_nodes = NonZeroUsize::new(pub_keys.len()).unwrap();
+        <span class="kw">let </span>state_key_pairs = (<span class="number">0</span>..num_staked_nodes.into())
             .map(|i| StateKeyPair::generate_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], i <span class="kw">as </span>u64))
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="kw">let </span>master_map = MasterMap::new();
         <span class="kw">let </span>stake = <span class="number">1u64</span>;
-        <span class="kw">let </span>known_nodes_with_stake = (<span class="number">0</span>..total_nodes.into())
+        <span class="kw">let </span>known_nodes_with_stake = (<span class="number">0</span>..num_staked_nodes.into())
             .map(|id| PeerConfig {
                 stake_table_entry: pub_keys[id].get_stake_table_entry(stake),
                 state_ver_key: state_key_pairs[id].ver_key(),
@@ -389,8 +392,10 @@
                         state_key_pair: state_key_pairs[node_id].clone(),
                     };
                     <span class="kw">let </span>config = HotShotConfig {
-                        total_nodes,
+                        num_nodes_with_stake: num_staked_nodes,
+                        num_nodes_without_stake: <span class="number">0</span>,
                         known_nodes_with_stake: known_nodes_with_stake.clone(),
+                        known_nodes_without_stake: <span class="macro">vec!</span>[],
                         my_own_validator_config,
                         start_delay: <span class="number">0</span>,
                         round_start_delay: <span class="number">0</span>,
@@ -403,7 +408,8 @@
                         num_bootstrap: <span class="number">0</span>,
                         execution_type: ExecutionType::Continuous,
                         election_config: <span class="prelude-val">None</span>,
-                        da_committee_size: pub_keys.len(),
+                        da_staked_committee_size: pub_keys.len(),
+                        da_non_staked_committee_size: <span class="number">0</span>,
                     };
 
                     <span class="kw">let </span>pub_keys = pub_keys.clone();
@@ -411,7 +417,7 @@
                     <span class="kw">let </span>config = config.clone();
                     <span class="kw">let </span>master_map = master_map.clone();
                     <span class="kw">let </span>election_config =
-                        MockMembership::default_election_config(total_nodes.get() <span class="kw">as </span>u64);
+                        MockMembership::default_election_config(num_staked_nodes.get() <span class="kw">as </span>u64, <span class="number">0</span>);
 
                     <span class="kw">let </span>span = <span class="macro">info_span!</span>(<span class="string">"initialize node"</span>, node_id);
                     <span class="kw">async move </span>{
