@@ -689,7 +689,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">"test_ledger_log"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>log = LedgerLog::&lt;u64&gt;::create(<span class="kw-2">&amp;mut </span>loader, <span class="string">"ledger"</span>, <span class="number">3</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>store = AtomicStore::open(loader).unwrap();
-        <span class="macro">assert_eq!</span>(log.iter().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), <span class="macro">vec!</span>[]);
+        <span class="macro">assert_eq!</span>(log.iter().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), Vec::&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt;::new());
 
         <span class="comment">// Insert at end.
         </span>log.insert(<span class="number">0</span>, <span class="number">1</span>).unwrap();

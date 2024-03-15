@@ -299,6 +299,7 @@
 <a href="#298" id="298">298</a>
 <a href="#299" id="299">299</a>
 <a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -410,6 +411,7 @@
                         election_config: <span class="prelude-val">None</span>,
                         da_staked_committee_size: pub_keys.len(),
                         da_non_staked_committee_size: <span class="number">0</span>,
+                        data_request_delay: Duration::from_millis(<span class="number">200</span>),
                     };
 
                     <span class="kw">let </span>pub_keys = pub_keys.clone();

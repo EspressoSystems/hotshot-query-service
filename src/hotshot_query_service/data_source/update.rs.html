@@ -197,26 +197,6 @@
 <a href="#196" id="196">196</a>
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -321,11 +301,9 @@
                         </span><span class="prelude-val">Some</span>(vid.shares.first_key_value().unwrap().<span class="number">1</span>.clone()),
                     )
                     .<span class="kw">await</span><span class="question-mark">?</span>;
-                } <span class="kw">else if </span>leaf.view_number.get_u64() &lt; <span class="number">2 </span>{
-                    <span class="comment">// HotShot does not run VID in consensus for the genesis block (and, as a
-                    // special case, for view 1, see
-                    // https://github.com/EspressoSystems/hotshot-query-service/issues/440). In
-                    // these cases, the block payload is guaranteed to always be empty, so VID isn't
+                } <span class="kw">else if </span>leaf.view_number.get_u64() == <span class="number">0 </span>{
+                    <span class="comment">// HotShot does not run VID in consensus for the genesis block). In
+                    // this case, the block payload is guaranteed to always be empty, so VID isn't
                     // really necessary. But for consistency, we will still store the VID dispersal
                     // data, computing it ourselves based on the well-known genesis VID commitment.
                     </span>store_genesis_vid(<span class="self">self</span>, <span class="kw-2">&amp;</span>leaf).<span class="kw">await</span>;
@@ -355,54 +333,36 @@
     storage: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>UpdateAvailabilityData&lt;Types&gt;,
     leaf: <span class="kw-2">&amp;</span>Leaf&lt;Types&gt;,
 ) {
-    <span class="kw">let </span><span class="kw-2">mut </span>num_storage_nodes = GENESIS_VID_NUM_STORAGE_NODES;
-    <span class="macro">tracing::info!</span>(<span class="question-mark">?</span>leaf, num_storage_nodes, <span class="string">"generating genesis VID"</span>);
-
-    <span class="kw">loop </span>{
-        <span class="kw">let </span>payload = Payload::&lt;Types&gt;::genesis().<span class="number">0</span>;
-        <span class="kw">let </span>bytes = <span class="kw">match </span>payload.encode() {
-            <span class="prelude-val">Ok</span>(bytes) =&gt; bytes.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
-            <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="macro">tracing::error!</span>(%err, <span class="string">"unable to encode genesis payload"</span>);
-                <span class="kw">return</span>;
-            }
-        };
-        <span class="kw">match </span>vid_scheme(num_storage_nodes).disperse(bytes) {
-            <span class="prelude-val">Ok</span>(disperse) <span class="kw">if </span>disperse.commit != leaf.block_header.payload_commitment() =&gt; {
-                <span class="macro">tracing::error!</span>(
-                    computed = %disperse.commit,
-                    header = %leaf.block_header.payload_commitment(),
-                    <span class="string">"computed VID commit for genesis block does not match header"</span>,
-                );
-                <span class="kw">if </span>leaf.view_number.get_u64() == <span class="number">1 </span>{
-                    <span class="comment">// Extremely special case: currently in HotShot, view 1 is a similar special
-                    // case as the genesis view, where HotShot doesn't do VID, and we have to
-                    // compute it ourselves. However, unlike the genesis view, this view does _not_
-                    // have a well-known scheme for computing the VID commitment. It uses the actual
-                    // number of storage nodes, which we do not have a good way of finding here.
-                    // This special case will be eliminated soon; in the meantime we brute force
-                    // search until we find a number of storage nodes that works.
-                    // See https://github.com/EspressoSystems/hotshot-query-service/issues/440
-                    </span>num_storage_nodes += <span class="number">1</span>;
-                    <span class="kw">continue</span>;
-                }
-            }
-            <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>disperse) =&gt; {
-                <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = storage
-                    .insert_vid(
-                        VidCommonQueryData::new(leaf.block_header.clone(), disperse.common),
-                        <span class="prelude-val">Some</span>(disperse.shares.remove(<span class="number">0</span>)),
-                    )
-                    .<span class="kw">await
-                </span>{
-                    <span class="macro">tracing::error!</span>(%err, <span class="string">"unable to store genesis VID"</span>);
-                }
-            }
-            <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="macro">tracing::error!</span>(%err, <span class="string">"unable to compute VID dispersal for genesis block"</span>);
+    <span class="kw">let </span>payload = Payload::&lt;Types&gt;::genesis().<span class="number">0</span>;
+    <span class="kw">let </span>bytes = <span class="kw">match </span>payload.encode() {
+        <span class="prelude-val">Ok</span>(bytes) =&gt; bytes.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
+        <span class="prelude-val">Err</span>(err) =&gt; {
+            <span class="macro">tracing::error!</span>(%err, <span class="string">"unable to encode genesis payload"</span>);
+            <span class="kw">return</span>;
+        }
+    };
+    <span class="kw">match </span>vid_scheme(GENESIS_VID_NUM_STORAGE_NODES).disperse(bytes) {
+        <span class="prelude-val">Ok</span>(disperse) <span class="kw">if </span>disperse.commit != leaf.block_header.payload_commitment() =&gt; {
+            <span class="macro">tracing::error!</span>(
+                computed = %disperse.commit,
+                header = %leaf.block_header.payload_commitment(),
+                <span class="string">"computed VID commit for genesis block does not match header"</span>,
+            );
+        }
+        <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>disperse) =&gt; {
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = storage
+                .insert_vid(
+                    VidCommonQueryData::new(leaf.block_header.clone(), disperse.common),
+                    <span class="prelude-val">Some</span>(disperse.shares.remove(<span class="number">0</span>)),
+                )
+                .<span class="kw">await
+            </span>{
+                <span class="macro">tracing::error!</span>(%err, <span class="string">"unable to store genesis VID"</span>);
             }
         }
-        <span class="kw">return</span>;
+        <span class="prelude-val">Err</span>(err) =&gt; {
+            <span class="macro">tracing::error!</span>(%err, <span class="string">"unable to compute VID dispersal for genesis block"</span>);
+        }
     }
 }
 
