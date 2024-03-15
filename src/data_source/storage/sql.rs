@@ -61,7 +61,7 @@ use tokio_postgres::{
     Client, NoTls, Row, ToStatement,
 };
 
-use super::{pruning::PrunedHeightStorage, AvailabilityStorage};
+use super::{pruning::PrunedHeightStorage, AvailabilityStorage, ExplorerStorage};
 pub use crate::include_migrations;
 use jf_primitives::merkle_tree::{
     prelude::{MerkleNode, MerklePath},
@@ -1778,6 +1778,15 @@ impl SqlStorage {
 
         Ok(TimeWindowQueryData { window, prev, next })
     }
+}
+
+#[async_trait]
+impl<Types: NodeType> ExplorerStorage<Types> for SqlStorage
+where
+    Types: NodeType,
+    Payload<Types>: QueryablePayload,
+    Header<Types>: QueryableHeader<Types>,
+{
 }
 
 /// An atomic SQL transaction.
