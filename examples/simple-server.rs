@@ -80,6 +80,7 @@ async fn init_data_source(db: &Db) -> DataSource {
     data_source::sql::Config::default()
         .user("postgres")
         .password("password")
+        .host(db.host())
         .port(db.port())
         .connect(Default::default())
         .await
