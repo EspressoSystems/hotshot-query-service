@@ -21,11 +21,11 @@ use async_std::sync::Arc;
 use clap::Parser;
 use futures::future::{join_all, try_join_all};
 use hotshot::{
-    traits::implementations::{MasterMap, MemoryNetwork, MemoryStorage, NetworkingMetricsValue},
+    traits::implementations::{MasterMap, MemoryNetwork, NetworkingMetricsValue},
     types::{SignatureKey, SystemContextHandle},
     HotShotInitializer, Memberships, Networks, SystemContext,
 };
-use hotshot_example_types::state_types::TestInstanceState;
+use hotshot_example_types::{state_types::TestInstanceState, storage_types::TestStorage};
 use hotshot_query_service::{
     data_source,
     fetching::provider::NoFetching,
@@ -42,7 +42,6 @@ use hotshot_types::{
     traits::election::Membership, ExecutionType, HotShotConfig, PeerConfig, ValidatorConfig,
 };
 use std::{num::NonZeroUsize, time::Duration};
-use versioned_binary_serialization::version::StaticVersion;
 
 const NUM_NODES: usize = 2;
 
@@ -111,7 +110,8 @@ async fn main() -> Result<(), Error> {
     let nodes = init_consensus(&data_sources).await;
 
     // Use version 0.1, for no particular reason
-    let bind_version: StaticVersion<0, 1> = StaticVersion {};
+    let bind_version: hotshot_types::constants::Version01 =
+        hotshot_types::constants::STATIC_VER_0_1;
 
     // Start the servers.
     try_join_all(
@@ -170,6 +170,7 @@ async fn init_consensus(
         da_non_staked_committee_size: 0,
         my_own_validator_config: Default::default(),
         data_request_delay: Duration::from_millis(200),
+        view_sync_timeout: Duration::from_millis(250),
     };
     join_all(priv_keys.into_iter().zip(data_sources).enumerate().map(
         |(node_id, (priv_key, data_source))| {
@@ -217,16 +218,18 @@ async fn init_consensus(
                     _pd: Default::default(),
                 };
 
+                let storage: TestStorage<MockTypes> = TestStorage::default();
+
                 SystemContext::init(
                     pub_keys[node_id],
                     priv_key,
                     node_id as u64,
                     config,
-                    MemoryStorage::empty(),
                     memberships,
                     networks,
                     HotShotInitializer::from_genesis(TestInstanceState {}).unwrap(),
                     ConsensusMetricsValue::new(&*data_source.populate_metrics()),
+                    storage,
                 )
                 .await
                 .unwrap()

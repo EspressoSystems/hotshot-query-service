@@ -16,12 +16,13 @@ use crate::{
 };
 use hotshot::traits::{
     election::static_committee::{GeneralStaticCommittee, StaticElectionConfig},
-    implementations::{MemoryNetwork, MemoryStorage},
+    implementations::MemoryNetwork,
     NodeImplementation,
 };
 use hotshot_example_types::{
     block_types::{TestBlockHeader, TestBlockPayload, TestTransaction},
     state_types::{TestInstanceState, TestValidatedState},
+    storage_types::TestStorage,
 };
 use hotshot_types::{
     data::{QuorumProposal, ViewNumber},
@@ -96,13 +97,15 @@ pub type MockMembership = GeneralStaticCommittee<MockTypes, <MockTypes as NodeTy
 pub type MockQuorumProposal = QuorumProposal<MockTypes>;
 pub type MockNetwork = MemoryNetwork<Message<MockTypes>, BLSPubKey>;
 
+pub type MockStorage = TestStorage<MockTypes>;
+
 #[derive(
     Copy, Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize,
 )]
 pub struct MockNodeImpl;
 
 impl NodeImplementation<MockTypes> for MockNodeImpl {
-    type Storage = MemoryStorage<MockTypes>;
     type QuorumNetwork = MockNetwork;
     type CommitteeNetwork = MockNetwork;
+    type Storage = MockStorage;
 }

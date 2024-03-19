@@ -101,7 +101,7 @@ use std::path::Path;
 /// # };
 /// # use std::path::Path;
 /// # use tide_disco::App;
-/// # use versioned_binary_serialization::version::StaticVersion;
+/// # use versioned_binary_serialization::version::StaticVersionType;
 /// struct AppState {
 ///     // Top-level storage coordinator
 ///     store: AtomicStore,
@@ -109,11 +109,11 @@ use std::path::Path;
 ///     // additional state for other modules
 /// }
 ///
-/// async fn init_server<const MAJOR_VERSION: u16, const MINOR_VERSION: u16>(
+/// async fn init_server<Ver: StaticVersionType + 'static>(
 ///     storage_path: &Path,
 ///     hotshot: SystemContextHandle<AppTypes, AppNodeImpl>,
-///     _: StaticVersion<MAJOR_VERSION, MINOR_VERSION>,
-/// ) -> Result<App<Arc<RwLock<AppState>>, Error, MAJOR_VERSION, MINOR_VERSION>, Error> {
+///     _: Ver,
+/// ) -> Result<App<Arc<RwLock<AppState>>, Error, Ver>, Error> {
 ///     let mut loader = AtomicStoreLoader::create(storage_path, "my_app") // or `open`
 ///         .map_err(Error::internal)?;
 ///     let hotshot_qs = FileSystemDataSource::create_with_store(&mut loader, NoFetching)

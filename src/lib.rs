@@ -38,7 +38,7 @@
 //!
 //! use async_std::{sync::{Arc, RwLock}, task::spawn};
 //! use futures::StreamExt;
-//! use hotshot_constants::STATIC_VER_0_1;
+//! use hotshot_types::constants::{Version01, STATIC_VER_0_1};
 //! use hotshot::SystemContext;
 //! use tide_disco::App;
 //!
@@ -49,8 +49,8 @@
 //!
 //! // Create hotshot, giving it a handle to the status metrics.
 //! let hotshot = SystemContext::<AppTypes, AppNodeImpl>::init(
-//! #   panic!(), panic!(), panic!(), panic!(), panic!(), panic!(), panic!(), panic!(),
-//!     ConsensusMetricsValue::new(&*data_source.populate_metrics()),
+//! #   panic!(), panic!(), panic!(), panic!(), panic!(), panic!(), panic!(),
+//!     ConsensusMetricsValue::new(&*data_source.populate_metrics()), panic!(),
 //!     // Other fields omitted
 //! ).await.map_err(Error::internal)?.0;
 //!
@@ -64,7 +64,7 @@
 //!
 //! // Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
 //! let data_source = Arc::new(RwLock::new(data_source));
-//! let mut app = App::<_, Error, 0, 1>::with_state(data_source.clone());
+//! let mut app = App::<_, Error, Version01>::with_state(data_source.clone());
 //! app
 //!     .register_module("availability", availability_api)
 //!     .map_err(Error::internal)?
@@ -74,7 +74,7 @@
 //!     .map_err(Error::internal)?;
 //!
 //! // Serve app.
-//! spawn(app.serve("0.0.0.0:8080"));
+//! spawn(app.serve("0.0.0.0:8080", STATIC_VER_0_1));
 //!
 //! // Update query data using HotShot events.
 //! let mut events = hotshot.get_event_stream();
@@ -96,7 +96,7 @@
 //! ```
 //! # use async_std::task::spawn;
 //! # use hotshot::types::SystemContextHandle;
-//! # use hotshot_constants::STATIC_VER_0_1;
+//! # use hotshot_types::constants::STATIC_VER_0_1;
 //! # use hotshot_query_service::{data_source::FileSystemDataSource, Error, Options};
 //! # use hotshot_query_service::fetching::provider::NoFetching;
 //! # use hotshot_query_service::testing::mocks::{MockNodeImpl, MockTypes};
@@ -177,7 +177,7 @@
 //! # use async_std::sync::RwLock;
 //! # use async_trait::async_trait;
 //! # use futures::FutureExt;
-//! # use hotshot_constants::STATIC_VER_0_1;
+//! # use hotshot_types::constants::STATIC_VER_0_1;
 //! # use hotshot_query_service::availability::{
 //! #   self, AvailabilityDataSource, FetchBlockSnafu, TransactionIndex,
 //! # };
@@ -185,16 +185,16 @@
 //! # use hotshot_query_service::Error;
 //! # use snafu::ResultExt;
 //! # use tide_disco::{api::ApiError, method::ReadState, Api, App, StatusCode};
-//! # use versioned_binary_serialization::version::StaticVersion;
+//! # use versioned_binary_serialization::version::StaticVersionType;
 //! # #[async_trait]
 //! # trait UtxoDataSource: AvailabilityDataSource<AppTypes> {
 //! #   async fn find_utxo(&self, utxo: u64) -> Option<(usize, TransactionIndex<AppTypes>, usize)>;
 //! # }
 //!
-//! fn define_app_specific_availability_api<State, const MAJOR_VERSION: u16, const MINOR_VERSION: u16>(
+//! fn define_app_specific_availability_api<State, Ver: StaticVersionType + 'static>(
 //!     options: &availability::Options,
-//!     bind_version: StaticVersion<MAJOR_VERSION, MINOR_VERSION>,
-//! ) -> Result<Api<State, availability::Error, MAJOR_VERSION, MINOR_VERSION>, ApiError>
+//!     bind_version: Ver,
+//! ) -> Result<Api<State, availability::Error, Ver>, ApiError>
 //! where
 //!     State: 'static + Send + Sync + ReadState,
 //!     <State as ReadState>::State: UtxoDataSource + Send + Sync,
@@ -221,14 +221,14 @@
 //!     Ok(api)
 //! }
 //!
-//! fn init_server<D: UtxoDataSource + Send + Sync + 'static, const MAJOR_VERSION: u16, const MINOR_VERSION: u16>(
+//! fn init_server<D: UtxoDataSource + Send + Sync + 'static, Ver: StaticVersionType + 'static>(
 //!     options: &availability::Options,
 //!     data_source: D,
-//!     bind_version: StaticVersion<MAJOR_VERSION, MINOR_VERSION>,
-//! ) -> Result<App<RwLock<D>, Error, MAJOR_VERSION, MINOR_VERSION>, availability::Error> {
+//!     bind_version: Ver,
+//! ) -> Result<App<RwLock<D>, Error, Ver>, availability::Error> {
 //!     let api = define_app_specific_availability_api(options, bind_version)
 //!         .map_err(availability::Error::internal)?;
-//!     let mut app = App::with_state(RwLock::new(data_source));
+//!     let mut app = App::<_, _, Ver>::with_state(RwLock::new(data_source));
 //!     app.register_module("availability", api).map_err(availability::Error::internal)?;
 //!     Ok(app)
 //! }
@@ -433,7 +433,7 @@ use serde::{Deserialize, Serialize};
 use snafu::Snafu;
 use task::BackgroundTask;
 use tide_disco::{App, StatusCode};
-use versioned_binary_serialization::version::StaticVersion;
+use versioned_binary_serialization::version::StaticVersionType;
 
 pub use hotshot_types::{
     data::Leaf,
@@ -485,17 +485,11 @@ pub struct Options {
 }
 
 /// Run an instance of the HotShot Query service with no customization.
-pub async fn run_standalone_service<
-    Types: NodeType,
-    I: NodeImplementation<Types>,
-    D,
-    const MAJOR_VERSION: u16,
-    const MINOR_VERSION: u16,
->(
+pub async fn run_standalone_service<Types: NodeType, I: NodeImplementation<Types>, D, Ver>(
     options: Options,
     data_source: D,
     hotshot: SystemContextHandle<Types, I>,
-    bind_version: StaticVersion<MAJOR_VERSION, MINOR_VERSION>,
+    bind_version: Ver,
 ) -> Result<(), Error>
 where
     Payload<Types>: availability::QueryablePayload,
@@ -508,6 +502,7 @@ where
         + Send
         + Sync
         + 'static,
+    Ver: StaticVersionType + 'static,
 {
     // Create API modules.
     let availability_api =
@@ -517,7 +512,7 @@ where
 
     // Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
     let data_source = Arc::new(RwLock::new(data_source));
-    let mut app = App::<_, Error, MAJOR_VERSION, MINOR_VERSION>::with_state(data_source.clone());
+    let mut app = App::<_, Error, Ver>::with_state(data_source.clone());
     app.register_module("availability", availability_api)
         .map_err(Error::internal)?
         .register_module("node", node_api)
@@ -527,7 +522,8 @@ where
 
     // Serve app.
     let url = format!("0.0.0.0:{}", options.port);
-    let _server = BackgroundTask::spawn("server", async move { app.serve(&url).await });
+    let _server =
+        BackgroundTask::spawn("server", async move { app.serve(&url, bind_version).await });
 
     // Subscribe to events before starting consensus, so we don't miss any events.
     let mut events = hotshot.get_event_stream();
@@ -568,8 +564,8 @@ mod test {
     use atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
 
     use futures::FutureExt;
-    use hotshot_constants::STATIC_VER_0_1;
     use hotshot_example_types::state_types::TestInstanceState;
+    use hotshot_types::constants::{Version01, STATIC_VER_0_1};
     use portpicker::pick_unused_port;
     use std::ops::RangeBounds;
     use std::time::Duration;
@@ -740,7 +736,7 @@ mod test {
             METHOD = "GET"
         };
 
-        let mut app = App::<_, Error, 0, 1>::with_state(RwLock::new(state));
+        let mut app = App::<_, Error, Version01>::with_state(RwLock::new(state));
         app.register_module(
             "availability",
             availability::define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
@@ -784,10 +780,13 @@ mod test {
         .unwrap();
 
         let port = pick_unused_port().unwrap();
-        let _server = BackgroundTask::spawn("server", app.serve(format!("0.0.0.0:{}", port)));
+        let _server = BackgroundTask::spawn(
+            "server",
+            app.serve(format!("0.0.0.0:{}", port), STATIC_VER_0_1),
+        );
 
         let client =
-            Client::<Error, 0, 1>::new(format!("http://localhost:{}", port).parse().unwrap());
+            Client::<Error, Version01>::new(format!("http://localhost:{}", port).parse().unwrap());
         assert!(client.connect(Some(Duration::from_secs(60))).await);
 
         client.post::<()>("mod/ext/42").send().await.unwrap();

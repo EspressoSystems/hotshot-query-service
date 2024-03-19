@@ -36,7 +36,7 @@ use serde::{Deserialize, Serialize};
 use snafu::{OptionExt, Snafu};
 use std::{fmt::Display, path::PathBuf, str::FromStr, time::Duration};
 use tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
-use versioned_binary_serialization::version::StaticVersion;
+use versioned_binary_serialization::version::StaticVersionType;
 
 pub(crate) mod data_source;
 mod fetch;
@@ -141,16 +141,16 @@ impl Error {
     }
 }
 
-pub fn define_api<State, Types: NodeType, const MAJOR_VERSION: u16, const MINOR_VERSION: u16>(
+pub fn define_api<State, Types: NodeType, Ver: StaticVersionType + 'static>(
     options: &Options,
-    _: StaticVersion<MAJOR_VERSION, MINOR_VERSION>,
-) -> Result<Api<State, Error, MAJOR_VERSION, MINOR_VERSION>, ApiError>
+    _: Ver,
+) -> Result<Api<State, Error, Ver>, ApiError>
 where
     State: 'static + Send + Sync + ReadState,
     <State as ReadState>::State: Send + Sync + AvailabilityDataSource<Types>,
     Payload<Types>: QueryablePayload,
 {
-    let mut api = load_api::<State, Error, MAJOR_VERSION, MINOR_VERSION>(
+    let mut api = load_api::<State, Error, Ver>(
         options.api_path.as_ref(),
         include_str!("../api/availability.toml"),
         options.extensions.clone(),
@@ -498,9 +498,11 @@ mod test {
     use async_std::sync::RwLock;
     use commit::Committable;
     use futures::future::FutureExt;
-    use hotshot_constants::STATIC_VER_0_1;
     use hotshot_example_types::state_types::TestInstanceState;
-    use hotshot_types::data::Leaf;
+    use hotshot_types::{
+        constants::{Version01, STATIC_VER_0_1},
+        data::Leaf,
+    };
     use portpicker::pick_unused_port;
     use std::time::Duration;
     use surf_disco::Client;
@@ -510,7 +512,7 @@ mod test {
 
     /// Get the current ledger height and a list of non-empty leaf/block pairs.
     async fn get_non_empty_blocks(
-        client: &Client<Error, 0, 1>,
+        client: &Client<Error, Version01>,
     ) -> (
         u64,
         Vec<(LeafQueryData<MockTypes>, BlockQueryData<MockTypes>)>,
@@ -543,7 +545,7 @@ mod test {
         unreachable!()
     }
 
-    async fn validate(client: &Client<Error, 0, 1>, height: u64) {
+    async fn validate(client: &Client<Error, Version01>, height: u64) {
         // Check the consistency of every block/leaf pair.
         for i in 0..height {
             // Limit the number of blocks we validate in order to
@@ -788,7 +790,7 @@ mod test {
 
         // Start the web server.
         let port = pick_unused_port().unwrap();
-        let mut app = App::<_, Error, 0, 1>::with_state(network.data_source());
+        let mut app = App::<_, Error, Version01>::with_state(network.data_source());
         app.register_module(
             "availability",
             define_api(
@@ -801,10 +803,13 @@ mod test {
             .unwrap(),
         )
         .unwrap();
-        network.spawn("server", app.serve(format!("0.0.0.0:{}", port)));
+        network.spawn(
+            "server",
+            app.serve(format!("0.0.0.0:{}", port), STATIC_VER_0_1),
+        );
 
         // Start a client.
-        let client = Client::<Error, 0, 1>::new(
+        let client = Client::<Error, Version01>::new(
             format!("http://localhost:{}/availability", port)
                 .parse()
                 .unwrap(),
@@ -916,7 +921,7 @@ mod test {
         };
 
         let mut api =
-            define_api::<RwLock<ExtensibleDataSource<MockDataSource, u64>>, MockTypes, 0, 1>(
+            define_api::<RwLock<ExtensibleDataSource<MockDataSource, u64>>, MockTypes, Version01>(
                 &Options {
                     extensions: vec![extensions.into()],
                     ..Default::default()
@@ -937,13 +942,16 @@ mod test {
         })
         .unwrap();
 
-        let mut app = App::<_, Error, 0, 1>::with_state(RwLock::new(data_source));
+        let mut app = App::<_, Error, Version01>::with_state(RwLock::new(data_source));
         app.register_module("availability", api).unwrap();
 
         let port = pick_unused_port().unwrap();
-        let _server = BackgroundTask::spawn("server", app.serve(format!("0.0.0.0:{}", port)));
+        let _server = BackgroundTask::spawn(
+            "server",
+            app.serve(format!("0.0.0.0:{}", port), STATIC_VER_0_1),
+        );
 
-        let client = Client::<Error, 0, 1>::new(
+        let client = Client::<Error, Version01>::new(
             format!("http://localhost:{}/availability", port)
                 .parse()
                 .unwrap(),

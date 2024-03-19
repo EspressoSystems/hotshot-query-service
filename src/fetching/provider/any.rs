@@ -66,7 +66,7 @@ type VidCommonProvider<Types> = Arc<dyn DebugProvider<Types, VidCommonRequest>>;
 /// Fetching from multiple query services, for resiliency.
 ///
 /// ```
-/// # use hotshot_constants::STATIC_VER_0_1;
+/// # use hotshot_types::constants::STATIC_VER_0_1;
 /// # use hotshot_types::traits::node_implementation::NodeType;
 /// # async fn doc<Types>() -> anyhow::Result<()>
 /// # where
@@ -213,7 +213,7 @@ mod test {
         Error,
     };
     use futures::stream::StreamExt;
-    use hotshot_constants::STATIC_VER_0_1;
+    use hotshot_types::constants::{Version01, STATIC_VER_0_1};
     use portpicker::pick_unused_port;
     use tide_disco::App;
 
@@ -228,20 +228,16 @@ mod test {
 
         // Start a web server that the non-consensus node can use to fetch blocks.
         let port = pick_unused_port().unwrap();
-<<<<<<< HEAD
-        let mut app = App::<_, Error, 0, 1>::with_state(network.data_source());
+        let mut app = App::<_, Error, Version01>::with_state(network.data_source());
         app.register_module(
             "availability",
             define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
         )
         .unwrap();
-        spawn(app.serve(format!("0.0.0.0:{port}")));
-=======
-        let mut app = App::<_, Error>::with_state(network.data_source());
-        app.register_module("availability", define_api(&Default::default()).unwrap())
-            .unwrap();
-        let _server = BackgroundTask::spawn("server", app.serve(format!("0.0.0.0:{port}")));
->>>>>>> main
+        let _server = BackgroundTask::spawn(
+            "server",
+            app.serve(format!("0.0.0.0:{port}"), STATIC_VER_0_1),
+        );
 
         // Start a data source which is not receiving events from consensus, only from a peer.
         let db = TmpDb::init().await;
