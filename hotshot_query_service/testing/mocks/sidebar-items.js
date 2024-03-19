@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["mock_transaction"],"struct":["MockNodeImpl","MockTypes"],"type":["MockHeader","MockMembership","MockNetwork","MockPayload","MockQuorumProposal","MockTransaction"]};
+window.SIDEBAR_ITEMS = {"fn":["mock_transaction"],"struct":["MockNodeImpl","MockTypes"],"type":["MockHeader","MockMembership","MockMerkleTree","MockNetwork","MockPayload","MockQuorumProposal","MockTransaction"]};

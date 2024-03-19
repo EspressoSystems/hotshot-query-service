@@ -570,6 +570,8 @@
 <a href="#569" id="569">569</a>
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -585,14 +587,15 @@
 </span><span class="attr">#![cfg(feature = <span class="string">"no-storage"</span>)]
 
 </span><span class="kw">use </span><span class="kw">super</span>::AvailabilityStorage;
-<span class="kw">use </span><span class="kw">crate</span>::data_source::storage::pruning::PrunedHeightStorage;
-<span class="kw">use </span><span class="kw">crate</span>::data_source::storage::pruning::{PruneStorage, PrunerConfig};
 <span class="kw">use crate</span>::{
     availability::{
         BlockId, BlockQueryData, LeafId, LeafQueryData, PayloadQueryData, QueryablePayload,
         TransactionHash, TransactionIndex, UpdateAvailabilityData, VidCommonQueryData,
     },
-    data_source::VersionedDataSource,
+    data_source::{
+        storage::pruning::{PruneStorage, PrunedHeightStorage, PrunerConfig},
+        VersionedDataSource,
+    },
     node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
     Header, Payload, QueryError, QueryResult, VidShare,
 };
@@ -762,6 +765,7 @@
 </span><span class="attr">#[cfg(all(any(test, feature = <span class="string">"testing"</span>), not(target_os = <span class="string">"windows"</span>)))]
 </span><span class="kw">pub mod </span>testing {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::QueryError;
     <span class="kw">use crate</span>::{
         availability::{define_api, AvailabilityDataSource, Fetch},
         data_source::{

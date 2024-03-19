@@ -197,6 +197,21 @@
 <a href="#196" id="196">196</a>
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -210,7 +225,8 @@
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
 </span><span class="doccomment">//! A generic algorithm for updating a HotShot Query Service data source with new data.
-</span><span class="kw">use crate</span>::{
+</span><span class="kw">use </span><span class="kw">crate</span>::merklized_state::UpdateStateStorage;
+<span class="kw">use crate</span>::{
     availability::{
         BlockQueryData, LeafQueryData, QueryablePayload, UpdateAvailabilityData, VidCommonQueryData,
     },
@@ -219,6 +235,7 @@
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>hotshot::types::{Event, EventType};
+<span class="kw">use </span>hotshot_types::event::LeafInfo;
 <span class="kw">use </span>hotshot_types::{
     traits::{
         block_contents::{BlockHeader, BlockPayload, GENESIS_VID_NUM_STORAGE_NODES},
@@ -227,9 +244,7 @@
     vid::vid_scheme,
 };
 <span class="kw">use </span>jf_primitives::vid::VidScheme;
-<span class="kw">use </span>std::error::Error;
-<span class="kw">use </span>std::fmt::Debug;
-<span class="kw">use </span>std::iter::once;
+<span class="kw">use </span>std::{error::Error, fmt::Debug, iter::once};
 
 <span class="doccomment">/// An extension trait for types which implement the update trait for each API module.
 ///
@@ -265,6 +280,7 @@
 <span class="kw">where
     </span>T: UpdateAvailabilityData&lt;Types&gt; + UpdateStatusData + Send,
     Payload&lt;Types&gt;: QueryablePayload,
+    &lt;Types <span class="kw">as </span>NodeType&gt;::ValidatedState: UpdateStateStorage&lt;Types, T&gt;,
 {
     <span class="kw">async fn </span>update(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -281,13 +297,20 @@
                 <span class="comment">// The oldest QC is the `justify_qc` of the oldest leaf, which does not justify any
                 // leaf in the new chain, so we don't need it.
                 </span>.skip(<span class="number">1</span>);
-            <span class="kw">for </span>(qc, leaf_info) <span class="kw">in </span>qcs.zip(leaf_chain.iter().rev()) {
+            <span class="kw">for </span>(
+                qc,
+                LeafInfo {
+                    leaf,
+                    state,
+                    delta,
+                    vid,
+                },
+            ) <span class="kw">in </span>qcs.zip(leaf_chain.iter().rev())
+            {
                 <span class="comment">// `LeafQueryData::new` only fails if `qc` does not reference `leaf`. We have just
                 // gotten `leaf` and `qc` directly from a consensus `Decide` event, so they are
                 // guaranteed to correspond, and this should never panic.
-                </span><span class="kw">let </span>leaf = leaf_info.leaf.clone();
-                <span class="kw">let </span>vid = leaf_info.vid.clone();
-                <span class="kw">let </span>leaf_data =
+                </span><span class="kw">let </span>leaf_data =
                     LeafQueryData::new(leaf.clone(), qc.clone()).expect(<span class="string">"inconsistent leaf"</span>);
                 <span class="self">self</span>.insert_leaf(leaf_data.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -306,7 +329,7 @@
                     // this case, the block payload is guaranteed to always be empty, so VID isn't
                     // really necessary. But for consistency, we will still store the VID dispersal
                     // data, computing it ourselves based on the well-known genesis VID commitment.
-                    </span>store_genesis_vid(<span class="self">self</span>, <span class="kw-2">&amp;</span>leaf).<span class="kw">await</span>;
+                    </span>store_genesis_vid(<span class="self">self</span>, leaf).<span class="kw">await</span>;
                 } <span class="kw">else </span>{
                     <span class="macro">tracing::error!</span>(
                         <span class="string">"VID info for block {} not available at decide"</span>,
@@ -322,6 +345,13 @@
                         <span class="string">"block {} not available at decide"</span>,
                         leaf.block_header.block_number()
                     );
+                }
+
+                <span class="comment">// Update state storage if the state has changed
+                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(delta) = delta {
+                    <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = state.update_storage(<span class="self">self</span>, leaf, delta.clone()).<span class="kw">await </span>{
+                        <span class="macro">tracing::error!</span>(<span class="string">"failed to update state storage {e} for leaf {leaf}"</span>)
+                    }
                 }
             }
         }

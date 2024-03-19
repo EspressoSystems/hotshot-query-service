@@ -572,6 +572,8 @@
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
 <a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -591,6 +593,7 @@
     pruning::{PruneStorage, PrunedHeightStorage, PrunerConfig},
     AvailabilityStorage,
 };
+
 <span class="kw">use crate</span>::{
     availability::{
         data_source::{BlockId, LeafId, UpdateAvailabilityData},
@@ -608,6 +611,7 @@
 <span class="kw">use </span>atomic_store::{AtomicStore, AtomicStoreLoader, PersistenceError};
 <span class="kw">use </span>commit::Committable;
 <span class="kw">use </span>hotshot_types::traits::{block_contents::BlockHeader, node_implementation::NodeType};
+
 <span class="kw">use </span>serde::{de::DeserializeOwned, Serialize};
 <span class="kw">use </span>snafu::OptionExt;
 <span class="kw">use </span>std::collections::{

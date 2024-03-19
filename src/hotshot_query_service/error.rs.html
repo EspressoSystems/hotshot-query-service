@@ -53,6 +53,9 @@
 <a href="#52" id="52">52</a>
 <a href="#53" id="53">53</a>
 <a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -65,7 +68,7 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use crate</span>::{availability, node, status};
+</span><span class="kw">use crate</span>::{availability, merklized_state, node, status};
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::Snafu;
@@ -80,6 +83,8 @@
     </span>Node { source: node::Error },
     <span class="attr">#[snafu(display(<span class="string">"{source}"</span>))]
     </span>Status { source: status::Error },
+    <span class="attr">#[snafu(display(<span class="string">"{source}"</span>))]
+    </span>MerklizedState { source: merklized_state::Error },
     <span class="attr">#[snafu(display(<span class="string">"error {status}: {message}"</span>))]
     </span>Custom { message: String, status: StatusCode },
 }
@@ -103,6 +108,7 @@
             <span class="self">Self</span>::Availability { source } =&gt; source.status(),
             <span class="self">Self</span>::Node { source } =&gt; source.status(),
             <span class="self">Self</span>::Status { source } =&gt; source.status(),
+            <span class="self">Self</span>::MerklizedState { source } =&gt; source.status(),
             <span class="self">Self</span>::Custom { status, .. } =&gt; <span class="kw-2">*</span>status,
         }
     }
