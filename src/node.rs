@@ -173,6 +173,7 @@ mod test {
     use super::*;
     use crate::{
         data_source::ExtensibleDataSource,
+        task::BackgroundTask,
         testing::{
             consensus::{MockDataSource, MockNetwork},
             mocks::MockTypes,
@@ -180,14 +181,12 @@ mod test {
         },
         Error, Header, VidShare,
     };
-    use async_std::{
-        sync::RwLock,
-        task::{sleep, spawn},
-    };
+    use async_std::{sync::RwLock, task::sleep};
     use commit::Committable;
     use futures::{FutureExt, StreamExt};
     use hotshot_constants::STATIC_VER_0_1;
     use hotshot_types::event::EventType;
+    use hotshot_types::event::LeafInfo;
     use portpicker::pick_unused_port;
     use std::time::Duration;
     use surf_disco::Client;
@@ -206,6 +205,7 @@ mod test {
 
         // Start the web server.
         let port = pick_unused_port().unwrap();
+<<<<<<< HEAD
         let mut app = App::<_, Error, 0, 1>::with_state(network.data_source());
         app.register_module(
             "node",
@@ -213,6 +213,12 @@ mod test {
         )
         .unwrap();
         spawn(app.serve(format!("0.0.0.0:{}", port)));
+=======
+        let mut app = App::<_, Error>::with_state(network.data_source());
+        app.register_module("node", define_api(&Default::default()).unwrap())
+            .unwrap();
+        network.spawn("server", app.serve(format!("0.0.0.0:{}", port)));
+>>>>>>> main
 
         // Start a client.
         let client =
@@ -255,7 +261,7 @@ mod test {
             let EventType::Decide { leaf_chain, .. } = event.event else {
                 continue;
             };
-            for (leaf, vid) in leaf_chain.iter().rev() {
+            for LeafInfo { leaf, vid, .. } in leaf_chain.iter().rev() {
                 headers.push(leaf.block_header.clone());
                 if leaf.block_header.block_number >= block_height as u64 {
                     break 'outer;
@@ -355,7 +361,7 @@ mod test {
     async fn test_extensions() {
         setup_test();
 
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::with_prefix("test_node_extensions").unwrap();
         let data_source = ExtensibleDataSource::new(
             MockDataSource::create(dir.path(), Default::default())
                 .await
@@ -401,7 +407,7 @@ mod test {
         app.register_module("node", api).unwrap();
 
         let port = pick_unused_port().unwrap();
-        spawn(app.serve(format!("0.0.0.0:{}", port)));
+        let _server = BackgroundTask::spawn("server", app.serve(format!("0.0.0.0:{}", port)));
 
         let client =
             Client::<Error, 0, 1>::new(format!("http://localhost:{}/node", port).parse().unwrap());

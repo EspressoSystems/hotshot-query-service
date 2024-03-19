@@ -486,6 +486,7 @@ mod test {
     use crate::{
         data_source::{storage::no_storage, ExtensibleDataSource},
         status::StatusDataSource,
+        task::BackgroundTask,
         testing::{
             consensus::{MockDataSource, MockNetwork, TestableDataSource},
             mocks::{mock_transaction, MockHeader, MockPayload, MockTypes},
@@ -494,7 +495,7 @@ mod test {
         types::HeightIndexed,
         Error, Header,
     };
-    use async_std::{sync::RwLock, task::spawn};
+    use async_std::sync::RwLock;
     use commit::Committable;
     use futures::future::FutureExt;
     use hotshot_constants::STATIC_VER_0_1;
@@ -800,7 +801,7 @@ mod test {
             .unwrap(),
         )
         .unwrap();
-        spawn(app.serve(format!("0.0.0.0:{}", port)));
+        network.spawn("server", app.serve(format!("0.0.0.0:{}", port)));
 
         // Start a client.
         let client = Client::<Error, 0, 1>::new(
@@ -878,7 +879,7 @@ mod test {
     async fn test_extensions() {
         setup_test();
 
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::with_prefix("test_availability_extensions").unwrap();
         let mut data_source = ExtensibleDataSource::new(
             MockDataSource::create(dir.path(), Default::default())
                 .await
@@ -940,7 +941,7 @@ mod test {
         app.register_module("availability", api).unwrap();
 
         let port = pick_unused_port().unwrap();
-        spawn(app.serve(format!("0.0.0.0:{}", port)));
+        let _server = BackgroundTask::spawn("server", app.serve(format!("0.0.0.0:{}", port)));
 
         let client = Client::<Error, 0, 1>::new(
             format!("http://localhost:{}/availability", port)

@@ -205,7 +205,6 @@ pub mod testing {
         },
         Error,
     };
-    use async_std::task::spawn;
     use futures::stream::{BoxStream, StreamExt};
     use hotshot::types::Event;
     use hotshot_constants::STATIC_VER_0_1;
@@ -292,13 +291,14 @@ pub mod testing {
             }
         }
 
-        async fn setup(network: &MockNetwork<Self>) {
+        async fn setup(network: &mut MockNetwork<Self>) {
             // Spawn the web server on node 1 that node 0 will use to fetch missing data.
             let Storage::NoStorage { fetch_from_port } = network.storage() else {
                 panic!("node 0 should always be NoStorage node");
             };
             tracing::info!("spawning server for missing data on port {fetch_from_port}");
             let api_data_source = network.data_source_index(1);
+<<<<<<< HEAD
             let mut app = App::<_, Error, 0, 1>::with_state(api_data_source);
             app.register_module(
                 "availability",
@@ -306,6 +306,12 @@ pub mod testing {
             )
             .unwrap();
             spawn(app.serve(format!("0.0.0.0:{fetch_from_port}")));
+=======
+            let mut app = App::<_, Error>::with_state(api_data_source);
+            app.register_module("availability", define_api(&Default::default()).unwrap())
+                .unwrap();
+            network.spawn("server", app.serve(format!("0.0.0.0:{fetch_from_port}")));
+>>>>>>> main
         }
 
         async fn handle_event(&mut self, event: &Event<MockTypes>) {

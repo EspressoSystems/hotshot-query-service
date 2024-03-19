@@ -17,14 +17,15 @@ use crate::{
     fetching::provider::NoFetching,
     node::NodeDataSource,
     status::{StatusDataSource, UpdateStatusData},
+    task::BackgroundTask,
     SignatureKey,
 };
-use async_std::{
-    sync::{Arc, RwLock},
-    task::spawn,
-};
+use async_std::sync::{Arc, RwLock};
 use async_trait::async_trait;
-use futures::{future::join_all, stream::StreamExt};
+use futures::{
+    future::{join_all, Future},
+    stream::StreamExt,
+};
 use hotshot::{
     traits::implementations::{MasterMap, MemoryNetwork, MemoryStorage, NetworkingMetricsValue},
     types::{Event, SystemContextHandle},
@@ -38,8 +39,10 @@ use hotshot_types::{
     traits::{election::Membership, signature_key::SignatureKey as _},
     ExecutionType, HotShotConfig, PeerConfig, ValidatorConfig,
 };
+use std::fmt::Display;
 use std::num::NonZeroUsize;
 use std::time::Duration;
+use tracing::{info_span, Instrument};
 
 struct MockNode<D: DataSourceLifeCycle> {
     hotshot: SystemContextHandle<MockTypes, MockNodeImpl>,
@@ -48,6 +51,7 @@ struct MockNode<D: DataSourceLifeCycle> {
 }
 
 pub struct MockNetwork<D: DataSourceLifeCycle> {
+    tasks: Vec<BackgroundTask>,
     nodes: Vec<MockNode<D>>,
     pub_keys: Vec<BLSPubKey>,
 }
@@ -63,13 +67,13 @@ impl<D: DataSourceLifeCycle + UpdateStatusData> MockNetwork<D> {
         let (pub_keys, priv_keys): (Vec<_>, Vec<_>) = (0..NUM_NODES)
             .map(|i| BLSPubKey::generated_from_seed_indexed([0; 32], i as u64))
             .unzip();
-        let total_nodes = NonZeroUsize::new(pub_keys.len()).unwrap();
-        let state_key_pairs = (0..total_nodes.into())
+        let num_staked_nodes = NonZeroUsize::new(pub_keys.len()).unwrap();
+        let state_key_pairs = (0..num_staked_nodes.into())
             .map(|i| StateKeyPair::generate_from_seed_indexed([0; 32], i as u64))
             .collect::<Vec<_>>();
         let master_map = MasterMap::new();
         let stake = 1u64;
-        let known_nodes_with_stake = (0..total_nodes.into())
+        let known_nodes_with_stake = (0..num_staked_nodes.into())
             .map(|id| PeerConfig {
                 stake_table_entry: pub_keys[id].get_stake_table_entry(stake),
                 state_ver_key: state_key_pairs[id].ver_key(),
@@ -87,8 +91,10 @@ impl<D: DataSourceLifeCycle + UpdateStatusData> MockNetwork<D> {
                         state_key_pair: state_key_pairs[node_id].clone(),
                     };
                     let config = HotShotConfig {
-                        total_nodes,
+                        num_nodes_with_stake: num_staked_nodes,
+                        num_nodes_without_stake: 0,
                         known_nodes_with_stake: known_nodes_with_stake.clone(),
+                        known_nodes_without_stake: vec![],
                         my_own_validator_config,
                         start_delay: 0,
                         round_start_delay: 0,
@@ -101,7 +107,9 @@ impl<D: DataSourceLifeCycle + UpdateStatusData> MockNetwork<D> {
                         num_bootstrap: 0,
                         execution_type: ExecutionType::Continuous,
                         election_config: None,
-                        da_committee_size: pub_keys.len(),
+                        da_staked_committee_size: pub_keys.len(),
+                        da_non_staked_committee_size: 0,
+                        data_request_delay: Duration::from_millis(200),
                     };
 
                     let pub_keys = pub_keys.clone();
@@ -109,8 +117,9 @@ impl<D: DataSourceLifeCycle + UpdateStatusData> MockNetwork<D> {
                     let config = config.clone();
                     let master_map = master_map.clone();
                     let election_config =
-                        MockMembership::default_election_config(total_nodes.get() as u64);
+                        MockMembership::default_election_config(num_staked_nodes.get() as u64, 0);
 
+                    let span = info_span!("initialize node", node_id);
                     async move {
                         let storage = D::create(node_id).await;
                         let data_source = D::connect(&storage).await;
@@ -159,12 +168,17 @@ impl<D: DataSourceLifeCycle + UpdateStatusData> MockNetwork<D> {
                             storage,
                         }
                     }
+                    .instrument(span)
                 }),
         )
         .await;
 
-        let network = Self { nodes, pub_keys };
-        D::setup(&network).await;
+        let mut network = Self {
+            nodes,
+            pub_keys,
+            tasks: Default::default(),
+        };
+        D::setup(&mut network).await;
         network
     }
 }
@@ -198,12 +212,16 @@ impl<D: DataSourceLifeCycle> MockNetwork<D> {
         &self.nodes[0].storage
     }
 
+    pub fn spawn(&mut self, name: impl Display, task: impl Future + Send + 'static) {
+        self.tasks.push(BackgroundTask::spawn(name, task));
+    }
+
     pub async fn shut_down(mut self) {
         self.shut_down_impl().await
     }
 
     async fn shut_down_impl(&mut self) {
-        for mut node in std::mem::take(&mut self.nodes) {
+        for node in &mut self.nodes {
             node.hotshot.shut_down().await;
         }
     }
@@ -215,13 +233,19 @@ impl<D: DataSourceLifeCycle> MockNetwork<D> {
         for (i, node) in self.nodes.iter_mut().enumerate() {
             let ds = node.data_source.clone();
             let mut events = node.hotshot.get_event_stream();
-            spawn(async move {
-                while let Some(event) = events.next().await {
-                    tracing::info!(node = i, event = ?event.event, "EVENT");
-                    let mut ds = ds.write().await;
-                    ds.handle_event(&event).await;
-                }
-            });
+            self.tasks.push(BackgroundTask::spawn(
+                format!("update node {i}"),
+                async move {
+                    while let Some(event) = events.next().await {
+                        tracing::info!(node = i, event = ?event.event, "EVENT");
+                        {
+                            let mut ds = ds.write().await;
+                            ds.handle_event(&event).await;
+                        }
+                        async_std::task::yield_now().await;
+                    }
+                },
+            ));
         }
 
         join_all(
@@ -253,7 +277,7 @@ pub trait DataSourceLifeCycle: Send + Sync + Sized + 'static {
     async fn handle_event(&mut self, event: &Event<MockTypes>);
 
     /// Setup runs after setting up the network but before starting a test.
-    async fn setup(_network: &MockNetwork<Self>) {}
+    async fn setup(_network: &mut MockNetwork<Self>) {}
 }
 
 pub trait TestableDataSource:

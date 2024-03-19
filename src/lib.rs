@@ -422,10 +422,7 @@ pub mod types;
 pub use error::Error;
 pub use resolvable::Resolvable;
 
-use async_std::{
-    sync::{Arc, RwLock},
-    task::spawn,
-};
+use async_std::sync::{Arc, RwLock};
 use futures::StreamExt;
 use hotshot::types::SystemContextHandle;
 use hotshot_types::traits::{
@@ -434,6 +431,7 @@ use hotshot_types::traits::{
 };
 use serde::{Deserialize, Serialize};
 use snafu::Snafu;
+use task::BackgroundTask;
 use tide_disco::{App, StatusCode};
 use versioned_binary_serialization::version::StaticVersion;
 
@@ -529,7 +527,7 @@ where
 
     // Serve app.
     let url = format!("0.0.0.0:{}", options.port);
-    spawn(async move { app.serve(&url).await });
+    let _server = BackgroundTask::spawn("server", async move { app.serve(&url).await });
 
     // Subscribe to events before starting consensus, so we don't miss any events.
     let mut events = hotshot.get_event_stream();
@@ -565,7 +563,7 @@ mod test {
             mocks::{MockHeader, MockPayload, MockTypes},
         },
     };
-    use async_std::{sync::RwLock, task::spawn};
+    use async_std::sync::RwLock;
     use async_trait::async_trait;
     use atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
 
@@ -712,7 +710,7 @@ mod test {
 
     #[async_std::test]
     async fn test_composition() {
-        let dir = TempDir::new().unwrap();
+        let dir = TempDir::with_prefix("test_composition").unwrap();
         let mut loader = AtomicStoreLoader::create(dir.path(), "test_composition").unwrap();
         let mut hotshot_qs = MockDataSource::create_with_store(&mut loader, Default::default())
             .await
@@ -786,7 +784,7 @@ mod test {
         .unwrap();
 
         let port = pick_unused_port().unwrap();
-        spawn(app.serve(format!("0.0.0.0:{}", port)));
+        let _server = BackgroundTask::spawn("server", app.serve(format!("0.0.0.0:{}", port)));
 
         let client =
             Client::<Error, 0, 1>::new(format!("http://localhost:{}", port).parse().unwrap());
