@@ -3308,7 +3308,6 @@
 <a href="#3307" id="3307">3307</a>
 <a href="#3308" id="3308">3308</a>
 <a href="#3309" id="3309">3309</a>
-<a href="#3310" id="3310">3310</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -4672,7 +4671,6 @@
 <span class="kw">where
     </span>Types: NodeType,
     State: MerklizedState&lt;Types&gt; + <span class="lifetime">'static</span>,
-    State::Commitment: Send,
 {
     <span class="doccomment">/// Retreives a Merkle path from the database
     </span><span class="kw">async fn </span>get_path(
