@@ -572,6 +572,14 @@
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
 <a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -783,6 +791,7 @@
     };
     <span class="kw">use </span>futures::stream::{BoxStream, StreamExt};
     <span class="kw">use </span>hotshot::types::Event;
+    <span class="kw">use </span>hotshot_types::constants::{Version01, STATIC_VER_0_1};
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::{fmt::Display, time::Duration};
     <span class="kw">use </span>tide_disco::App;
@@ -803,7 +812,7 @@
 
     <span class="kw">pub enum </span>DataSource {
         Sql(SqlDataSource&lt;MockTypes, NoFetching&gt;),
-        NoStorage(FetchingDataSource&lt;MockTypes, NoStorage, QueryServiceProvider&gt;),
+        NoStorage(FetchingDataSource&lt;MockTypes, NoStorage, QueryServiceProvider&lt;Version01&gt;&gt;),
     }
 
     <span class="attr">#[async_trait]
@@ -831,6 +840,7 @@
                         <span class="macro">format!</span>(<span class="string">"http://localhost:{fetch_from_port}"</span>)
                             .parse()
                             .unwrap(),
+                        STATIC_VER_0_1,
                     );
                     <span class="self">Self</span>::NoStorage(
                         FetchingDataSource::builder(NoStorage, provider)
@@ -872,10 +882,16 @@
             };
             <span class="macro">tracing::info!</span>(<span class="string">"spawning server for missing data on port {fetch_from_port}"</span>);
             <span class="kw">let </span>api_data_source = network.data_source_index(<span class="number">1</span>);
-            <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(api_data_source);
-            app.register_module(<span class="string">"availability"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
-                .unwrap();
-            network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{fetch_from_port}"</span>)));
+            <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(api_data_source);
+            app.register_module(
+                <span class="string">"availability"</span>,
+                define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
+            )
+            .unwrap();
+            network.spawn(
+                <span class="string">"server"</span>,
+                app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{fetch_from_port}"</span>), STATIC_VER_0_1),
+            );
         }
 
         <span class="kw">async fn </span>handle_event(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;MockTypes&gt;) {

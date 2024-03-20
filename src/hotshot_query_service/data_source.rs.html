@@ -1762,7 +1762,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Set up a mock VID scheme to use for generating test data.
-        </span><span class="kw">let </span>vid = vid_scheme(<span class="number">2</span>);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>vid = vid_scheme(<span class="number">2</span>);
 
         <span class="comment">// Generate some mock leaves and blocks to insert.
         </span><span class="kw">let </span><span class="kw-2">mut </span>leaves = <span class="macro">vec!</span>[LeafQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {})];
@@ -1906,8 +1906,8 @@
             <span class="kw">let </span>payload_commitment = vid_commitment(<span class="kw-2">&amp;</span>encoded, <span class="number">1</span>);
             <span class="kw">let </span>header = TestBlockHeader {
                 block_number: i,
-                timestamp: i,
                 payload_commitment,
+                timestamp: i,
             };
 
             <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
@@ -1958,7 +1958,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Generate some test VID data.
-        </span><span class="kw">let </span>vid = vid_scheme(<span class="number">2</span>);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>vid = vid_scheme(<span class="number">2</span>);
         <span class="kw">let </span>disperse = vid.disperse([]).unwrap();
 
         <span class="comment">// Insert test data with VID common and a share.
@@ -2207,7 +2207,7 @@
         },
     };
     <span class="kw">use </span>bincode::Options;
-    <span class="kw">use </span>hotshot_utils::bincode::bincode_opts;
+    <span class="kw">use </span>hotshot_types::utils::bincode_opts;
     <span class="kw">use </span>std::time::Duration;
 
     <span class="attr">#[async_std::test]

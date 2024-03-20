@@ -405,6 +405,25 @@
 <a href="#404" id="404">404</a>
 <a href="#405" id="405">405</a>
 <a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -437,6 +456,7 @@
 <span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
+<span class="kw">use </span>versioned_binary_serialization::version::StaticVersionType;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>data_source;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>query_data;
@@ -510,12 +530,15 @@
     }
 }
 
-<span class="kw">pub fn </span>define_api&lt;State, Types: NodeType&gt;(options: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt;
+<span class="kw">pub fn </span>define_api&lt;State, Types: NodeType, Ver: StaticVersionType + <span class="lifetime">'static</span>&gt;(
+    options: <span class="kw-2">&amp;</span>Options,
+    <span class="kw">_</span>: Ver,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error, Ver&gt;, ApiError&gt;
 <span class="kw">where
     </span>State: <span class="lifetime">'static </span>+ Send + Sync + ReadState,
     &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + NodeDataSource&lt;Types&gt;,
 {
-    <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error&gt;(
+    <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error, Ver&gt;(
         options.api_path.as_ref(),
         <span class="macro">include_str!</span>(<span class="string">"../api/node.toml"</span>),
         options.extensions.clone(),
@@ -587,6 +610,7 @@
     <span class="kw">use </span>async_std::{sync::RwLock, task::sleep};
     <span class="kw">use </span>commit::Committable;
     <span class="kw">use </span>futures::{FutureExt, StreamExt};
+    <span class="kw">use </span>hotshot_types::constants::{Version01, STATIC_VER_0_1};
     <span class="kw">use </span>hotshot_types::event::EventType;
     <span class="kw">use </span>hotshot_types::event::LeafInfo;
     <span class="kw">use </span>portpicker::pick_unused_port;
@@ -607,14 +631,21 @@
 
         <span class="comment">// Start the web server.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
-        app.register_module(<span class="string">"node"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
-            .unwrap();
-        network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        app.register_module(
+            <span class="string">"node"</span>,
+            define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
+        )
+        .unwrap();
+        network.spawn(
+            <span class="string">"server"</span>,
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), STATIC_VER_0_1),
+        );
 
         <span class="comment">// Start a client.
-        </span><span class="kw">let </span>client =
-            Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap());
+        </span><span class="kw">let </span>client = Client::&lt;Error, Version01&gt;::new(
+            <span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap(),
+        );
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
         <span class="comment">// Wait until a few blocks have been sequenced.
@@ -774,10 +805,13 @@
         </span>};
 
         <span class="kw">let </span><span class="kw-2">mut </span>api =
-            define_api::&lt;RwLock&lt;ExtensibleDataSource&lt;MockDataSource, u64&gt;&gt;, MockTypes&gt;(<span class="kw-2">&amp;</span>Options {
-                extensions: <span class="macro">vec!</span>[extensions.into()],
-                ..Default::default()
-            })
+            define_api::&lt;RwLock&lt;ExtensibleDataSource&lt;MockDataSource, u64&gt;&gt;, MockTypes, Version01&gt;(
+                <span class="kw-2">&amp;</span>Options {
+                    extensions: <span class="macro">vec!</span>[extensions.into()],
+                    ..Default::default()
+                },
+                STATIC_VER_0_1,
+            )
             .unwrap();
         api.get(<span class="string">"get_ext"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>state.as_ref()) }.boxed()
@@ -792,14 +826,18 @@
         })
         .unwrap();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(RwLock::new(data_source));
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(RwLock::new(data_source));
         app.register_module(<span class="string">"node"</span>, api).unwrap();
 
         <span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span>_server = BackgroundTask::spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
+        <span class="kw">let </span>_server = BackgroundTask::spawn(
+            <span class="string">"server"</span>,
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), STATIC_VER_0_1),
+        );
 
-        <span class="kw">let </span>client =
-            Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap());
+        <span class="kw">let </span>client = Client::&lt;Error, Version01&gt;::new(
+            <span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap(),
+        );
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
         <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"ext"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);

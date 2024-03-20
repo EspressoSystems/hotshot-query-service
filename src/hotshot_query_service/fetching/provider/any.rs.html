@@ -277,6 +277,15 @@
 <a href="#276" id="276">276</a>
 <a href="#277" id="277">277</a>
 <a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -345,6 +354,7 @@
 /// Fetching from multiple query services, for resiliency.
 ///
 /// ```
+/// # use hotshot_types::constants::STATIC_VER_0_1;
 /// # use hotshot_types::traits::node_implementation::NodeType;
 /// # async fn doc&lt;Types&gt;() -&gt; anyhow::Result&lt;()&gt;
 /// # where
@@ -352,8 +362,8 @@
 /// # {
 /// use hotshot_query_service::fetching::provider::{AnyProvider, QueryServiceProvider};
 ///
-/// let qs1 = QueryServiceProvider::new("https://backup.query-service.1".parse()?);
-/// let qs2 = QueryServiceProvider::new("https://backup.query-service.2".parse()?);
+/// let qs1 = QueryServiceProvider::new("https://backup.query-service.1".parse()?, STATIC_VER_0_1);
+/// let qs2 = QueryServiceProvider::new("https://backup.query-service.2".parse()?, STATIC_VER_0_1);
 /// let provider = AnyProvider::&lt;Types&gt;::default()
 ///     .with_provider(qs1)
 ///     .with_provider(qs2);
@@ -491,6 +501,7 @@
         Error,
     };
     <span class="kw">use </span>futures::stream::StreamExt;
+    <span class="kw">use </span>hotshot_types::constants::{Version01, STATIC_VER_0_1};
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>tide_disco::App;
 
@@ -505,10 +516,16 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
-        app.register_module(<span class="string">"availability"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
-            .unwrap();
-        <span class="kw">let </span>_server = BackgroundTask::spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>)));
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        app.register_module(
+            <span class="string">"availability"</span>,
+            define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
+        )
+        .unwrap();
+        <span class="kw">let </span>_server = BackgroundTask::spawn(
+            <span class="string">"server"</span>,
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), STATIC_VER_0_1),
+        );
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
@@ -517,6 +534,7 @@
                 .with_provider(NoFetching)
                 .with_provider(QueryServiceProvider::new(
                     <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
+                    STATIC_VER_0_1,
                 ));
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = db.config().connect(provider.clone()).<span class="kw">await</span>.unwrap();
 

@@ -150,6 +150,8 @@
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -170,13 +172,13 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>hotshot::traits::{
     election::static_committee::{GeneralStaticCommittee, StaticElectionConfig},
-    implementations::{MemoryNetwork, MemoryStorage},
+    implementations::MemoryNetwork,
     NodeImplementation, ValidatedState,
 };
-<span class="kw">use </span>hotshot_example_types::state_types::TestValidatedState;
 <span class="kw">use </span>hotshot_example_types::{
     block_types::{TestBlockHeader, TestBlockPayload, TestTransaction},
-    state_types::TestInstanceState,
+    state_types::{TestInstanceState, TestValidatedState},
+    storage_types::TestStorage,
 };
 <span class="kw">use </span>hotshot_types::data::Leaf;
 <span class="kw">use </span>hotshot_types::{
@@ -268,15 +270,17 @@
 <span class="kw">pub type </span>MockQuorumProposal = QuorumProposal&lt;MockTypes&gt;;
 <span class="kw">pub type </span>MockNetwork = MemoryNetwork&lt;Message&lt;MockTypes&gt;, BLSPubKey&gt;;
 
+<span class="kw">pub type </span>MockStorage = TestStorage&lt;MockTypes&gt;;
+
 <span class="attr">#[derive(
     Copy, Clone, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize,
 )]
 </span><span class="kw">pub struct </span>MockNodeImpl;
 
 <span class="kw">impl </span>NodeImplementation&lt;MockTypes&gt; <span class="kw">for </span>MockNodeImpl {
-    <span class="kw">type </span>Storage = MemoryStorage&lt;MockTypes&gt;;
     <span class="kw">type </span>QuorumNetwork = MockNetwork;
     <span class="kw">type </span>CommitteeNetwork = MockNetwork;
+    <span class="kw">type </span>Storage = MockStorage;
 }
 
 <span class="kw">pub type </span>MockMerkleTree = UniversalMerkleTree&lt;usize, Sha3Digest, usize, typenum::U8, Sha3Node&gt;;

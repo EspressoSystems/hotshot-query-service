@@ -297,6 +297,24 @@
 <a href="#296" id="296">296</a>
 <a href="#297" id="297">297</a>
 <a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -333,6 +351,7 @@
 <span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
+<span class="kw">use </span>versioned_binary_serialization::version::StaticVersionType;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>data_source;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>query_data;
@@ -377,12 +396,15 @@
     }
 }
 
-<span class="kw">pub fn </span>define_api&lt;State&gt;(options: <span class="kw-2">&amp;</span>Options) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt;
+<span class="kw">pub fn </span>define_api&lt;State, Ver: StaticVersionType + <span class="lifetime">'static</span>&gt;(
+    options: <span class="kw-2">&amp;</span>Options,
+    <span class="kw">_</span>: Ver,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error, Ver&gt;, ApiError&gt;
 <span class="kw">where
     </span>State: <span class="lifetime">'static </span>+ Send + Sync + ReadState,
     &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + StatusDataSource,
 {
-    <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error&gt;(
+    <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error, Ver&gt;(
         options.api_path.as_ref(),
         <span class="macro">include_str!</span>(<span class="string">"../api/status.toml"</span>),
         options.extensions.clone(),
@@ -428,7 +450,8 @@
     <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>bincode::Options <span class="kw">as _</span>;
     <span class="kw">use </span>futures::FutureExt;
-    <span class="kw">use </span>hotshot_utils::bincode::bincode_opts;
+    <span class="kw">use </span>hotshot_types::constants::{Version01, STATIC_VER_0_1};
+    <span class="kw">use </span>hotshot_types::utils::bincode_opts;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::str::FromStr;
     <span class="kw">use </span>std::time::Duration;
@@ -446,14 +469,20 @@
 
         <span class="comment">// Start the web server.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
-        app.register_module(<span class="string">"status"</span>, define_api(<span class="kw-2">&amp;</span>Default::default()).unwrap())
-            .unwrap();
-        network.spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        app.register_module(
+            <span class="string">"status"</span>,
+            define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
+        )
+        .unwrap();
+        network.spawn(
+            <span class="string">"server"</span>,
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), STATIC_VER_0_1),
+        );
 
         <span class="comment">// Start a client.
         </span><span class="kw">let </span>url = Url::from_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"http://localhost:{}/status"</span>, port)).unwrap();
-        <span class="kw">let </span>client = Client::&lt;Error&gt;::new(url.clone());
+        <span class="kw">let </span>client = Client::&lt;Error, Version01&gt;::new(url.clone());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
         <span class="comment">// Submit a transaction. We have not yet started the validators, so this transaction will
@@ -559,10 +588,13 @@
             METHOD = <span class="string">"GET"
         </span>};
 
-        <span class="kw">let </span><span class="kw-2">mut </span>api = define_api::&lt;RwLock&lt;ExtensibleDataSource&lt;MockDataSource, u64&gt;&gt;&gt;(<span class="kw-2">&amp;</span>Options {
-            extensions: <span class="macro">vec!</span>[extensions.into()],
-            ..Default::default()
-        })
+        <span class="kw">let </span><span class="kw-2">mut </span>api = define_api::&lt;RwLock&lt;ExtensibleDataSource&lt;MockDataSource, u64&gt;&gt;, Version01&gt;(
+            <span class="kw-2">&amp;</span>Options {
+                extensions: <span class="macro">vec!</span>[extensions.into()],
+                ..Default::default()
+            },
+            STATIC_VER_0_1,
+        )
         .unwrap();
         api.get(<span class="string">"get_ext"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>state.as_ref()) }.boxed()
@@ -577,14 +609,18 @@
         })
         .unwrap();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(RwLock::new(data_source));
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(RwLock::new(data_source));
         app.register_module(<span class="string">"status"</span>, api).unwrap();
 
         <span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span>_server = BackgroundTask::spawn(<span class="string">"server"</span>, app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
+        <span class="kw">let </span>_server = BackgroundTask::spawn(
+            <span class="string">"server"</span>,
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), STATIC_VER_0_1),
+        );
 
-        <span class="kw">let </span>client =
-            Client::&lt;Error&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}/status"</span>, port).parse().unwrap());
+        <span class="kw">let </span>client = Client::&lt;Error, Version01&gt;::new(
+            <span class="macro">format!</span>(<span class="string">"http://localhost:{}/status"</span>, port).parse().unwrap(),
+        );
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
         <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"ext"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);

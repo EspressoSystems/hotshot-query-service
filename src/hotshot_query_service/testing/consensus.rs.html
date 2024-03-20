@@ -300,6 +300,9 @@
 <a href="#299" id="299">299</a>
 <a href="#300" id="300">300</a>
 <a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -329,11 +332,11 @@
     stream::StreamExt,
 };
 <span class="kw">use </span>hotshot::{
-    traits::implementations::{MasterMap, MemoryNetwork, MemoryStorage, NetworkingMetricsValue},
+    traits::implementations::{MasterMap, MemoryNetwork, NetworkingMetricsValue},
     types::{Event, SystemContextHandle},
     HotShotInitializer, Memberships, Networks, SystemContext,
 };
-<span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
+<span class="kw">use </span>hotshot_example_types::{state_types::TestInstanceState, storage_types::TestStorage};
 <span class="kw">use </span>hotshot_types::{
     consensus::ConsensusMetricsValue,
     light_client::StateKeyPair,
@@ -412,6 +415,7 @@
                         da_staked_committee_size: pub_keys.len(),
                         da_non_staked_committee_size: <span class="number">0</span>,
                         data_request_delay: Duration::from_millis(<span class="number">200</span>),
+                        view_sync_timeout: Duration::from_millis(<span class="number">250</span>),
                     };
 
                     <span class="kw">let </span>pub_keys = pub_keys.clone();
@@ -450,16 +454,18 @@
                             view_sync_membership: membership.clone(),
                         };
 
+                        <span class="kw">let </span>hs_storage: TestStorage&lt;MockTypes&gt; = TestStorage::default();
+
                         <span class="kw">let </span>hotshot = SystemContext::init(
                             pub_keys[node_id],
                             priv_key,
                             node_id <span class="kw">as </span>u64,
                             config,
-                            MemoryStorage::empty(),
                             memberships,
                             networks,
                             HotShotInitializer::from_genesis(TestInstanceState {}).unwrap(),
                             ConsensusMetricsValue::new(<span class="kw-2">&amp;*</span>data_source.populate_metrics()),
+                            hs_storage,
                         )
                         .<span class="kw">await
                         </span>.unwrap()

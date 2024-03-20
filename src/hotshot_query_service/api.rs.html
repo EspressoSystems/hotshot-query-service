@@ -57,6 +57,7 @@
 <a href="#56" id="56">56</a>
 <a href="#57" id="57">57</a>
 <a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -73,12 +74,13 @@
 <span class="kw">use </span>std::path::Path;
 <span class="kw">use </span>tide_disco::api::{Api, ApiError};
 <span class="kw">use </span>toml::{map::Entry, Value};
+<span class="kw">use </span>versioned_binary_serialization::version::StaticVersionType;
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>load_api&lt;State, Error&gt;(
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>load_api&lt;State, Error, Ver: StaticVersionType&gt;(
     path: <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>AsRef&lt;Path&gt;&gt;,
     default: <span class="kw-2">&amp;</span>str,
     extensions: <span class="kw">impl </span>IntoIterator&lt;Item = Value&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error, Ver&gt;, ApiError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>toml = <span class="kw">match </span>path {
         <span class="prelude-val">Some</span>(path) =&gt; load_toml(path.as_ref())<span class="question-mark">?</span>,
         <span class="prelude-val">None </span>=&gt; toml::from_str(default).map_err(|err| ApiError::CannotReadToml {

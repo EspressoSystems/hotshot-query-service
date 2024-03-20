@@ -116,6 +116,12 @@
 <a href="#115" id="115">115</a>
 <a href="#116" id="116">116</a>
 <a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -144,6 +150,7 @@
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>tagged_base64::TaggedBase64;
 <span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
+<span class="kw">use </span>versioned_binary_serialization::version::StaticVersionType;
 
 <span class="kw">use crate</span>::{api::load_api, QueryError};
 
@@ -195,16 +202,21 @@
     }
 }
 
-<span class="kw">pub fn </span>define_api&lt;State, Types: NodeType, M: MerklizedState&lt;Types&gt;&gt;(
+<span class="kw">pub fn </span>define_api&lt;
+    State,
+    Types: NodeType,
+    M: MerklizedState&lt;Types&gt;,
+    Ver: StaticVersionType + <span class="lifetime">'static</span>,
+&gt;(
     options: <span class="kw-2">&amp;</span>Options,
-) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error&gt;, ApiError&gt;
+) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error, Ver&gt;, ApiError&gt;
 <span class="kw">where
     </span>State: <span class="lifetime">'static </span>+ Send + Sync + ReadState,
     &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + MerklizedStateDataSource&lt;Types, M&gt;,
     Types: NodeType,
     <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; &lt;M::Commit <span class="kw">as </span>TryFrom&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>TaggedBase64&gt;&gt;::Error: Display,
 {
-    <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error&gt;(
+    <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error, Ver&gt;(
         options.api_path.as_ref(),
         <span class="macro">include_str!</span>(<span class="string">"../api/state.toml"</span>),
         options.extensions.clone(),

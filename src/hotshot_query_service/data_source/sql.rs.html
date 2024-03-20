@@ -463,6 +463,8 @@
 <a href="#462" id="462">462</a>
 <a href="#463" id="463">463</a>
 <a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -730,15 +732,17 @@
 /// #   MockNodeImpl as AppNodeImpl, MockTypes as AppTypes,
 /// # };
 /// # use tide_disco::App;
+/// # use versioned_binary_serialization::version::StaticVersionType;
 /// struct AppState {
 ///     hotshot_qs: SqlDataSource&lt;AppTypes, NoFetching&gt;,
 ///     // additional state for other modules
 /// }
 ///
-/// async fn init_server(
+/// async fn init_server&lt;Ver: StaticVersionType + 'static&gt;(
 ///     config: Config,
 ///     hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl&gt;,
-/// ) -&gt; Result&lt;App&lt;Arc&lt;RwLock&lt;AppState&gt;&gt;, Error&gt;, Error&gt; {
+///     _: Ver,
+/// ) -&gt; Result&lt;App&lt;Arc&lt;RwLock&lt;AppState&gt;&gt;, Error, Ver&gt;, Error&gt; {
 ///     let mut hotshot_qs = config.connect(NoFetching).await.map_err(Error::internal)?;
 ///     // Initialize storage for other modules, using `hotshot_qs` to access the database.
 ///     let tx = hotshot_qs.transaction().await.map_err(Error::internal)?;
