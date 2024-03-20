@@ -689,6 +689,7 @@ impl<Types, S, P> ExplorerDataSource<Types> for FetchingDataSource<Types, S, P>
 where
     Types: NodeType,
     Payload<Types>: QueryablePayload,
+    Header<Types>: QueryableHeader<Types> + explorer::traits::ExplorerHeader<Types>,
     S: ExplorerStorage<Types> + Send + Sync,
     P: Send + Sync,
 {
@@ -696,7 +697,7 @@ where
         &self,
         request: explorer::data_source::GetBlockSummariesRequest<Types>,
     ) -> Result<
-        Vec<explorer::data_source::BlockSummary>,
+        Vec<explorer::data_source::BlockSummary<Types>>,
         explorer::data_source::GetBlockSummariesError,
     > {
         self.storage()

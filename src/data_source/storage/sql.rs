@@ -1786,12 +1786,13 @@ impl<Types: NodeType> ExplorerStorage<Types> for SqlStorage
 where
     Types: NodeType,
     Payload<Types>: QueryablePayload,
-    Header<Types>: QueryableHeader<Types>,
+    Header<Types>: QueryableHeader<Types> + explorer::traits::ExplorerHeader<Types>,
+    explorer::data_source::BalanceAmount<Types>: Into<explorer::monetary_value::MonetaryValue>,
 {
     async fn get_block_summaries(
         &self,
         request: &explorer::data_source::GetBlockSummariesRequest<Types>,
-    ) -> QueryResult<Vec<explorer::data_source::BlockSummary>> {
+    ) -> QueryResult<Vec<explorer::data_source::BlockSummary<Types>>> {
         let request = &request.0;
 
         let (query, params): (String, Vec<Box<dyn ToSql + Send + Sync>>) = match request.target {
@@ -1836,13 +1837,14 @@ where
         };
 
         let result = self.query(&query, params).await.map(|row_stream| {
-            row_stream.map(|row| -> Result<BlockSummary, QueryError> {
+            row_stream.map(|row| -> Result<BlockSummary<Types>, QueryError> {
                 let block = parse_block::<Types>(row?)?;
                 Ok(BlockSummary::try_from(block)?)
             })
         });
 
-        let results = result.map(|res| async move { res.try_collect::<Vec<BlockSummary>>().await });
+        let results =
+            result.map(|res| async move { res.try_collect::<Vec<BlockSummary<Types>>>().await });
 
         results?.await
     }
