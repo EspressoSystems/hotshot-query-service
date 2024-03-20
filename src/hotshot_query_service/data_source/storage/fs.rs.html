@@ -574,6 +574,8 @@
 <a href="#573" id="573">573</a>
 <a href="#574" id="574">574</a>
 <a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -674,6 +676,7 @@
     /// The [FileSystemStorage] will manage its own persistence synchronization.
     </span><span class="kw">pub async fn </span>create(path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(path, <span class="string">"hotshot_data_source"</span>)<span class="question-mark">?</span>;
+        loader.retain_archives(<span class="number">1</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = <span class="self">Self</span>::create_with_store(<span class="kw-2">&amp;mut </span>loader).<span class="kw">await</span><span class="question-mark">?</span>;
         data_source.top_storage = <span class="prelude-val">Some</span>(AtomicStore::open(loader)<span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(data_source)
@@ -686,6 +689,7 @@
     /// The [FileSystemStorage] will manage its own persistence synchronization.
     </span><span class="kw">pub async fn </span>open(path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::load(path, <span class="string">"hotshot_data_source"</span>)<span class="question-mark">?</span>;
+        loader.retain_archives(<span class="number">1</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = <span class="self">Self</span>::open_with_store(<span class="kw-2">&amp;mut </span>loader).<span class="kw">await</span><span class="question-mark">?</span>;
         data_source.top_storage = <span class="prelude-val">Some</span>(AtomicStore::open(loader)<span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(data_source)
