@@ -143,7 +143,7 @@ macro_rules! include_migrations {
     };
 }
 
-/// The migrations requied to build the default schema for this version of [`SqlStorage`].
+/// The migrations required to build the default schema for this version of [`SqlStorage`].
 pub fn default_migrations() -> Vec<Migration> {
     let mut migrations = include_migrations!("$CARGO_MANIFEST_DIR/migrations").collect::<Vec<_>>();
 
@@ -1271,7 +1271,7 @@ impl<Types: NodeType, State: MerklizedState<Types>> UpdateStateData<Types, State
                                     .map_err(ParseError::Serialize)?;
 
                                 children_values.push(hash);
-                                // Mark the entry as 1 in bitvec to indiciate a non-empty child
+                                // Mark the entry as 1 in bitvec to indicate a non-empty child
                                 children_bitvec.push(true);
                             }
                         }
@@ -1362,7 +1362,7 @@ where
     Types: NodeType,
     State: MerklizedState<Types> + 'static,
 {
-    /// Retreives a Merkle path from the database
+    /// Retrieves a Merkle path from the database
     async fn get_path(
         &self,
         snapshot: Snapshot<Types, State>,
@@ -1398,7 +1398,7 @@ where
                 // Check if header exists
                 // For Snapshot::Commit the entry is already checked when retrieving the block height
                 let row = self.query_one(&format!(
-                    "SELECT  data->>'{header_state_commitment_field}' as root_commmitment from HEADER where height = $1"),
+                    "SELECT  data->>'{header_state_commitment_field}' as root_commitment from HEADER where height = $1"),
                     [sql_param(&created)],
                 )
                 .await?;
@@ -1564,7 +1564,7 @@ where
         if commitment_from_path != merkle_commitment {
             return Err(QueryError::Error {
                 message:
-                    "Commitment calcuated from merkle path does not match the commitment in the header"
+                    "Commitment calculated from merkle path does not match the commitment in the header"
                         .to_string(),
             });
         }

@@ -205,7 +205,7 @@ pub trait VersionedDataSource {
     /// or to erase outstanding changes with [`revert`](Self::revert).
     async fn commit(&mut self) -> Result<(), Self::Error>;
 
-    /// Erase all oustanding modifications to the data.
+    /// Erase all outstanding modifications to the data.
     ///
     /// This function must not return if it has failed to revert changes. Inability to revert
     /// changes to the database is considered a fatal error, and this function may panic.

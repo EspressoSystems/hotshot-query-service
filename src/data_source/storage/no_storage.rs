@@ -318,7 +318,7 @@ pub mod testing {
         }
     }
 
-    // Now a lot of boilerplate to implement all teh traits for [`DataSource`], by dispatching each
+    // Now a lot of boilerplate to implement all the traits for [`DataSource`], by dispatching each
     // method to either variant.
     #[async_trait]
     impl VersionedDataSource for DataSource {

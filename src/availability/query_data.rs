@@ -79,7 +79,7 @@ pub trait QueryablePayload: traits::BlockPayload {
     /// applications proving stronger or weaker statements depending on the trust assumptions at
     /// play. Some may prove a very strong statement (for example, a shared sequencer proving that
     /// the transaction belongs not only to the block but to a section of the block dedicated to a
-    /// specific rollup), otherws may prove something substantially weaker (for example, a trusted
+    /// specific rollup), otherwise may prove something substantially weaker (for example, a trusted
     /// query service may use `()` for the proof).
     type InclusionProof: Clone + Debug + PartialEq + Eq + Serialize + DeserializeOwned;
 

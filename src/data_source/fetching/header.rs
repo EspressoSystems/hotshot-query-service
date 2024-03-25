@@ -40,7 +40,7 @@ where
         #[derivative(Debug = "ignore")]
         fetcher: Arc<Fetcher<Types, S, P>>,
     },
-    /// Callback when fetching the leaf in order to then look up the corresopnding VID common data.
+    /// Callback when fetching the leaf in order to then look up the corresponding VID common data.
     VidCommon {
         #[derivative(Debug = "ignore")]
         fetcher: Arc<Fetcher<Types, S, P>>,
@@ -148,7 +148,7 @@ pub(super) async fn fetch_header_and_then<Types, S, P>(
                     fetch_leaf_with_callbacks(callback.fetcher(), n.into(), [callback.into()]);
                 }
                 BlockId::Hash(h) => {
-                    // Given only the hash, we cannot tell if the corresonding leaf actually exists,
+                    // Given only the hash, we cannot tell if the corresponding leaf actually exists,
                     // since we don't have a corresponding header. Therefore, we will not spawn an
                     // active fetch.
                     tracing::debug!("not fetching unknown block {h}");
@@ -163,7 +163,7 @@ pub(super) async fn fetch_header_and_then<Types, S, P>(
         BlockRequest::WithTransaction(h) => {
             // We don't actively fetch blocks when requested by transaction, because without the
             // block payload, we have no way of knowing whether a block with such a transaction
-            // actually exists, and we don't want to bother peers with requests for non-existant
+            // actually exists, and we don't want to bother peers with requests for non-existent
             // blocks.
             tracing::debug!("not fetching block with unknown transaction {h}");
         }
