@@ -1094,6 +1094,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
 
 [[package]]
+name = "base64"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9475866fec1451be56a3c2400fd081ff546538961565ccb5b7142cbd22bc7a51"
+
+[[package]]
 name = "base64ct"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1322,10 +1328,32 @@ dependencies = [
 [[package]]
 name = "cdn-broker"
 version = "0.1.0"
+source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.11#c854b7c106f72f21c94a1235e8222f76f78e47e6"
+dependencies = [
+ "async-std",
+ "cdn-proto 0.1.0 (git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.11)",
+ "clap",
+ "dashmap",
+ "derivative",
+ "derive_builder 0.13.1",
+ "jf-primitives",
+ "lazy_static",
+ "local-ip-address",
+ "parking_lot",
+ "prometheus",
+ "rkyv",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "cdn-broker"
+version = "0.1.0"
 source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.9#8f9cc2d56e725a6cc29a792c6ed67e2e9efee756"
 dependencies = [
  "async-std",
- "cdn-proto",
+ "cdn-proto 0.1.0 (git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.9)",
  "clap",
  "dashmap",
  "delegate",
@@ -1346,10 +1374,26 @@ dependencies = [
 [[package]]
 name = "cdn-client"
 version = "0.1.0"
+source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.11#c854b7c106f72f21c94a1235e8222f76f78e47e6"
+dependencies = [
+ "async-std",
+ "cdn-proto 0.1.0 (git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.11)",
+ "clap",
+ "derive_builder 0.13.1",
+ "jf-primitives",
+ "rand 0.8.5",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "cdn-client"
+version = "0.1.0"
 source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.9#8f9cc2d56e725a6cc29a792c6ed67e2e9efee756"
 dependencies = [
  "async-std",
- "cdn-proto",
+ "cdn-proto 0.1.0 (git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.9)",
  "clap",
  "derive_builder 0.13.1",
  "jf-primitives",
@@ -1362,16 +1406,65 @@ dependencies = [
 [[package]]
 name = "cdn-marshal"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.9#8f9cc2d56e725a6cc29a792c6ed67e2e9efee756"
+source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.11#c854b7c106f72f21c94a1235e8222f76f78e47e6"
 dependencies = [
  "async-std",
- "cdn-proto",
+ "cdn-proto 0.1.0 (git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.11)",
  "clap",
  "derive_builder 0.13.1",
  "jf-primitives",
  "tokio",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "cdn-marshal"
+version = "0.1.0"
+source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.9#8f9cc2d56e725a6cc29a792c6ed67e2e9efee756"
+dependencies = [
+ "async-std",
+ "cdn-proto 0.1.0 (git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.9)",
+ "clap",
+ "derive_builder 0.13.1",
+ "jf-primitives",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "cdn-proto"
+version = "0.1.0"
+source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.11#c854b7c106f72f21c94a1235e8222f76f78e47e6"
+dependencies = [
+ "anyhow",
+ "ark-serialize",
+ "async-std",
+ "async-trait",
+ "capnp",
+ "capnpc",
+ "derivative",
+ "jf-primitives",
+ "kanal",
+ "lazy_static",
+ "mnemonic",
+ "mockall",
+ "parking_lot",
+ "pem",
+ "prometheus",
+ "quinn",
+ "rand 0.8.5",
+ "rcgen 0.12.1",
+ "redis",
+ "rkyv",
+ "rustls 0.21.10",
+ "sqlx",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "url",
+ "warp",
 ]
 
 [[package]]
@@ -1569,7 +1662,7 @@ dependencies = [
 [[package]]
 name = "commit"
 version = "0.2.2"
-source = "git+https://github.com/EspressoSystems/commit.git#30679718efd4ecf870b66950160077125dcb8d93"
+source = "git+https://github.com/EspressoSystems/commit.git#709f181de703edd5a53dffd47ee9d930911f21c3"
 dependencies = [
  "arbitrary",
  "ark-serialize",
@@ -1580,7 +1673,7 @@ dependencies = [
  "hex",
  "serde",
  "sha3",
- "tagged-base64",
+ "tagged-base64 0.4.0",
 ]
 
 [[package]]
@@ -3290,9 +3383,9 @@ dependencies = [
  "async-trait",
  "bimap",
  "bincode",
- "cdn-broker",
- "cdn-client",
- "cdn-marshal",
+ "cdn-broker 0.1.0 (git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.9)",
+ "cdn-client 0.1.0 (git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.9)",
+ "cdn-marshal 0.1.0 (git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.9)",
  "commit",
  "custom_debug 0.5.1",
  "dashmap",
@@ -3302,12 +3395,54 @@ dependencies = [
  "ethereum-types",
  "futures",
  "hotshot-orchestrator",
- "hotshot-task",
- "hotshot-task-impls",
- "hotshot-types",
- "hotshot-web-server",
+ "hotshot-task 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
+ "hotshot-task-impls 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
+ "hotshot-web-server 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
  "libp2p-identity",
- "libp2p-networking",
+ "libp2p-networking 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
+ "lru",
+ "portpicker",
+ "rand 0.8.5",
+ "serde",
+ "snafu 0.8.2",
+ "surf-disco",
+ "time 0.3.34",
+ "tokio",
+ "tracing",
+ "versioned-binary-serialization",
+]
+
+[[package]]
+name = "hotshot"
+version = "0.5.26"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28#db3fcfafccdc909845de47e2dd241662c3849b77"
+dependencies = [
+ "anyhow",
+ "async-broadcast",
+ "async-compatibility-layer 1.0.0 (git+https://github.com/EspressoSystems/async-compatibility-layer.git?tag=1.4.2)",
+ "async-lock 2.8.0",
+ "async-std",
+ "async-trait",
+ "bimap",
+ "bincode",
+ "cdn-broker 0.1.0 (git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.11)",
+ "cdn-client 0.1.0 (git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.11)",
+ "cdn-marshal 0.1.0 (git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.11)",
+ "commit",
+ "custom_debug 0.5.1",
+ "dashmap",
+ "derive_more",
+ "either",
+ "ethereum-types",
+ "futures",
+ "hotshot-task 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28)",
+ "hotshot-task-impls 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28)",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28)",
+ "hotshot-web-server 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28)",
+ "jf-primitives",
+ "libp2p-identity",
+ "libp2p-networking 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28)",
  "lru",
  "portpicker",
  "rand 0.8.5",
@@ -3329,10 +3464,28 @@ dependencies = [
  "clap",
  "derive_more",
  "futures",
- "hotshot-types",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
  "serde",
  "snafu 0.8.2",
- "tagged-base64",
+ "tagged-base64 0.3.4",
+ "tide-disco",
+ "toml",
+ "versioned-binary-serialization",
+]
+
+[[package]]
+name = "hotshot-builder-api"
+version = "0.1.6"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28#db3fcfafccdc909845de47e2dd241662c3849b77"
+dependencies = [
+ "async-trait",
+ "clap",
+ "derive_more",
+ "futures",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28)",
+ "serde",
+ "snafu 0.8.2",
+ "tagged-base64 0.3.4",
  "tide-disco",
  "toml",
  "versioned-binary-serialization",
@@ -3354,11 +3507,11 @@ dependencies = [
  "either",
  "ethereum-types",
  "futures",
- "hotshot",
+ "hotshot 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
  "hotshot-orchestrator",
- "hotshot-task",
- "hotshot-task-impls",
- "hotshot-types",
+ "hotshot-task 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
+ "hotshot-task-impls 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
  "rand 0.8.5",
  "serde",
  "sha2 0.10.8",
@@ -3381,7 +3534,7 @@ dependencies = [
  "clap",
  "csv",
  "futures",
- "hotshot-types",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
  "libp2p",
  "serde",
  "serde-inline-default",
@@ -3419,9 +3572,9 @@ dependencies = [
  "espresso-macros",
  "futures",
  "generic-array",
- "hotshot",
+ "hotshot 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28)",
  "hotshot-example-types",
- "hotshot-types",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
  "include_dir",
  "itertools 0.12.1",
  "jf-primitives",
@@ -3437,7 +3590,7 @@ dependencies = [
  "spin_sleep",
  "surf",
  "surf-disco",
- "tagged-base64",
+ "tagged-base64 0.3.4",
  "tempfile",
  "tide-disco",
  "time 0.3.34",
@@ -3464,6 +3617,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "hotshot-task"
+version = "0.5.26"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28#db3fcfafccdc909845de47e2dd241662c3849b77"
+dependencies = [
+ "async-broadcast",
+ "async-compatibility-layer 1.0.0 (git+https://github.com/EspressoSystems/async-compatibility-layer.git?tag=1.4.2)",
+ "async-std",
+ "futures",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "hotshot-task-impls"
 version = "0.5.26"
 source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27#8bf55cfb3a1d096c0330ba62d03ed1e5f7298cf8"
@@ -3479,16 +3645,48 @@ dependencies = [
  "commit",
  "either",
  "futures",
- "hotshot-builder-api",
- "hotshot-task",
- "hotshot-types",
+ "hotshot-builder-api 0.1.6 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
+ "hotshot-task 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
  "jf-primitives",
  "rand 0.8.5",
  "serde",
  "sha2 0.10.8",
  "snafu 0.8.2",
  "surf-disco",
- "tagged-base64",
+ "tagged-base64 0.3.4",
+ "time 0.3.34",
+ "tokio",
+ "tracing",
+ "versioned-binary-serialization",
+]
+
+[[package]]
+name = "hotshot-task-impls"
+version = "0.5.26"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28#db3fcfafccdc909845de47e2dd241662c3849b77"
+dependencies = [
+ "async-broadcast",
+ "async-compatibility-layer 1.0.0 (git+https://github.com/EspressoSystems/async-compatibility-layer.git?tag=1.4.2)",
+ "async-lock 2.8.0",
+ "async-std",
+ "async-trait",
+ "bincode",
+ "bitvec",
+ "chrono",
+ "commit",
+ "either",
+ "futures",
+ "hotshot-builder-api 0.1.6 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28)",
+ "hotshot-task 0.5.26 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28)",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28)",
+ "jf-primitives",
+ "rand 0.8.5",
+ "serde",
+ "sha2 0.10.8",
+ "snafu 0.8.2",
+ "surf-disco",
+ "tagged-base64 0.3.4",
  "time 0.3.34",
  "tokio",
  "tracing",
@@ -3535,7 +3733,55 @@ dependencies = [
  "serde",
  "sha2 0.10.8",
  "snafu 0.8.2",
- "tagged-base64",
+ "tagged-base64 0.3.4",
+ "time 0.3.34",
+ "tokio",
+ "tracing",
+ "typenum",
+ "versioned-binary-serialization",
+]
+
+[[package]]
+name = "hotshot-types"
+version = "0.1.11"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28#db3fcfafccdc909845de47e2dd241662c3849b77"
+dependencies = [
+ "anyhow",
+ "ark-bls12-381",
+ "ark-bn254",
+ "ark-ec",
+ "ark-ed-on-bn254",
+ "ark-ff",
+ "ark-serialize",
+ "ark-std",
+ "async-compatibility-layer 1.0.0 (git+https://github.com/EspressoSystems/async-compatibility-layer.git?tag=1.4.2)",
+ "async-lock 2.8.0",
+ "async-std",
+ "async-trait",
+ "bincode",
+ "bitvec",
+ "blake3",
+ "commit",
+ "custom_debug 0.5.1",
+ "derivative",
+ "digest 0.10.7",
+ "displaydoc",
+ "dyn-clone 1.0.17",
+ "either",
+ "espresso-systems-common 0.4.1",
+ "ethereum-types",
+ "futures",
+ "generic-array",
+ "jf-plonk",
+ "jf-primitives",
+ "jf-utils",
+ "lazy_static",
+ "rand 0.8.5",
+ "rand_chacha 0.3.1",
+ "serde",
+ "sha2 0.10.8",
+ "snafu 0.8.2",
+ "tagged-base64 0.3.4",
  "time 0.3.34",
  "tokio",
  "tracing",
@@ -3553,7 +3799,26 @@ dependencies = [
  "async-std",
  "clap",
  "futures",
- "hotshot-types",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
+ "rand 0.8.5",
+ "tide-disco",
+ "tokio",
+ "toml",
+ "tracing",
+ "versioned-binary-serialization",
+]
+
+[[package]]
+name = "hotshot-web-server"
+version = "0.5.26"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28#db3fcfafccdc909845de47e2dd241662c3849b77"
+dependencies = [
+ "async-compatibility-layer 1.0.0 (git+https://github.com/EspressoSystems/async-compatibility-layer.git?tag=1.4.2)",
+ "async-lock 2.8.0",
+ "async-std",
+ "clap",
+ "futures",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28)",
  "rand 0.8.5",
  "tide-disco",
  "tokio",
@@ -4012,7 +4277,7 @@ dependencies = [
  "rayon",
  "serde",
  "sha3",
- "tagged-base64",
+ "tagged-base64 0.3.4",
 ]
 
 [[package]]
@@ -4055,7 +4320,7 @@ dependencies = [
  "serde",
  "sha2 0.10.8",
  "sha3",
- "tagged-base64",
+ "tagged-base64 0.3.4",
  "typenum",
  "zeroize",
 ]
@@ -4099,7 +4364,7 @@ dependencies = [
  "rayon",
  "serde",
  "sha2 0.10.8",
- "tagged-base64",
+ "tagged-base64 0.3.4",
 ]
 
 [[package]]
@@ -4503,7 +4768,39 @@ dependencies = [
  "derive_builder 0.20.0",
  "either",
  "futures",
- "hotshot-types",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.27)",
+ "lazy_static",
+ "libp2p",
+ "libp2p-identity",
+ "libp2p-swarm-derive",
+ "rand 0.8.5",
+ "serde",
+ "serde_bytes",
+ "serde_json",
+ "snafu 0.8.2",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "versioned-binary-serialization",
+ "void",
+]
+
+[[package]]
+name = "libp2p-networking"
+version = "0.5.26"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28#db3fcfafccdc909845de47e2dd241662c3849b77"
+dependencies = [
+ "anyhow",
+ "async-compatibility-layer 1.0.0 (git+https://github.com/EspressoSystems/async-compatibility-layer.git?tag=1.4.2)",
+ "async-lock 2.8.0",
+ "async-std",
+ "async-trait",
+ "blake3",
+ "custom_debug 0.5.1",
+ "derive_builder 0.20.0",
+ "either",
+ "futures",
+ "hotshot-types 0.1.11 (git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28)",
  "lazy_static",
  "libp2p",
  "libp2p-identity",
@@ -7940,14 +8237,37 @@ dependencies = [
  "crc-any",
  "serde",
  "snafu 0.7.5",
- "tagged-base64-macros",
+ "tagged-base64-macros 0.3.3",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "tagged-base64"
+version = "0.4.0"
+source = "git+https://github.com/EspressoSystems/tagged-base64.git?tag=v0.4.0#eb449140f2feb597983ebaf0ee2464ed6cee322a"
+dependencies = [
+ "ark-serialize",
+ "ark-std",
+ "base64 0.22.0",
+ "crc-any",
+ "serde",
+ "snafu 0.8.2",
+ "tagged-base64-macros 0.4.0",
 ]
 
 [[package]]
 name = "tagged-base64-macros"
 version = "0.3.3"
 source = "git+https://github.com/EspressoSystems/tagged-base64?tag=0.3.4#93be6f0f5c0ec8458f13dede3d2b68dcce12a608"
+dependencies = [
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "tagged-base64-macros"
+version = "0.4.0"
+source = "git+https://github.com/EspressoSystems/tagged-base64.git?tag=v0.4.0#eb449140f2feb597983ebaf0ee2464ed6cee322a"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -8075,7 +8395,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "surf",
- "tagged-base64",
+ "tagged-base64 0.3.4",
  "tide",
  "tide-websockets",
  "toml",
