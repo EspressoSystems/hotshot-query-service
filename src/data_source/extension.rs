@@ -24,7 +24,7 @@ use crate::{
     Header, Payload, QueryResult, VidShare,
 };
 use async_trait::async_trait;
-use hotshot_events_service::events_source::EventConsumer;
+// use hotshot_events_service::events_source::EventConsumer;
 use hotshot_types::traits::node_implementation::NodeType;
 use jf_primitives::merkle_tree::prelude::MerklePath;
 use std::ops::RangeBounds;
