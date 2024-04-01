@@ -70,7 +70,7 @@ bit-vec = { version = "0.6.3", features = ["serde_std"] }
 chrono = "0.4"
 clap = { version = "4.5", features = ["derive", "env"] }
 cld = "0.5"
-commit = { git = "https://github.com/EspressoSystems/commit.git", version = "0.2.2" }
+commit = { git = "https://github.com/EspressoSystems/commit.git", tag = "0.2.2" }
 custom_debug = "0.6"
 derivative = "2.2"
 derive_more = "0.99"
