@@ -102,7 +102,10 @@ where
 
                 if let Some(vid) = vid {
                     self.insert_vid(
-                        VidCommonQueryData::new(leaf.get_block_header().clone(), vid.common.clone()),
+                        VidCommonQueryData::new(
+                            leaf.get_block_header().clone(),
+                            vid.common.clone(),
+                        ),
                         // TODO we should get just a single share from VID dispersal, but currently
                         // HotShot sends us _all_ shares, and we don't know which one is for us. For
                         // no we arbitrarily take the first share, this should be fixed in HotShot
@@ -115,7 +118,7 @@ where
                     // this case, the block payload is guaranteed to always be empty, so VID isn't
                     // really necessary. But for consistency, we will still store the VID dispersal
                     // data, computing it ourselves based on the well-known genesis VID commitment.
-                    store_genesis_vid(self, &leaf).await;
+                    store_genesis_vid(self, leaf).await;
                 } else {
                     tracing::error!(
                         "VID info for block {} not available at decide",
@@ -135,7 +138,7 @@ where
 
                 // Update state storage if the state has changed
                 if let Some(delta) = delta {
-                    if let Err(e) = state.update_storage(self, &leaf, delta.clone()).await {
+                    if let Err(e) = state.update_storage(self, leaf, delta.clone()).await {
                         tracing::error!("failed to update state storage {e} for leaf {leaf}")
                     }
                 }

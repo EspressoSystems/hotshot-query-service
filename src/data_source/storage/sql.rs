@@ -840,7 +840,7 @@ where
 
         // While we don't necessarily have the full block for this leaf yet, we can initialize the
         // header table with block metadata taken from the leaf.
-        let header_json = serde_json::to_value(&leaf.leaf().get_block_header()).map_err(|err| {
+        let header_json = serde_json::to_value(leaf.leaf().get_block_header()).map_err(|err| {
             QueryError::Error {
                 message: format!("failed to serialize header: {err}"),
             }

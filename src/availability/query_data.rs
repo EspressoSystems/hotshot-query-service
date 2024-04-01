@@ -237,7 +237,7 @@ impl<Types: NodeType> LeafQueryData<Types> {
     }
 
     pub fn header(&self) -> &Header<Types> {
-        &self.leaf.get_block_header()
+        self.leaf.get_block_header()
     }
 
     pub fn hash(&self) -> LeafHash<Types> {

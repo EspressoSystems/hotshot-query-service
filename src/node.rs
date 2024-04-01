@@ -263,10 +263,16 @@ mod test {
                 if leaf.get_block_header().block_number >= block_height as u64 {
                     break 'outer;
                 }
-                tracing::info!(height = leaf.get_block_header().block_number, "checking share");
+                tracing::info!(
+                    height = leaf.get_block_header().block_number,
+                    "checking share"
+                );
 
                 let share = client
-                    .get::<VidShare>(&format!("vid/share/{}", leaf.get_block_header().block_number))
+                    .get::<VidShare>(&format!(
+                        "vid/share/{}",
+                        leaf.get_block_header().block_number
+                    ))
                     .send()
                     .await
                     .unwrap();
@@ -278,7 +284,10 @@ mod test {
                 assert_eq!(
                     share,
                     client
-                        .get(&format!("vid/share/hash/{}", leaf.get_block_header().commit()))
+                        .get(&format!(
+                            "vid/share/hash/{}",
+                            leaf.get_block_header().commit()
+                        ))
                         .send()
                         .await
                         .unwrap()
