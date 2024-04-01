@@ -12,6 +12,7 @@
 
 use crate::{availability, merklized_state, node, status};
 use derive_more::From;
+use hotshot_events_service::events::Error as HotshotEventsStreamError;
 use serde::{Deserialize, Serialize};
 use snafu::Snafu;
 use std::fmt::Display;
@@ -53,5 +54,12 @@ impl tide_disco::Error for Error {
             Self::MerklizedState { source } => source.status(),
             Self::Custom { status, .. } => *status,
         }
+    }
+}
+
+// impl from hotshoteventerror for error and convert to custom error
+impl From<HotshotEventsStreamError> for Error {
+    fn from(error: HotshotEventsStreamError) -> Self {
+        Self::internal(error)
     }
 }

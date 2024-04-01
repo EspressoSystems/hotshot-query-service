@@ -24,6 +24,7 @@ use crate::{
     Header, Payload, QueryResult, VidShare,
 };
 use async_trait::async_trait;
+use hotshot_events_service::events_source::EventConsumer;
 use hotshot_types::traits::node_implementation::NodeType;
 use jf_primitives::merkle_tree::prelude::MerklePath;
 use std::ops::RangeBounds;
@@ -314,6 +315,24 @@ where
             .await
     }
 }
+
+// use async_std::sync::Arc;
+// use async_std::sync::RwLock;
+// use futures::stream::BoxStream;
+// use hotshot_events_service::events_source::{BuilderEvent, EventsSource};
+// #[async_trait]
+// impl<D, U, Types> EventsSource<Types> for ExtensibleDataSource<D, U>
+// where
+//     Types: NodeType,
+//     D: Send + Sync,
+//     U: EventsSource<Types> + Send + Sync + 'static,
+// {
+//     type EventStream = BoxStream<'static, Arc<BuilderEvent<Types>>>;
+
+//     async fn get_event_stream(&self) -> Self::EventStream {
+//         self.user_data.get_event_stream().await
+//     }
+// }
 
 #[cfg(any(test, feature = "testing"))]
 mod impl_testable_data_source {

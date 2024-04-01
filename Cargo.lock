@@ -3292,6 +3292,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "hotshot-events-service"
+version = "0.1.0"
+source = "git+https://github.com/EspressoSystems/hotshot-events-service.git?branch=api_test#3f6eea7f422d6982d3ef0314441eb4ac7aaa3c4d"
+dependencies = [
+ "async-broadcast",
+ "async-compatibility-layer 1.0.0 (git+https://github.com/EspressoSystems/async-compatibility-layer.git?tag=1.4.2)",
+ "async-lock 2.8.0",
+ "async-std",
+ "async-trait",
+ "clap",
+ "derivative",
+ "derive_more",
+ "either",
+ "futures",
+ "hotshot-types",
+ "serde",
+ "snafu 0.8.2",
+ "tagged-base64",
+ "tide-disco",
+ "toml",
+ "tracing",
+ "versioned-binary-serialization",
+]
+
+[[package]]
 name = "hotshot-example-types"
 version = "0.5.26"
 source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.28#db3fcfafccdc909845de47e2dd241662c3849b77"
@@ -3346,6 +3371,7 @@ dependencies = [
  "futures",
  "generic-array",
  "hotshot",
+ "hotshot-events-service",
  "hotshot-example-types",
  "hotshot-types",
  "include_dir",

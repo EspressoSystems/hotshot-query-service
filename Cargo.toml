@@ -93,6 +93,9 @@ tracing = "0.1"
 trait-variant = "0.1"
 typenum = "1"
 versioned-binary-serialization = { git = "https://github.com/EspressoSystems/versioned-binary-serialization.git", tag = "0.1.2" }
+#hotshot-events-service = { git = "https://github.com/EspressoSystems/hotshot-events-service.git", tag = "0.1.0" }
+hotshot-events-service = { git = "https://github.com/EspressoSystems/hotshot-events-service.git", branch = "api_test" }
+#hotshot-events-service = { path = "../hotshot-events-service" }
 
 # Dependencies enabled by feature "file-system-data-source".
 atomic_store = { git = "https://github.com/EspressoSystems/atomicstore.git", tag = "0.1.4", optional = true }
