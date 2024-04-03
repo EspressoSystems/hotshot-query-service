@@ -1,5 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/update.rs`."><title>update.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/update.rs`."><title>update.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0 (aedd173a2 2024-03-17)" data-channel="1.77.0" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../hotshot_query_service/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -211,7 +212,6 @@
 <a href="#210" id="210">210</a>
 <a href="#211" id="211">211</a>
 <a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -303,7 +303,7 @@
                     leaf,
                     state,
                     delta,
-                    vid,
+                    vid_share,
                 },
             ) <span class="kw">in </span>qcs.zip(leaf_chain.iter().rev())
             {
@@ -314,17 +314,16 @@
                     LeafQueryData::new(leaf.clone(), qc.clone()).expect(<span class="string">"inconsistent leaf"</span>);
                 <span class="self">self</span>.insert_leaf(leaf_data.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
 
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(vid) = vid {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(vid_share) = vid_share {
                     <span class="self">self</span>.insert_vid(
-                        VidCommonQueryData::new(leaf.block_header.clone(), vid.common.clone()),
-                        <span class="comment">// TODO we should get just a single share from VID dispersal, but currently
-                        // HotShot sends us _all_ shares, and we don't know which one is for us. For
-                        // no we arbitrarily take the first share, this should be fixed in HotShot
-                        // soon.
-                        </span><span class="prelude-val">Some</span>(vid.shares.first_key_value().unwrap().<span class="number">1</span>.clone()),
+                        VidCommonQueryData::new(
+                            leaf.get_block_header().clone(),
+                            vid_share.common.clone(),
+                        ),
+                        <span class="prelude-val">Some</span>(vid_share.share.clone()),
                     )
                     .<span class="kw">await</span><span class="question-mark">?</span>;
-                } <span class="kw">else if </span>leaf.view_number.get_u64() == <span class="number">0 </span>{
+                } <span class="kw">else if </span>leaf.get_view_number().get_u64() == <span class="number">0 </span>{
                     <span class="comment">// HotShot does not run VID in consensus for the genesis block). In
                     // this case, the block payload is guaranteed to always be empty, so VID isn't
                     // really necessary. But for consistency, we will still store the VID dispersal
@@ -333,17 +332,17 @@
                 } <span class="kw">else </span>{
                     <span class="macro">tracing::error!</span>(
                         <span class="string">"VID info for block {} not available at decide"</span>,
-                        leaf.block_header.block_number()
+                        leaf.get_block_header().block_number()
                     );
                 }
 
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(block) = leaf.get_block_payload() {
-                    <span class="self">self</span>.insert_block(BlockQueryData::new(leaf.block_header.clone(), block))
+                    <span class="self">self</span>.insert_block(BlockQueryData::new(leaf.get_block_header().clone(), block))
                         .<span class="kw">await</span><span class="question-mark">?</span>;
                 } <span class="kw">else </span>{
                     <span class="macro">tracing::error!</span>(
                         <span class="string">"block {} not available at decide"</span>,
-                        leaf.block_header.block_number()
+                        leaf.get_block_header().block_number()
                     );
                 }
 
@@ -372,17 +371,17 @@
         }
     };
     <span class="kw">match </span>vid_scheme(GENESIS_VID_NUM_STORAGE_NODES).disperse(bytes) {
-        <span class="prelude-val">Ok</span>(disperse) <span class="kw">if </span>disperse.commit != leaf.block_header.payload_commitment() =&gt; {
+        <span class="prelude-val">Ok</span>(disperse) <span class="kw">if </span>disperse.commit != leaf.get_block_header().payload_commitment() =&gt; {
             <span class="macro">tracing::error!</span>(
                 computed = %disperse.commit,
-                header = %leaf.block_header.payload_commitment(),
+                header = %leaf.get_block_header().payload_commitment(),
                 <span class="string">"computed VID commit for genesis block does not match header"</span>,
             );
         }
         <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>disperse) =&gt; {
             <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = storage
                 .insert_vid(
-                    VidCommonQueryData::new(leaf.block_header.clone(), disperse.common),
+                    VidCommonQueryData::new(leaf.get_block_header().clone(), disperse.common),
                     <span class="prelude-val">Some</span>(disperse.shares.remove(<span class="number">0</span>)),
                 )
                 .<span class="kw">await
