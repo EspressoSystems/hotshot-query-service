@@ -4712,7 +4712,7 @@
                             <span class="string">"SELECT height FROM Header  where 
                              data-&gt;&gt;'{header_state_commitment_field}' = $1"
                         </span>),
-                        <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>serde_json::to_string(<span class="kw-2">&amp;</span>commit).map_err(ParseError::Serde)<span class="question-mark">?</span>],
+                        <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>commit.to_string()],
                     )
                     .<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -4727,9 +4727,9 @@
                     [sql_param(<span class="kw-2">&amp;</span>created)],
                 )
                 .<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="kw">let </span>commit = row.get(<span class="number">0</span>);
+                <span class="kw">let </span>commit: String = row.get(<span class="number">0</span>);
                 <span class="kw">let </span>commit: State::Commit =
-                    serde_json::from_str(commit).map_err(ParseError::Serde)<span class="question-mark">?</span>;
+                    serde_json::from_value(commit.into()).map_err(ParseError::Serde)<span class="question-mark">?</span>;
                 (created, commit.digest())
             }
         };
@@ -4848,7 +4848,7 @@
             <span class="prelude-val">Some</span>(MerkleNode::Empty) =&gt; State::T::default(),
             <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(QueryError::Error {
-                    message: <span class="string">"First node in the proof should be leaf or empty"</span>.to_string(),
+                    message: <span class="string">"Missing State "</span>.to_string(),
                 })
             }
             <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueryError::Missing),
@@ -6181,7 +6181,7 @@
             test_tree.update(i, i).unwrap();
 
             <span class="comment">// data field of the header
-            </span><span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_string(<span class="kw-2">&amp;</span>test_tree.commitment()).unwrap()});
+            </span><span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()});
             storage
                 .query_opt(
                     <span class="string">"INSERT INTO HEADER VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
@@ -6238,7 +6238,7 @@
         <span class="comment">// Also update the merkle commitment in the header
 
         // data field of the header
-        </span><span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_string(<span class="kw-2">&amp;</span>test_tree.commitment()).unwrap()});
+        </span><span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()});
         storage
             .query_opt(
                 <span class="string">"INSERT INTO HEADER VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
@@ -6327,7 +6327,7 @@
         </span>test_tree.update(<span class="number">0</span>, <span class="number">0</span>).unwrap();
         <span class="kw">let </span>commitment = test_tree.commitment();
 
-        <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_string(<span class="kw-2">&amp;</span>commitment).unwrap()});
+        <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(commitment).unwrap()});
         <span class="comment">// insert the header with merkle commitment
         </span>storage
                 .query_opt(
@@ -6392,7 +6392,7 @@
             [
                 sql_param(<span class="kw-2">&amp;</span><span class="number">2_i64</span>),
                 sql_param(<span class="kw-2">&amp;</span><span class="string">"randomString2"</span>),
-                sql_param(<span class="kw-2">&amp;</span><span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_string(<span class="kw-2">&amp;</span>test_tree.commitment()).unwrap()})),
+                sql_param(<span class="kw-2">&amp;</span><span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()})),
             ],
         )
         .<span class="kw">await
@@ -6444,7 +6444,7 @@
         </span>test_tree.update(<span class="number">0</span>, <span class="number">0</span>).unwrap();
         <span class="kw">let </span>commitment = test_tree.commitment();
 
-        <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_string(<span class="kw-2">&amp;</span>commitment).unwrap()});
+        <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(commitment).unwrap()});
         <span class="comment">// insert the header with merkle commitment
         </span>storage
                 .query_opt(
@@ -6504,7 +6504,7 @@
 
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">27 </span>{
             test_tree.update(i, i).unwrap();
-            <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_string(<span class="kw-2">&amp;</span>test_tree.commitment()).unwrap()});
+            <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()});
             <span class="comment">// insert the header with merkle commitment
             </span>storage
                     .query_opt(
@@ -6557,7 +6557,7 @@
         .<span class="kw">await</span>;
         <span class="macro">assert!</span>(merkle_path.is_err());
 
-        <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_string(<span class="kw-2">&amp;</span>test_tree.commitment()).unwrap()});
+        <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()});
         <span class="comment">// insert the header with merkle commitment
         </span>storage
                 .query_opt(
@@ -6585,7 +6585,7 @@
         </span>test_tree.update(<span class="number">1</span>, <span class="number">200</span>).unwrap();
 
         <span class="kw">let </span>(<span class="kw">_</span>, proof) = test_tree.lookup(<span class="number">1</span>).expect_ok().unwrap();
-        <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_string(<span class="kw-2">&amp;</span>test_tree.commitment()).unwrap()});
+        <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()});
 
         <span class="comment">// insert the header with merkle commitment
         </span>storage
