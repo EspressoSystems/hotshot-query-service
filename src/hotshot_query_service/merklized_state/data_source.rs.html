@@ -150,6 +150,8 @@
 <a href="#148" id="148">148</a>
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -185,8 +187,6 @@
 <span class="kw">use </span>std::{fmt::Debug, str::FromStr};
 <span class="kw">use </span>tagged_base64::TaggedBase64;
 
-<span class="kw">use </span>typenum::Unsigned;
-
 <span class="kw">use </span>std::{cmp::Ordering, sync::Arc};
 
 <span class="kw">use </span><span class="kw">crate</span>::QueryResult;
@@ -194,21 +194,23 @@
 <span class="doccomment">/// This trait defines methods that a data source should implement
 /// It enables retrieval of the membership path for a leaf node, which can be used to reconstruct the Merkle tree state.
 </span><span class="attr">#[async_trait]
-</span><span class="kw">pub trait </span>MerklizedStateDataSource&lt;Types, State&gt;
+</span><span class="kw">pub trait </span>MerklizedStateDataSource&lt;Types, State, <span class="kw">const </span>ARITY: usize&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    State: MerklizedState&lt;Types&gt;,
+    State: MerklizedState&lt;Types, ARITY&gt;,
 {
     <span class="kw">async fn </span>get_path(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        snapshot: Snapshot&lt;Types, State&gt;,
+        snapshot: Snapshot&lt;Types, State, ARITY&gt;,
         key: State::Key,
     ) -&gt; QueryResult&lt;MerklePath&lt;State::Entry, State::Key, State::T&gt;&gt;;
 }
 
 <span class="doccomment">/// This trait defines methods for updating the storage with the merkle tree state.
 </span><span class="attr">#[async_trait]
-</span><span class="kw">pub trait </span>UpdateStateData&lt;Types: NodeType, State: MerklizedState&lt;Types&gt;&gt;: Send + Sync {
+</span><span class="kw">pub trait </span>UpdateStateData&lt;Types: NodeType, State: MerklizedState&lt;Types, ARITY&gt;, <span class="kw">const </span>ARITY: usize&gt;:
+    Send + Sync
+{
     <span class="kw">async fn </span>insert_merkle_nodes(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         path: MerklePath&lt;State::Entry, State::Key, State::T&gt;,
@@ -233,7 +235,7 @@
     ) -&gt; anyhow::Result&lt;()&gt;;
 }
 
-<span class="kw">type </span>StateCommitment&lt;Types, T&gt; = &lt;T <span class="kw">as </span>MerklizedState&lt;Types&gt;&gt;::Commit;
+<span class="kw">type </span>StateCommitment&lt;Types, T, <span class="kw">const </span>ARITY: usize&gt; = &lt;T <span class="kw">as </span>MerklizedState&lt;Types, ARITY&gt;&gt;::Commit;
 <span class="attr">#[derive(Derivative, Display)]
 #[derivative(Ord = <span class="string">"feature_allow_slow_enum"</span>)]
 #[derivative(
@@ -244,14 +246,16 @@
     Hash(bound = <span class="string">""</span>)
 )]
 </span><span class="comment">// Snapshot can be queried by block height (index) or merkle tree commitment
-</span><span class="kw">pub enum </span>Snapshot&lt;Types: NodeType, T: MerklizedState&lt;Types&gt;&gt; {
+</span><span class="kw">pub enum </span>Snapshot&lt;Types: NodeType, T: MerklizedState&lt;Types, ARITY&gt;, <span class="kw">const </span>ARITY: usize&gt; {
     <span class="attr">#[display(fmt = <span class="string">"{_0}"</span>)]
-    </span>Commit(StateCommitment&lt;Types, T&gt;),
+    </span>Commit(StateCommitment&lt;Types, T, ARITY&gt;),
     <span class="attr">#[display(fmt = <span class="string">"{_0}"</span>)]
     </span>Index(u64),
 }
 
-<span class="kw">impl</span>&lt;T: MerklizedState&lt;Types&gt;, Types: NodeType&gt; PartialOrd <span class="kw">for </span>Snapshot&lt;Types, T&gt; {
+<span class="kw">impl</span>&lt;T: MerklizedState&lt;Types, ARITY&gt;, Types: NodeType, <span class="kw">const </span>ARITY: usize&gt; PartialOrd
+    <span class="kw">for </span>Snapshot&lt;Types, T, ARITY&gt;
+{
     <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Ordering&gt; {
         <span class="prelude-val">Some</span>(<span class="self">self</span>.cmp(other))
     }
@@ -259,16 +263,16 @@
 
 <span class="doccomment">/// This trait should be implemented by the MerkleTree that the module is initialized for.
 /// It defines methods utilized by the module.
-</span><span class="kw">pub trait </span>MerklizedState&lt;Types&gt;: MerkleTreeScheme + Send + Sync + Clone + <span class="lifetime">'static
+</span><span class="kw">pub trait </span>MerklizedState&lt;Types, <span class="kw">const </span>ARITY: usize&gt;:
+    MerkleTreeScheme + Send + Sync + Clone + <span class="lifetime">'static
 </span><span class="kw">where
     </span>Types: NodeType,
 {
-    <span class="kw">type </span>Arity: Unsigned;
     <span class="kw">type </span>Key: Index
         + Send
         + Sync
         + Serialize
-        + ToTraversalPath&lt;<span class="self">Self</span>::Arity&gt;
+        + ToTraversalPath&lt;ARITY&gt;
         + FromStr
         + DeserializeOwned
         + Display

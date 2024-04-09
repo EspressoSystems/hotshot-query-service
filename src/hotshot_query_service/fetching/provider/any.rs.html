@@ -502,7 +502,7 @@
         Error,
     };
     <span class="kw">use </span>futures::stream::StreamExt;
-    <span class="kw">use </span>hotshot_types::constants::{Version01, STATIC_VER_0_1};
+    <span class="kw">use </span>hotshot_types::constants::STATIC_VER_0_1;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>tide_disco::App;
 
@@ -517,7 +517,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),

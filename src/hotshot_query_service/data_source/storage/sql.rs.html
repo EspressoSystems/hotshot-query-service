@@ -3316,6 +3316,9 @@
 <a href="#3314" id="3314">3314</a>
 <a href="#3315" id="3315">3315</a>
 <a href="#3316" id="3316">3316</a>
+<a href="#3317" id="3317">3317</a>
+<a href="#3318" id="3318">3318</a>
+<a href="#3319" id="3319">3319</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -3347,7 +3350,7 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>bit_vec::BitVec;
 <span class="kw">use </span>chrono::Utc;
-<span class="kw">use </span>commit::Committable;
+<span class="kw">use </span>committable::Committable;
 <span class="kw">use </span>futures::{
     stream::{BoxStream, StreamExt, TryStreamExt},
     task::{Context, Poll},
@@ -4514,7 +4517,9 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types: NodeType, State: MerklizedState&lt;Types&gt;&gt; UpdateStateData&lt;Types, State&gt; <span class="kw">for </span>SqlStorage {
+</span><span class="kw">impl</span>&lt;Types: NodeType, State: MerklizedState&lt;Types, ARITY&gt;, <span class="kw">const </span>ARITY: usize&gt;
+    UpdateStateData&lt;Types, State, ARITY&gt; <span class="kw">for </span>SqlStorage
+{
     <span class="kw">async fn </span>insert_merkle_nodes(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         path: MerklePath&lt;State::Entry, State::Key, State::T&gt;,
@@ -4682,15 +4687,15 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types, State&gt; MerklizedStateDataSource&lt;Types, State&gt; <span class="kw">for </span>SqlStorage
+</span><span class="kw">impl</span>&lt;Types, State, <span class="kw">const </span>ARITY: usize&gt; MerklizedStateDataSource&lt;Types, State, ARITY&gt; <span class="kw">for </span>SqlStorage
 <span class="kw">where
     </span>Types: NodeType,
-    State: MerklizedState&lt;Types&gt; + <span class="lifetime">'static</span>,
+    State: MerklizedState&lt;Types, ARITY&gt; + <span class="lifetime">'static</span>,
 {
     <span class="doccomment">/// Retreives a Merkle path from the database
     </span><span class="kw">async fn </span>get_path(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        snapshot: Snapshot&lt;Types, State&gt;,
+        snapshot: Snapshot&lt;Types, State, ARITY&gt;,
         key: State::Key,
     ) -&gt; QueryResult&lt;MerklePath&lt;State::Entry, State::Key, State::T&gt;&gt; {
         <span class="kw">let </span>state_type = State::state_type();
@@ -5914,6 +5919,7 @@
 </span><span class="kw">mod </span>test {
 
     <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
+    <span class="kw">use </span>jf_primitives::merkle_tree::universal_merkle_tree::UniversalMerkleTree;
     <span class="kw">use </span>jf_primitives::merkle_tree::UniversalMerkleTreeScheme;
 
     <span class="kw">use super</span>::{testing::TmpDb, <span class="kw-2">*</span>};
@@ -6160,8 +6166,6 @@
 
     <span class="kw">use </span>jf_primitives::merkle_tree::MerkleTreeScheme;
 
-    <span class="kw">use </span>typenum::U8;
-
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_merklized_state_storage() {
         <span class="comment">// In this test we insert some entries into the tree and update the database
@@ -6172,7 +6176,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>storage = SqlStorage::connect(db.config()).<span class="kw">await</span>.unwrap();
 
         <span class="comment">// define a test tree
-        </span><span class="kw">let </span><span class="kw-2">mut </span>test_tree = MockMerkleTree::new(<span class="number">3</span>);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>test_tree: UniversalMerkleTree&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="number">8</span>, <span class="kw">_</span>&gt; = MockMerkleTree::new(<span class="number">3</span>);
         <span class="kw">let </span>block_height = <span class="number">1</span>;
 
         <span class="comment">// insert some entries into the tree and the header table
@@ -6197,9 +6201,9 @@
             </span><span class="kw">let </span>(<span class="kw">_</span>, proof) = test_tree.lookup(i).expect_ok().unwrap();
             <span class="comment">// traversal path for the index.
             </span><span class="kw">let </span>traversal_path =
-                &lt;usize <span class="kw">as </span>ToTraversalPath&lt;U8&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span>i, test_tree.height());
+                &lt;usize <span class="kw">as </span>ToTraversalPath&lt;<span class="number">8</span>&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span>i, test_tree.height());
 
-            &lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::insert_merkle_nodes(
+            &lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::insert_merkle_nodes(
                 <span class="kw-2">&amp;mut </span>storage,
                 proof.proof.clone(),
                 traversal_path.clone(),
@@ -6213,7 +6217,7 @@
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">27 </span>{
             <span class="comment">// Query the path for the index
             </span><span class="kw">let </span>merkle_path =
-                &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::get_path(
+                &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
                     <span class="kw-2">&amp;</span>storage,
                     Snapshot::Index(block_height <span class="kw">as </span>u64),
                     i,
@@ -6253,10 +6257,10 @@
         <span class="kw">let </span>(<span class="kw">_</span>, proof_bh_2) = test_tree.lookup(<span class="number">0</span>).expect_ok().unwrap();
         <span class="comment">// traversal path for the index.
         </span><span class="kw">let </span>traversal_path =
-            &lt;usize <span class="kw">as </span>ToTraversalPath&lt;U8&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span><span class="number">0</span>, test_tree.height());
+            &lt;usize <span class="kw">as </span>ToTraversalPath&lt;<span class="number">8</span>&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span><span class="number">0</span>, test_tree.height());
         <span class="comment">// Update storage to insert a new version of this code
 
-        </span>&lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::insert_merkle_nodes(
+        </span>&lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::insert_merkle_nodes(
             <span class="kw-2">&amp;mut </span>storage,
             proof_bh_2.proof.clone(),
             traversal_path.clone(),
@@ -6289,22 +6293,24 @@
         // One with created = 1 and other with 2
         // Query snapshot with created = 2
 
-        </span><span class="kw">let </span>path_with_bh_2 = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::get_path(
-            <span class="kw-2">&amp;</span>storage,
-            Snapshot::Index(<span class="number">2</span>),
-            <span class="number">0</span>,
-        )
-        .<span class="kw">await
-        </span>.unwrap();
+        </span><span class="kw">let </span>path_with_bh_2 =
+            &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
+                <span class="kw-2">&amp;</span>storage,
+                Snapshot::Index(<span class="number">2</span>),
+                <span class="number">0</span>,
+            )
+            .<span class="kw">await
+            </span>.unwrap();
 
         <span class="macro">assert_eq!</span>(path_with_bh_2, proof_bh_2.proof);
-        <span class="kw">let </span>path_with_bh_1 = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::get_path(
-            <span class="kw-2">&amp;</span>storage,
-            Snapshot::Index(<span class="number">1</span>),
-            <span class="number">0</span>,
-        )
-        .<span class="kw">await
-        </span>.unwrap();
+        <span class="kw">let </span>path_with_bh_1 =
+            &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
+                <span class="kw-2">&amp;</span>storage,
+                Snapshot::Index(<span class="number">1</span>),
+                <span class="number">0</span>,
+            )
+            .<span class="kw">await
+            </span>.unwrap();
         <span class="macro">assert_eq!</span>(path_with_bh_1, proof_bh_1.proof);
     }
 
@@ -6344,9 +6350,9 @@
         </span><span class="kw">let </span>(<span class="kw">_</span>, proof_before_remove) = test_tree.lookup(<span class="number">0</span>).expect_ok().unwrap();
         <span class="comment">// traversal path for the index.
         </span><span class="kw">let </span>traversal_path =
-            &lt;usize <span class="kw">as </span>ToTraversalPath&lt;U8&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span><span class="number">0</span>, test_tree.height());
+            &lt;usize <span class="kw">as </span>ToTraversalPath&lt;<span class="number">8</span>&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span><span class="number">0</span>, test_tree.height());
         <span class="comment">// insert merkle nodes
-        </span>&lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::insert_merkle_nodes(
+        </span>&lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::insert_merkle_nodes(
             <span class="kw-2">&amp;mut </span>storage,
             proof_before_remove.proof.clone(),
             traversal_path.clone(),
@@ -6355,7 +6361,7 @@
         .<span class="kw">await
         </span>.expect(<span class="string">"failed to insert nodes"</span>);
         <span class="comment">// the path from the db and and tree should match
-        </span><span class="kw">let </span>merkle_path = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::get_path(
+        </span><span class="kw">let </span>merkle_path = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
             <span class="kw-2">&amp;</span>storage,
             Snapshot::Index(block_height <span class="kw">as </span>u64),
             <span class="number">0</span>,
@@ -6377,7 +6383,7 @@
         // Created = 2 in this case
         </span><span class="kw">let </span>proof_after_remove = test_tree.universal_lookup(<span class="number">0</span>).expect_not_found().unwrap();
 
-        &lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::insert_merkle_nodes(
+        &lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::insert_merkle_nodes(
             <span class="kw-2">&amp;mut </span>storage,
             proof_after_remove.proof.clone(),
             traversal_path.clone(),
@@ -6399,7 +6405,7 @@
         </span>.unwrap();
         <span class="comment">// Get non membership proof
         </span><span class="kw">let </span>non_membership_path =
-            &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::get_path(
+            &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
                 <span class="kw-2">&amp;</span>storage,
                 Snapshot::Index(<span class="number">2_u64</span>),
                 <span class="number">0</span>,
@@ -6416,7 +6422,7 @@
         // This proof should be equal to the proof before deletion
         // Assert that the paths from the db and the tree are equal
 
-        </span><span class="kw">let </span>proof_bh_1 = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::get_path(
+        </span><span class="kw">let </span>proof_bh_1 = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
             <span class="kw-2">&amp;</span>storage,
             Snapshot::Index(<span class="number">1_u64</span>),
             <span class="number">0</span>,
@@ -6461,9 +6467,9 @@
         </span><span class="kw">let </span>(<span class="kw">_</span>, proof) = test_tree.lookup(<span class="number">0</span>).expect_ok().unwrap();
         <span class="comment">// traversal path for the index.
         </span><span class="kw">let </span>traversal_path =
-            &lt;usize <span class="kw">as </span>ToTraversalPath&lt;U8&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span><span class="number">0</span>, test_tree.height());
+            &lt;usize <span class="kw">as </span>ToTraversalPath&lt;<span class="number">8</span>&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span><span class="number">0</span>, test_tree.height());
         <span class="comment">// insert merkle nodes
-        </span>&lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::insert_merkle_nodes(
+        </span>&lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::insert_merkle_nodes(
             <span class="kw-2">&amp;mut </span>storage,
             proof.proof.clone(),
             traversal_path.clone(),
@@ -6472,7 +6478,7 @@
         .<span class="kw">await
         </span>.expect(<span class="string">"failed to insert nodes"</span>);
 
-        <span class="kw">let </span>merkle_path = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::get_path(
+        <span class="kw">let </span>merkle_path = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
             <span class="kw-2">&amp;</span>storage,
             Snapshot::Commit(commitment),
             <span class="number">0</span>,
@@ -6521,9 +6527,9 @@
             </span><span class="kw">let </span>(<span class="kw">_</span>, proof) = test_tree.lookup(i).expect_ok().unwrap();
             <span class="comment">// traversal path for the index.
             </span><span class="kw">let </span>traversal_path =
-                &lt;usize <span class="kw">as </span>ToTraversalPath&lt;U8&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span>i, test_tree.height());
+                &lt;usize <span class="kw">as </span>ToTraversalPath&lt;<span class="number">8</span>&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span>i, test_tree.height());
             <span class="comment">// insert merkle nodes
-            </span>&lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::insert_merkle_nodes(
+            </span>&lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::insert_merkle_nodes(
                 <span class="kw-2">&amp;mut </span>storage,
                 proof.proof.clone(),
                 traversal_path.clone(),
@@ -6536,11 +6542,11 @@
         test_tree.update(<span class="number">1</span>, <span class="number">100</span>).unwrap();
         <span class="comment">//insert updated merkle path without updating the header
         </span><span class="kw">let </span>traversal_path =
-            &lt;usize <span class="kw">as </span>ToTraversalPath&lt;U8&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span><span class="number">1</span>, test_tree.height());
+            &lt;usize <span class="kw">as </span>ToTraversalPath&lt;<span class="number">8</span>&gt;&gt;::to_traversal_path(<span class="kw-2">&amp;</span><span class="number">1</span>, test_tree.height());
         <span class="kw">let </span>(<span class="kw">_</span>, proof) = test_tree.lookup(<span class="number">1</span>).expect_ok().unwrap();
 
         <span class="comment">// insert merkle nodes
-        </span>&lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::insert_merkle_nodes(
+        </span>&lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::insert_merkle_nodes(
             <span class="kw-2">&amp;mut </span>storage,
             proof.proof.clone(),
             traversal_path.clone(),
@@ -6549,7 +6555,7 @@
         .<span class="kw">await
         </span>.expect(<span class="string">"failed to insert nodes"</span>);
 
-        <span class="kw">let </span>merkle_path = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::get_path(
+        <span class="kw">let </span>merkle_path = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
             <span class="kw-2">&amp;</span>storage,
             Snapshot::Index(block_height <span class="kw">as </span>u64),
             <span class="number">1</span>,
@@ -6571,7 +6577,7 @@
                 .<span class="kw">await
                 </span>.unwrap();
         <span class="comment">// Querying the path again
-        </span><span class="kw">let </span>merkle_path = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::get_path(
+        </span><span class="kw">let </span>merkle_path = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
             <span class="kw-2">&amp;</span>storage,
             Snapshot::Index(block_height <span class="kw">as </span>u64),
             <span class="number">1</span>,
@@ -6599,7 +6605,7 @@
                 )
                 .<span class="kw">await
                 </span>.unwrap();
-        &lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::insert_merkle_nodes(
+        &lt;SqlStorage <span class="kw">as </span>UpdateStateData&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::insert_merkle_nodes(
             <span class="kw-2">&amp;mut </span>storage,
             proof.proof.clone(),
             traversal_path.clone(),
@@ -6622,7 +6628,7 @@
             </span>.expect(<span class="string">"failed to delete internal node"</span>);
         <span class="macro">assert_eq!</span>(rows, <span class="number">1</span>);
 
-        <span class="kw">let </span>merkle_path = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree&gt;&gt;::get_path(
+        <span class="kw">let </span>merkle_path = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
             <span class="kw-2">&amp;</span>storage,
             Snapshot::Index(<span class="number">2_u64</span>),
             <span class="number">1</span>,

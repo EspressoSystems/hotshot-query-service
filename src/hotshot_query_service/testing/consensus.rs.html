@@ -306,6 +306,24 @@
 <a href="#304" id="304">304</a>
 <a href="#305" id="305">305</a>
 <a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -340,6 +358,7 @@
     HotShotInitializer, Memberships, Networks, SystemContext,
 };
 <span class="kw">use </span>hotshot_example_types::{state_types::TestInstanceState, storage_types::TestStorage};
+<span class="kw">use </span>hotshot_testing::block_builder::{SimpleBuilderImplementation, TestBuilderImplementation};
 <span class="kw">use </span>hotshot_types::{
     consensus::ConsensusMetricsValue,
     light_client::StateKeyPair,
@@ -387,11 +406,36 @@
                 state_ver_key: state_key_pairs[id].ver_key(),
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+
+        <span class="comment">// Create memberships
+        </span><span class="kw">let </span>election_config =
+            MockMembership::default_election_config(num_staked_nodes.get() <span class="kw">as </span>u64, <span class="number">0</span>);
+        <span class="kw">let </span>membership = MockMembership::create_election(
+            known_nodes_with_stake.clone(),
+            election_config.clone(),
+            <span class="number">0</span>,
+        );
+
+        <span class="kw">let </span>memberships = Memberships {
+            quorum_membership: membership.clone(),
+            da_membership: membership.clone(),
+            vid_membership: membership.clone(),
+            view_sync_membership: membership.clone(),
+        };
+
+        <span class="comment">// Start the builder server
+        </span><span class="kw">let </span>(builder_task, builder_url) =
+            &lt;SimpleBuilderImplementation <span class="kw">as </span>TestBuilderImplementation&lt;MockTypes&gt;&gt;::start(Arc::new(
+                membership,
+            ))
+            .<span class="kw">await</span>;
+
         <span class="kw">let </span>nodes = join_all(
             priv_keys
                 .into_iter()
                 .enumerate()
                 .map(|(node_id, priv_key)| {
+                    <span class="kw">let </span>memberships = memberships.clone();
                     <span class="kw">let </span>my_own_validator_config = ValidatorConfig {
                         public_key: pub_keys[node_id],
                         private_key: priv_key.clone(),
@@ -399,6 +443,7 @@
                         state_key_pair: state_key_pairs[node_id].clone(),
                     };
                     <span class="kw">let </span>config = HotShotConfig {
+                        builder_url: builder_url.clone(),
                         fixed_leader_for_gpuvid: <span class="number">0</span>,
                         num_nodes_with_stake: num_staked_nodes,
                         num_nodes_without_stake: <span class="number">0</span>,
@@ -423,11 +468,8 @@
                     };
 
                     <span class="kw">let </span>pub_keys = pub_keys.clone();
-                    <span class="kw">let </span>known_nodes_with_stake = known_nodes_with_stake.clone();
                     <span class="kw">let </span>config = config.clone();
                     <span class="kw">let </span>master_map = master_map.clone();
-                    <span class="kw">let </span>election_config =
-                        MockMembership::default_election_config(num_staked_nodes.get() <span class="kw">as </span>u64, <span class="number">0</span>);
 
                     <span class="kw">let </span>span = <span class="macro">info_span!</span>(<span class="string">"initialize node"</span>, node_id);
                     <span class="kw">async move </span>{
@@ -446,18 +488,6 @@
                             da_network: network,
                             _pd: std::marker::PhantomData,
                         };
-                        <span class="kw">let </span>membership = MockMembership::create_election(
-                            known_nodes_with_stake.clone(),
-                            election_config.clone(),
-                            <span class="number">0</span>,
-                        );
-
-                        <span class="kw">let </span>memberships = Memberships {
-                            quorum_membership: membership.clone(),
-                            da_membership: membership.clone(),
-                            vid_membership: membership.clone(),
-                            view_sync_membership: membership.clone(),
-                        };
 
                         <span class="kw">let </span>hs_storage: TestStorage&lt;MockTypes&gt; = TestStorage::default();
 
@@ -475,6 +505,7 @@
                         .<span class="kw">await
                         </span>.unwrap()
                         .<span class="number">0</span>;
+
                         MockNode {
                             hotshot,
                             data_source: Arc::new(RwLock::new(data_source)),
@@ -485,6 +516,11 @@
                 }),
         )
         .<span class="kw">await</span>;
+
+        <span class="comment">// Hook the builder up to the event stream from the first node
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(builder_task) = builder_task {
+            builder_task.start(Box::new(nodes[<span class="number">0</span>].hotshot.get_event_stream()));
+        }
 
         <span class="kw">let </span><span class="kw-2">mut </span>network = <span class="self">Self </span>{
             nodes,

@@ -43,7 +43,7 @@ extensible library, which makes it easy to add additional, application-specific 
 
 <span class="comment">// Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
 </span><span class="kw">let </span>data_source = Arc::new(RwLock::new(data_source));
-<span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(data_source.clone());
+<span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(data_source.clone());
 app
     .register_module(<span class="string">"availability"</span>, availability_api)
     .map_err(Error::internal)<span class="question-mark">?
@@ -156,10 +156,10 @@ the availability API like so:</p>
     options: <span class="kw-2">&amp;</span>availability::Options,
     data_source: D,
     bind_version: Ver,
-) -&gt; <span class="prelude-ty">Result</span>&lt;App&lt;RwLock&lt;D&gt;, Error, Ver&gt;, availability::Error&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;App&lt;RwLock&lt;D&gt;, Error&gt;, availability::Error&gt; {
     <span class="kw">let </span>api = define_app_specific_availability_api(options, bind_version)
         .map_err(availability::Error::internal)<span class="question-mark">?</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, <span class="kw">_</span>, Ver&gt;::with_state(RwLock::new(data_source));
+    <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;::with_state(RwLock::new(data_source));
     app.register_module(<span class="string">"availability"</span>, api).map_err(availability::Error::internal)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(app)
 }</code></pre></div>

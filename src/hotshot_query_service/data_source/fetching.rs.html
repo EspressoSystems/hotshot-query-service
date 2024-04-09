@@ -1274,6 +1274,8 @@
 <a href="#1272" id="1272">1272</a>
 <a href="#1273" id="1273">1273</a>
 <a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1822,11 +1824,12 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types, State, S, P&gt; UpdateStateData&lt;Types, State&gt; <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
+</span><span class="kw">impl</span>&lt;Types, State, S, P, <span class="kw">const </span>ARITY: usize&gt; UpdateStateData&lt;Types, State, ARITY&gt;
+    <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    State: MerklizedState&lt;Types&gt;,
-    S: UpdateStateData&lt;Types, State&gt; + Send + Sync + <span class="lifetime">'static</span>,
+    State: MerklizedState&lt;Types, ARITY&gt;,
+    S: UpdateStateData&lt;Types, State, ARITY&gt; + Send + Sync + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="kw">async fn </span>insert_merkle_nodes(
@@ -1846,17 +1849,18 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types, S, State, P&gt; MerklizedStateDataSource&lt;Types, State&gt; <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
+</span><span class="kw">impl</span>&lt;Types, S, State, P, <span class="kw">const </span>ARITY: usize&gt; MerklizedStateDataSource&lt;Types, State, ARITY&gt;
+    <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    S: MerklizedStateDataSource&lt;Types, State&gt; + Send + Sync + <span class="lifetime">'static</span>,
+    S: MerklizedStateDataSource&lt;Types, State, ARITY&gt; + Send + Sync + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
-    State: MerklizedState&lt;Types&gt; + <span class="lifetime">'static</span>,
+    State: MerklizedState&lt;Types, ARITY&gt; + <span class="lifetime">'static</span>,
     &lt;State <span class="kw">as </span>MerkleTreeScheme&gt;::Commitment: Send,
 {
     <span class="kw">async fn </span>get_path(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        snapshot: Snapshot&lt;Types, State&gt;,
+        snapshot: Snapshot&lt;Types, State, ARITY&gt;,
         key: State::Key,
     ) -&gt; QueryResult&lt;MerklePath&lt;State::Entry, State::Key, State::T&gt;&gt; {
         <span class="self">self</span>.fetcher

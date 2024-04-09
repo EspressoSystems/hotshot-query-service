@@ -883,7 +883,7 @@
 //!
 //! // Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
 //! let data_source = Arc::new(RwLock::new(data_source));
-//! let mut app = App::&lt;_, Error, Version01&gt;::with_state(data_source.clone());
+//! let mut app = App::&lt;_, Error&gt;::with_state(data_source.clone());
 //! app
 //!     .register_module("availability", availability_api)
 //!     .map_err(Error::internal)?
@@ -1004,7 +1004,7 @@
 //! # use hotshot_query_service::Error;
 //! # use snafu::ResultExt;
 //! # use tide_disco::{api::ApiError, method::ReadState, Api, App, StatusCode};
-//! # use versioned_binary_serialization::version::StaticVersionType;
+//! # use vbs::version::StaticVersionType;
 //! # #[async_trait]
 //! # trait UtxoDataSource: AvailabilityDataSource&lt;AppTypes&gt; {
 //! #   async fn find_utxo(&amp;self, utxo: u64) -&gt; Option&lt;(usize, TransactionIndex&lt;AppTypes&gt;, usize)&gt;;
@@ -1044,10 +1044,10 @@
 //!     options: &amp;availability::Options,
 //!     data_source: D,
 //!     bind_version: Ver,
-//! ) -&gt; Result&lt;App&lt;RwLock&lt;D&gt;, Error, Ver&gt;, availability::Error&gt; {
+//! ) -&gt; Result&lt;App&lt;RwLock&lt;D&gt;, Error&gt;, availability::Error&gt; {
 //!     let api = define_app_specific_availability_api(options, bind_version)
 //!         .map_err(availability::Error::internal)?;
-//!     let mut app = App::&lt;_, _, Ver&gt;::with_state(RwLock::new(data_source));
+//!     let mut app = App::&lt;_, _&gt;::with_state(RwLock::new(data_source));
 //!     app.register_module("availability", api).map_err(availability::Error::internal)?;
 //!     Ok(app)
 //! }
@@ -1253,7 +1253,7 @@
 <span class="kw">use </span>snafu::Snafu;
 <span class="kw">use </span>task::BackgroundTask;
 <span class="kw">use </span>tide_disco::{App, StatusCode};
-<span class="kw">use </span>versioned_binary_serialization::version::StaticVersionType;
+<span class="kw">use </span>vbs::version::StaticVersionType;
 
 <span class="kw">pub use </span>hotshot_types::{
     data::Leaf,
@@ -1332,7 +1332,7 @@
 
     <span class="comment">// Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
     </span><span class="kw">let </span>data_source = Arc::new(RwLock::new(data_source));
-    <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Ver&gt;::with_state(data_source.clone());
+    <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(data_source.clone());
     app.register_module(<span class="string">"availability"</span>, availability_api)
         .map_err(Error::internal)<span class="question-mark">?
         </span>.register_module(<span class="string">"node"</span>, node_api)
@@ -1556,7 +1556,7 @@
             METHOD = <span class="string">"GET"
         </span>};
 
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(RwLock::new(state));
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(RwLock::new(state));
         app.register_module(
             <span class="string">"availability"</span>,
             availability::define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
@@ -1572,7 +1572,7 @@
             status::define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
         )
         .unwrap()
-        .module::&lt;Error&gt;(<span class="string">"mod"</span>, module_spec)
+        .module::&lt;Error, Version01&gt;(<span class="string">"mod"</span>, module_spec)
         .unwrap()
         .get(<span class="string">"get_ext"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async move </span>{ state.module_state.load_latest().map_err(Error::internal) }.boxed()

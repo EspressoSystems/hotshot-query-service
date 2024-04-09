@@ -469,7 +469,7 @@
 <span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
-<span class="kw">use </span>versioned_binary_serialization::version::StaticVersionType;
+<span class="kw">use </span>vbs::version::StaticVersionType;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>data_source;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>query_data;
@@ -621,7 +621,7 @@
         Error, Header, VidShare,
     };
     <span class="kw">use </span>async_std::{sync::RwLock, task::sleep};
-    <span class="kw">use </span>commit::Committable;
+    <span class="kw">use </span>committable::Committable;
     <span class="kw">use </span>futures::{FutureExt, StreamExt};
     <span class="kw">use </span>hotshot_types::constants::{Version01, STATIC_VER_0_1};
     <span class="kw">use </span>hotshot_types::event::EventType;
@@ -644,7 +644,7 @@
 
         <span class="comment">// Start the web server.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"node"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
@@ -851,7 +851,7 @@
         })
         .unwrap();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(RwLock::new(data_source));
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(RwLock::new(data_source));
         app.register_module(<span class="string">"node"</span>, api).unwrap();
 
         <span class="kw">let </span>port = pick_unused_port().unwrap();

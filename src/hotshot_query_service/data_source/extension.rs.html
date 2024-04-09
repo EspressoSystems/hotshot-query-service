@@ -367,6 +367,8 @@
 <a href="#365" id="365">365</a>
 <a href="#366" id="366">366</a>
 <a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -648,16 +650,17 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;D, U, Types, State&gt; MerklizedStateDataSource&lt;Types, State&gt; <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
+</span><span class="kw">impl</span>&lt;D, U, Types, State, <span class="kw">const </span>ARITY: usize&gt; MerklizedStateDataSource&lt;Types, State, ARITY&gt;
+    <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
 <span class="kw">where
-    </span>D: MerklizedStateDataSource&lt;Types, State&gt; + Send + Sync,
+    </span>D: MerklizedStateDataSource&lt;Types, State, ARITY&gt; + Send + Sync,
     U: Send + Sync,
     Types: NodeType,
-    State: MerklizedState&lt;Types&gt;,
+    State: MerklizedState&lt;Types, ARITY&gt;,
 {
     <span class="kw">async fn </span>get_path(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        snapshot: Snapshot&lt;Types, State&gt;,
+        snapshot: Snapshot&lt;Types, State, ARITY&gt;,
         key: State::Key,
     ) -&gt; QueryResult&lt;MerklePath&lt;State::Entry, State::Key, State::T&gt;&gt; {
         <span class="self">self</span>.data_source.get_path(snapshot, key).<span class="kw">await
@@ -665,11 +668,12 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;D, U, Types, State&gt; UpdateStateData&lt;Types, State&gt; <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
+</span><span class="kw">impl</span>&lt;D, U, Types, State, <span class="kw">const </span>ARITY: usize&gt; UpdateStateData&lt;Types, State, ARITY&gt;
+    <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
 <span class="kw">where
-    </span>D: UpdateStateData&lt;Types, State&gt; + Send + Sync,
+    </span>D: UpdateStateData&lt;Types, State, ARITY&gt; + Send + Sync,
     U: Send + Sync,
-    State: MerklizedState&lt;Types&gt;,
+    State: MerklizedState&lt;Types, ARITY&gt;,
     Types: NodeType,
 {
     <span class="kw">async fn </span>insert_merkle_nodes(

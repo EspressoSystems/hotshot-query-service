@@ -1014,7 +1014,7 @@
 <span class="kw">use </span>snafu::{OptionExt, Snafu};
 <span class="kw">use </span>std::{fmt::Display, path::PathBuf, str::FromStr, time::Duration};
 <span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
-<span class="kw">use </span>versioned_binary_serialization::version::StaticVersionType;
+<span class="kw">use </span>vbs::version::StaticVersionType;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>data_source;
 <span class="kw">mod </span>fetch;
@@ -1474,7 +1474,7 @@
         Error, Header,
     };
     <span class="kw">use </span>async_std::sync::RwLock;
-    <span class="kw">use </span>commit::Committable;
+    <span class="kw">use </span>committable::Committable;
     <span class="kw">use </span>futures::future::FutureExt;
     <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
     <span class="kw">use </span>hotshot_types::{
@@ -1768,7 +1768,7 @@
 
         <span class="comment">// Start the web server.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(
@@ -1920,7 +1920,7 @@
         })
         .unwrap();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(RwLock::new(data_source));
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(RwLock::new(data_source));
         app.register_module(<span class="string">"availability"</span>, api).unwrap();
 
         <span class="kw">let </span>port = pick_unused_port().unwrap();

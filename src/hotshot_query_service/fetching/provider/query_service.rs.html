@@ -904,6 +904,7 @@
 <a href="#902" id="902">902</a>
 <a href="#903" id="903">903</a>
 <a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -931,7 +932,7 @@
 };
 <span class="kw">use </span>jf_primitives::vid::VidScheme;
 <span class="kw">use </span>surf_disco::{Client, Url};
-<span class="kw">use </span>versioned_binary_serialization::version::StaticVersionType;
+<span class="kw">use </span>vbs::version::StaticVersionType;
 
 <span class="doccomment">/// Data availability provider backed by another instance of this query service.
 ///
@@ -973,7 +974,8 @@
         <span class="kw">match </span>res {
             <span class="prelude-val">Ok</span>((payload, common)) =&gt; {
                 <span class="comment">// Verify that the data we retrieved is consistent with the request we made.
-                </span><span class="kw">let </span>num_storage_nodes = VidSchemeType::get_num_storage_nodes(common.common());
+                </span><span class="kw">let </span>num_storage_nodes =
+                    VidSchemeType::get_num_storage_nodes(common.common()) <span class="kw">as </span>usize;
                 <span class="kw">let </span>bytes = <span class="kw">match </span>payload.data().encode() {
                     <span class="prelude-val">Ok</span>(bytes) =&gt; bytes.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
                     <span class="prelude-val">Err</span>(err) =&gt; {
@@ -1088,7 +1090,7 @@
         types::HeightIndexed,
         VidCommitment,
     };
-    <span class="kw">use </span>commit::Committable;
+    <span class="kw">use </span>committable::Committable;
     <span class="kw">use </span>futures::{
         future::{join, FutureExt},
         stream::StreamExt,
@@ -1135,7 +1137,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
@@ -1362,7 +1364,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
@@ -1421,7 +1423,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
@@ -1484,7 +1486,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
@@ -1544,7 +1546,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
@@ -1605,7 +1607,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
@@ -1679,7 +1681,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
@@ -1773,7 +1775,7 @@
         })
         .unwrap();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;(), ServerError, Version01&gt;::with_state(());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;(), ServerError&gt;::with_state(());
         app.register_module(<span class="string">"availability"</span>, api).unwrap();
         app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), STATIC_VER_0_1)
             .<span class="kw">await

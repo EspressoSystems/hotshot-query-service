@@ -883,7 +883,7 @@
             };
             <span class="macro">tracing::info!</span>(<span class="string">"spawning server for missing data on port {fetch_from_port}"</span>);
             <span class="kw">let </span>api_data_source = network.data_source_index(<span class="number">1</span>);
-            <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error, Version01&gt;::with_state(api_data_source);
+            <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(api_data_source);
             app.register_module(
                 <span class="string">"availability"</span>,
                 define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
