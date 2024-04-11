@@ -142,16 +142,6 @@
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
 <a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
-<a href="#149" id="149">149</a>
-<a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -174,9 +164,9 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>derive_more::Display;
-<span class="kw">use </span>hotshot::traits::ValidatedState;
-<span class="kw">use </span>hotshot_types::{data::Leaf, traits::node_implementation::NodeType};
+<span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 
+<span class="kw">use </span>jf_primitives::merkle_tree::prelude::MerkleProof;
 <span class="kw">use </span>jf_primitives::merkle_tree::DigestAlgorithm;
 <span class="kw">use </span>jf_primitives::merkle_tree::{
     prelude::MerklePath, Element, Index, MerkleCommitment, MerkleTreeScheme, NodeValue,
@@ -187,7 +177,7 @@
 <span class="kw">use </span>std::{fmt::Debug, str::FromStr};
 <span class="kw">use </span>tagged_base64::TaggedBase64;
 
-<span class="kw">use </span>std::{cmp::Ordering, sync::Arc};
+<span class="kw">use </span>std::cmp::Ordering;
 
 <span class="kw">use </span><span class="kw">crate</span>::QueryResult;
 
@@ -203,7 +193,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         snapshot: Snapshot&lt;Types, State, ARITY&gt;,
         key: State::Key,
-    ) -&gt; QueryResult&lt;MerklePath&lt;State::Entry, State::Key, State::T&gt;&gt;;
+    ) -&gt; QueryResult&lt;MerkleProof&lt;State::Entry, State::Key, State::T, ARITY&gt;&gt;;
 }
 
 <span class="doccomment">/// This trait defines methods for updating the storage with the merkle tree state.
@@ -219,20 +209,10 @@
     ) -&gt; QueryResult&lt;()&gt;;
 }
 
-<span class="doccomment">/// This trait should be implemented by types that represent validated states.
-/// It enables services using the module to implement update functionality.
-/// Some services may manage multiple Merkle trees within their validated state,
-/// requiring updates for all state types with each event.
-/// Therefore, the `insert_merkle_nodes` method of `UpdateStateData` should be called
-/// for all state types within the validated state.
-</span><span class="attr">#[async_trait]
-</span><span class="kw">pub trait </span>UpdateStateStorage&lt;Types: NodeType, D&gt; {
-    <span class="kw">async fn </span>update_storage(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;mut </span>D,
-        leaf: <span class="kw-2">&amp;</span>Leaf&lt;Types&gt;,
-        delta: Arc&lt;&lt;&lt;Types <span class="kw">as </span>NodeType&gt;::ValidatedState <span class="kw">as </span>ValidatedState&lt;Types&gt;&gt;::Delta&gt;,
-    ) -&gt; anyhow::Result&lt;()&gt;;
+<span class="attr">#[async_trait]
+</span><span class="kw">pub trait </span>MerklizedStateHeightPersistence {
+    <span class="kw">async fn </span>set_last_state_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>, height: usize) -&gt; QueryResult&lt;()&gt;;
+    <span class="kw">async fn </span>get_last_state_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt;;
 }
 
 <span class="kw">type </span>StateCommitment&lt;Types, T, <span class="kw">const </span>ARITY: usize&gt; = &lt;T <span class="kw">as </span>MerklizedState&lt;Types, ARITY&gt;&gt;::Commit;

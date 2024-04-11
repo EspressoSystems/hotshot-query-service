@@ -369,6 +369,24 @@
 <a href="#367" id="367">367</a>
 <a href="#368" id="368">368</a>
 <a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -388,7 +406,10 @@
         PayloadQueryData, QueryablePayload, TransactionHash, TransactionIndex,
         UpdateAvailabilityData, VidCommonQueryData,
     },
-    merklized_state::{MerklizedState, MerklizedStateDataSource, Snapshot, UpdateStateData},
+    merklized_state::{
+        MerklizedState, MerklizedStateDataSource, MerklizedStateHeightPersistence, Snapshot,
+        UpdateStateData,
+    },
     metrics::PrometheusMetrics,
     node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
     status::StatusDataSource,
@@ -397,6 +418,7 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>jf_primitives::merkle_tree::prelude::MerklePath;
+<span class="kw">use </span>jf_primitives::merkle_tree::prelude::MerkleProof;
 <span class="kw">use </span>std::ops::RangeBounds;
 
 <span class="doccomment">/// Wrapper to add extensibility to an existing data source.
@@ -662,8 +684,22 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         snapshot: Snapshot&lt;Types, State, ARITY&gt;,
         key: State::Key,
-    ) -&gt; QueryResult&lt;MerklePath&lt;State::Entry, State::Key, State::T&gt;&gt; {
+    ) -&gt; QueryResult&lt;MerkleProof&lt;State::Entry, State::Key, State::T, ARITY&gt;&gt; {
         <span class="self">self</span>.data_source.get_path(snapshot, key).<span class="kw">await
+    </span>}
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;D, U&gt; MerklizedStateHeightPersistence <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
+<span class="kw">where
+    </span>D: MerklizedStateHeightPersistence + Send + Sync,
+    U: Send + Sync,
+{
+    <span class="kw">async fn </span>set_last_state_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>, height: usize) -&gt; QueryResult&lt;()&gt; {
+        <span class="self">self</span>.data_source.set_last_state_height(height).<span class="kw">await
+    </span>}
+    <span class="kw">async fn </span>get_last_state_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="self">self</span>.data_source.get_last_state_height().<span class="kw">await
     </span>}
 }
 

@@ -3319,6 +3319,38 @@
 <a href="#3317" id="3317">3317</a>
 <a href="#3318" id="3318">3318</a>
 <a href="#3319" id="3319">3319</a>
+<a href="#3320" id="3320">3320</a>
+<a href="#3321" id="3321">3321</a>
+<a href="#3322" id="3322">3322</a>
+<a href="#3323" id="3323">3323</a>
+<a href="#3324" id="3324">3324</a>
+<a href="#3325" id="3325">3325</a>
+<a href="#3326" id="3326">3326</a>
+<a href="#3327" id="3327">3327</a>
+<a href="#3328" id="3328">3328</a>
+<a href="#3329" id="3329">3329</a>
+<a href="#3330" id="3330">3330</a>
+<a href="#3331" id="3331">3331</a>
+<a href="#3332" id="3332">3332</a>
+<a href="#3333" id="3333">3333</a>
+<a href="#3334" id="3334">3334</a>
+<a href="#3335" id="3335">3335</a>
+<a href="#3336" id="3336">3336</a>
+<a href="#3337" id="3337">3337</a>
+<a href="#3338" id="3338">3338</a>
+<a href="#3339" id="3339">3339</a>
+<a href="#3340" id="3340">3340</a>
+<a href="#3341" id="3341">3341</a>
+<a href="#3342" id="3342">3342</a>
+<a href="#3343" id="3343">3343</a>
+<a href="#3344" id="3344">3344</a>
+<a href="#3345" id="3345">3345</a>
+<a href="#3346" id="3346">3346</a>
+<a href="#3347" id="3347">3347</a>
+<a href="#3348" id="3348">3348</a>
+<a href="#3349" id="3349">3349</a>
+<a href="#3350" id="3350">3350</a>
+<a href="#3351" id="3351">3351</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -3363,6 +3395,7 @@
         node_implementation::NodeType,
     },
 };
+<span class="kw">use </span>jf_primitives::merkle_tree::prelude::MerkleProof;
 
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>tokio_postgres::types::{private::BytesMut, to_sql_checked, FromSql, Type};
@@ -3399,7 +3432,10 @@
         storage::pruning::{PruneStorage, PrunerCfg, PrunerConfig},
         VersionedDataSource,
     },
-    merklized_state::{MerklizedState, MerklizedStateDataSource, Snapshot, UpdateStateData},
+    merklized_state::{
+        MerklizedState, MerklizedStateDataSource, MerklizedStateHeightPersistence, Snapshot,
+        UpdateStateData,
+    },
     node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
     task::BackgroundTask,
     types::HeightIndexed,
@@ -4697,7 +4733,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         snapshot: Snapshot&lt;Types, State, ARITY&gt;,
         key: State::Key,
-    ) -&gt; QueryResult&lt;MerklePath&lt;State::Entry, State::Key, State::T&gt;&gt; {
+    ) -&gt; QueryResult&lt;MerkleProof&lt;State::Entry, State::Key, State::T, ARITY&gt;&gt; {
         <span class="kw">let </span>state_type = State::state_type();
         <span class="kw">let </span>tree_height = State::tree_height();
         <span class="kw">let </span>header_state_commitment_field = State::header_state_commitment_field();
@@ -4899,7 +4935,36 @@
             });
         }
 
-        <span class="prelude-val">Ok</span>(proof_path)
+        <span class="prelude-val">Ok</span>(MerkleProof {
+            pos: key,
+            proof: proof_path,
+        })
+    }
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl </span>MerklizedStateHeightPersistence <span class="kw">for </span>SqlStorage {
+    <span class="kw">async fn </span>set_last_state_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>, height: usize) -&gt; QueryResult&lt;()&gt; {
+        <span class="self">self</span>.transaction()
+            .<span class="kw">await</span><span class="question-mark">?
+            </span>.upsert(
+                <span class="string">"last_merklized_state_height"</span>,
+                [<span class="string">"id"</span>, <span class="string">"height"</span>],
+                [<span class="string">"id"</span>],
+                [[sql_param(<span class="kw-2">&amp;</span>(<span class="number">1_i32</span>)), sql_param(<span class="kw-2">&amp;</span>(height <span class="kw">as </span>i64))]],
+            )
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
+    }
+    <span class="kw">async fn </span>get_last_state_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">let </span>row = <span class="self">self
+            </span>.query_opt_static(<span class="string">"SELECT * from last_merklized_state_height"</span>)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>height = row.map(|r| r.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"height"</span>) <span class="kw">as </span>usize);
+
+        <span class="prelude-val">Ok</span>(height.unwrap_or(<span class="number">0</span>))
     }
 }
 
@@ -6230,7 +6295,7 @@
             <span class="macro">tracing::info!</span>(<span class="string">"merkle path {:?}"</span>, merkle_path);
 
             <span class="comment">// merkle path from the storage should match the path from test tree
-            </span><span class="macro">assert_eq!</span>(merkle_path, proof.proof.clone(), <span class="string">"merkle paths mismatch"</span>);
+            </span><span class="macro">assert_eq!</span>(merkle_path, proof.clone(), <span class="string">"merkle paths mismatch"</span>);
         }
 
         <span class="comment">// Get the proof of index 0 with bh = 1
@@ -6302,7 +6367,7 @@
             .<span class="kw">await
             </span>.unwrap();
 
-        <span class="macro">assert_eq!</span>(path_with_bh_2, proof_bh_2.proof);
+        <span class="macro">assert_eq!</span>(path_with_bh_2, proof_bh_2);
         <span class="kw">let </span>path_with_bh_1 =
             &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
                 <span class="kw-2">&amp;</span>storage,
@@ -6311,7 +6376,7 @@
             )
             .<span class="kw">await
             </span>.unwrap();
-        <span class="macro">assert_eq!</span>(path_with_bh_1, proof_bh_1.proof);
+        <span class="macro">assert_eq!</span>(path_with_bh_1, proof_bh_1);
     }
 
     <span class="attr">#[async_std::test]
@@ -6372,7 +6437,7 @@
         <span class="comment">// merkle path from the storage should match the path from test tree
         </span><span class="macro">assert_eq!</span>(
             merkle_path,
-            proof_before_remove.proof.clone(),
+            proof_before_remove.clone(),
             <span class="string">"merkle paths mismatch"
         </span>);
 
@@ -6414,7 +6479,7 @@
             </span>.unwrap();
         <span class="comment">// Assert that the paths from the db and the tree are equal
         </span><span class="macro">assert_eq!</span>(
-            non_membership_path, proof_after_remove.proof,
+            non_membership_path, proof_after_remove,
             <span class="string">"merkle paths dont match"
         </span>);
 
@@ -6429,10 +6494,7 @@
         )
         .<span class="kw">await
         </span>.unwrap();
-        <span class="macro">assert_eq!</span>(
-            proof_bh_1, proof_before_remove.proof,
-            <span class="string">"merkle paths dont match"
-        </span>);
+        <span class="macro">assert_eq!</span>(proof_bh_1, proof_before_remove, <span class="string">"merkle paths dont match"</span>);
     }
 
     <span class="attr">#[async_std::test]
@@ -6478,17 +6540,18 @@
         .<span class="kw">await
         </span>.expect(<span class="string">"failed to insert nodes"</span>);
 
-        <span class="kw">let </span>merkle_path = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
-            <span class="kw-2">&amp;</span>storage,
-            Snapshot::Commit(commitment),
-            <span class="number">0</span>,
-        )
-        .<span class="kw">await
-        </span>.unwrap();
+        <span class="kw">let </span>merkle_proof =
+            &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
+                <span class="kw-2">&amp;</span>storage,
+                Snapshot::Commit(commitment),
+                <span class="number">0</span>,
+            )
+            .<span class="kw">await
+            </span>.unwrap();
 
         <span class="kw">let </span>(<span class="kw">_</span>, proof) = test_tree.lookup(<span class="number">0</span>).expect_ok().unwrap();
 
-        <span class="macro">assert_eq!</span>(merkle_path, proof.proof.clone(), <span class="string">"merkle paths mismatch"</span>);
+        <span class="macro">assert_eq!</span>(merkle_proof, proof.clone(), <span class="string">"merkle paths mismatch"</span>);
     }
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_merklized_state_missing_state() {
@@ -6577,14 +6640,15 @@
                 .<span class="kw">await
                 </span>.unwrap();
         <span class="comment">// Querying the path again
-        </span><span class="kw">let </span>merkle_path = &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
-            <span class="kw-2">&amp;</span>storage,
-            Snapshot::Index(block_height <span class="kw">as </span>u64),
-            <span class="number">1</span>,
-        )
-        .<span class="kw">await
-        </span>.unwrap();
-        <span class="macro">assert_eq!</span>(merkle_path, proof.proof, <span class="string">"path dont match"</span>);
+        </span><span class="kw">let </span>merkle_proof =
+            &lt;SqlStorage <span class="kw">as </span>MerklizedStateDataSource&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;&gt;::get_path(
+                <span class="kw-2">&amp;</span>storage,
+                Snapshot::Index(block_height <span class="kw">as </span>u64),
+                <span class="number">1</span>,
+            )
+            .<span class="kw">await
+            </span>.unwrap();
+        <span class="macro">assert_eq!</span>(merkle_proof, proof, <span class="string">"path dont match"</span>);
 
         <span class="comment">// Update the tree again for index 0 with created (bh) = 2
         // Delete one of the node in the traversal path
