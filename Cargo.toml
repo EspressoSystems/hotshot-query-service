@@ -138,3 +138,9 @@ rand = "0.8"
 spin_sleep = "1.2"
 tempfile = "3.10"
 reqwest = "0.12.3"
+
+[patch."https://github.com/EspressoSystems/HotShot"]
+hotshot = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "ss/fix-leaf-commit-again" }
+hotshot-types = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "ss/fix-leaf-commit-again" }
+hotshot-testing = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "ss/fix-leaf-commit-again" }
+hotshot-example-types = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "ss/fix-leaf-commit-again" }
