@@ -210,9 +210,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.81"
+version = "1.0.82"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0952808a6c2afd1aa8947271f3a60f1a6763c7b912d210184c5149b5cf147247"
+checksum = "f538837af36e6f6a9be0faa67f9a314f8119e4e4b5867c6ab40ed60360142519"
 
 [[package]]
 name = "arbitrary"
@@ -499,7 +499,7 @@ dependencies = [
  "num-traits",
  "rusticata-macros",
  "thiserror",
- "time 0.3.34",
+ "time 0.3.36",
 ]
 
 [[package]]
@@ -883,9 +883,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.79"
+version = "0.1.80"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a507401cad91ec6a857ed5513a2073c82a9b9048762b885bb98655b306964681"
+checksum = "c6fa2087f2753a7da8cc1c0dbfcf89579dd57458e36769de5ac750b4671737ca"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1305,7 +1305,7 @@ dependencies = [
 [[package]]
 name = "cdn-broker"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.24#5e0689dd07e3a5692b272afb176be43d26002f3d"
+source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.25#a506712f553b4800ce3a36e62341c839153aeab3"
 dependencies = [
  "async-std",
  "cdn-proto",
@@ -1328,7 +1328,7 @@ dependencies = [
 [[package]]
 name = "cdn-client"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.24#5e0689dd07e3a5692b272afb176be43d26002f3d"
+source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.25#a506712f553b4800ce3a36e62341c839153aeab3"
 dependencies = [
  "async-std",
  "cdn-proto",
@@ -1344,7 +1344,7 @@ dependencies = [
 [[package]]
 name = "cdn-marshal"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.24#5e0689dd07e3a5692b272afb176be43d26002f3d"
+source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.25#a506712f553b4800ce3a36e62341c839153aeab3"
 dependencies = [
  "async-std",
  "cdn-proto",
@@ -1359,7 +1359,7 @@ dependencies = [
 [[package]]
 name = "cdn-proto"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.24#5e0689dd07e3a5692b272afb176be43d26002f3d"
+source = "git+https://github.com/EspressoSystems/Push-CDN?tag=0.1.25#a506712f553b4800ce3a36e62341c839153aeab3"
 dependencies = [
  "anyhow",
  "ark-serialize",
@@ -1420,9 +1420,9 @@ dependencies = [
 
 [[package]]
 name = "chrono"
-version = "0.4.35"
+version = "0.4.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8eaf5903dcbc0a39312feb77df2ff4c76387d591b9fc7b04a238dcf8bb62639a"
+checksum = "a21f936df1771bf62b77f047b726c4625ff2e8aa607c01ec06e5a05bd8463401"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
@@ -2300,9 +2300,9 @@ checksum = "bbbaaaf38131deb9ca518a274a45bfdb8771f139517b073b16c2d3d32ae5037b"
 
 [[package]]
 name = "either"
-version = "1.10.0"
+version = "1.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11157ac094ffbdde99aa67b23417ebdd801842852b500e395a45a9c0aac03e4a"
+checksum = "a47c1c47d2f5964e29c61246e81db715514cd532db6b5116a25ea3c03d6780a2"
 dependencies = [
  "serde",
 ]
@@ -3113,7 +3113,7 @@ dependencies = [
 [[package]]
 name = "hotshot"
 version = "0.5.37"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=nfy/builder_commitment_support#099294dc2676fbbf80c476499504e2c34daa0201"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.37#696c3f04b303a1f69b2917e07fa986e1a4ee4172"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -3149,7 +3149,7 @@ dependencies = [
  "sha2 0.10.8",
  "snafu 0.8.2",
  "surf-disco",
- "time 0.3.34",
+ "time 0.3.36",
  "tokio",
  "tracing",
  "vbs",
@@ -3158,7 +3158,7 @@ dependencies = [
 [[package]]
 name = "hotshot-builder-api"
 version = "0.1.6"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=nfy/builder_commitment_support#099294dc2676fbbf80c476499504e2c34daa0201"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.37#696c3f04b303a1f69b2917e07fa986e1a4ee4172"
 dependencies = [
  "async-trait",
  "clap",
@@ -3177,7 +3177,7 @@ dependencies = [
 [[package]]
 name = "hotshot-example-types"
 version = "0.5.37"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=nfy/builder_commitment_support#099294dc2676fbbf80c476499504e2c34daa0201"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.37#696c3f04b303a1f69b2917e07fa986e1a4ee4172"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -3199,7 +3199,7 @@ dependencies = [
  "sha2 0.10.8",
  "sha3",
  "snafu 0.8.2",
- "time 0.3.34",
+ "time 0.3.36",
  "tokio",
  "tracing",
 ]
@@ -3207,7 +3207,7 @@ dependencies = [
 [[package]]
 name = "hotshot-macros"
 version = "0.5.37"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=nfy/builder_commitment_support#099294dc2676fbbf80c476499504e2c34daa0201"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.37#696c3f04b303a1f69b2917e07fa986e1a4ee4172"
 dependencies = [
  "derive_builder",
  "proc-macro2",
@@ -3218,7 +3218,7 @@ dependencies = [
 [[package]]
 name = "hotshot-orchestrator"
 version = "0.5.37"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=nfy/builder_commitment_support#099294dc2676fbbf80c476499504e2c34daa0201"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.37#696c3f04b303a1f69b2917e07fa986e1a4ee4172"
 dependencies = [
  "anyhow",
  "async-compatibility-layer",
@@ -3290,7 +3290,7 @@ dependencies = [
  "tagged-base64 0.4.0",
  "tempfile",
  "tide-disco",
- "time 0.3.34",
+ "time 0.3.36",
  "tokio",
  "tokio-postgres",
  "toml",
@@ -3303,7 +3303,7 @@ dependencies = [
 [[package]]
 name = "hotshot-task"
 version = "0.5.37"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=nfy/builder_commitment_support#099294dc2676fbbf80c476499504e2c34daa0201"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.37#696c3f04b303a1f69b2917e07fa986e1a4ee4172"
 dependencies = [
  "async-broadcast",
  "async-compatibility-layer",
@@ -3316,7 +3316,7 @@ dependencies = [
 [[package]]
 name = "hotshot-task-impls"
 version = "0.5.37"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=nfy/builder_commitment_support#099294dc2676fbbf80c476499504e2c34daa0201"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.37#696c3f04b303a1f69b2917e07fa986e1a4ee4172"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -3340,7 +3340,7 @@ dependencies = [
  "snafu 0.8.2",
  "surf-disco",
  "tagged-base64 0.4.0",
- "time 0.3.34",
+ "time 0.3.36",
  "tokio",
  "tracing",
  "vbs",
@@ -3349,7 +3349,7 @@ dependencies = [
 [[package]]
 name = "hotshot-testing"
 version = "0.5.37"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=nfy/builder_commitment_support#099294dc2676fbbf80c476499504e2c34daa0201"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.37#696c3f04b303a1f69b2917e07fa986e1a4ee4172"
 dependencies = [
  "async-broadcast",
  "async-compatibility-layer",
@@ -3388,7 +3388,7 @@ dependencies = [
 [[package]]
 name = "hotshot-types"
 version = "0.1.11"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=nfy/builder_commitment_support#099294dc2676fbbf80c476499504e2c34daa0201"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.37#696c3f04b303a1f69b2917e07fa986e1a4ee4172"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -3427,7 +3427,7 @@ dependencies = [
  "sha2 0.10.8",
  "snafu 0.8.2",
  "tagged-base64 0.4.0",
- "time 0.3.34",
+ "time 0.3.36",
  "tokio",
  "tracing",
  "typenum",
@@ -3438,7 +3438,7 @@ dependencies = [
 [[package]]
 name = "hotshot-web-server"
 version = "0.5.37"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=nfy/builder_commitment_support#099294dc2676fbbf80c476499504e2c34daa0201"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.37#696c3f04b303a1f69b2917e07fa986e1a4ee4172"
 dependencies = [
  "async-compatibility-layer",
  "async-lock 2.8.0",
@@ -4509,7 +4509,7 @@ dependencies = [
 [[package]]
 name = "libp2p-networking"
 version = "0.5.37"
-source = "git+https://github.com/EspressoSystems/HotShot.git?branch=nfy/builder_commitment_support#099294dc2676fbbf80c476499504e2c34daa0201"
+source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.37#696c3f04b303a1f69b2917e07fa986e1a4ee4172"
 dependencies = [
  "anyhow",
  "async-compatibility-layer",
@@ -5950,7 +5950,7 @@ dependencies = [
  "postgres-protocol",
  "serde",
  "serde_json",
- "time 0.3.34",
+ "time 0.3.36",
 ]
 
 [[package]]
@@ -6352,7 +6352,7 @@ checksum = "52c4f3084aa3bc7dfbba4eff4fab2a54db4324965d8872ab933565e6fbd83bc6"
 dependencies = [
  "pem",
  "ring 0.16.20",
- "time 0.3.34",
+ "time 0.3.36",
  "yasna",
 ]
 
@@ -6364,7 +6364,7 @@ checksum = "48406db8ac1f3cbc7dcdb56ec355343817958a356ff430259bb07baf7607e1e1"
 dependencies = [
  "pem",
  "ring 0.17.7",
- "time 0.3.34",
+ "time 0.3.36",
  "x509-parser",
  "yasna",
 ]
@@ -6434,7 +6434,7 @@ dependencies = [
  "serde",
  "siphasher 1.0.0",
  "thiserror",
- "time 0.3.34",
+ "time 0.3.36",
  "tokio",
  "tokio-postgres",
  "toml",
@@ -7074,7 +7074,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "serde_with_macros",
- "time 0.3.34",
+ "time 0.3.36",
 ]
 
 [[package]]
@@ -7488,7 +7488,7 @@ dependencies = [
  "smallvec",
  "sqlformat",
  "thiserror",
- "time 0.3.34",
+ "time 0.3.36",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -7572,7 +7572,7 @@ dependencies = [
  "sqlx-core",
  "stringprep",
  "thiserror",
- "time 0.3.34",
+ "time 0.3.36",
  "tracing",
  "whoami",
 ]
@@ -7611,7 +7611,7 @@ dependencies = [
  "sqlx-core",
  "stringprep",
  "thiserror",
- "time 0.3.34",
+ "time 0.3.36",
  "tracing",
  "whoami",
 ]
@@ -7634,7 +7634,7 @@ dependencies = [
  "percent-encoding",
  "serde",
  "sqlx-core",
- "time 0.3.34",
+ "time 0.3.36",
  "tracing",
  "url",
  "urlencoding",
@@ -8143,9 +8143,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.34"
+version = "0.3.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8248b6521bb14bc45b4067159b9b6ad792e2d6d754d6c41fb50e29fefe38749"
+checksum = "5dfd88e563464686c916c7e46e623e520ddc6d79fa6641390f2e3fa86e83e885"
 dependencies = [
  "deranged",
  "itoa",
@@ -8153,7 +8153,7 @@ dependencies = [
  "powerfmt",
  "serde",
  "time-core",
- "time-macros 0.2.17",
+ "time-macros 0.2.18",
 ]
 
 [[package]]
@@ -8174,9 +8174,9 @@ dependencies = [
 
 [[package]]
 name = "time-macros"
-version = "0.2.17"
+version = "0.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ba3a3ef41e6672a2f0f001392bb5dcd3ff0a9992d618ca761a11c3121547774"
+checksum = "3f252a68540fde3a3877aeea552b832b40ab9a69e318efd078774a01ddee1ccf"
 dependencies = [
  "num-conv",
  "time-core",
@@ -8221,9 +8221,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.36.0"
+version = "1.37.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61285f6515fa018fb2d1e46eb21223fff441ee8db5d0f1435e8ab4f5cdb80931"
+checksum = "1adbebffeca75fcfd058afa480fb6c0b81e165a0323f9c9d39c9697e37c46787"
 dependencies = [
  "backtrace",
  "bytes",
@@ -9267,7 +9267,7 @@ dependencies = [
  "ring 0.16.20",
  "rusticata-macros",
  "thiserror",
- "time 0.3.34",
+ "time 0.3.36",
 ]
 
 [[package]]
@@ -9331,7 +9331,7 @@ version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e17bb3549cc1321ae1296b9cdc2698e2b6cb1992adfa19a8c72e5b7a738f44cd"
 dependencies = [
- "time 0.3.34",
+ "time 0.3.36",
 ]
 
 [[package]]
