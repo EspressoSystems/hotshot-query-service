@@ -12,7 +12,7 @@
 
 [package]
 name = "hotshot-query-service"
-version = "0.1.4"
+version = "0.1.7"
 authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2021"
 license = "GPL-3.0-or-later"
@@ -74,7 +74,7 @@ committable = "0.2"
 custom_debug = "0.6"
 derivative = "2.2"
 derive_more = "0.99"
-either = "1.10"
+either = "1.11"
 futures = "0.3"
 hotshot = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.37" }
 hotshot-testing = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.37" }
