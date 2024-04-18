@@ -322,8 +322,6 @@
 <a href="#320" id="320">320</a>
 <a href="#321" id="321">321</a>
 <a href="#322" id="322">322</a>
-<a href="#323" id="323">323</a>
-<a href="#324" id="324">324</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -425,10 +423,8 @@
 
         <span class="comment">// Start the builder server
         </span><span class="kw">let </span>(builder_task, builder_url) =
-            &lt;SimpleBuilderImplementation <span class="kw">as </span>TestBuilderImplementation&lt;MockTypes&gt;&gt;::start(Arc::new(
-                membership,
-            ))
-            .<span class="kw">await</span>;
+            &lt;SimpleBuilderImplementation <span class="kw">as </span>TestBuilderImplementation&lt;MockTypes&gt;&gt;::start(<span class="number">1</span>, ())
+                .<span class="kw">await</span>;
 
         <span class="kw">let </span>nodes = join_all(
             priv_keys
