@@ -977,7 +977,7 @@
                 </span><span class="kw">let </span>num_storage_nodes =
                     VidSchemeType::get_num_storage_nodes(common.common()) <span class="kw">as </span>usize;
                 <span class="kw">let </span>bytes = <span class="kw">match </span>payload.data().encode() {
-                    <span class="prelude-val">Ok</span>(bytes) =&gt; bytes.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
+                    <span class="prelude-val">Ok</span>(bytes) =&gt; bytes,
                     <span class="prelude-val">Err</span>(err) =&gt; {
                         <span class="macro">tracing::error!</span>(
                             %err,

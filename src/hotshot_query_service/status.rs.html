@@ -472,7 +472,7 @@
         <span class="comment">// Check updated block height.
         // being updated and the decide event being published. Retry this a few times until it
         // succeeds.
-        </span><span class="kw">while </span>client.get::&lt;u64&gt;(<span class="string">"block-height"</span>).send().<span class="kw">await</span>.unwrap() == <span class="number">0 </span>{
+        </span><span class="kw">while </span>client.get::&lt;u64&gt;(<span class="string">"block-height"</span>).send().<span class="kw">await</span>.unwrap() &lt;= <span class="number">1 </span>{
             <span class="macro">tracing::info!</span>(<span class="string">"waiting for block height to update"</span>);
             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
         }

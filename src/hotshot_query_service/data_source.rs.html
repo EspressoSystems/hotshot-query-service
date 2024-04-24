@@ -1590,7 +1590,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Mock up some consensus data.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>qc = QuorumCertificate::&lt;MockTypes&gt;::genesis();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>qc = QuorumCertificate::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
         <span class="kw">let </span><span class="kw-2">mut </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
         <span class="comment">// Increment the block number, to distinguish this block from the genesis block, which
         // already exists.
@@ -1633,7 +1633,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Mock up some consensus data.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>qc = QuorumCertificate::&lt;MockTypes&gt;::genesis();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>qc = QuorumCertificate::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
         <span class="kw">let </span><span class="kw-2">mut </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
         <span class="comment">// Increment the block number, to distinguish this block from the genesis block, which
         // already exists.
@@ -1690,7 +1690,7 @@
     <span class="kw">use </span>committable::Committable;
     <span class="kw">use </span>futures::{future::join_all, stream::StreamExt};
     <span class="kw">use </span>hotshot_example_types::{
-        block_types::{TestBlockHeader, TestBlockPayload},
+        block_types::{TestBlockHeader, TestBlockPayload, TestMetadata},
         state_types::TestInstanceState,
     };
     <span class="kw">use </span>hotshot_types::{
@@ -1845,7 +1845,7 @@
             // computing the total size.
             </span><span class="kw">let </span>(payload, metadata) =
                 TestBlockPayload::from_transactions([mock_transaction(<span class="macro">vec!</span>[i <span class="kw">as </span>u8 % <span class="number">2</span>])]).unwrap();
-            <span class="kw">let </span>encoded = payload.encode().unwrap().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+            <span class="kw">let </span>encoded = payload.encode().unwrap();
             <span class="kw">let </span>payload_commitment = vid_commitment(<span class="kw-2">&amp;</span>encoded, <span class="number">1</span>);
             <span class="kw">let </span>header = TestBlockHeader {
                 block_number: i,
@@ -1984,7 +1984,7 @@
         <span class="comment">// Recover payload.
         </span><span class="macro">tracing::info!</span>(<span class="string">"recovering payload"</span>);
         <span class="kw">let </span>bytes = vid.recover_payload(<span class="kw-2">&amp;</span>shares, common).unwrap();
-        <span class="kw">let </span>recovered = MockPayload::from_bytes(bytes.into_iter(), <span class="kw-2">&amp;</span>());
+        <span class="kw">let </span>recovered = MockPayload::from_bytes(<span class="kw-2">&amp;</span>bytes, <span class="kw-2">&amp;</span>TestMetadata);
         <span class="macro">assert_eq!</span>(recovered, <span class="kw-2">*</span>block.payload());
         <span class="macro">assert_eq!</span>(recovered.transactions, <span class="macro">vec!</span>[txn]);
     }

@@ -3762,10 +3762,6 @@
 <a href="#3760" id="3760">3760</a>
 <a href="#3761" id="3761">3761</a>
 <a href="#3762" id="3762">3762</a>
-<a href="#3763" id="3763">3763</a>
-<a href="#3764" id="3764">3764</a>
-<a href="#3765" id="3765">3765</a>
-<a href="#3766" id="3766">3766</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -4667,20 +4663,16 @@
 
         <span class="comment">// The header and payload tables should already have been initialized when we inserted the
         // corresponding leaf. All we have to do is add the payload itself and its size.
-        </span><span class="kw">let </span>payload = block
-            .payload
-            .encode()
-            .map_err(|err| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to serialize block: {err}"</span>),
-            })<span class="question-mark">?
-            </span>.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        </span><span class="kw">let </span>payload = block.payload.encode().map_err(|err| QueryError::Error {
+            message: <span class="macro">format!</span>(<span class="string">"failed to serialize block: {err}"</span>),
+        })<span class="question-mark">?</span>;
         tx.upsert(
             <span class="string">"payload"</span>,
             [<span class="string">"height"</span>, <span class="string">"data"</span>, <span class="string">"size"</span>],
             [<span class="string">"height"</span>],
             [[
                 sql_param(<span class="kw-2">&amp;</span>(block.height() <span class="kw">as </span>i64)),
-                sql_param(<span class="kw-2">&amp;</span>payload),
+                sql_param(<span class="kw-2">&amp;</span>payload.as_ref()),
                 sql_param(<span class="kw-2">&amp;</span>(block.size() <span class="kw">as </span>i32)),
             ]],
         )
@@ -6074,7 +6066,7 @@
         })<span class="question-mark">?</span>;
 
     <span class="comment">// Reconstruct the full block payload.
-    </span><span class="kw">let </span>payload = Payload::&lt;Types&gt;::from_bytes(payload_data.into_iter(), header.metadata());
+    </span><span class="kw">let </span>payload = Payload::&lt;Types&gt;::from_bytes(<span class="kw-2">&amp;</span>payload_data, header.metadata());
 
     <span class="comment">// Reconstruct the query data by adding metadata.
     </span><span class="kw">let </span>hash: String = row.try_get(<span class="string">"hash"</span>).map_err(|err| QueryError::Error {

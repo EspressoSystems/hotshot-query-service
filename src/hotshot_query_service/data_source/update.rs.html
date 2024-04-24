@@ -340,7 +340,7 @@
 ) {
     <span class="kw">let </span>payload = Payload::&lt;Types&gt;::genesis().<span class="number">0</span>;
     <span class="kw">let </span>bytes = <span class="kw">match </span>payload.encode() {
-        <span class="prelude-val">Ok</span>(bytes) =&gt; bytes.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
+        <span class="prelude-val">Ok</span>(bytes) =&gt; bytes,
         <span class="prelude-val">Err</span>(err) =&gt; {
             <span class="macro">tracing::error!</span>(%err, <span class="string">"unable to encode genesis payload"</span>);
             <span class="kw">return</span>;
