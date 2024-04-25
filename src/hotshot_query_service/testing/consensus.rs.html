@@ -322,6 +322,8 @@
 <a href="#320" id="320">320</a>
 <a href="#321" id="321">321</a>
 <a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -364,9 +366,9 @@
     traits::{election::Membership, signature_key::SignatureKey <span class="kw">as _</span>},
     ExecutionType, HotShotConfig, PeerConfig, ValidatorConfig,
 };
-<span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::num::NonZeroUsize;
 <span class="kw">use </span>std::time::Duration;
+<span class="kw">use </span>std::{collections::HashSet, fmt::Display};
 <span class="kw">use </span>tracing::{info_span, Instrument};
 
 <span class="kw">struct </span>MockNode&lt;D: DataSourceLifeCycle&gt; {
@@ -437,6 +439,7 @@
                         private_key: priv_key.clone(),
                         stake_value: stake,
                         state_key_pair: state_key_pairs[node_id].clone(),
+                        is_da: <span class="bool-val">true</span>,
                     };
                     <span class="kw">let </span>config = HotShotConfig {
                         builder_url: builder_url.clone(),
@@ -458,6 +461,7 @@
                         execution_type: ExecutionType::Continuous,
                         election_config: <span class="prelude-val">None</span>,
                         da_staked_committee_size: pub_keys.len(),
+                        known_da_nodes: HashSet::from_iter(known_nodes_with_stake.clone()),
                         da_non_staked_committee_size: <span class="number">0</span>,
                         data_request_delay: Duration::from_millis(<span class="number">200</span>),
                         view_sync_timeout: Duration::from_millis(<span class="number">250</span>),
