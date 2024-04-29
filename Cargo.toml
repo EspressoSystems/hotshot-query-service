@@ -140,7 +140,7 @@ spin_sleep = "1.2"
 tempfile = "3.10"
 
 [patch."https://github.com/EspressoSystems/HotShot"]
-hotshot = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "ss/min-propose-time" }
-hotshot-types = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "ss/min-propose-time" }
-hotshot-testing = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "ss/min-propose-time" }
-hotshot-example-types = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "ss/min-propose-time" }
+hotshot = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "jb/simple-builder-empty-blocks" }
+hotshot-types = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "jb/simple-builder-empty-blocks" }
+hotshot-testing = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "jb/simple-builder-empty-blocks" }
+hotshot-example-types = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "jb/simple-builder-empty-blocks" }
