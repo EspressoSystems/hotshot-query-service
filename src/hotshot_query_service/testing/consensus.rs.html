@@ -324,6 +324,7 @@
 <a href="#322" id="322">322</a>
 <a href="#323" id="323">323</a>
 <a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -339,7 +340,7 @@
 </span><span class="kw">use </span><span class="kw">super</span>::mocks::{MockMembership, MockNodeImpl, MockTransaction, MockTypes};
 <span class="kw">use crate</span>::{
     availability::AvailabilityDataSource,
-    data_source::{FileSystemDataSource, UpdateDataSource, VersionedDataSource},
+    data_source::{FileSystemDataSource, SqlDataSource, UpdateDataSource, VersionedDataSource},
     fetching::provider::NoFetching,
     node::NodeDataSource,
     status::{StatusDataSource, UpdateStatusData},
@@ -386,6 +387,7 @@
 <span class="comment">// MockNetwork can be used with any DataSourceLifeCycle, but it's nice to have a default with a
 // convenient type alias.
 </span><span class="kw">pub type </span>MockDataSource = FileSystemDataSource&lt;MockTypes, NoFetching&gt;;
+<span class="kw">pub type </span>MockSqlDataSource = SqlDataSource&lt;MockTypes, NoFetching&gt;;
 
 <span class="kw">pub const </span>NUM_NODES: usize = <span class="number">2</span>;
 

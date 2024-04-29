@@ -1229,6 +1229,7 @@
 <span class="kw">pub mod </span>availability;
 <span class="kw">pub mod </span>data_source;
 <span class="kw">mod </span>error;
+<span class="kw">pub mod </span>explorer;
 <span class="kw">pub mod </span>fetching;
 <span class="kw">pub mod </span>merklized_state;
 <span class="kw">pub mod </span>metrics;
@@ -1382,7 +1383,6 @@
     <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>async_trait::async_trait;
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
-
     <span class="kw">use </span>futures::FutureExt;
     <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
     <span class="kw">use </span>hotshot_types::constants::{Version01, STATIC_VER_0_1};
