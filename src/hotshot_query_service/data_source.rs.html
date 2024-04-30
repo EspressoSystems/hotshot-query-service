@@ -1122,6 +1122,9 @@
 <a href="#1120" id="1120">1120</a>
 <a href="#1121" id="1121">1121</a>
 <a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1182,7 +1185,6 @@
         stream::{BoxStream, StreamExt},
     };
     <span class="kw">use </span>std::ops::{Bound, RangeBounds};
-
     <span class="doccomment">/// Apply an upper bound to a range based on the currently available block height.
     </span><span class="kw">async fn </span>bound_range&lt;R, D&gt;(ds: <span class="kw-2">&amp;</span>D, range: R) -&gt; <span class="kw">impl </span>RangeBounds&lt;usize&gt;
     <span class="kw">where
@@ -1698,6 +1700,7 @@
         vid::{vid_scheme, VidSchemeType},
     };
     <span class="kw">use </span>jf_primitives::vid::VidScheme;
+    <span class="kw">use </span>std::sync::Arc;
 
     <span class="attr">#[async_std::test]
     </span><span class="kw">pub async fn </span>test_sync_status&lt;D: TestableDataSource&gt;() {
@@ -1843,8 +1846,11 @@
             // (since we insert more than 2 transactions total). The query service should still
             // count these as separate transactions and should include both duplicates when
             // computing the total size.
-            </span><span class="kw">let </span>(payload, metadata) =
-                TestBlockPayload::from_transactions([mock_transaction(<span class="macro">vec!</span>[i <span class="kw">as </span>u8 % <span class="number">2</span>])]).unwrap();
+            </span><span class="kw">let </span>(payload, metadata) = TestBlockPayload::from_transactions(
+                [mock_transaction(<span class="macro">vec!</span>[i <span class="kw">as </span>u8 % <span class="number">2</span>])],
+                Arc::new(TestInstanceState {}),
+            )
+            .unwrap();
             <span class="kw">let </span>encoded = payload.encode().unwrap();
             <span class="kw">let </span>payload_commitment = vid_commitment(<span class="kw-2">&amp;</span>encoded, <span class="number">1</span>);
             <span class="kw">let </span>header = TestBlockHeader {
