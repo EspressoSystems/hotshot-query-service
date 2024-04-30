@@ -77,7 +77,7 @@ derive_more = "0.99"
 either = "1.11"
 futures = "0.3"
 hotshot = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.44" }
-hotshot-testing = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.44" }
+hotshot-testing = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.45" }
 hotshot-types = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.44" }
 itertools = "0.12.1"
 jf-primitives = { git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.4" }
