@@ -124,6 +124,10 @@
 <a href="#122" id="122">122</a>
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -215,7 +219,8 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Api&lt;State, Error, Ver&gt;, ApiError&gt;
 <span class="kw">where
     </span>State: <span class="lifetime">'static </span>+ Send + Sync + ReadState,
-    &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + MerklizedStateDataSource&lt;Types, M, ARITY&gt;,
+    &lt;State <span class="kw">as </span>ReadState&gt;::State:
+        Send + Sync + MerklizedStateDataSource&lt;Types, M, ARITY&gt; + MerklizedStateHeightPersistence,
     Types: NodeType,
     <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; &lt;M::Commit <span class="kw">as </span>TryFrom&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>TaggedBase64&gt;&gt;::Error: Display,
 {
@@ -244,6 +249,9 @@
                 state.get_path(snapshot, key).<span class="kw">await</span>.context(QuerySnafu)
             }
             .boxed()
+        })<span class="question-mark">?
+        </span>.get(<span class="string">"get_height"</span>, <span class="kw">move </span>|<span class="kw">_</span>, state| {
+            <span class="kw">async move </span>{ state.get_last_state_height().<span class="kw">await</span>.context(QuerySnafu) }.boxed()
         })<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(api)
