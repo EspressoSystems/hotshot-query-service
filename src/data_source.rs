@@ -721,7 +721,7 @@ pub mod node_tests {
             // computing the total size.
             let (payload, metadata) = TestBlockPayload::from_transactions(
                 [mock_transaction(vec![i as u8 % 2])],
-                Arc::new(TestInstanceState {}),
+                &TestInstanceState {},
             )
             .unwrap();
             let encoded = payload.encode().unwrap();
