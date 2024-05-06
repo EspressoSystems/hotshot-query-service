@@ -112,7 +112,7 @@ tokio-postgres = { version = "0.7", optional = true, default-features = false, f
 
 # Dependencies enabled by feature "testing".
 espresso-macros = { git = "https://github.com/EspressoSystems/espresso-macros.git", tag = "0.1.0", optional = true }
-hotshot-example-types = { git = "https://github.com/EspressoSystems/hotshot", rev = "6d293ae9b" }
+hotshot-example-types = { git = "https://github.com/EspressoSystems/hotshot", rev = "6d293ae9b", optional = true }
 portpicker = { version = "0.1", optional = true }
 rand = { version = "0.8", optional = true }
 spin_sleep = { version = "1.2", optional = true }
