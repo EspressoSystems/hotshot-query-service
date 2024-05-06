@@ -573,7 +573,6 @@ pub mod node_tests {
         vid::{vid_scheme, VidSchemeType},
     };
     use jf_primitives::vid::VidScheme;
-    use std::sync::Arc;
 
     #[async_std::test]
     pub async fn test_sync_status<D: TestableDataSource>() {
