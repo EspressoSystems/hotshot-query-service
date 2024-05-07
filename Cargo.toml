@@ -78,7 +78,7 @@ either = "1.11"
 futures = "0.3"
 hotshot = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.48" }
 hotshot-testing = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.48" }
-hotshot-types = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.48" }
+hotshot-types = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.49" }
 itertools = "0.12.1"
 jf-primitives = { git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.4" }
 prometheus = "0.13"
