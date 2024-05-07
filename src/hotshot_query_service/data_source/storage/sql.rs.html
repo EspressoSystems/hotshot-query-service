@@ -4250,67 +4250,6 @@
 <a href="#4248" id="4248">4248</a>
 <a href="#4249" id="4249">4249</a>
 <a href="#4250" id="4250">4250</a>
-<a href="#4251" id="4251">4251</a>
-<a href="#4252" id="4252">4252</a>
-<a href="#4253" id="4253">4253</a>
-<a href="#4254" id="4254">4254</a>
-<a href="#4255" id="4255">4255</a>
-<a href="#4256" id="4256">4256</a>
-<a href="#4257" id="4257">4257</a>
-<a href="#4258" id="4258">4258</a>
-<a href="#4259" id="4259">4259</a>
-<a href="#4260" id="4260">4260</a>
-<a href="#4261" id="4261">4261</a>
-<a href="#4262" id="4262">4262</a>
-<a href="#4263" id="4263">4263</a>
-<a href="#4264" id="4264">4264</a>
-<a href="#4265" id="4265">4265</a>
-<a href="#4266" id="4266">4266</a>
-<a href="#4267" id="4267">4267</a>
-<a href="#4268" id="4268">4268</a>
-<a href="#4269" id="4269">4269</a>
-<a href="#4270" id="4270">4270</a>
-<a href="#4271" id="4271">4271</a>
-<a href="#4272" id="4272">4272</a>
-<a href="#4273" id="4273">4273</a>
-<a href="#4274" id="4274">4274</a>
-<a href="#4275" id="4275">4275</a>
-<a href="#4276" id="4276">4276</a>
-<a href="#4277" id="4277">4277</a>
-<a href="#4278" id="4278">4278</a>
-<a href="#4279" id="4279">4279</a>
-<a href="#4280" id="4280">4280</a>
-<a href="#4281" id="4281">4281</a>
-<a href="#4282" id="4282">4282</a>
-<a href="#4283" id="4283">4283</a>
-<a href="#4284" id="4284">4284</a>
-<a href="#4285" id="4285">4285</a>
-<a href="#4286" id="4286">4286</a>
-<a href="#4287" id="4287">4287</a>
-<a href="#4288" id="4288">4288</a>
-<a href="#4289" id="4289">4289</a>
-<a href="#4290" id="4290">4290</a>
-<a href="#4291" id="4291">4291</a>
-<a href="#4292" id="4292">4292</a>
-<a href="#4293" id="4293">4293</a>
-<a href="#4294" id="4294">4294</a>
-<a href="#4295" id="4295">4295</a>
-<a href="#4296" id="4296">4296</a>
-<a href="#4297" id="4297">4297</a>
-<a href="#4298" id="4298">4298</a>
-<a href="#4299" id="4299">4299</a>
-<a href="#4300" id="4300">4300</a>
-<a href="#4301" id="4301">4301</a>
-<a href="#4302" id="4302">4302</a>
-<a href="#4303" id="4303">4303</a>
-<a href="#4304" id="4304">4304</a>
-<a href="#4305" id="4305">4305</a>
-<a href="#4306" id="4306">4306</a>
-<a href="#4307" id="4307">4307</a>
-<a href="#4308" id="4308">4308</a>
-<a href="#4309" id="4309">4309</a>
-<a href="#4310" id="4310">4310</a>
-<a href="#4311" id="4311">4311</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -4397,7 +4336,7 @@
 <span class="kw">use </span>tokio_postgres::{
     config::Host,
     tls::TlsConnect,
-    types::{private::BytesMut, to_sql_checked, BorrowToSql, FromSql, ToSql, Type},
+    types::{BorrowToSql, ToSql},
     Client, NoTls, Row, ToStatement,
 };
 
@@ -5532,27 +5471,32 @@
         <span class="kw">let </span>name = State::state_type();
         <span class="kw">let </span>block_number = block_number <span class="kw">as </span>i64;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>traversal_path = traversal_path.iter();
+        <span class="kw">let </span><span class="kw-2">mut </span>traversal_path = traversal_path.iter().map(|n| <span class="kw-2">*</span>n <span class="kw">as </span>i32);
         <span class="kw">let </span>txn = <span class="self">self</span>.transaction().<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// All the nodes are collected here, They depend on the hash ids which are returned after
         // hashes are upserted in the db
         </span><span class="kw">let </span><span class="kw-2">mut </span>nodes = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>hashset = HashSet::new();
 
         <span class="kw">for </span>node <span class="kw">in </span>path.iter() {
             <span class="kw">match </span>node {
                 MerkleNode::Empty =&gt; {
-                    <span class="kw">let </span>ltree_path = LTree::from(traversal_path.clone());
                     <span class="kw">let </span>index = serde_json::to_value(pos.clone()).map_err(ParseError::Serde)<span class="question-mark">?</span>;
-
+                    <span class="comment">// The node path represents the sequence of nodes from the root down to a specific node.
+                    // Therefore, the traversal path needs to be reversed
+                    // The root node path is an empty array.
+                    </span><span class="kw">let </span>node_path = traversal_path.clone().rev().collect();
                     nodes.push((
                         Node {
-                            pos: ltree_path,
+                            path: node_path,
                             index: <span class="prelude-val">Some</span>(index),
                             ..Default::default()
                         },
+                        <span class="prelude-val">None</span>,
                         [<span class="number">0_u8</span>; <span class="number">32</span>].to_vec(),
                     ));
+                    hashset.insert([<span class="number">0_u8</span>; <span class="number">32</span>].to_vec());
                 }
                 MerkleNode::ForgettenSubtree { .. } =&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(QueryError::Error {
@@ -5566,20 +5510,23 @@
                         .serialize_compressed(<span class="kw-2">&amp;mut </span>leaf_commit)
                         .map_err(ParseError::Serialize)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>ltree_path = LTree::from(traversal_path.clone());
+                    <span class="kw">let </span>path = traversal_path.clone().rev().collect();
 
-                    <span class="kw">let </span>index = serde_json::to_value(pos).map_err(ParseError::Serde)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>index = serde_json::to_value(pos.clone()).map_err(ParseError::Serde)<span class="question-mark">?</span>;
                     <span class="kw">let </span>entry = serde_json::to_value(elem).map_err(ParseError::Serde)<span class="question-mark">?</span>;
 
                     nodes.push((
                         Node {
-                            pos: ltree_path,
+                            path,
                             index: <span class="prelude-val">Some</span>(index),
                             entry: <span class="prelude-val">Some</span>(entry),
                             ..Default::default()
                         },
-                        leaf_commit,
+                        <span class="prelude-val">None</span>,
+                        leaf_commit.clone(),
                     ));
+
+                    hashset.insert(leaf_commit);
                 }
                 MerkleNode::Branch { value, children } =&gt; {
                     <span class="comment">// Get hash
@@ -5613,32 +5560,20 @@
                         }
                     }
 
-                    <span class="kw">let </span>(params, batch_hash_insert_stmt) =
-                        HashTableRow::build_batch_insert(<span class="kw-2">&amp;</span>children_values);
-
-                    <span class="comment">// Batch insert all the child hashes
-                    </span><span class="kw">let </span>children_hash_ids = txn
-                        .client
-                        .query(<span class="kw-2">&amp;</span>batch_hash_insert_stmt, <span class="kw-2">&amp;</span>params[..])
-                        .<span class="kw">await
-                        </span>.map_err(|e| QueryError::Error {
-                            message: <span class="macro">format!</span>(<span class="string">"failed to batch insert children hashes {e}"</span>),
-                        })<span class="question-mark">?
-                        </span>.iter()
-                        .map(|r| r.get(<span class="number">0</span>))
-                        .collect();
-
                     <span class="comment">// insert internal node
-                    </span><span class="kw">let </span>ltree_path = LTree::from(traversal_path.clone());
+                    </span><span class="kw">let </span>path = traversal_path.clone().rev().collect();
                     nodes.push((
                         Node {
-                            pos: ltree_path,
-                            children: <span class="prelude-val">Some</span>(children_hash_ids),
+                            path,
+                            children: <span class="prelude-val">None</span>,
                             children_bitvec: <span class="prelude-val">Some</span>(children_bitvec),
                             ..Default::default()
                         },
-                        branch_hash,
+                        <span class="prelude-val">Some</span>(children_values.clone()),
+                        branch_hash.clone(),
                     ));
+                    hashset.insert(branch_hash);
+                    hashset.extend(children_values);
                 }
             }
 
@@ -5647,8 +5582,8 @@
             </span>traversal_path.next();
         }
         <span class="comment">// We build a hashset to avoid duplicate entries
-        </span><span class="kw">let </span>hashset: HashSet&lt;Vec&lt;u8&gt;&gt; = nodes.iter().map(|(<span class="kw">_</span>, h)| h.clone()).collect();
-        <span class="kw">let </span>hashes = hashset.into_iter().collect::&lt;Vec&lt;Vec&lt;u8&gt;&gt;&gt;();
+        </span><span class="kw">let </span>hashes = hashset.into_iter().collect::&lt;Vec&lt;Vec&lt;u8&gt;&gt;&gt;();
+
         <span class="comment">// insert all the hashes into database
         // It returns all the ids inserted in the order they were inserted
         // We use the hash ids to insert all the nodes
@@ -5667,11 +5602,25 @@
             .collect();
 
         <span class="comment">// Updates the node fields
-        </span><span class="kw">for </span>(node, hash) <span class="kw">in </span><span class="kw-2">&amp;mut </span>nodes {
+        </span><span class="kw">for </span>(node, children, hash) <span class="kw">in </span><span class="kw-2">&amp;mut </span>nodes {
             node.created = block_number;
-            node.hash_id = <span class="kw-2">*</span>nodes_hash_ids.get(<span class="kw-2">&amp;*</span>hash).ok_or(QueryError::NotFound)<span class="question-mark">?</span>;
+            node.hash_id = <span class="kw-2">*</span>nodes_hash_ids.get(<span class="kw-2">&amp;*</span>hash).ok_or(QueryError::Error {
+                message: <span class="string">"Missing node hash"</span>.to_string(),
+            })<span class="question-mark">?</span>;
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(children) = children {
+                <span class="kw">let </span>children_hashes = children
+                    .iter()
+                    .map(|c| nodes_hash_ids.get(c).copied())
+                    .collect::&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;i32&gt;&gt;&gt;()
+                    .ok_or(QueryError::Error {
+                        message: <span class="string">"Missing child hash"</span>.to_string(),
+                    })<span class="question-mark">?</span>;
+
+                node.children = <span class="prelude-val">Some</span>(children_hashes);
+            }
         }
-        <span class="kw">let </span>nodes = nodes.into_iter().map(|(n, <span class="kw">_</span>)| n).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        <span class="kw">let </span>nodes = nodes.into_iter().map(|(n, <span class="kw">_</span>, <span class="kw">_</span>)| n).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="kw">let </span>(params, batch_stmt) = Node::build_batch_insert(name, <span class="kw-2">&amp;</span>nodes);
 
         <span class="comment">// Batch insert all the child hashes
@@ -5709,28 +5658,15 @@
         <span class="kw">let </span>tree_height = State::tree_height();
 
         <span class="comment">// Get the traversal path of the index
-        </span><span class="kw">let </span>traversal_path = State::Key::to_traversal_path(<span class="kw-2">&amp;</span>key, tree_height)
-            .into_iter()
-            .map(|x| x <span class="kw">as </span>i64)
-            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        </span><span class="kw">let </span>traversal_path = State::Key::to_traversal_path(<span class="kw-2">&amp;</span>key, tree_height);
         <span class="kw">let </span>(created, merkle_commitment) = <span class="self">self</span>.snapshot_info(snapshot).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Get all the nodes in the path to the index.
         // Order by pos DESC is to return nodes from the leaf to the root
-        </span><span class="kw">let </span>nodes = <span class="self">self
-            </span>.query(
-                <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                    <span class="string">"SELECT DISTINCT ON (pos) *
-                    FROM {state_type}
-                    WHERE pos @&gt; $1 and created &lt;= $2
-                    ORDER BY pos DESC , created DESC;"
-                </span>),
-                [
-                    sql_param(<span class="kw-2">&amp;</span>LTree::from(traversal_path.iter())),
-                    sql_param(<span class="kw-2">&amp;</span>created),
-                ],
-            )
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        </span><span class="kw">let </span>(params, stmt) = build_get_path_query(state_type, traversal_path.clone(), created);
+
+        <span class="kw">let </span>nodes = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>stmt, params).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>nodes: Vec&lt;<span class="kw">_</span>&gt; = nodes.map(|res| Node::try_from(res<span class="question-mark">?</span>)).try_collect().<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -5861,13 +5797,13 @@
                             })
                             .collect::&lt;QueryResult&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
 
-                        <span class="kw">if </span>data[<span class="kw-2">*</span>branch <span class="kw">as </span>usize] != val {
+                        <span class="kw">if </span>data[<span class="kw-2">*</span>branch] != val {
                             <span class="comment">// This can only happen if data is missing: we have an old version of
                             // one of the nodes in the path, which is why it is not matching up with
                             // its parent.
                             </span><span class="macro">tracing::warn!</span>(
                                 <span class="question-mark">?</span>key,
-                                parent = <span class="question-mark">?</span>data[<span class="kw-2">*</span>branch <span class="kw">as </span>usize],
+                                parent = <span class="question-mark">?</span>data[<span class="kw-2">*</span>branch],
                                 child = <span class="question-mark">?</span>val,
                                 branch = %<span class="kw-2">*</span>branch,
                                 %created,
@@ -5899,55 +5835,6 @@
             pos: key,
             proof: proof_path.into(),
         })
-    }
-
-    <span class="kw">async fn </span>keys(<span class="kw-2">&amp;</span><span class="self">self</span>, snapshot: Snapshot&lt;Types, State, ARITY&gt;) -&gt; QueryResult&lt;Vec&lt;State::Key&gt;&gt; {
-        <span class="kw">let </span>state_type = State::state_type();
-
-        <span class="comment">// Identify the snapshot.
-        </span><span class="kw">let </span>created = <span class="self">self</span>.snapshot_info(snapshot).<span class="kw">await</span><span class="question-mark">?</span>.<span class="number">0</span>;
-
-        <span class="comment">// Get all the nodes which correspond to an entry, ie have a non-NULL index field.
-        </span><span class="kw">let </span>rows = <span class="self">self
-            </span>.query(
-                <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                    <span class="string">"SELECT DISTINCT ON (pos) index
-                    FROM {state_type}
-                    WHERE created &lt;= $1 AND index IS NOT NULL
-                    ORDER BY pos, created DESC;"
-                </span>),
-                [sql_param(<span class="kw-2">&amp;</span>created)],
-            )
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-        rows.map(|row| {
-            <span class="kw">let </span>row = row.map_err(|err| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to fetch key: {err:#}"</span>),
-            })<span class="question-mark">?</span>;
-            serde_json::from_value(row.get(<span class="string">"index"</span>)).map_err(|err| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to deserialize key: {err:#}"</span>),
-            })
-        })
-        .try_collect()
-        .<span class="kw">await
-    </span>}
-
-    <span class="kw">async fn </span>get_snapshot(<span class="kw-2">&amp;</span><span class="self">self</span>, snapshot: Snapshot&lt;Types, State, ARITY&gt;) -&gt; QueryResult&lt;State&gt; {
-        <span class="comment">// Identify the snapshot.
-        </span><span class="kw">let </span>commit = <span class="self">self</span>.snapshot_info(snapshot).<span class="kw">await</span><span class="question-mark">?</span>.<span class="number">1</span>;
-
-        <span class="comment">// Create a completely sparse snapshot from the header, as a starting point.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>state = State::from_commitment(commit);
-        <span class="comment">// Remember each path into the tree.
-        </span><span class="kw">for </span>key <span class="kw">in </span><span class="self">self</span>.keys(snapshot).<span class="kw">await</span><span class="question-mark">? </span>{
-            <span class="kw">let </span>path = <span class="self">self</span>.get_path(snapshot, key.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
-            state
-                .insert_path(key.clone(), <span class="kw-2">&amp;</span>path)
-                .map_err(|err| QueryError::Error {
-                    message: <span class="macro">format!</span>(<span class="string">"invalid path for key {key:?}: {err:#}"</span>),
-                })<span class="question-mark">?</span>;
-        }
-
-        <span class="prelude-val">Ok</span>(state)
     }
 }
 
@@ -6104,7 +5991,7 @@
 <span class="comment">// Represents a row in a state table
 </span><span class="attr">#[derive(Debug, Default, Clone)]
 </span><span class="kw">struct </span>Node {
-    pos: LTree,
+    path: Vec&lt;i32&gt;,
     created: i64,
     hash_id: i32,
     children: <span class="prelude-ty">Option</span>&lt;Vec&lt;i32&gt;&gt;,
@@ -6122,7 +6009,7 @@
             .iter()
             .flat_map(|n| {
                 [
-                    <span class="kw-2">&amp;</span>n.pos <span class="kw">as </span><span class="kw-2">&amp;</span>(<span class="kw">dyn </span>ToSql + Sync),
+                    <span class="kw-2">&amp;</span>n.path <span class="kw">as </span><span class="kw-2">&amp;</span>(<span class="kw">dyn </span>ToSql + Sync),
                     <span class="kw-2">&amp;</span>n.created,
                     <span class="kw-2">&amp;</span>n.hash_id,
                     <span class="kw-2">&amp;</span>n.children,
@@ -6134,13 +6021,13 @@
             .collect();
 
         <span class="kw">let </span>stmt = <span class="macro">format!</span>(
-                <span class="string">"INSERT INTO {name} (pos, created, hash_id, children, children_bitvec, index, entry) values {} ON CONFLICT (pos, created) 
+                <span class="string">"INSERT INTO {name} (path, created, hash_id, children, children_bitvec, index, entry) values {} ON CONFLICT (path, created) 
                 DO UPDATE SET hash_id = EXCLUDED.hash_id, children = EXCLUDED.children, children_bitvec = EXCLUDED.children_bitvec, 
-                index = EXCLUDED.index, entry = EXCLUDED.entry RETURNING pos"</span>,
+                index = EXCLUDED.index, entry = EXCLUDED.entry RETURNING path"</span>,
                 (<span class="number">1</span>..params.len()+<span class="number">1</span>)
                 .tuples()
-                    .format_with(<span class="string">", "</span>, |(pos, created, id, children, bitmap, i, e), f| 
-                    { f(<span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">"(${pos}, ${created}, ${id}, ${children}, ${bitmap}, ${i}, ${e})"</span>)) }),
+                    .format_with(<span class="string">", "</span>, |(path, created, id, children, bitmap, i, e), f| 
+                    { f(<span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">"(${path}, ${created}, ${id}, ${children}, ${bitmap}, ${i}, ${e})"</span>)) }),
             );
 
         (params, stmt)
@@ -6152,8 +6039,8 @@
     <span class="kw">type </span>Error = QueryError;
     <span class="kw">fn </span>try_from(row: Row) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            pos: row.try_get(<span class="number">0</span>).map_err(|e| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to get column pos: {e}"</span>),
+            path: row.try_get(<span class="number">0</span>).map_err(|e| QueryError::Error {
+                message: <span class="macro">format!</span>(<span class="string">"failed to get column path: {e}"</span>),
             })<span class="question-mark">?</span>,
             created: row.try_get(<span class="number">1</span>).map_err(|e| QueryError::Error {
                 message: <span class="macro">format!</span>(<span class="string">"failed to get column created: {e}"</span>),
@@ -7316,58 +7203,6 @@
     param
 }
 
-<span class="doccomment">/// LTree SQL data type
-///
-/// The traversal path in a merkle tree is from the leaf to the root.
-/// The LTREE path is created by reversing the traversal path.
-/// Root node is represented as an empty LTree
-</span><span class="attr">#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
-</span><span class="kw">pub struct </span>LTree(String);
-
-<span class="kw">impl</span>&lt;I, Iter: Iterator&lt;Item = I&gt; + DoubleEndedIterator&gt; From&lt;Iter&gt; <span class="kw">for </span>LTree
-<span class="kw">where
-    </span>I: Display + Clone,
-{
-    <span class="kw">fn </span>from(iter: Iter) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(itertools::intersperse(iter.map(|x| x.to_string()).rev(), <span class="string">"."</span>.to_string()).collect())
-    }
-}
-
-<span class="kw">impl </span>ToSql <span class="kw">for </span>LTree {
-    <span class="kw">fn </span>to_sql(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        ty: <span class="kw-2">&amp;</span>postgres::types::Type,
-        out: <span class="kw-2">&amp;mut </span>BytesMut,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;postgres::types::IsNull, Box&lt;<span class="kw">dyn </span>std::error::Error + Sync + Send&gt;&gt;
-    <span class="kw">where
-        </span><span class="self">Self</span>: Sized,
-    {
-        &lt;String <span class="kw">as </span>ToSql&gt;::to_sql(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, ty, out)
-    }
-
-    <span class="kw">fn </span>accepts(ty: <span class="kw-2">&amp;</span>postgres::types::Type) -&gt; bool
-    <span class="kw">where
-        </span><span class="self">Self</span>: Sized,
-    {
-        &lt;String <span class="kw">as </span>ToSql&gt;::accepts(ty)
-    }
-
-    <span class="macro">to_sql_checked!</span>();
-}
-
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; FromSql&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>LTree {
-    <span class="kw">fn </span>from_sql(
-        ty: <span class="kw-2">&amp;</span>Type,
-        raw: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Box&lt;<span class="kw">dyn </span>std::error::Error + Sync + Send&gt;&gt; {
-        &lt;String <span class="kw">as </span>FromSql&gt;::from_sql(ty, raw).map(LTree)
-    }
-
-    <span class="kw">fn </span>accepts(ty: <span class="kw-2">&amp;</span>Type) -&gt; bool {
-        &lt;String <span class="kw">as </span>FromSql&gt;::accepts(ty)
-    }
-}
-
 <span class="comment">// tokio-postgres is written in terms of the tokio AsyncRead/AsyncWrite traits. However, these
 // traits do not require any specifics of the tokio runtime. Thus we can implement them using the
 // async_std TcpStream type, and have a stream which is compatible with tokio-postgres but will run
@@ -7433,6 +7268,38 @@
     <span class="kw">fn </span>poll_shutdown(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;std::io::Result&lt;()&gt;&gt; {
         Pin::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>).poll_close(cx)
     }
+}
+
+<span class="kw">fn </span>build_get_path_query(
+    table: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+    traversal_path: Vec&lt;usize&gt;,
+    created: i64,
+) -&gt; (Vec&lt;Box&lt;(<span class="kw">dyn </span>ToSql + Send + Sync)&gt;&gt;, String) {
+    <span class="kw">let </span><span class="kw-2">mut </span>traversal_path = traversal_path.into_iter().map(|x| x <span class="kw">as </span>i32);
+
+    <span class="comment">// Since the 'created' parameter is common to all queries,
+    // we place it at the first position in the 'params' vector.
+    // We iterate through the path vector skipping the first element after each iteration
+    </span><span class="kw">let </span><span class="kw-2">mut </span>params: Vec&lt;Box&lt;(<span class="kw">dyn </span>ToSql + Send + Sync)&gt;&gt; = <span class="macro">vec!</span>[Box::new(created)];
+    <span class="kw">let </span>len = traversal_path.len();
+    <span class="kw">let </span><span class="kw-2">mut </span>queries = Vec::new();
+
+    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..=len {
+        <span class="kw">let </span>node_path = traversal_path.clone().rev().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+
+        <span class="kw">let </span>query = <span class="macro">format!</span>(
+            <span class="string">"(SELECT * FROM {table} WHERE path = ${} AND created &lt;= $1 ORDER BY created DESC LIMIT 1)"</span>,
+            i + <span class="number">2
+        </span>);
+
+        queries.push(query);
+        params.push(Box::new(node_path));
+        traversal_path.next();
+    }
+
+    <span class="kw">let </span><span class="kw-2">mut </span>final_query: String = queries.join(<span class="string">" UNION "</span>);
+    final_query.push_str(<span class="string">"ORDER BY path DESC"</span>);
+    (params, final_query)
 }
 
 <span class="comment">// These tests run the `postgres` Docker image, which doesn't work on Windows.
@@ -7572,7 +7439,7 @@
         
             CREATE TABLE {name}
             (
-                pos LTREE NOT NULL, 
+                path integer[] NOT NULL, 
                 created BIGINT NOT NULL,
                 hash_id INT NOT NULL REFERENCES hash (id),
                 children INT[],
@@ -7580,8 +7447,8 @@
                 index JSONB,
                 entry JSONB 
             );
-            ALTER TABLE {name} ADD CONSTRAINT {name}_pk PRIMARY KEY (pos, created);
-            CREATE INDEX {name}_path ON {name} USING GIST (pos);"
+            ALTER TABLE {name} ADD CONSTRAINT {name}_pk PRIMARY KEY (path, created);
+            CREATE INDEX {name}_created ON {name} (created);"
             </span>)
         }
     }
@@ -7949,12 +7816,17 @@
         <span class="comment">// update saved state height
         </span>storage.set_last_state_height(<span class="number">2</span>).<span class="kw">await</span>.unwrap();
 
+        <span class="kw">let </span>node_path = traversal_path
+            .into_iter()
+            .rev()
+            .map(|n| n <span class="kw">as </span>i32)
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+
         <span class="comment">// Find all the nodes of Index 0 in table
-        </span><span class="kw">let </span>ltree_path = LTree::from(traversal_path.iter());
-        <span class="kw">let </span>rows = storage
+        </span><span class="kw">let </span>rows = storage
             .query(
-                <span class="string">"SELECT * from test_tree where pos = $1 ORDER BY created"</span>,
-                [sql_param(<span class="kw-2">&amp;</span>ltree_path)],
+                <span class="string">"SELECT * from test_tree where path = $1 ORDER BY created"</span>,
+                [sql_param(<span class="kw-2">&amp;</span>node_path)],
             )
             .<span class="kw">await
             </span>.unwrap();
@@ -8358,14 +8230,20 @@
         </span>.expect(<span class="string">"failed to insert nodes"</span>);
 
         <span class="comment">// Deleting one internal node
-        </span><span class="kw">let </span>rows = storage
+        </span><span class="kw">let </span>node_path = traversal_path
+            .iter()
+            .skip(<span class="number">1</span>)
+            .rev()
+            .map(|n| <span class="kw-2">*</span>n <span class="kw">as </span>i32)
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        <span class="kw">let </span>rows = storage
             .client
             .execute_raw(
                 <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                    <span class="string">"DELETE FROM {} WHERE created = 2 and pos = $1"</span>,
+                    <span class="string">"DELETE FROM {} WHERE created = 2 and path = $1"</span>,
                     MockMerkleTree::state_type()
                 ),
-                [sql_param(<span class="kw-2">&amp;</span>(LTree::from(traversal_path[<span class="number">1</span>..].iter())))],
+                [sql_param(<span class="kw-2">&amp;</span>node_path)],
             )
             .<span class="kw">await
             </span>.expect(<span class="string">"failed to delete internal node"</span>);
@@ -8484,9 +8362,9 @@
 
             <span class="comment">// Check that we can get a correct path for each key that we touched.
             </span><span class="kw">let </span>snapshot = Snapshot::&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;::Index(block_height);
-            <span class="kw">let </span>loaded = storage.get_snapshot(snapshot).<span class="kw">await</span>.unwrap();
+
             <span class="kw">for </span>(key, val) <span class="kw">in </span>expected {
-                <span class="kw">let </span>proof = <span class="kw">match </span>loaded.universal_lookup(key) {
+                <span class="kw">let </span>proof = <span class="kw">match </span>tree.universal_lookup(key) {
                     LookupResult::Ok(<span class="kw">_</span>, proof) =&gt; proof,
                     LookupResult::NotFound(proof) =&gt; proof,
                     LookupResult::NotInMemory =&gt; <span class="macro">panic!</span>(<span class="string">"failed to find key {key}"</span>),
@@ -8504,7 +8382,7 @@
             }
 
             <span class="comment">// Check that we can even get a non-membership proof for a key that we never touched.
-            </span><span class="kw">let </span>proof = <span class="kw">match </span>loaded.universal_lookup(RESERVED_KEY) {
+            </span><span class="kw">let </span>proof = <span class="kw">match </span>tree.universal_lookup(RESERVED_KEY) {
                 LookupResult::Ok(<span class="kw">_</span>, proof) =&gt; proof,
                 LookupResult::NotFound(proof) =&gt; proof,
                 LookupResult::NotInMemory =&gt; <span class="macro">panic!</span>(<span class="string">"failed to find reserved key {RESERVED_KEY}"</span>),
