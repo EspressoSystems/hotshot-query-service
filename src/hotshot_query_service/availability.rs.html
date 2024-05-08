@@ -963,19 +963,6 @@
 <a href="#961" id="961">961</a>
 <a href="#962" id="962">962</a>
 <a href="#963" id="963">963</a>
-<a href="#964" id="964">964</a>
-<a href="#965" id="965">965</a>
-<a href="#966" id="966">966</a>
-<a href="#967" id="967">967</a>
-<a href="#968" id="968">968</a>
-<a href="#969" id="969">969</a>
-<a href="#970" id="970">970</a>
-<a href="#971" id="971">971</a>
-<a href="#972" id="972">972</a>
-<a href="#973" id="973">973</a>
-<a href="#974" id="974">974</a>
-<a href="#975" id="975">975</a>
-<a href="#976" id="976">976</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1005,14 +992,12 @@
 //! the [node](crate::node) API.
 
 </span><span class="kw">use crate</span>::{api::load_api, Payload};
-<span class="kw">use </span>clap::Args;
-<span class="kw">use </span>cld::ClDuration;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::{OptionExt, Snafu};
-<span class="kw">use </span>std::{fmt::Display, path::PathBuf, str::FromStr, time::Duration};
+<span class="kw">use </span>std::{fmt::Display, path::PathBuf, time::Duration};
 <span class="kw">use </span>tide_disco::{api::ApiError, method::ReadState, Api, RequestError, StatusCode};
 <span class="kw">use </span>vbs::version::StaticVersionType;
 
@@ -1023,47 +1008,36 @@
 <span class="kw">pub use </span>fetch::Fetch;
 <span class="kw">pub use </span>query_data::<span class="kw-2">*</span>;
 
-<span class="attr">#[derive(Args, Default)]
-</span><span class="kw">pub struct </span>Options {
-    <span class="attr">#[arg(long = <span class="string">"availability-api-path"</span>, env = <span class="string">"HOTSHOT_AVAILABILITY_API_PATH"</span>)]
-    </span><span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
+<span class="kw">pub struct </span>Options {
+    <span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
 
     <span class="doccomment">/// Timeout for failing requests due to missing data.
     ///
     /// If data needed to respond to a request is missing, it can (in some cases) be fetched from an
     /// external provider. This parameter controls how long the request handler will wait for
     /// missing data to be fetched before giving up and failing the request.
-    </span><span class="attr">#[arg(
-        long = <span class="string">"availability-fetch-timeout"</span>,
-        env = <span class="string">"HOTSHOT_AVAILABILITY_FETCH_TIMEOUT"</span>,
-        default_value = <span class="string">"500ms"</span>,
-        value_parser = parse_duration,
-    )]
     </span><span class="kw">pub </span>fetch_timeout: Duration,
 
     <span class="doccomment">/// Additional API specification files to merge with `availability-api-path`.
     ///
     /// These optional files may contain route definitions for application-specific routes that have
     /// been added as extensions to the basic availability API.
-    </span><span class="attr">#[arg(
-        long = <span class="string">"availability-extension"</span>,
-        env = <span class="string">"HOTSHOT_AVAILABILITY_EXTENSIONS"</span>,
-        value_delimiter = <span class="string">','
-    </span>)]
     </span><span class="kw">pub </span>extensions: Vec&lt;toml::Value&gt;,
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>Options {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            api_path: <span class="prelude-val">None</span>,
+            fetch_timeout: Duration::from_millis(<span class="number">500</span>),
+            extensions: <span class="macro">vec!</span>[],
+        }
+    }
 }
 
 <span class="attr">#[derive(Clone, Debug, Snafu)]
 </span><span class="kw">struct </span>ParseDurationError {
     reason: String,
-}
-
-<span class="kw">fn </span>parse_duration(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Duration, ParseDurationError&gt; {
-    ClDuration::from_str(s)
-        .map(Duration::from)
-        .map_err(|err| ParseDurationError {
-            reason: err.to_string(),
-        })
 }
 
 <span class="attr">#[derive(Clone, Debug, From, Snafu, Deserialize, Serialize)]

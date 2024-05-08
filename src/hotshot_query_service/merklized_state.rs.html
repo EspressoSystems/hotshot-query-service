@@ -118,16 +118,6 @@
 <a href="#116" id="116">116</a>
 <a href="#117" id="117">117</a>
 <a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -147,7 +137,6 @@
 //! If any parent state is missing then the partial snapshot can not be queried.
 </span><span class="kw">use </span>std::{fmt::Display, path::PathBuf};
 
-<span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
@@ -163,23 +152,14 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>data_source;
 <span class="kw">pub use </span>data_source::<span class="kw-2">*</span>;
 
-<span class="attr">#[derive(Args, Default)]
+<span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>Options {
-    <span class="attr">#[arg(
-        long = <span class="string">"merklized-state-api-path"</span>,
-        env = <span class="string">"HOTSHOT_MERKLIZED_STATE_API_PATH"
-    </span>)]
-    </span><span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
+    <span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
 
     <span class="doccomment">/// Additional API specification files to merge with `merklized-state-api-path`.
     ///
     /// These optional files may contain route definitions for application-specific routes that have
     /// been added as extensions to the basic status API.
-    </span><span class="attr">#[arg(
-        long = <span class="string">"merklized-state-extension"</span>,
-        env = <span class="string">"HOTSHOT_MERKLIZED_STATE_EXTENSIONS"</span>,
-        value_delimiter = <span class="string">','
-    </span>)]
     </span><span class="kw">pub </span>extensions: Vec&lt;toml::Value&gt;,
 }
 

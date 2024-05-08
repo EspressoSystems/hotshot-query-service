@@ -269,13 +269,6 @@
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
 <a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -302,7 +295,6 @@
 //! * summary statistics
 
 </span><span class="kw">use </span><span class="kw">crate</span>::api::load_api;
-<span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -317,20 +309,14 @@
 
 <span class="kw">pub use </span>data_source::<span class="kw-2">*</span>;
 
-<span class="attr">#[derive(Args, Default)]
+<span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>Options {
-    <span class="attr">#[arg(long = <span class="string">"status-api-path"</span>, env = <span class="string">"HOTSHOT_STATUS_API_PATH"</span>)]
-    </span><span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
+    <span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
 
     <span class="doccomment">/// Additional API specification files to merge with `status-api-path`.
     ///
     /// These optional files may contain route definitions for application-specific routes that have
     /// been added as extensions to the basic status API.
-    </span><span class="attr">#[arg(
-        long = <span class="string">"status-extension"</span>,
-        env = <span class="string">"HOTSHOT_STATUS_EXTENSIONS"</span>,
-        value_delimiter = <span class="string">','
-    </span>)]
     </span><span class="kw">pub </span>extensions: Vec&lt;toml::Value&gt;,
 }
 

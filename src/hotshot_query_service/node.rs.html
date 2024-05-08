@@ -430,13 +430,6 @@
 <a href="#428" id="428">428</a>
 <a href="#429" id="429">429</a>
 <a href="#430" id="430">430</a>
-<a href="#431" id="431">431</a>
-<a href="#432" id="432">432</a>
-<a href="#433" id="433">433</a>
-<a href="#434" id="434">434</a>
-<a href="#435" id="435">435</a>
-<a href="#436" id="436">436</a>
-<a href="#437" id="437">437</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -460,7 +453,6 @@
 //! return the expected counts.
 
 </span><span class="kw">use crate</span>::{api::load_api, QueryError};
-<span class="kw">use </span>clap::Args;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
@@ -476,20 +468,14 @@
 <span class="kw">pub use </span>data_source::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>query_data::<span class="kw-2">*</span>;
 
-<span class="attr">#[derive(Args, Default)]
+<span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>Options {
-    <span class="attr">#[arg(long = <span class="string">"node-api-path"</span>, env = <span class="string">"HOTSHOT_NODE_API_PATH"</span>)]
-    </span><span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
+    <span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
 
     <span class="doccomment">/// Additional API specification files to merge with `node-api-path`.
     ///
     /// These optional files may contain route definitions for application-specific routes that have
     /// been added as extensions to the basic node API.
-    </span><span class="attr">#[arg(
-        long = <span class="string">"node-extension"</span>,
-        env = <span class="string">"HOTSHOT_NODE_EXTENSIONS"</span>,
-        value_delimiter = <span class="string">','
-    </span>)]
     </span><span class="kw">pub </span>extensions: Vec&lt;toml::Value&gt;,
 }
 
