@@ -4315,7 +4315,7 @@
     },
 };
 <span class="kw">use </span>itertools::{izip, Itertools};
-<span class="kw">use </span>jf_primitives::merkle_tree::{
+<span class="kw">use </span>jf_merkle_tree::{
     prelude::{MerkleNode, MerkleProof},
     DigestAlgorithm, MerkleCommitment, ToTraversalPath,
 };
@@ -7459,7 +7459,7 @@
 </span><span class="kw">mod </span>test {
 
     <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
-    <span class="kw">use </span>jf_primitives::merkle_tree::{
+    <span class="kw">use </span>jf_merkle_tree::{
         universal_merkle_tree::UniversalMerkleTree, LookupResult, UniversalMerkleTreeScheme,
     };
     <span class="kw">use </span>rand::{seq::IteratorRandom, RngCore};
@@ -7706,7 +7706,7 @@
 
     <span class="kw">use </span><span class="kw">crate</span>::data_source::VersionedDataSource;
 
-    <span class="kw">use </span>jf_primitives::merkle_tree::MerkleTreeScheme;
+    <span class="kw">use </span>jf_merkle_tree::MerkleTreeScheme;
 
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_merklized_state_storage() {
