@@ -936,6 +936,13 @@
 <a href="#934" id="934">934</a>
 <a href="#935" id="935">935</a>
 <a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -957,7 +964,7 @@
 <span class="kw">use </span><span class="self">self</span>::errors::InvalidLimit;
 <span class="kw">use </span><span class="kw">crate</span>::availability::{QueryableHeader, QueryablePayload};
 <span class="kw">use </span><span class="kw">crate</span>::data_source::storage::ExplorerStorage;
-<span class="kw">use crate</span>::{api::load_api, Header, Payload};
+<span class="kw">use crate</span>::{api::load_api, Header, Payload, Transaction};
 
 <span class="kw">pub use </span>currency::<span class="kw-2">*</span>;
 <span class="kw">use </span>futures::FutureExt;
@@ -1088,6 +1095,7 @@
 </span><span class="kw">pub struct </span>TransactionSummariesResponse&lt;Types: NodeType&gt;
 <span class="kw">where
     </span>Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: ExplorerTransaction,
 {
     <span class="kw">pub </span>transaction_summaries: Vec&lt;TransactionSummary&lt;Types&gt;&gt;,
 }
@@ -1095,6 +1103,7 @@
 <span class="kw">impl</span>&lt;Types: NodeType&gt; From&lt;Vec&lt;TransactionSummary&lt;Types&gt;&gt;&gt; <span class="kw">for </span>TransactionSummariesResponse&lt;Types&gt;
 <span class="kw">where
     </span>Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: ExplorerTransaction,
 {
     <span class="kw">fn </span>from(transaction_summaries: Vec&lt;TransactionSummary&lt;Types&gt;&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
@@ -1110,6 +1119,7 @@
 </span><span class="kw">pub struct </span>ExplorerSummaryResponse&lt;Types: NodeType&gt;
 <span class="kw">where
     </span>Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: ExplorerTransaction,
 {
     <span class="kw">pub </span>explorer_summary: ExplorerSummary&lt;Types&gt;,
 }
@@ -1117,6 +1127,7 @@
 <span class="kw">impl</span>&lt;Types: NodeType&gt; From&lt;ExplorerSummary&lt;Types&gt;&gt; <span class="kw">for </span>ExplorerSummaryResponse&lt;Types&gt;
 <span class="kw">where
     </span>Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: ExplorerTransaction,
 {
     <span class="kw">fn </span>from(explorer_summary: ExplorerSummary&lt;Types&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ explorer_summary }
@@ -1130,6 +1141,7 @@
 </span><span class="kw">pub struct </span>SearchResultResponse&lt;Types: NodeType&gt;
 <span class="kw">where
     </span>Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: ExplorerTransaction,
 {
     <span class="kw">pub </span>search_results: SearchResult&lt;Types&gt;,
 }
@@ -1137,6 +1149,7 @@
 <span class="kw">impl</span>&lt;Types: NodeType&gt; From&lt;SearchResult&lt;Types&gt;&gt; <span class="kw">for </span>SearchResultResponse&lt;Types&gt;
 <span class="kw">where
     </span>Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: ExplorerTransaction,
 {
     <span class="kw">fn </span>from(search_results: SearchResult&lt;Types&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ search_results }
@@ -1172,6 +1185,7 @@
 <span class="kw">where
     </span>State: <span class="lifetime">'static </span>+ Send + Sync + ReadState,
     Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt; + QueryableHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: ExplorerTransaction,
     Payload&lt;Types&gt;: QueryablePayload,
     &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + ExplorerStorage&lt;Types&gt;,
 {

@@ -1376,6 +1376,7 @@
 <a href="#1374" id="1374">1374</a>
 <a href="#1375" id="1375">1375</a>
 <a href="#1376" id="1376">1376</a>
+<a href="#1377" id="1377">1377</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1473,7 +1474,7 @@
     status::StatusDataSource,
     task::BackgroundTask,
     types::HeightIndexed,
-    Header, Payload, QueryResult, VidShare,
+    Header, Payload, QueryResult, Transaction, VidShare,
 };
 <span class="kw">use </span>anyhow::Context;
 <span class="kw">use </span>async_std::{
@@ -2098,6 +2099,7 @@
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt; + explorer::traits::ExplorerHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: explorer::traits::ExplorerTransaction,
     S: ExplorerStorage&lt;Types&gt; + Send + Sync,
     P: Send + Sync,
 {

@@ -4250,6 +4250,7 @@
 <a href="#4248" id="4248">4248</a>
 <a href="#4249" id="4249">4249</a>
 <a href="#4250" id="4250">4250</a>
+<a href="#4251" id="4251">4251</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -6141,6 +6142,7 @@
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt; + explorer::traits::ExplorerHeader&lt;Types&gt;,
+    <span class="kw">crate</span>::Transaction&lt;Types&gt;: explorer::traits::ExplorerTransaction,
     BalanceAmount&lt;Types&gt;: Into&lt;explorer::monetary_value::MonetaryValue&gt;,
 {
     <span class="kw">async fn </span>get_block_summaries(

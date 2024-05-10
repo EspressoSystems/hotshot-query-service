@@ -894,6 +894,11 @@
 <a href="#892" id="892">892</a>
 <a href="#893" id="893">893</a>
 <a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -909,7 +914,7 @@
 </span><span class="kw">use super</span>::{
     errors::{BadQuery, ExplorerAPIError, InvalidLimit, NotFound, QueryError, Unimplemented},
     monetary_value::MonetaryValue,
-    traits::ExplorerHeader,
+    traits::{ExplorerHeader, ExplorerTransaction},
 };
 <span class="kw">use crate</span>::{
     availability::{BlockQueryData, QueryableHeader, QueryablePayload, TransactionHash},
@@ -1038,7 +1043,8 @@
 }
 
 <span class="kw">pub type </span>WalletAddress&lt;Types&gt; = &lt;Header&lt;Types&gt; <span class="kw">as </span>ExplorerHeader&lt;Types&gt;&gt;::WalletAddress;
-<span class="kw">pub type </span>NamespaceId&lt;Types&gt; = &lt;Header&lt;Types&gt; <span class="kw">as </span>ExplorerHeader&lt;Types&gt;&gt;::NamespaceId;
+<span class="kw">pub type </span>BlockNamespaceId&lt;Types&gt; = &lt;Header&lt;Types&gt; <span class="kw">as </span>ExplorerHeader&lt;Types&gt;&gt;::NamespaceId;
+<span class="kw">pub type </span>TransactionNamespaceId&lt;Types&gt; = &lt;Transaction&lt;Types&gt; <span class="kw">as </span>ExplorerTransaction&gt;::NamespaceId;
 <span class="kw">pub type </span>ProposerId&lt;Types&gt; = &lt;Header&lt;Types&gt; <span class="kw">as </span>ExplorerHeader&lt;Types&gt;&gt;::ProposerId;
 <span class="kw">pub type </span>BalanceAmount&lt;Types&gt; = &lt;Header&lt;Types&gt; <span class="kw">as </span>ExplorerHeader&lt;Types&gt;&gt;::BalanceAmount;
 
@@ -1221,9 +1227,10 @@
 </span><span class="kw">pub struct </span>TransactionSummary&lt;Types: NodeType&gt;
 <span class="kw">where
     </span>Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: ExplorerTransaction,
 {
     <span class="kw">pub </span>hash: TransactionHash&lt;Types&gt;,
-    <span class="kw">pub </span>rollups: Vec&lt;NamespaceId&lt;Types&gt;&gt;,
+    <span class="kw">pub </span>rollups: Vec&lt;TransactionNamespaceId&lt;Types&gt;&gt;,
     <span class="kw">pub </span>height: u64,
     <span class="kw">pub </span>offset: u64,
     <span class="kw">pub </span>num_transactions: u64,
@@ -1240,6 +1247,7 @@
     </span>BlockQueryData&lt;Types&gt;: HeightIndexed,
     Payload&lt;Types&gt;: QueryablePayload,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt; + ExplorerHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: ExplorerTransaction,
 {
     <span class="kw">type </span>Error = TimestampConversionError;
 
@@ -1258,7 +1266,7 @@
             offset: offset <span class="kw">as </span>u64,
             num_transactions: block.num_transactions,
             time: Timestamp(time::OffsetDateTime::from_unix_timestamp(seconds)<span class="question-mark">?</span>),
-            rollups: block.header.namespace_ids_for_offset(offset),
+            rollups: <span class="macro">vec!</span>[transaction.namespace_id()],
         })
     }
 }
@@ -1380,6 +1388,7 @@
 </span><span class="kw">pub struct </span>ExplorerSummary&lt;Types: NodeType&gt;
 <span class="kw">where
     </span>Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: ExplorerTransaction,
 {
     <span class="kw">pub </span>latest_block: BlockDetail&lt;Types&gt;,
     <span class="kw">pub </span>genesis_overview: GenesisOverview,
@@ -1397,6 +1406,7 @@
 </span><span class="kw">pub struct </span>SearchResult&lt;Types: NodeType&gt;
 <span class="kw">where
     </span>Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: ExplorerTransaction,
 {
     <span class="kw">pub </span>blocks: Vec&lt;BlockSummary&lt;Types&gt;&gt;,
     <span class="kw">pub </span>transactions: Vec&lt;TransactionSummary&lt;Types&gt;&gt;,

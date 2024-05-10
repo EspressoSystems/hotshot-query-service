@@ -454,6 +454,7 @@
 <a href="#452" id="452">452</a>
 <a href="#453" id="453">453</a>
 <a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -473,7 +474,7 @@
         PayloadQueryData, QueryableHeader, QueryablePayload, TransactionHash, TransactionIndex,
         UpdateAvailabilityData, VidCommonQueryData,
     },
-    explorer::{<span class="self">self</span>, ExplorerHeader},
+    explorer::{<span class="self">self</span>, ExplorerHeader, ExplorerTransaction},
     merklized_state::{
         MerklizedState, MerklizedStateDataSource, MerklizedStateHeightPersistence, Snapshot,
         UpdateStateData,
@@ -481,7 +482,7 @@
     metrics::PrometheusMetrics,
     node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
     status::StatusDataSource,
-    Header, Payload, QueryResult, VidShare,
+    Header, Payload, QueryResult, Transaction, VidShare,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
@@ -799,6 +800,7 @@
     Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload,
     Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt; + QueryableHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: ExplorerTransaction,
 {
     <span class="kw">async fn </span>get_block_detail(
         <span class="kw-2">&amp;</span><span class="self">self</span>,

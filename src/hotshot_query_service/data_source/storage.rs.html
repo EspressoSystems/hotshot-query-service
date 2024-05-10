@@ -190,6 +190,7 @@
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -223,7 +224,7 @@
         VidCommonQueryData,
     },
     data_source::VersionedDataSource,
-    explorer, Header, Payload, QueryResult,
+    explorer, Header, Payload, QueryResult, Transaction,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
@@ -316,6 +317,7 @@
 <span class="kw">where
     </span>Types: NodeType,
     Header&lt;Types&gt;: explorer::traits::ExplorerHeader&lt;Types&gt; + QueryableHeader&lt;Types&gt;,
+    Transaction&lt;Types&gt;: explorer::traits::ExplorerTransaction,
     Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="doccomment">/// `get_block_detail` is a method that retrieves the details of a specific
