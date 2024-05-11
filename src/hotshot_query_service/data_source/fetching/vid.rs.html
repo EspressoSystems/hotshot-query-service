@@ -306,7 +306,7 @@
         </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
         P: AvailabilityProvider&lt;Types&gt;,
     {
-        fetch_header_and_then(storage, req.<span class="number">0</span>.into(), HeaderCallback::VidCommon { fetcher }).<span class="kw">await
+        fetch_header_and_then(storage, req.<span class="number">0</span>, HeaderCallback::VidCommon { fetcher }).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;

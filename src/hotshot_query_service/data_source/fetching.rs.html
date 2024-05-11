@@ -1460,7 +1460,7 @@
 <span class="kw">use crate</span>::{
     availability::{
         AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
-        PayloadQueryData, QueryableHeader, QueryablePayload, TransactionHash, TransactionIndex,
+        PayloadQueryData, QueryableHeader, QueryablePayload, TransactionHash, TransactionQueryData,
         UpdateAvailabilityData, VidCommonQueryData,
     },
     explorer,
@@ -1919,10 +1919,10 @@
         <span class="self">self</span>.fetcher.clone().get_range(range)
     }
 
-    <span class="kw">async fn </span>get_block_with_transaction(
+    <span class="kw">async fn </span>get_transaction(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hash: TransactionHash&lt;Types&gt;,
-    ) -&gt; Fetch&lt;(BlockQueryData&lt;Types&gt;, TransactionIndex&lt;Types&gt;)&gt; {
+    ) -&gt; Fetch&lt;TransactionQueryData&lt;Types&gt;&gt; {
         <span class="self">self</span>.fetcher.get(TransactionRequest::from(hash)).<span class="kw">await
     </span>}
 }

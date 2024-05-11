@@ -813,6 +813,7 @@
 <a href="#811" id="811">811</a>
 <a href="#812" id="812">812</a>
 <a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1082,7 +1083,7 @@
 //! # use hotshot_query_service::{Header, QueryResult, VidShare};
 //! # use hotshot_query_service::availability::{
 //! #   AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
-//! #   PayloadQueryData, TransactionHash, TransactionIndex, VidCommonQueryData,
+//! #   PayloadQueryData, TransactionHash, TransactionQueryData, VidCommonQueryData,
 //! # };
 //! # use hotshot_query_service::metrics::PrometheusMetrics;
 //! # use hotshot_query_service::node::{
@@ -1134,7 +1135,7 @@
 //! #   async fn get_vid_common&lt;ID&gt;(&amp;self, id: ID) -&gt; Fetch&lt;VidCommonQueryData&lt;AppTypes&gt;&gt;
 //! #   where
 //! #       ID: Into&lt;BlockId&lt;AppTypes&gt;&gt; + Send + Sync { todo!() }
-//! #   async fn get_block_with_transaction(&amp;self, hash: TransactionHash&lt;AppTypes&gt;) -&gt; Fetch&lt;(BlockQueryData&lt;AppTypes&gt;, TransactionIndex&lt;AppTypes&gt;)&gt; { todo!() }
+//! #   async fn get_transaction(&amp;self, hash: TransactionHash&lt;AppTypes&gt;) -&gt; Fetch&lt;TransactionQueryData&lt;AppTypes&gt;&gt; { todo!() }
 //! #   async fn get_leaf_range&lt;R&gt;(&amp;self, range: R) -&gt; Self::LeafRange&lt;R&gt;
 //! #   where
 //! #       R: RangeBounds&lt;usize&gt; + Send { todo!() }
@@ -1275,6 +1276,7 @@
     </span>Missing,
     <span class="doccomment">/// There was an error while trying to fetch the requested resource.
     </span><span class="attr">#[snafu(display(<span class="string">"Failed to fetch requested resource: {message}"</span>))]
+    #[snafu(context(suffix(ErrorSnafu)))]
     </span>Error { message: String },
 }
 
@@ -1361,7 +1363,7 @@
     <span class="kw">use crate</span>::{
         availability::{
             AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
-            PayloadQueryData, TransactionHash, TransactionIndex, UpdateAvailabilityData,
+            PayloadQueryData, TransactionHash, TransactionQueryData, UpdateAvailabilityData,
             VidCommonQueryData,
         },
         metrics::PrometheusMetrics,
@@ -1467,11 +1469,11 @@
         {
             <span class="self">self</span>.hotshot_qs.get_vid_common_range(range).<span class="kw">await
         </span>}
-        <span class="kw">async fn </span>get_block_with_transaction(
+        <span class="kw">async fn </span>get_transaction(
             <span class="kw-2">&amp;</span><span class="self">self</span>,
             hash: TransactionHash&lt;MockTypes&gt;,
-        ) -&gt; Fetch&lt;(BlockQueryData&lt;MockTypes&gt;, TransactionIndex&lt;MockTypes&gt;)&gt; {
-            <span class="self">self</span>.hotshot_qs.get_block_with_transaction(hash).<span class="kw">await
+        ) -&gt; Fetch&lt;TransactionQueryData&lt;MockTypes&gt;&gt; {
+            <span class="self">self</span>.hotshot_qs.get_transaction(hash).<span class="kw">await
         </span>}
     }
 

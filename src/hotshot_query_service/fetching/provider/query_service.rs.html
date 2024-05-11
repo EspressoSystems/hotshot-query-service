@@ -903,8 +903,6 @@
 <a href="#901" id="901">901</a>
 <a href="#902" id="902">902</a>
 <a href="#903" id="903">903</a>
-<a href="#904" id="904">904</a>
-<a href="#905" id="905">905</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1074,7 +1072,9 @@
 
     <span class="kw">use crate</span>::{
         api::load_api,
-        availability::{define_api, AvailabilityDataSource, Fetch, UpdateAvailabilityData},
+        availability::{
+            define_api, AvailabilityDataSource, Fetch, TransactionQueryData, UpdateAvailabilityData,
+        },
         data_source::{
             sql::{<span class="self">self</span>, SqlDataSource},
             storage::sql::testing::TmpDb,
@@ -1227,7 +1227,7 @@
         <span class="comment">// * An unknown transaction.
         </span>fetches.push(
             data_source
-                .get_block_with_transaction(mock_transaction(<span class="macro">vec!</span>[]).commit())
+                .get_transaction(mock_transaction(<span class="macro">vec!</span>[]).commit())
                 .<span class="kw">await
                 </span>.map(ignore),
         );
@@ -1634,7 +1634,7 @@
         // and works without a fetcher; we don't trigger fetches for transactions that we don't know
         // exist.
         </span><span class="kw">let </span>tx = mock_transaction(<span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
-        <span class="kw">let </span>fut = data_source.get_block_with_transaction(tx.commit()).<span class="kw">await</span>;
+        <span class="kw">let </span>fut = data_source.get_transaction(tx.commit()).<span class="kw">await</span>;
 
         <span class="comment">// Sequence the transaction.
         </span>network.submit_transaction(tx.clone()).<span class="kw">await</span>;
@@ -1655,20 +1655,16 @@
         };
         <span class="macro">tracing::info!</span>(<span class="string">"transaction included in block {}"</span>, block.height());
 
-        <span class="kw">let </span>(fetched_block, tx_ix) = fut.<span class="kw">await</span>;
-        <span class="macro">assert_eq!</span>(block, fetched_block);
+        <span class="kw">let </span>fetched_tx = fut.<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(
-            tx,
-            <span class="kw-2">*</span>fetched_block.transaction(<span class="kw-2">&amp;</span>tx_ix).unwrap().transaction()
+            fetched_tx,
+            TransactionQueryData::with_hash(<span class="kw-2">&amp;</span>block, tx.commit()).unwrap()
         );
 
         <span class="comment">// Future queries for this transaction resolve immediately.
         </span><span class="macro">assert_eq!</span>(
-            (fetched_block, tx_ix),
-            data_source
-                .get_block_with_transaction(tx.commit())
-                .<span class="kw">await
-                </span>.<span class="kw">await
+            fetched_tx,
+            data_source.get_transaction(tx.commit()).<span class="kw">await</span>.<span class="kw">await
         </span>);
     }
 

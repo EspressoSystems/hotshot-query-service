@@ -220,7 +220,7 @@
 </span><span class="kw">use crate</span>::{
     availability::{
         BlockId, BlockQueryData, LeafId, LeafQueryData, PayloadQueryData, QueryableHeader,
-        QueryablePayload, TransactionHash, TransactionIndex, UpdateAvailabilityData,
+        QueryablePayload, TransactionHash, TransactionQueryData, UpdateAvailabilityData,
         VidCommonQueryData,
     },
     data_source::VersionedDataSource,
@@ -297,10 +297,10 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 
-    <span class="kw">async fn </span>get_block_with_transaction(
+    <span class="kw">async fn </span>get_transaction(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hash: TransactionHash&lt;Types&gt;,
-    ) -&gt; QueryResult&lt;(BlockQueryData&lt;Types&gt;, TransactionIndex&lt;Types&gt;)&gt;;
+    ) -&gt; QueryResult&lt;TransactionQueryData&lt;Types&gt;&gt;;
 }
 
 <span class="doccomment">/// An interface for querying Data and Statistics from the HotShot Blockchain.

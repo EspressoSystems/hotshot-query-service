@@ -602,13 +602,13 @@
         data_source::{BlockId, LeafId, UpdateAvailabilityData},
         query_data::{
             BlockHash, BlockQueryData, LeafHash, LeafQueryData, PayloadQueryData, QueryableHeader,
-            QueryablePayload, TransactionHash, TransactionIndex, VidCommonQueryData,
+            QueryablePayload, TransactionHash, TransactionQueryData, VidCommonQueryData,
         },
     },
     data_source::VersionedDataSource,
     node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
     types::HeightIndexed,
-    Header, MissingSnafu, NotFoundSnafu, Payload, QueryResult, VidCommitment, VidShare,
+    ErrorSnafu, Header, MissingSnafu, NotFoundSnafu, Payload, QueryResult, VidCommitment, VidShare,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>atomic_store::{AtomicStore, AtomicStoreLoader, PersistenceError};
@@ -639,7 +639,7 @@
     index_by_leaf_hash: HashMap&lt;LeafHash&lt;Types&gt;, u64&gt;,
     index_by_block_hash: HashMap&lt;BlockHash&lt;Types&gt;, u64&gt;,
     index_by_payload_hash: HashMap&lt;VidCommitment, u64&gt;,
-    index_by_txn_hash: HashMap&lt;TransactionHash&lt;Types&gt;, (u64, TransactionIndex&lt;Types&gt;)&gt;,
+    index_by_txn_hash: HashMap&lt;TransactionHash&lt;Types&gt;, u64&gt;,
     index_by_time: BTreeMap&lt;u64, Vec&lt;u64&gt;&gt;,
     num_transactions: usize,
     payload_size: usize,
@@ -770,8 +770,8 @@
             payload_size += block.size() <span class="kw">as </span>usize;
 
             <span class="kw">let </span>height = block.height();
-            <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.enumerate() {
-                update_index_by_hash(<span class="kw-2">&amp;mut </span>index_by_txn_hash, txn.commit(), (height, txn_ix));
+            <span class="kw">for </span>(<span class="kw">_</span>, txn) <span class="kw">in </span>block.enumerate() {
+                update_index_by_hash(<span class="kw-2">&amp;mut </span>index_by_txn_hash, txn.commit(), height);
             }
         }
 
@@ -967,13 +967,17 @@
             .collect())
     }
 
-    <span class="kw">async fn </span>get_block_with_transaction(
+    <span class="kw">async fn </span>get_transaction(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hash: TransactionHash&lt;Types&gt;,
-    ) -&gt; QueryResult&lt;(BlockQueryData&lt;Types&gt;, TransactionIndex&lt;Types&gt;)&gt; {
-        <span class="kw">let </span>(height, ix) = <span class="self">self</span>.index_by_txn_hash.get(<span class="kw-2">&amp;</span>hash).context(NotFoundSnafu)<span class="question-mark">?</span>;
+    ) -&gt; QueryResult&lt;TransactionQueryData&lt;Types&gt;&gt; {
+        <span class="kw">let </span>height = <span class="self">self</span>.index_by_txn_hash.get(<span class="kw-2">&amp;</span>hash).context(NotFoundSnafu)<span class="question-mark">?</span>;
         <span class="kw">let </span>block = <span class="self">self</span>.get_block((<span class="kw-2">*</span>height <span class="kw">as </span>usize).into()).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((block, ix.clone()))
+        TransactionQueryData::with_hash(<span class="kw-2">&amp;</span>block, hash).context(ErrorSnafu {
+            message: <span class="macro">format!</span>(
+                <span class="string">"transaction index inconsistent: block {height} contains no transaction {hash}"
+            </span>),
+        })
     }
 }
 
@@ -1016,12 +1020,8 @@
         }
         <span class="self">self</span>.num_transactions += block.len();
         <span class="self">self</span>.payload_size += block.size() <span class="kw">as </span>usize;
-        <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.enumerate() {
-            update_index_by_hash(
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.index_by_txn_hash,
-                txn.commit(),
-                (block.height(), txn_ix),
-            );
+        <span class="kw">for </span>(<span class="kw">_</span>, txn) <span class="kw">in </span>block.enumerate() {
+            update_index_by_hash(<span class="kw-2">&amp;mut </span><span class="self">self</span>.index_by_txn_hash, txn.commit(), block.height());
         }
         <span class="prelude-val">Ok</span>(())
     }

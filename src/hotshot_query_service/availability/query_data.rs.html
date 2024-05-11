@@ -572,6 +572,49 @@
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -655,7 +698,7 @@
     /// the transaction belongs not only to the block but to a section of the block dedicated to a
     /// specific rollup), otherws may prove something substantially weaker (for example, a trusted
     /// query service may use `()` for the proof).
-    </span><span class="kw">type </span>InclusionProof: Clone + Debug + PartialEq + Eq + Serialize + DeserializeOwned;
+    </span><span class="kw">type </span>InclusionProof: Clone + Debug + PartialEq + Eq + Serialize + DeserializeOwned + Send + Sync;
 
     <span class="doccomment">/// The number of transactions in the block.
     </span><span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>, meta: <span class="kw-2">&amp;</span><span class="self">Self</span>::Metadata) -&gt; usize;
@@ -901,15 +944,8 @@
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload,
 {
-    <span class="kw">pub fn </span>transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, i: <span class="kw-2">&amp;</span>TransactionIndex&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;TransactionQueryData&lt;Types&gt;&gt; {
-        <span class="kw">let </span>(transaction, proof) = <span class="self">self</span>.payload.transaction_with_proof(<span class="self">self</span>.metadata(), i)<span class="question-mark">?</span>;
-        <span class="prelude-val">Some</span>(TransactionQueryData {
-            transaction: transaction.clone(),
-            block_hash: <span class="self">self</span>.hash(),
-            proof,
-            height: <span class="self">self</span>.height(),
-            hash: transaction.commit(),
-        })
+    <span class="kw">pub fn </span>transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, ix: <span class="kw-2">&amp;</span>TransactionIndex&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Transaction&lt;Types&gt;&gt; {
+        <span class="self">self</span>.payload().transaction(<span class="self">self</span>.metadata(), ix)
     }
 
     <span class="kw">pub fn </span>transaction_by_hash(
@@ -1049,29 +1085,79 @@
     </span>Payload&lt;Types&gt;: QueryablePayload,
 {
     transaction: Transaction&lt;Types&gt;,
-    block_hash: BlockHash&lt;Types&gt;,
-    proof: TransactionInclusionProof&lt;Types&gt;,
-    height: u64,
     hash: TransactionHash&lt;Types&gt;,
+    index: u64,
+    proof: TransactionInclusionProof&lt;Types&gt;,
+    block_hash: BlockHash&lt;Types&gt;,
+    block_height: u64,
 }
 
 <span class="kw">impl</span>&lt;Types: NodeType&gt; TransactionQueryData&lt;Types&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload,
 {
-    <span class="kw">pub fn </span>transaction(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Transaction&lt;Types&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
+        block: <span class="kw-2">&amp;</span>BlockQueryData&lt;Types&gt;,
+        i: TransactionIndex&lt;Types&gt;,
+        index: u64,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>(transaction, proof) = block
+            .payload()
+            .transaction_with_proof(block.metadata(), <span class="kw-2">&amp;</span>i)<span class="question-mark">?</span>;
+        <span class="prelude-val">Some</span>(<span class="self">Self </span>{
+            hash: transaction.commit(),
+            transaction,
+            index,
+            proof,
+            block_hash: block.hash(),
+            block_height: block.height(),
+        })
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>with_hash(
+        block: <span class="kw-2">&amp;</span>BlockQueryData&lt;Types&gt;,
+        hash: TransactionHash&lt;Types&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        block
+            .enumerate()
+            .enumerate()
+            .find_map(|(i, (index, tx))| {
+                <span class="kw">if </span>tx.commit() == hash {
+                    <span class="prelude-val">Some</span>(<span class="self">Self</span>::new(block, index, i <span class="kw">as </span>u64))
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>}
+            })
+            .flatten()
+    }
+
+    <span class="doccomment">/// The underlying transaction data.
+    </span><span class="kw">pub fn </span>transaction(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Transaction&lt;Types&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.transaction
     }
 
-    <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        <span class="self">self</span>.height
-    }
-
-    <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TransactionHash&lt;Types&gt; {
+    <span class="doccomment">/// The hash of this transaction.
+    </span><span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TransactionHash&lt;Types&gt; {
         <span class="self">self</span>.hash
     }
 
-    <span class="kw">pub fn </span>block_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BlockHash&lt;Types&gt; {
+    <span class="doccomment">/// The (0-based) position of this transaction within its block.
+    </span><span class="kw">pub fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.index
+    }
+
+    <span class="doccomment">/// A proof of inclusion of this transaction in its block.
+    </span><span class="kw">pub fn </span>proof(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>TransactionInclusionProof&lt;Types&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.proof
+    }
+
+    <span class="doccomment">/// The height of the block containing this transaction.
+    </span><span class="kw">pub fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.block_height
+    }
+
+    <span class="doccomment">/// The hash of the block containing this transaction.
+    </span><span class="kw">pub fn </span>block_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BlockHash&lt;Types&gt; {
         <span class="self">self</span>.block_hash
     }
 }

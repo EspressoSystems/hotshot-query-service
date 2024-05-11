@@ -958,11 +958,6 @@
 <a href="#956" id="956">956</a>
 <a href="#957" id="957">957</a>
 <a href="#958" id="958">958</a>
-<a href="#959" id="959">959</a>
-<a href="#960" id="960">960</a>
-<a href="#961" id="961">961</a>
-<a href="#962" id="962">962</a>
-<a href="#963" id="963">963</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1354,40 +1349,34 @@
         })<span class="question-mark">?
         </span>.get(<span class="string">"get_transaction"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
-                <span class="kw">let </span>(block, index) = <span class="kw">match </span>req.opt_blob_param(<span class="string">"hash"</span>)<span class="question-mark">? </span>{
+                <span class="kw">match </span>req.opt_blob_param(<span class="string">"hash"</span>)<span class="question-mark">? </span>{
                     <span class="prelude-val">Some</span>(hash) =&gt; state
-                        .get_block_with_transaction(hash)
+                        .get_transaction(hash)
                         .<span class="kw">await
                         </span>.with_timeout(timeout)
                         .<span class="kw">await
                         </span>.context(FetchTransactionSnafu {
                             resource: hash.to_string(),
-                        })<span class="question-mark">?</span>,
+                        }),
                     <span class="prelude-val">None </span>=&gt; {
-                        <span class="kw">let </span>height = req.integer_param(<span class="string">"height"</span>)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>id = BlockId::Number(height);
+                        <span class="kw">let </span>height: u64 = req.integer_param(<span class="string">"height"</span>)<span class="question-mark">?</span>;
                         <span class="kw">let </span>block = state
-                            .get_block(id)
+                            .get_block(height <span class="kw">as </span>usize)
                             .<span class="kw">await
                             </span>.with_timeout(timeout)
                             .<span class="kw">await
                             </span>.context(FetchBlockSnafu {
-                                resource: id.to_string(),
+                                resource: height.to_string(),
                             })<span class="question-mark">?</span>;
-                        <span class="kw">let </span>i = req.integer_param(<span class="string">"index"</span>)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>index = block.payload().nth(block.metadata(), i).context(
-                            InvalidTransactionIndexSnafu {
-                                height: height <span class="kw">as </span>u64,
-                                index: i <span class="kw">as </span>u64,
-                            },
-                        )<span class="question-mark">?</span>;
-                        (block, index)
+                        <span class="kw">let </span>i: u64 = req.integer_param(<span class="string">"index"</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>index = block
+                            .payload()
+                            .nth(block.metadata(), i <span class="kw">as </span>usize)
+                            .context(InvalidTransactionIndexSnafu { height, index: i })<span class="question-mark">?</span>;
+                        TransactionQueryData::new(<span class="kw-2">&amp;</span>block, index, i)
+                            .context(InvalidTransactionIndexSnafu { height, index: i })
                     }
-                };
-                <span class="prelude-val">Ok</span>(block
-                    .transaction(<span class="kw-2">&amp;</span>index)
-                    <span class="comment">// The computation of `index` above should ensure that it is a valid index.
-                    </span>.unwrap())
+                }
             }
             .boxed()
         })<span class="question-mark">?
@@ -1658,8 +1647,9 @@
                     .send()
                     .<span class="kw">await
                     </span>.unwrap();
-                <span class="macro">assert_eq!</span>(txn.height(), i);
+                <span class="macro">assert_eq!</span>(txn.block_height(), i);
                 <span class="macro">assert_eq!</span>(txn.block_hash(), block.hash());
+                <span class="macro">assert_eq!</span>(txn.index(), j <span class="kw">as </span>u64);
                 <span class="macro">assert_eq!</span>(txn.hash(), txn_from_block.commit());
                 <span class="macro">assert_eq!</span>(txn.transaction(), <span class="kw-2">&amp;</span>txn_from_block);
                 <span class="comment">// We should be able to look up the transaction by hash. Note that for duplicate

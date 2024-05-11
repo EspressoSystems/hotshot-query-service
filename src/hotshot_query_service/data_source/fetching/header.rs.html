@@ -154,23 +154,6 @@
 <a href="#152" id="152">152</a>
 <a href="#153" id="153">153</a>
 <a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
-<a href="#156" id="156">156</a>
-<a href="#157" id="157">157</a>
-<a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
-<a href="#171" id="171">171</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -186,10 +169,8 @@
 </span><span class="doccomment">//! Header fetching.
 
 </span><span class="kw">use super</span>::{
-    block::{fetch_block_with_header, BlockRequest},
-    leaf::fetch_leaf_with_callbacks,
-    vid::fetch_vid_common_with_header,
-    AvailabilityProvider, Fetcher, NotifyStorage, ResultExt,
+    block::fetch_block_with_header, leaf::fetch_leaf_with_callbacks,
+    vid::fetch_vid_common_with_header, AvailabilityProvider, Fetcher, NotifyStorage, ResultExt,
 };
 <span class="kw">use crate</span>::{
     availability::{BlockId, QueryablePayload},
@@ -281,7 +262,7 @@
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>fetch_header_and_then&lt;Types, S, P&gt;(
     storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
-    req: BlockRequest&lt;Types&gt;,
+    req: BlockId&lt;Types&gt;,
     callback: HeaderCallback&lt;Types, S, P&gt;,
 ) <span class="kw">where
     </span>Types: NodeType,
@@ -289,56 +270,41 @@
     S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
-    <span class="kw">match </span>req {
-        BlockRequest::Id(id) =&gt; {
-            <span class="comment">// Check if at least the header is available in local storage. If it is, we benefit
-            // two ways:
-            // 1. We know for sure the corresponding block exists, so we can unconditionally
-            //    trigger an active fetch without unnecessarily bothering our peers.
-            // 2. We only need to fetch the missing data (e.g. payload or VID common), not the full
-            //    block. Not only is this marginally less data to download, there are some providers
-            //    that may only be able to provide certain data. For example, the HotShot DA
-            //    committee members may be able to provide paylaods, but not full blocks. Or, in the
-            //    case where VID recovery is needed, the VID common data may be available but the
-            //    full block may not exist anywhere.
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(header) = storage
-                .storage
-                .get_header(id)
-                .<span class="kw">await
-                </span>.context(<span class="macro">format!</span>(<span class="string">"loading header for block {id}"</span>))
-                .ok_or_trace()
-            {
-                callback.run(header);
-                <span class="kw">return</span>;
-            }
+    <span class="comment">// Check if at least the header is available in local storage. If it is, we benefit two ways:
+    // 1. We know for sure the corresponding block exists, so we can unconditionally trigger an
+    //    active fetch without unnecessarily bothering our peers.
+    // 2. We only need to fetch the missing data (e.g. payload or VID common), not the full block.
+    //    Not only is this marginally less data to download, there are some providers that may only
+    //    be able to provide certain data. For example, the HotShot DA committee members may be able
+    //    to provide paylaods, but not full blocks. Or, in the case where VID recovery is needed,
+    //    the VID common data may be available but the full block may not exist anywhere.
+    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(header) = storage
+        .storage
+        .get_header(req)
+        .<span class="kw">await
+        </span>.context(<span class="macro">format!</span>(<span class="string">"loading header for block {req}"</span>))
+        .ok_or_trace()
+    {
+        callback.run(header);
+        <span class="kw">return</span>;
+    }
 
-            <span class="comment">// If the header is _not_ present, we may still be able to fetch the request, but we
-            // need to fetch the header (in fact, the entire leaf) first. This is because we have an
-            // invariant that we should not store derived objects in the database unless we already
-            // have the corresponding header and leaf.
-            </span><span class="kw">match </span>id {
-                BlockId::Number(n) =&gt; {
-                    fetch_leaf_with_callbacks(callback.fetcher(), n.into(), [callback.into()]);
-                }
-                BlockId::Hash(h) =&gt; {
-                    <span class="comment">// Given only the hash, we cannot tell if the corresonding leaf actually exists,
-                    // since we don't have a corresponding header. Therefore, we will not spawn an
-                    // active fetch.
-                    </span><span class="macro">tracing::debug!</span>(<span class="string">"not fetching unknown block {h}"</span>);
-                }
-                BlockId::PayloadHash(h) =&gt; {
-                    <span class="comment">// Same as above, we don't fetch a block with a payload that is not known to
-                    // exist.
-                    </span><span class="macro">tracing::debug!</span>(<span class="string">"not fetching block with unknown payload {h}"</span>);
-                }
-            }
+    <span class="comment">// If the header is _not_ present, we may still be able to fetch the request, but we need to
+    // fetch the header (in fact, the entire leaf) first. This is because we have an invariant that
+    // we should not store derived objects in the database unless we already have the corresponding
+    // header and leaf.
+    </span><span class="kw">match </span>req {
+        BlockId::Number(n) =&gt; {
+            fetch_leaf_with_callbacks(callback.fetcher(), n.into(), [callback.into()]);
         }
-        BlockRequest::WithTransaction(h) =&gt; {
-            <span class="comment">// We don't actively fetch blocks when requested by transaction, because without the
-            // block payload, we have no way of knowing whether a block with such a transaction
-            // actually exists, and we don't want to bother peers with requests for non-existant
-            // blocks.
-            </span><span class="macro">tracing::debug!</span>(<span class="string">"not fetching block with unknown transaction {h}"</span>);
+        BlockId::Hash(h) =&gt; {
+            <span class="comment">// Given only the hash, we cannot tell if the corresonding leaf actually exists, since
+            // we don't have a corresponding header. Therefore, we will not spawn an active fetch.
+            </span><span class="macro">tracing::debug!</span>(<span class="string">"not fetching unknown block {h}"</span>);
+        }
+        BlockId::PayloadHash(h) =&gt; {
+            <span class="comment">// Same as above, we don't fetch a block with a payload that is not known to exist.
+            </span><span class="macro">tracing::debug!</span>(<span class="string">"not fetching block with unknown payload {h}"</span>);
         }
     }
 }

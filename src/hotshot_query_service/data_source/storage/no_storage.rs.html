@@ -579,8 +579,6 @@
 <a href="#577" id="577">577</a>
 <a href="#578" id="578">578</a>
 <a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a>
-<a href="#581" id="581">581</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -599,7 +597,7 @@
 <span class="kw">use crate</span>::{
     availability::{
         BlockId, BlockQueryData, LeafId, LeafQueryData, PayloadQueryData, QueryablePayload,
-        TransactionHash, TransactionIndex, UpdateAvailabilityData, VidCommonQueryData,
+        TransactionHash, TransactionQueryData, UpdateAvailabilityData, VidCommonQueryData,
     },
     data_source::{
         storage::pruning::{PruneStorage, PrunedHeightStorage, PrunerConfig},
@@ -701,10 +699,10 @@
         <span class="prelude-val">Err</span>(QueryError::Missing)
     }
 
-    <span class="kw">async fn </span>get_block_with_transaction(
+    <span class="kw">async fn </span>get_transaction(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         _hash: TransactionHash&lt;Types&gt;,
-    ) -&gt; QueryResult&lt;(BlockQueryData&lt;Types&gt;, TransactionIndex&lt;Types&gt;)&gt; {
+    ) -&gt; QueryResult&lt;TransactionQueryData&lt;Types&gt;&gt; {
         <span class="prelude-val">Err</span>(QueryError::Missing)
     }
 }
@@ -1019,15 +1017,13 @@
             }
         }
 
-        <span class="doccomment">/// Returns the block containing a transaction with the given `hash` and the transaction's
-        /// position in the block.
-        </span><span class="kw">async fn </span>get_block_with_transaction(
+        <span class="kw">async fn </span>get_transaction(
             <span class="kw-2">&amp;</span><span class="self">self</span>,
             hash: TransactionHash&lt;MockTypes&gt;,
-        ) -&gt; Fetch&lt;(BlockQueryData&lt;MockTypes&gt;, TransactionIndex&lt;MockTypes&gt;)&gt; {
+        ) -&gt; Fetch&lt;TransactionQueryData&lt;MockTypes&gt;&gt; {
             <span class="kw">match </span><span class="self">self </span>{
-                <span class="self">Self</span>::Sql(data_source) =&gt; data_source.get_block_with_transaction(hash).<span class="kw">await</span>,
-                <span class="self">Self</span>::NoStorage(data_source) =&gt; data_source.get_block_with_transaction(hash).<span class="kw">await</span>,
+                <span class="self">Self</span>::Sql(data_source) =&gt; data_source.get_transaction(hash).<span class="kw">await</span>,
+                <span class="self">Self</span>::NoStorage(data_source) =&gt; data_source.get_transaction(hash).<span class="kw">await</span>,
             }
         }
     }

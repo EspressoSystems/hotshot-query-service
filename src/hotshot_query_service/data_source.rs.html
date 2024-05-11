@@ -1122,8 +1122,6 @@
 <a href="#1120" id="1120">1120</a>
 <a href="#1121" id="1121">1121</a>
 <a href="#1122" id="1122">1122</a>
-<a href="#1123" id="1123">1123</a>
-<a href="#1124" id="1124">1124</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1383,18 +1381,16 @@
                 </span><span class="kw">let </span>ix = seen_transactions
                     .entry(txn.commit())
                     .or_insert((i <span class="kw">as </span>u64, j));
-                <span class="kw">if let </span><span class="prelude-val">Ok</span>((block, pos)) = ds
-                    .get_block_with_transaction(txn.commit())
-                    .<span class="kw">await
-                    </span>.try_resolve()
-                {
-                    <span class="macro">assert_eq!</span>((block.height(), pos), <span class="kw-2">*</span>ix);
+                <span class="kw">if let </span><span class="prelude-val">Ok</span>(tx_data) = ds.get_transaction(txn.commit()).<span class="kw">await</span>.try_resolve() {
+                    <span class="macro">assert_eq!</span>(tx_data.transaction(), <span class="kw-2">&amp;</span>txn);
+                    <span class="macro">assert_eq!</span>(tx_data.block_height(), ix.<span class="number">0</span>);
+                    <span class="macro">assert_eq!</span>(tx_data.index(), ix.<span class="number">1 </span><span class="kw">as </span>u64);
                 } <span class="kw">else </span>{
                     <span class="macro">tracing::warn!</span>(
                         <span class="string">"skipping transaction index check for missing transaction {j} {txn:?}"
                     </span>);
                     <span class="comment">// At least check that _some_ transaction can be fetched.
-                    </span>ds.get_block_with_transaction(txn.commit()).<span class="kw">await</span>.<span class="kw">await</span>;
+                    </span>ds.get_transaction(txn.commit()).<span class="kw">await</span>.<span class="kw">await</span>;
                 }
             }
         }
