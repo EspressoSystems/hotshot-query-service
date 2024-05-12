@@ -4248,6 +4248,11 @@
 <a href="#4246" id="4246">4246</a>
 <a href="#4247" id="4247">4247</a>
 <a href="#4248" id="4248">4248</a>
+<a href="#4249" id="4249">4249</a>
+<a href="#4250" id="4250">4250</a>
+<a href="#4251" id="4251">4251</a>
+<a href="#4252" id="4252">4252</a>
+<a href="#4253" id="4253">4253</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -5883,7 +5888,7 @@
                     </span>.query_one(
                         <span class="kw-2">&amp;</span><span class="macro">format!</span>(
                             <span class="string">"SELECT height FROM Header  where
-                             data-&gt;&gt;'{header_state_commitment_field}' = $1"
+                             {header_state_commitment_field} = $1"
                         </span>),
                         <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>commit.to_string()],
                     )
@@ -5896,7 +5901,7 @@
                 <span class="kw">let </span>row = <span class="self">self
                     </span>.query_one(
                         <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                            <span class="string">"SELECT data-&gt;&gt;'{header_state_commitment_field}' AS root_commmitment
+                            <span class="string">"SELECT {header_state_commitment_field} AS root_commmitment
                              FROM header
                              WHERE height = $1"
                         </span>),
@@ -7433,6 +7438,11 @@
                 value BYTEA  NOT NULL UNIQUE
             );
         
+
+            ALTER TABLE header
+            ADD column test_merkle_tree_root text
+            GENERATED ALWAYS as (data-&gt;&gt;'test_merkle_tree_root') STORED;
+
             CREATE TABLE {name}
             (
                 path integer[] NOT NULL, 
@@ -7502,11 +7512,11 @@
         // The SQL commands used here will fail if not run in order.
         </span><span class="kw">let </span>migrations = <span class="macro">vec!</span>[
             Migration::unapplied(
-                <span class="string">"V13__create_test_table.sql"</span>,
+                <span class="string">"V23__create_test_table.sql"</span>,
                 <span class="string">"ALTER TABLE test ADD COLUMN data INTEGER;"</span>,
             )
             .unwrap(),
-            Migration::unapplied(<span class="string">"V12__create_test_table.sql"</span>, <span class="string">"CREATE TABLE test ();"</span>).unwrap(),
+            Migration::unapplied(<span class="string">"V22__create_test_table.sql"</span>, <span class="string">"CREATE TABLE test ();"</span>).unwrap(),
         ];
         connect(<span class="bool-val">true</span>, migrations.clone()).<span class="kw">await</span>.unwrap();
 
@@ -7727,7 +7737,7 @@
             </span><span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()});
             storage
                 .query_opt(
-                    <span class="string">"INSERT INTO HEADER VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
+                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
                     [
                         sql_param(<span class="kw-2">&amp;</span>(block_height <span class="kw">as </span>i64)),
                         sql_param(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"randomHash{i}"</span>)),
@@ -7786,7 +7796,7 @@
         </span><span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()});
         storage
             .query_opt(
-                <span class="string">"INSERT INTO HEADER VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
+                <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
                 [
                     sql_param(<span class="kw-2">&amp;</span>(<span class="number">2_i64</span>)),
                     sql_param(<span class="kw-2">&amp;</span><span class="string">"randomstring"</span>),
@@ -7885,7 +7895,7 @@
         <span class="comment">// insert the header with merkle commitment
         </span>storage
                 .query_opt(
-                    <span class="string">"INSERT INTO HEADER VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
+                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
                     [
                         sql_param(<span class="kw-2">&amp;</span>(block_height <span class="kw">as </span>i64)),
                         sql_param(<span class="kw-2">&amp;</span><span class="string">"randomString"</span>),
@@ -7944,7 +7954,7 @@
         <span class="comment">// Insert the new header
         </span>storage
         .query_opt(
-            <span class="string">"INSERT INTO HEADER VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
+            <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
             [
                 sql_param(<span class="kw-2">&amp;</span><span class="number">2_i64</span>),
                 sql_param(<span class="kw-2">&amp;</span><span class="string">"randomString2"</span>),
@@ -8002,7 +8012,7 @@
             <span class="comment">// Insert a dummy header
             </span>storage
                 .query_opt(
-                    <span class="string">"INSERT INTO HEADER VALUES ($1, $2, 't', 0, $3)"</span>,
+                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3)"</span>,
                     [
                         sql_param(<span class="kw-2">&amp;</span>(i <span class="kw">as </span>i64)),
                         sql_param(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"hash{i}"</span>)),
@@ -8059,7 +8069,7 @@
         <span class="comment">// insert the header with merkle commitment
         </span>storage
                 .query_opt(
-                    <span class="string">"INSERT INTO HEADER VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
+                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
                     [
                         sql_param(<span class="kw-2">&amp;</span>(block_height <span class="kw">as </span>i64)),
                         sql_param(<span class="kw-2">&amp;</span><span class="string">"randomString"</span>),
@@ -8122,7 +8132,7 @@
             <span class="comment">// insert the header with merkle commitment
             </span>storage
                     .query_opt(
-                        <span class="string">"INSERT INTO HEADER VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
+                        <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
                         [
                             sql_param(<span class="kw-2">&amp;</span>(block_height <span class="kw">as </span>i64)),
                             sql_param(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"randomString{i}"</span>)),
@@ -8177,7 +8187,7 @@
         <span class="comment">// insert the header with merkle commitment
         </span>storage
                 .query_opt(
-                    <span class="string">"INSERT INTO HEADER VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
+                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
                     [
                         sql_param(<span class="kw-2">&amp;</span>(block_height <span class="kw">as </span>i64)),
                         sql_param(<span class="kw-2">&amp;</span><span class="string">"randomStringgg"</span>),
@@ -8207,7 +8217,7 @@
         <span class="comment">// insert the header with merkle commitment
         </span>storage
                 .query_opt(
-                    <span class="string">"INSERT INTO HEADER VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
+                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
                     [
                         sql_param(<span class="kw-2">&amp;</span>(<span class="number">2_i64</span>)),
                         sql_param(<span class="kw-2">&amp;</span><span class="string">"randomHashString"</span>),
@@ -8331,7 +8341,7 @@
             <span class="comment">// insert the header with merkle commitment
             </span>storage
             .query_opt(
-                <span class="string">"INSERT INTO HEADER VALUES ($1, $2, 'hash', 0, $3)"</span>,
+                <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 'hash', 0, $3)"</span>,
                 [
                     sql_param(<span class="kw-2">&amp;</span>(block_height <span class="kw">as </span>i64)),
                     sql_param(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"hash{block_height}"</span>)),
@@ -8433,7 +8443,7 @@
             <span class="comment">// Insert a header with the tree commitment.
             </span>storage
                 .query_opt(
-                    <span class="string">"INSERT INTO HEADER VALUES (0, 'hash', 'hash', 0, $1)"</span>,
+                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES (0, 'hash', 'hash', 0, $1)"</span>,
                     [
                         sql_param(<span class="kw-2">&amp;</span><span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()})),
                     ],
