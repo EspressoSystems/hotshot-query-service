@@ -4245,14 +4245,6 @@
 <a href="#4243" id="4243">4243</a>
 <a href="#4244" id="4244">4244</a>
 <a href="#4245" id="4245">4245</a>
-<a href="#4246" id="4246">4246</a>
-<a href="#4247" id="4247">4247</a>
-<a href="#4248" id="4248">4248</a>
-<a href="#4249" id="4249">4249</a>
-<a href="#4250" id="4250">4250</a>
-<a href="#4251" id="4251">4251</a>
-<a href="#4252" id="4252">4252</a>
-<a href="#4253" id="4253">4253</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -4316,6 +4308,7 @@
     traits::{
         block_contents::{BlockHeader, BlockPayload},
         node_implementation::NodeType,
+        EncodeBytes,
     },
 };
 <span class="kw">use </span>itertools::{izip, Itertools};
@@ -5104,11 +5097,10 @@
 
         <span class="comment">// While we don't necessarily have the full block for this leaf yet, we can initialize the
         // header table with block metadata taken from the leaf.
-        </span><span class="kw">let </span>header_json = serde_json::to_value(leaf.leaf().get_block_header()).map_err(|err| {
-            QueryError::Error {
+        </span><span class="kw">let </span>header_json =
+            serde_json::to_value(leaf.leaf().block_header()).map_err(|err| QueryError::Error {
                 message: <span class="macro">format!</span>(<span class="string">"failed to serialize header: {err}"</span>),
-            }
-        })<span class="question-mark">?</span>;
+            })<span class="question-mark">?</span>;
         tx.upsert(
             <span class="string">"header"</span>,
             [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"data"</span>, <span class="string">"timestamp"</span>],
@@ -5116,15 +5108,9 @@
             [[
                 sql_param(<span class="kw-2">&amp;</span>(leaf.height() <span class="kw">as </span>i64)),
                 sql_param(<span class="kw-2">&amp;</span>leaf.block_hash().to_string()),
-                sql_param(
-                    <span class="kw-2">&amp;</span>leaf
-                        .leaf()
-                        .get_block_header()
-                        .payload_commitment()
-                        .to_string(),
-                ),
+                sql_param(<span class="kw-2">&amp;</span>leaf.leaf().block_header().payload_commitment().to_string()),
                 sql_param(<span class="kw-2">&amp;</span>header_json),
-                sql_param(<span class="kw-2">&amp;</span>(leaf.leaf().get_block_header().timestamp() <span class="kw">as </span>i64)),
+                sql_param(<span class="kw-2">&amp;</span>(leaf.leaf().block_header().timestamp() <span class="kw">as </span>i64)),
             ]],
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
@@ -5165,9 +5151,7 @@
 
         <span class="comment">// The header and payload tables should already have been initialized when we inserted the
         // corresponding leaf. All we have to do is add the payload itself and its size.
-        </span><span class="kw">let </span>payload = block.payload.encode().map_err(|err| QueryError::Error {
-            message: <span class="macro">format!</span>(<span class="string">"failed to serialize block: {err}"</span>),
-        })<span class="question-mark">?</span>;
+        </span><span class="kw">let </span>payload = block.payload.encode();
         tx.upsert(
             <span class="string">"payload"</span>,
             [<span class="string">"height"</span>, <span class="string">"data"</span>, <span class="string">"size"</span>],
@@ -7567,8 +7551,8 @@
         <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
         <span class="comment">// insert some mock data
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">20 </span>{
-            leaf.leaf.get_block_header_mut().block_number = i;
-            leaf.leaf.get_block_header_mut().timestamp = Utc::now().timestamp() <span class="kw">as </span>u64;
+            leaf.leaf.block_header_mut().block_number = i;
+            leaf.leaf.block_header_mut().timestamp = Utc::now().timestamp() <span class="kw">as </span>u64;
             storage.insert_leaf(leaf.clone()).<span class="kw">await</span>.unwrap();
             storage.commit().<span class="kw">await</span>.unwrap();
         }
@@ -7637,8 +7621,8 @@
         <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
         <span class="comment">// insert some mock data
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">20 </span>{
-            leaf.leaf.get_block_header_mut().block_number = i;
-            leaf.leaf.get_block_header_mut().timestamp = Utc::now().timestamp() <span class="kw">as </span>u64;
+            leaf.leaf.block_header_mut().block_number = i;
+            leaf.leaf.block_header_mut().timestamp = Utc::now().timestamp() <span class="kw">as </span>u64;
             storage.insert_leaf(leaf.clone()).<span class="kw">await</span>.unwrap();
             storage.commit().<span class="kw">await</span>.unwrap();
         }

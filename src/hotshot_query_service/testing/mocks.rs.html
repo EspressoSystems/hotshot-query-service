@@ -233,7 +233,7 @@
 <span class="kw">pub type </span>MockTransaction = TestTransaction;
 
 <span class="kw">pub fn </span>mock_transaction(payload: Vec&lt;u8&gt;) -&gt; MockTransaction {
-    TestTransaction(payload)
+    TestTransaction::new(payload)
 }
 
 <span class="kw">impl </span>QueryableHeader&lt;MockTypes&gt; <span class="kw">for </span>MockHeader {

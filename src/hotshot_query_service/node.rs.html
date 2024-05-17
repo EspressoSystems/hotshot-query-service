@@ -421,15 +421,6 @@
 <a href="#419" id="419">419</a>
 <a href="#420" id="420">420</a>
 <a href="#421" id="421">421</a>
-<a href="#422" id="422">422</a>
-<a href="#423" id="423">423</a>
-<a href="#424" id="424">424</a>
-<a href="#425" id="425">425</a>
-<a href="#426" id="426">426</a>
-<a href="#427" id="427">427</a>
-<a href="#428" id="428">428</a>
-<a href="#429" id="429">429</a>
-<a href="#430" id="430">430</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -625,7 +616,7 @@
 
         <span class="comment">// Create the consensus network.
         </span><span class="kw">let </span><span class="kw-2">mut </span>network = MockNetwork::&lt;MockDataSource&gt;::init().<span class="kw">await</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>events = network.handle().get_event_stream();
+        <span class="kw">let </span><span class="kw-2">mut </span>events = network.handle().event_stream();
         network.start().<span class="kw">await</span>;
 
         <span class="comment">// Start the web server.
@@ -687,20 +678,14 @@
                 leaf, vid_share, ..
             } <span class="kw">in </span>leaf_chain.iter().rev()
             {
-                headers.push(leaf.get_block_header().clone());
-                <span class="kw">if </span>leaf.get_block_header().block_number &gt;= block_height <span class="kw">as </span>u64 {
+                headers.push(leaf.block_header().clone());
+                <span class="kw">if </span>leaf.block_header().block_number &gt;= block_height <span class="kw">as </span>u64 {
                     <span class="kw">break </span><span class="lifetime">'outer</span>;
                 }
-                <span class="macro">tracing::info!</span>(
-                    height = leaf.get_block_header().block_number,
-                    <span class="string">"checking share"
-                </span>);
+                <span class="macro">tracing::info!</span>(height = leaf.block_header().block_number, <span class="string">"checking share"</span>);
 
                 <span class="kw">let </span>share = client
-                    .get::&lt;VidShare&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                        <span class="string">"vid/share/{}"</span>,
-                        leaf.get_block_header().block_number
-                    ))
+                    .get::&lt;VidShare&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"vid/share/{}"</span>, leaf.block_header().block_number))
                     .send()
                     .<span class="kw">await
                     </span>.unwrap();
@@ -712,10 +697,7 @@
                 </span><span class="macro">assert_eq!</span>(
                     share,
                     client
-                        .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                            <span class="string">"vid/share/hash/{}"</span>,
-                            leaf.get_block_header().commit()
-                        ))
+                        .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"vid/share/hash/{}"</span>, leaf.block_header().commit()))
                         .send()
                         .<span class="kw">await
                         </span>.unwrap()
@@ -725,7 +707,7 @@
                     client
                         .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                             <span class="string">"vid/share/payload-hash/{}"</span>,
-                            leaf.get_block_header().payload_commitment
+                            leaf.block_header().payload_commitment
                         ))
                         .send()
                         .<span class="kw">await

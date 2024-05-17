@@ -404,7 +404,7 @@
         <span class="kw">let </span>stake = <span class="number">1u64</span>;
         <span class="kw">let </span>known_nodes_with_stake = (<span class="number">0</span>..num_staked_nodes.into())
             .map(|id| PeerConfig {
-                stake_table_entry: pub_keys[id].get_stake_table_entry(stake),
+                stake_table_entry: pub_keys[id].stake_table_entry(stake),
                 state_ver_key: state_key_pairs[id].ver_key(),
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
@@ -521,7 +521,7 @@
 
         <span class="comment">// Hook the builder up to the event stream from the first node
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(builder_task) = builder_task {
-            builder_task.start(Box::new(nodes[<span class="number">0</span>].hotshot.get_event_stream()));
+            builder_task.start(Box::new(nodes[<span class="number">0</span>].hotshot.event_stream()));
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>network = <span class="self">Self </span>{
@@ -583,7 +583,7 @@
         <span class="comment">// Spawn the update tasks.
         </span><span class="kw">for </span>(i, node) <span class="kw">in </span><span class="self">self</span>.nodes.iter_mut().enumerate() {
             <span class="kw">let </span>ds = node.data_source.clone();
-            <span class="kw">let </span><span class="kw-2">mut </span>events = node.hotshot.get_event_stream();
+            <span class="kw">let </span><span class="kw-2">mut </span>events = node.hotshot.event_stream();
             <span class="self">self</span>.tasks.push(BackgroundTask::spawn(
                 <span class="macro">format!</span>(<span class="string">"update node {i}"</span>),
                 <span class="kw">async move </span>{

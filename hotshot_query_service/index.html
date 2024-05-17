@@ -56,7 +56,7 @@ app
 </span>spawn(app.serve(<span class="string">"0.0.0.0:8080"</span>, STATIC_VER_0_1));
 
 <span class="comment">// Update query data using HotShot events.
-</span><span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.get_event_stream();
+</span><span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.event_stream();
 <span class="kw">while let </span><span class="prelude-val">Some</span>(event) = events.next().<span class="kw">await </span>{
     <span class="comment">// Re-lock the mutex each time we get a new event.
     </span><span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source.write().<span class="kw">await</span>;

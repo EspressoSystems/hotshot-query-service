@@ -452,7 +452,7 @@
                     </span><span class="macro">tracing::warn!</span>(<span class="string">"failed to store fetched leaf {height}: {err}"</span>);
                 }
             }
-            <span class="self">Self</span>::Continuation { callback } =&gt; callback.run(leaf.leaf.get_block_header().clone()),
+            <span class="self">Self</span>::Continuation { callback } =&gt; callback.run(leaf.leaf.block_header().clone()),
         }
     }
 }

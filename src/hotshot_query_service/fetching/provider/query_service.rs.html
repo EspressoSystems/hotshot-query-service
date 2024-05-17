@@ -893,16 +893,6 @@
 <a href="#891" id="891">891</a>
 <a href="#892" id="892">892</a>
 <a href="#893" id="893">893</a>
-<a href="#894" id="894">894</a>
-<a href="#895" id="895">895</a>
-<a href="#896" id="896">896</a>
-<a href="#897" id="897">897</a>
-<a href="#898" id="898">898</a>
-<a href="#899" id="899">899</a>
-<a href="#900" id="900">900</a>
-<a href="#901" id="901">901</a>
-<a href="#902" id="902">902</a>
-<a href="#903" id="903">903</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -925,7 +915,7 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>futures::try_join;
 <span class="kw">use </span>hotshot_types::{
-    traits::{node_implementation::NodeType, BlockPayload},
+    traits::{node_implementation::NodeType, EncodeBytes},
     vid::{vid_scheme, VidSchemeType},
 };
 <span class="kw">use </span>jf_vid::VidScheme;
@@ -974,17 +964,7 @@
                 <span class="comment">// Verify that the data we retrieved is consistent with the request we made.
                 </span><span class="kw">let </span>num_storage_nodes =
                     VidSchemeType::get_num_storage_nodes(common.common()) <span class="kw">as </span>usize;
-                <span class="kw">let </span>bytes = <span class="kw">match </span>payload.data().encode() {
-                    <span class="prelude-val">Ok</span>(bytes) =&gt; bytes,
-                    <span class="prelude-val">Err</span>(err) =&gt; {
-                        <span class="macro">tracing::error!</span>(
-                            %err,
-                            <span class="question-mark">?</span>payload,
-                            <span class="string">"received malformed payload (unable to encode to bytes)"</span>,
-                        );
-                        <span class="kw">return </span><span class="prelude-val">None</span>;
-                    }
-                };
+                <span class="kw">let </span>bytes = payload.data().encode();
                 <span class="kw">let </span>commit = <span class="kw">match </span>vid_scheme(num_storage_nodes).commit_only(bytes) {
                     <span class="prelude-val">Ok</span>(commit) =&gt; commit,
                     <span class="prelude-val">Err</span>(err) =&gt; {

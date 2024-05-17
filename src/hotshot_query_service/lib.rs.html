@@ -893,7 +893,7 @@
 //! spawn(app.serve("0.0.0.0:8080", STATIC_VER_0_1));
 //!
 //! // Update query data using HotShot events.
-//! let mut events = hotshot.get_event_stream();
+//! let mut events = hotshot.event_stream();
 //! while let Some(event) = events.next().await {
 //!     // Re-lock the mutex each time we get a new event.
 //!     let mut data_source = data_source.write().await;
@@ -1341,7 +1341,7 @@
         BackgroundTask::spawn(<span class="string">"server"</span>, <span class="kw">async move </span>{ app.serve(<span class="kw-2">&amp;</span>url, bind_version).<span class="kw">await </span>});
 
     <span class="comment">// Subscribe to events before starting consensus, so we don't miss any events.
-    </span><span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.get_event_stream();
+    </span><span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.event_stream();
     hotshot.hotshot.start_consensus().<span class="kw">await</span>;
 
     <span class="comment">// Update query data using HotShot events.
@@ -1528,7 +1528,7 @@
 
         <span class="comment">// Mock up some data and add a block to the store.
         </span><span class="kw">let </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
-        <span class="kw">let </span>block = BlockQueryData::new(leaf.get_block_header().clone(), MockPayload::genesis());
+        <span class="kw">let </span>block = BlockQueryData::new(leaf.block_header().clone(), MockPayload::genesis());
         hotshot_qs.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
 
         <span class="kw">let </span>module_state =
