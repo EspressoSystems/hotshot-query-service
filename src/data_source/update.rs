@@ -65,6 +65,7 @@ impl<Types: NodeType, T> UpdateDataSource<Types> for T
 where
     T: UpdateAvailabilityData<Types> + UpdateStatusData + Send,
     Payload<Types>: QueryablePayload,
+    <Types as NodeType>::InstanceState: Default,
 {
     async fn update(
         &mut self,
@@ -109,7 +110,7 @@ where
                     // the block payload is guaranteed to always be empty, so VID isn't really
                     // necessary. But for consistency, we will still store the VID dispersal data,
                     // computing it ourselves based on the well-known genesis VID commitment.
-                    store_genesis_vid(self, leaf).await;
+                    store_genesis_vid(self, &leaf).await;
                 } else {
                     tracing::error!(
                         "VID info for block {} not available at decide",
@@ -135,7 +136,9 @@ where
 async fn store_genesis_vid<Types: NodeType>(
     storage: &mut impl UpdateAvailabilityData<Types>,
     leaf: &Leaf<Types>,
-) {
+) where
+    <Types as NodeType>::InstanceState: Default,
+{
     let payload = Payload::<Types>::genesis().0;
     let bytes = payload.encode();
     match vid_scheme(GENESIS_VID_NUM_STORAGE_NODES).disperse(bytes) {
