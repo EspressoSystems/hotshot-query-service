@@ -110,7 +110,7 @@ where
                     // the block payload is guaranteed to always be empty, so VID isn't really
                     // necessary. But for consistency, we will still store the VID dispersal data,
                     // computing it ourselves based on the well-known genesis VID commitment.
-                    store_genesis_vid(self, &leaf).await;
+                    store_genesis_vid(self, leaf).await;
                 } else {
                     tracing::error!(
                         "VID info for block {} not available at decide",
