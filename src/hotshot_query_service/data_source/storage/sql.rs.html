@@ -4245,6 +4245,8 @@
 <a href="#4243" id="4243">4243</a>
 <a href="#4244" id="4244">4244</a>
 <a href="#4245" id="4245">4245</a>
+<a href="#4246" id="4246">4246</a>
+<a href="#4247" id="4247">4247</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -6466,8 +6468,10 @@
                 FROM header AS h
                 JOIN payload AS p ON
                     p.height = h.height
-                ORDER BY h.height DESC
-                LIMIT 50"</span>,
+                WHERE
+                    h.height IN (SELECT height FROM header ORDER BY height DESC LIMIT 50)
+                ORDER BY h.height ASC 
+                "</span>,
                 Vec::&lt;Box&lt;<span class="kw">dyn </span>ToSql + Send + Sync&gt;&gt;::new(),
             ).<span class="kw">await</span><span class="question-mark">?</span>;
 
