@@ -1413,6 +1413,23 @@
 <a href="#1411" id="1411">1411</a>
 <a href="#1412" id="1412">1412</a>
 <a href="#1413" id="1413">1413</a>
+<a href="#1414" id="1414">1414</a>
+<a href="#1415" id="1415">1415</a>
+<a href="#1416" id="1416">1416</a>
+<a href="#1417" id="1417">1417</a>
+<a href="#1418" id="1418">1418</a>
+<a href="#1419" id="1419">1419</a>
+<a href="#1420" id="1420">1420</a>
+<a href="#1421" id="1421">1421</a>
+<a href="#1422" id="1422">1422</a>
+<a href="#1423" id="1423">1423</a>
+<a href="#1424" id="1424">1424</a>
+<a href="#1425" id="1425">1425</a>
+<a href="#1426" id="1426">1426</a>
+<a href="#1427" id="1427">1427</a>
+<a href="#1428" id="1428">1428</a>
+<a href="#1429" id="1429">1429</a>
+<a href="#1430" id="1430">1430</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1513,6 +1530,7 @@
     Header, Payload, QueryResult, Transaction, VidShare,
 };
 <span class="kw">use </span>anyhow::Context;
+<span class="kw">use </span>async_lock::Semaphore;
 <span class="kw">use </span>async_std::{
     sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
     task::sleep,
@@ -1551,6 +1569,7 @@
     storage: S,
     provider: P,
     retry_delay: <span class="prelude-ty">Option</span>&lt;Duration&gt;,
+    rate_limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     range_chunk_size: usize,
     minor_scan_interval: Duration,
     major_scan_interval: usize,
@@ -1567,6 +1586,7 @@
             storage,
             provider,
             retry_delay: <span class="prelude-val">None</span>,
+            rate_limit: <span class="prelude-val">None</span>,
             range_chunk_size: <span class="number">25</span>,
             <span class="comment">// By default, we run minor proactive scans fairly frequently: once every minute. These
             // scans are cheap (moreso the more frequently they run) and can help us keep up with
@@ -1588,6 +1608,12 @@
     <span class="doccomment">/// Set the maximum delay between retries of fetches.
     </span><span class="kw">pub fn </span>with_retry_delay(<span class="kw-2">mut </span><span class="self">self</span>, retry_delay: Duration) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.retry_delay = <span class="prelude-val">Some</span>(retry_delay);
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Set the maximum delay between retries of fetches.
+    </span><span class="kw">pub fn </span>with_rate_limit(<span class="kw-2">mut </span><span class="self">self</span>, with_rate_limit: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.rate_limit = <span class="prelude-val">Some</span>(with_rate_limit);
         <span class="self">self
     </span>}
 
@@ -2313,6 +2339,14 @@
             payload_fetcher = payload_fetcher.with_retry_delay(delay);
             leaf_fetcher = leaf_fetcher.with_retry_delay(delay);
             vid_common_fetcher = vid_common_fetcher.with_retry_delay(delay);
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(limit) = builder.rate_limit {
+            <span class="kw">let </span>permit = Arc::new(Semaphore::new(limit));
+
+            payload_fetcher = payload_fetcher.with_rate_limit(permit.clone());
+            leaf_fetcher = leaf_fetcher.with_rate_limit(permit.clone());
+            vid_common_fetcher = vid_common_fetcher.with_rate_limit(permit);
         }
 
         <span class="kw">let </span>height = builder.storage.block_height().<span class="kw">await</span><span class="question-mark">? </span><span class="kw">as </span>u64;
