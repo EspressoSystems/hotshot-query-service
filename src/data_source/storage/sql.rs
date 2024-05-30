@@ -3114,6 +3114,9 @@ pub mod testing {
                 .env("PGPASSWORD", "password")
                 // Null input so the command terminates as soon as it manages to connect.
                 .stdin(Stdio::null())
+                // Discard command output.
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
                 .status()
                 // We should ensure the exit status. A simple `unwrap`
                 // would panic on unrelated errors (such as network
