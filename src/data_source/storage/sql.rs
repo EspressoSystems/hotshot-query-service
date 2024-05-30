@@ -3101,27 +3101,33 @@ pub mod testing {
             };
 
             // Wait for the database to be ready.
-            while !Command::new("psql")
-                .args([
-                    "-h",
-                    &(db.host()),
-                    "-p",
-                    &(db.port().to_string()),
-                    "-U",
-                    "postgres",
-                ])
-                .env("PGPASSWORD", "password")
-                // Null input so the command terminates as soon as it manages to connect.
-                .stdin(Stdio::null())
-                // Output from this command is not useful, it's just a prompt.
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .status()
-                .unwrap()
-                .success()
-            {
-                tracing::warn!("database is not ready");
-                sleep(Duration::from_secs(1)).await;
+            loop {
+                if Command::new("docker")
+                    .args([
+                        "exec",
+                        "-h",
+                        &(db.host()),
+                        "-p",
+                        &(db.port().to_string()),
+                        "-U",
+                        "postgres",
+                        "psql",
+                    ])
+                    .env("PGPASSWORD", "password")
+                    // Null input so the command terminates as soon as it manages to connect.
+                    .stdin(Stdio::null())
+                    // Output from this command is not useful, it's just a prompt.
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .map(|status| status.success())
+                    .is_ok()
+                {
+                    break;
+                } else {
+                    tracing::warn!("database is not ready");
+                    sleep(Duration::from_secs(1)).await;
+                }
             }
 
             db
