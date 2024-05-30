@@ -3114,17 +3114,16 @@ pub mod testing {
                 .env("PGPASSWORD", "password")
                 // Null input so the command terminates as soon as it manages to connect.
                 .stdin(Stdio::null())
-                .output()
-                .and_then(|output| {
-                    dbg!(&output);
-                    if str::from_utf8(&output.stdout)
-                        .unwrap()
-                        .contains("accepting connections")
-                    {
-                        Ok(())
-                    } else {
-                        Err(std::io::Error::from_raw_os_error(32))
-                    }
+                .status()
+                // We should ensure the exit status. A simple `unwrap`
+                // would panic on unrelated errors (such as network
+                // connection failures)
+                .and_then(|status| {
+                    status
+                        .success()
+                        .then_some(true)
+                        // Any ol' Error will do
+                        .ok_or(std::io::Error::from_raw_os_error(666))
                 })
                 .is_err()
             {
