@@ -4247,6 +4247,15 @@
 <a href="#4245" id="4245">4245</a>
 <a href="#4246" id="4246">4246</a>
 <a href="#4247" id="4247">4247</a>
+<a href="#4248" id="4248">4248</a>
+<a href="#4249" id="4249">4249</a>
+<a href="#4250" id="4250">4250</a>
+<a href="#4251" id="4251">4251</a>
+<a href="#4252" id="4252">4252</a>
+<a href="#4253" id="4253">4253</a>
+<a href="#4254" id="4254">4254</a>
+<a href="#4255" id="4255">4255</a>
+<a href="#4256" id="4256">4256</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -7346,33 +7355,42 @@
             <span class="kw">let </span>db = <span class="self">Self </span>{
                 host,
                 port,
-                container_id,
+                container_id: container_id.clone(),
             };
 
             <span class="comment">// Wait for the database to be ready.
-            </span><span class="kw">while </span>!Command::new(<span class="string">"psql"</span>)
+            </span><span class="kw">while </span>Command::new(<span class="string">"docker"</span>)
                 .args([
+                    <span class="string">"exec"</span>,
+                    <span class="kw-2">&amp;</span>container_id,
+                    <span class="string">"pg_isready"</span>,
                     <span class="string">"-h"</span>,
-                    <span class="kw-2">&amp;</span>(db.host()),
-                    <span class="string">"-p"</span>,
-                    <span class="kw-2">&amp;</span>(db.port().to_string()),
+                    <span class="string">"localhost"</span>,
                     <span class="string">"-U"</span>,
                     <span class="string">"postgres"</span>,
                 ])
                 .env(<span class="string">"PGPASSWORD"</span>, <span class="string">"password"</span>)
                 <span class="comment">// Null input so the command terminates as soon as it manages to connect.
                 </span>.stdin(Stdio::null())
-                <span class="comment">// Output from this command is not useful, it's just a prompt.
+                <span class="comment">// Discard command output.
                 </span>.stdout(Stdio::null())
                 .stderr(Stdio::null())
                 .status()
-                .unwrap()
-                .success()
+                <span class="comment">// We should ensure the exit status. A simple `unwrap`
+                // would panic on unrelated errors (such as network
+                // connection failures)
+                </span>.and_then(|status| {
+                    status
+                        .success()
+                        .then_some(<span class="bool-val">true</span>)
+                        <span class="comment">// Any ol' Error will do
+                        </span>.ok_or(std::io::Error::from_raw_os_error(<span class="number">666</span>))
+                })
+                .is_err()
             {
                 <span class="macro">tracing::warn!</span>(<span class="string">"database is not ready"</span>);
                 sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
             }
-
             db
         }
 
