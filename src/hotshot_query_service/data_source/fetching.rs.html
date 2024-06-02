@@ -1430,6 +1430,63 @@
 <a href="#1428" id="1428">1428</a>
 <a href="#1429" id="1429">1429</a>
 <a href="#1430" id="1430">1430</a>
+<a href="#1431" id="1431">1431</a>
+<a href="#1432" id="1432">1432</a>
+<a href="#1433" id="1433">1433</a>
+<a href="#1434" id="1434">1434</a>
+<a href="#1435" id="1435">1435</a>
+<a href="#1436" id="1436">1436</a>
+<a href="#1437" id="1437">1437</a>
+<a href="#1438" id="1438">1438</a>
+<a href="#1439" id="1439">1439</a>
+<a href="#1440" id="1440">1440</a>
+<a href="#1441" id="1441">1441</a>
+<a href="#1442" id="1442">1442</a>
+<a href="#1443" id="1443">1443</a>
+<a href="#1444" id="1444">1444</a>
+<a href="#1445" id="1445">1445</a>
+<a href="#1446" id="1446">1446</a>
+<a href="#1447" id="1447">1447</a>
+<a href="#1448" id="1448">1448</a>
+<a href="#1449" id="1449">1449</a>
+<a href="#1450" id="1450">1450</a>
+<a href="#1451" id="1451">1451</a>
+<a href="#1452" id="1452">1452</a>
+<a href="#1453" id="1453">1453</a>
+<a href="#1454" id="1454">1454</a>
+<a href="#1455" id="1455">1455</a>
+<a href="#1456" id="1456">1456</a>
+<a href="#1457" id="1457">1457</a>
+<a href="#1458" id="1458">1458</a>
+<a href="#1459" id="1459">1459</a>
+<a href="#1460" id="1460">1460</a>
+<a href="#1461" id="1461">1461</a>
+<a href="#1462" id="1462">1462</a>
+<a href="#1463" id="1463">1463</a>
+<a href="#1464" id="1464">1464</a>
+<a href="#1465" id="1465">1465</a>
+<a href="#1466" id="1466">1466</a>
+<a href="#1467" id="1467">1467</a>
+<a href="#1468" id="1468">1468</a>
+<a href="#1469" id="1469">1469</a>
+<a href="#1470" id="1470">1470</a>
+<a href="#1471" id="1471">1471</a>
+<a href="#1472" id="1472">1472</a>
+<a href="#1473" id="1473">1473</a>
+<a href="#1474" id="1474">1474</a>
+<a href="#1475" id="1475">1475</a>
+<a href="#1476" id="1476">1476</a>
+<a href="#1477" id="1477">1477</a>
+<a href="#1478" id="1478">1478</a>
+<a href="#1479" id="1479">1479</a>
+<a href="#1480" id="1480">1480</a>
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1575,6 +1632,8 @@
     major_scan_interval: usize,
     major_scan_offset: usize,
     proactive_range_chunk_size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    active_fetch_delay: Duration,
+    chunk_fetch_delay: Duration,
     proactive_fetching: bool,
     _types: PhantomData&lt;Types&gt;,
 }
@@ -1600,6 +1659,8 @@
             // don't all pause for a major scan together.
             </span>major_scan_offset: <span class="number">0</span>,
             proactive_range_chunk_size: <span class="prelude-val">None</span>,
+            active_fetch_delay: Duration::from_millis(<span class="number">50</span>),
+            chunk_fetch_delay: Duration::from_millis(<span class="number">100</span>),
             proactive_fetching: <span class="bool-val">true</span>,
             _types: Default::default(),
         }
@@ -1669,6 +1730,32 @@
     /// whatever the normal range chunk size is.
     </span><span class="kw">pub fn </span>with_proactive_range_chunk_size(<span class="kw-2">mut </span><span class="self">self</span>, range_chunk_size: usize) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.proactive_range_chunk_size = <span class="prelude-val">Some</span>(range_chunk_size);
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Add a delay between active fetches in proactive scans.
+    ///
+    /// This can be used to limit the rate at which this query service makes requests to other query
+    /// services during proactive scans. This is useful if the query service has a lot of blocks to
+    /// catch up on, as without a delay, scanning can be extremely burdensome on the peer.
+    </span><span class="kw">pub fn </span>with_active_fetch_delay(<span class="kw-2">mut </span><span class="self">self</span>, active_fetch_delay: Duration) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.active_fetch_delay = active_fetch_delay;
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Adds a delay between chunk fetches during proactive scans.
+    ///
+    /// In a proactive scan, we retrieve a range of objects from a provider or local storage (e.g., a database).
+    /// Without a delay between fetching these chunks, the process can become very CPU-intensive, especially
+    /// when chunks are retrieved from local storage. While there is already a delay for active fetches
+    /// (`active_fetch_delay`), situations may arise when subscribed to an old stream that fetches most of the data
+    /// from local storage.
+    ///
+    /// This additional delay helps to limit constant maximum CPU usage
+    /// and ensures that local storage remains accessible to all processes,
+    /// not just the proactive scanner.
+    </span><span class="kw">pub fn </span>with_chunk_fetch_delay(<span class="kw-2">mut </span><span class="self">self</span>, chunk_fetch_delay: Duration) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.chunk_fetch_delay = chunk_fetch_delay;
         <span class="self">self
     </span>}
 
@@ -2258,6 +2345,10 @@
     leaf_fetcher: Arc&lt;LeafFetcher&lt;Types, S, P&gt;&gt;,
     vid_common_fetcher: Arc&lt;VidCommonFetcher&lt;Types, S, P&gt;&gt;,
     range_chunk_size: usize,
+    <span class="comment">// Duration to sleep after each active fetch,
+    </span>active_fetch_delay: Duration,
+    <span class="comment">// Duration to sleep after each chunk fetched
+    </span>chunk_fetch_delay: Duration,
 }
 
 <span class="attr">#[derive(Debug)]
@@ -2366,6 +2457,8 @@
             leaf_fetcher: Arc::new(leaf_fetcher),
             vid_common_fetcher: Arc::new(vid_common_fetcher),
             range_chunk_size: builder.range_chunk_size,
+            active_fetch_delay: builder.active_fetch_delay,
+            chunk_fetch_delay: builder.chunk_fetch_delay,
         })
     }
 }
@@ -2433,9 +2526,34 @@
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         T: RangedFetchable&lt;Types&gt;,
     {
+        <span class="kw">let </span>chunk_fetch_delay = <span class="self">self</span>.chunk_fetch_delay;
+        <span class="kw">let </span>active_fetch_delay = <span class="self">self</span>.active_fetch_delay;
+
         stream::iter(range_chunks(range, chunk_size))
-            .then(<span class="kw">move </span>|chunk| <span class="self">self</span>.clone().get_chunk(chunk))
+            .then(<span class="kw">move </span>|chunk| {
+                <span class="kw">let </span>self_clone = <span class="self">self</span>.clone();
+                <span class="kw">async move </span>{
+                    {
+                        <span class="kw">let </span>chunk = self_clone.get_chunk(chunk).<span class="kw">await</span>;
+
+                        <span class="comment">// Introduce a delay (`chunk_fetch_delay`) between fetching chunks.
+                        // This helps to limit constant high CPU usage when fetching long range of data,
+                        // especially for older streams that fetch most of the data from local storage
+                        </span>sleep(chunk_fetch_delay).<span class="kw">await</span>;
+                        chunk
+                    }
+                }
+            })
             .flatten()
+            .then(<span class="kw">move </span>|f| <span class="kw">async move </span>{
+                <span class="kw">match </span>f {
+                    <span class="comment">// Introduce a delay (`active_fetch_delay`) for active fetches to reduce load on the catchup provider.
+                    // The delay applies between pending fetches, not between chunks.
+                    </span>Fetch::Pending(<span class="kw">_</span>) =&gt; sleep(active_fetch_delay).<span class="kw">await</span>,
+                    Fetch::Ready(<span class="kw">_</span>) =&gt; (),
+                };
+                f
+            })
             .boxed()
     }
 
@@ -2664,15 +2782,11 @@
                 };
                 prev_height = block_height;
 
-                <span class="comment">// Iterate over all blocks that we should have. Merely iterating over the `Fetch`es
-                // without awaiting them is enough to trigger active fetches of missing blocks,
-                // since we always trigger an active fetch when fetching by block number. Moreover,
-                // fetching the block is enough to trigger an active fetch of the corresponding leaf
-                // if it too is missing.
-                //
-                // The chunking behavior of `get_range` automatically ensures that, no matter how
-                // big the range is, we will release the read lock on storage every `chunk_size`
-                // items, so we don't starve out would-be writers.
+                <span class="comment">// Iterate over all blocks that we should have. Fetching the block is enough to
+                // trigger an active fetch of the corresponding leaf if it too is missing. The
+                // chunking behavior of `get_range` automatically ensures that, no matter how big
+                // the range is, we will release the read lock on storage every `chunk_size` items,
+                // so we don't starve out would-be writers.
                 </span><span class="kw">let </span><span class="kw-2">mut </span>blocks = <span class="self">self
                     </span>.clone()
                     .get_range_with_chunk_size::&lt;<span class="kw">_</span>, BlockQueryData&lt;Types&gt;&gt;(
