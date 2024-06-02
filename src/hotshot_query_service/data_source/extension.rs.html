@@ -593,7 +593,7 @@
     </span>D: AvailabilityDataSource&lt;Types&gt; + Send + Sync,
     U: Send + Sync,
     Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     <span class="kw">type </span>LeafRange&lt;R&gt; = D::LeafRange&lt;R&gt;
     <span class="kw">where
@@ -798,7 +798,7 @@
     </span>D: ExplorerStorage&lt;Types&gt; + Send + Sync,
     U: Send + Sync,
     Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt; + QueryableHeader&lt;Types&gt;,
     Transaction&lt;Types&gt;: ExplorerTransaction,
 {

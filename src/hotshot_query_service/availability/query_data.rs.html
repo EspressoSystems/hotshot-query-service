@@ -610,6 +610,21 @@
 <a href="#608" id="608">608</a>
 <a href="#609" id="609">609</a>
 <a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -647,8 +662,9 @@
 /// payload, so we can commit to the entire block simply by hashing the header.
 </span><span class="kw">pub type </span>BlockHash&lt;Types&gt; = Commitment&lt;Header&lt;Types&gt;&gt;;
 <span class="kw">pub type </span>TransactionHash&lt;Types&gt; = Commitment&lt;Transaction&lt;Types&gt;&gt;;
-<span class="kw">pub type </span>TransactionIndex&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>QueryablePayload&gt;::TransactionIndex;
-<span class="kw">pub type </span>TransactionInclusionProof&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>QueryablePayload&gt;::InclusionProof;
+<span class="kw">pub type </span>TransactionIndex&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>QueryablePayload&lt;Types&gt;&gt;::TransactionIndex;
+<span class="kw">pub type </span>TransactionInclusionProof&lt;Types&gt; =
+    &lt;Payload&lt;Types&gt; <span class="kw">as </span>QueryablePayload&lt;Types&gt;&gt;::InclusionProof;
 
 <span class="kw">pub type </span>Timestamp = time::OffsetDateTime;
 
@@ -664,7 +680,7 @@
 /// the default implementations may be inefficient (e.g. performing an O(n) search, or computing an
 /// unnecessary inclusion proof). It is good practice to override these default implementations if
 /// your block type supports more efficient implementations (e.g. sublinear indexing by hash).
-</span><span class="kw">pub trait </span>QueryablePayload: traits::BlockPayload {
+</span><span class="kw">pub trait </span>QueryablePayload&lt;Types: NodeType&gt;: traits::BlockPayload&lt;Types&gt; {
     <span class="doccomment">/// An index which can be used to efficiently retrieve a transaction for the block.
     ///
     /// This is left abstract so that different block implementations can index transactions
@@ -834,10 +850,13 @@
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ leaf, qc })
     }
 
-    <span class="kw">pub fn </span>genesis(instance_state: <span class="kw-2">&amp;</span>Types::InstanceState) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub async fn </span>genesis(
+        validated_state: <span class="kw-2">&amp;</span>Types::ValidatedState,
+        instance_state: <span class="kw-2">&amp;</span>Types::InstanceState,
+    ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            leaf: Leaf::genesis(instance_state),
-            qc: QuorumCertificate::genesis(instance_state),
+            leaf: Leaf::genesis(validated_state, instance_state).<span class="kw">await</span>,
+            qc: QuorumCertificate::genesis(validated_state, instance_state).<span class="kw">await</span>,
         }
     }
 
@@ -885,7 +904,7 @@
 <span class="kw">impl</span>&lt;Types: NodeType&gt; BlockQueryData&lt;Types&gt; {
     <span class="kw">pub fn </span>new(header: Header&lt;Types&gt;, payload: Payload&lt;Types&gt;) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>Payload&lt;Types&gt;: QueryablePayload,
+        </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     {
         <span class="self">Self </span>{
             hash: header.commit(),
@@ -896,11 +915,14 @@
         }
     }
 
-    <span class="kw">pub fn </span>genesis(instance_state: <span class="kw-2">&amp;</span>Types::InstanceState) -&gt; <span class="self">Self
+    <span class="kw">pub async fn </span>genesis(
+        validated_state: <span class="kw-2">&amp;</span>Types::ValidatedState,
+        instance_state: <span class="kw-2">&amp;</span>Types::InstanceState,
+    ) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>Payload&lt;Types&gt;: QueryablePayload,
+        </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     {
-        <span class="kw">let </span>leaf = Leaf::&lt;Types&gt;::genesis(instance_state);
+        <span class="kw">let </span>leaf = Leaf::&lt;Types&gt;::genesis(validated_state, instance_state).<span class="kw">await</span>;
         <span class="self">Self</span>::new(leaf.block_header().clone(), leaf.block_payload().unwrap())
     }
 
@@ -935,7 +957,7 @@
 
 <span class="kw">impl</span>&lt;Types: NodeType&gt; BlockQueryData&lt;Types&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload,
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     <span class="kw">pub fn </span>transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, ix: <span class="kw-2">&amp;</span>TransactionIndex&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Transaction&lt;Types&gt;&gt; {
         <span class="self">self</span>.payload().transaction(<span class="self">self</span>.metadata(), ix)
@@ -992,11 +1014,16 @@
 }
 
 <span class="kw">impl</span>&lt;Types: NodeType&gt; PayloadQueryData&lt;Types&gt; {
-    <span class="kw">pub fn </span>genesis(instance_state: <span class="kw-2">&amp;</span>Types::InstanceState) -&gt; <span class="self">Self
+    <span class="kw">pub async fn </span>genesis(
+        validated_state: <span class="kw-2">&amp;</span>Types::ValidatedState,
+        instance_state: <span class="kw-2">&amp;</span>Types::InstanceState,
+    ) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>Payload&lt;Types&gt;: QueryablePayload,
+        </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     {
-        BlockQueryData::genesis(instance_state).into()
+        BlockQueryData::genesis(validated_state, instance_state)
+            .<span class="kw">await
+            </span>.into()
     }
 
     <span class="kw">pub fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VidCommitment {
@@ -1041,8 +1068,11 @@
         }
     }
 
-    <span class="kw">pub fn </span>genesis(instance_state: <span class="kw-2">&amp;</span>Types::InstanceState) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>leaf = Leaf::&lt;Types&gt;::genesis(instance_state);
+    <span class="kw">pub async fn </span>genesis(
+        validated_state: <span class="kw-2">&amp;</span>Types::ValidatedState,
+        instance_state: <span class="kw-2">&amp;</span>Types::InstanceState,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>leaf = Leaf::&lt;Types&gt;::genesis(validated_state, instance_state).<span class="kw">await</span>;
         <span class="kw">let </span>payload = leaf.block_payload().unwrap();
         <span class="kw">let </span>bytes = payload.encode();
         <span class="kw">let </span>disperse = vid_scheme(GENESIS_VID_NUM_STORAGE_NODES)
@@ -1075,7 +1105,7 @@
 #[serde(bound = <span class="string">""</span>)]
 </span><span class="kw">pub struct </span>TransactionQueryData&lt;Types: NodeType&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload,
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     transaction: Transaction&lt;Types&gt;,
     hash: TransactionHash&lt;Types&gt;,
@@ -1087,7 +1117,7 @@
 
 <span class="kw">impl</span>&lt;Types: NodeType&gt; TransactionQueryData&lt;Types&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload,
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
         block: <span class="kw-2">&amp;</span>BlockQueryData&lt;Types&gt;,
@@ -1209,7 +1239,7 @@
 // contentions.
 </span><span class="kw">impl</span>&lt;Types: NodeType&gt; From&lt;BlockQueryData&lt;Types&gt;&gt; <span class="kw">for </span>BlockSummaryQueryData&lt;Types&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload,
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     <span class="kw">fn </span>from(value: BlockQueryData&lt;Types&gt;) -&gt; <span class="self">Self </span>{
         BlockSummaryQueryData {

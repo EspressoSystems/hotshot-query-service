@@ -1776,7 +1776,7 @@
 <span class="kw">impl</span>&lt;Types, S, P&gt; Builder&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
     S: NodeDataSource&lt;Types&gt; + AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
@@ -1834,7 +1834,7 @@
 <span class="kw">impl</span>&lt;Types, S, P&gt; Pruner&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
@@ -1887,7 +1887,7 @@
 <span class="kw">impl</span>&lt;Types, S, P&gt; FetchingDataSource&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
     S: NodeDataSource&lt;Types&gt; + AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
@@ -2015,7 +2015,7 @@
 </span><span class="kw">impl</span>&lt;Types, S, P&gt; AvailabilityDataSource&lt;Types&gt; <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
@@ -2150,7 +2150,7 @@
 </span><span class="kw">impl</span>&lt;Types, S, P&gt; MerklizedStateHeightPersistence <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: MerklizedStateHeightPersistence + Send + Sync,
     P: Send + Sync,
 {
@@ -2177,7 +2177,7 @@
 </span><span class="kw">impl</span>&lt;Types, S, P&gt; UpdateAvailabilityData&lt;Types&gt; <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: UpdateAvailabilityData&lt;Types&gt; + Send + Sync,
     P: Send + Sync,
 {
@@ -2266,7 +2266,7 @@
 </span><span class="kw">impl</span>&lt;Types, S, P&gt; ExplorerStorage&lt;Types&gt; <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt; + explorer::traits::ExplorerHeader&lt;Types&gt;,
     Transaction&lt;Types&gt;: explorer::traits::ExplorerTransaction,
     S: ExplorerStorage&lt;Types&gt; + Send + Sync,
@@ -2466,7 +2466,7 @@
 <span class="kw">impl</span>&lt;Types, S, P&gt; Fetcher&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
@@ -2856,7 +2856,7 @@
 </span><span class="kw">trait </span>Fetchable&lt;Types&gt;: Clone + Send + Sync + <span class="lifetime">'static
 </span><span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     <span class="doccomment">/// A succinct specification of the object to be fetched.
     </span><span class="kw">type </span>Request: FetchRequest;
@@ -2910,7 +2910,7 @@
 </span><span class="kw">trait </span>RangedFetchable&lt;Types&gt;: Fetchable&lt;Types, Request = <span class="self">Self</span>::RangedRequest&gt; + HeightIndexed
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     <span class="kw">type </span>RangedRequest: FetchRequest + From&lt;usize&gt; + Send;
 

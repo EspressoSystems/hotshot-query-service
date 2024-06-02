@@ -814,6 +814,7 @@
 <a href="#812" id="812">812</a>
 <a href="#813" id="813">813</a>
 <a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1260,9 +1261,9 @@
 
 <span class="kw">pub type </span>Payload&lt;Types&gt; = &lt;Types <span class="kw">as </span>NodeType&gt;::BlockPayload;
 <span class="kw">pub type </span>Header&lt;Types&gt; = &lt;Types <span class="kw">as </span>NodeType&gt;::BlockHeader;
-<span class="kw">pub type </span>Metadata&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>BlockPayload&gt;::Metadata;
+<span class="kw">pub type </span>Metadata&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>BlockPayload&lt;Types&gt;&gt;::Metadata;
 <span class="doccomment">/// Item within a [`Payload`].
-</span><span class="kw">pub type </span>Transaction&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>BlockPayload&gt;::Transaction;
+</span><span class="kw">pub type </span>Transaction&lt;Types&gt; = &lt;Payload&lt;Types&gt; <span class="kw">as </span>BlockPayload&lt;Types&gt;&gt;::Transaction;
 <span class="kw">pub type </span>SignatureKey&lt;Types&gt; = &lt;Types <span class="kw">as </span>NodeType&gt;::SignatureKey;
 
 <span class="attr">#[derive(Clone, Debug, Snafu, Deserialize, Serialize)]
@@ -1307,7 +1308,7 @@
     bind_version: Ver,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: availability::QueryablePayload,
+    </span>Payload&lt;Types&gt;: availability::QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: availability::QueryableHeader&lt;Types&gt;,
     D: availability::AvailabilityDataSource&lt;Types&gt;
         + node::NodeDataSource&lt;Types&gt;
@@ -1378,7 +1379,7 @@
     <span class="kw">use </span>async_trait::async_trait;
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
     <span class="kw">use </span>futures::FutureExt;
-    <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
+    <span class="kw">use </span>hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
     <span class="kw">use </span>hotshot_types::constants::{Version01, STATIC_VER_0_1};
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::ops::RangeBounds;
@@ -1527,7 +1528,8 @@
             </span>.unwrap();
 
         <span class="comment">// Mock up some data and add a block to the store.
-        </span><span class="kw">let </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
+        </span><span class="kw">let </span>leaf =
+            Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestValidatedState::default(), <span class="kw-2">&amp;</span>TestInstanceState {}).<span class="kw">await</span>;
         <span class="kw">let </span>block = BlockQueryData::new(leaf.block_header().clone(), MockPayload::genesis());
         hotshot_qs.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
 

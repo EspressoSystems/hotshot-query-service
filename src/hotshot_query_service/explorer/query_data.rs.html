@@ -1069,7 +1069,7 @@
 <span class="kw">impl</span>&lt;Types: NodeType&gt; TryFrom&lt;BlockQueryData&lt;Types&gt;&gt; <span class="kw">for </span>BlockDetail&lt;Types&gt;
 <span class="kw">where
     </span>BlockQueryData&lt;Types&gt;: HeightIndexed,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt; + ExplorerHeader&lt;Types&gt;,
     BalanceAmount&lt;Types&gt;: Into&lt;MonetaryValue&gt;,
 {
@@ -1159,7 +1159,7 @@
 <span class="kw">impl</span>&lt;Types: NodeType&gt; TryFrom&lt;BlockQueryData&lt;Types&gt;&gt; <span class="kw">for </span>BlockSummary&lt;Types&gt;
 <span class="kw">where
     </span>BlockQueryData&lt;Types&gt;: HeightIndexed,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt; + ExplorerHeader&lt;Types&gt;,
 {
     <span class="kw">type </span>Error = TimestampConversionError;
@@ -1245,7 +1245,7 @@
     )&gt; <span class="kw">for </span>TransactionSummary&lt;Types&gt;
 <span class="kw">where
     </span>BlockQueryData&lt;Types&gt;: HeightIndexed,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt; + ExplorerHeader&lt;Types&gt;,
     Transaction&lt;Types&gt;: ExplorerTransaction,
 {
@@ -1279,7 +1279,7 @@
     )&gt; <span class="kw">for </span>TransactionDetailResponse&lt;Types&gt;
 <span class="kw">where
     </span>BlockQueryData&lt;Types&gt;: HeightIndexed,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt; + ExplorerHeader&lt;Types&gt;,
 {
     <span class="kw">type </span>Error = TimestampConversionError;
