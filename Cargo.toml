@@ -60,7 +60,7 @@ required-features = ["sql-data-source", "testing"]
 [dependencies]
 anyhow = "1.0"
 ark-serialize = "0.4.2"
-async-compatibility-layer = { version = "1.1", default-features = false, features = [
+async-compatibility-layer = { version = "1.2", default-features = false, features = [
 	"logging-utils",
 ] }
 async-lock = "3.3.0"
