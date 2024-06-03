@@ -463,6 +463,10 @@
 <a href="#461" id="461">461</a>
 <a href="#462" id="462">462</a>
 <a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -509,7 +513,7 @@
     <span class="kw">where
         </span>Types: NodeType,
         Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
-        Payload&lt;Types&gt;: QueryablePayload,
+        Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     {
         <span class="self">self</span>.builder(provider).<span class="kw">await</span><span class="question-mark">?</span>.build().<span class="kw">await
     </span>}
@@ -523,7 +527,7 @@
     <span class="kw">where
         </span>Types: NodeType,
         Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
-        Payload&lt;Types&gt;: QueryablePayload,
+        Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     {
         SqlDataSource::connect(<span class="self">self</span>, provider).<span class="kw">await
     </span>}
@@ -777,7 +781,7 @@
 <span class="kw">where
     </span>Types: NodeType,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     <span class="doccomment">/// Connect to a remote database.
     ///
@@ -889,7 +893,7 @@
         node::NodeDataSource,
         testing::{consensus::DataSourceLifeCycle, mocks::MockTypes, setup_test},
     };
-    <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
+    <span class="kw">use </span>hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
     <span class="kw">use </span>hotshot_types::vid::vid_scheme;
     <span class="kw">use </span>jf_vid::VidScheme;
 
@@ -908,7 +912,11 @@
         </span><span class="kw">let </span>disperse = vid_scheme(<span class="number">2</span>).disperse([]).unwrap();
 
         <span class="comment">// Insert test data with VID common but no share.
-        </span><span class="kw">let </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
+        </span><span class="kw">let </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(
+            <span class="kw-2">&amp;</span>TestValidatedState::default(),
+            <span class="kw-2">&amp;</span>TestInstanceState {},
+        )
+        .<span class="kw">await</span>;
         <span class="kw">let </span>common = VidCommonQueryData::new(leaf.header().clone(), disperse.common);
         ds.insert_leaf(leaf).<span class="kw">await</span>.unwrap();
         ds.insert_vid(common.clone(), <span class="prelude-val">None</span>).<span class="kw">await</span>.unwrap();

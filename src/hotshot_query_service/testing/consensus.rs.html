@@ -325,6 +325,10 @@
 <a href="#323" id="323">323</a>
 <a href="#324" id="324">324</a>
 <a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -359,7 +363,9 @@
     HotShotInitializer, Memberships, Networks, SystemContext,
 };
 <span class="kw">use </span>hotshot_example_types::{state_types::TestInstanceState, storage_types::TestStorage};
-<span class="kw">use </span>hotshot_testing::block_builder::{SimpleBuilderImplementation, TestBuilderImplementation};
+<span class="kw">use </span>hotshot_testing::block_builder::{
+    SimpleBuilderConfig, SimpleBuilderImplementation, TestBuilderImplementation,
+};
 <span class="kw">use </span>hotshot_types::{
     consensus::ConsensusMetricsValue,
     light_client::StateKeyPair,
@@ -426,7 +432,7 @@
         </span><span class="kw">let </span>(builder_task, builder_url) =
             &lt;SimpleBuilderImplementation <span class="kw">as </span>TestBuilderImplementation&lt;MockTypes&gt;&gt;::start(
                 NUM_NODES,
-                (),
+                SimpleBuilderConfig::default(),
             )
             .<span class="kw">await</span>;
 
@@ -500,7 +506,9 @@
                             config,
                             memberships,
                             networks,
-                            HotShotInitializer::from_genesis(TestInstanceState {}).unwrap(),
+                            HotShotInitializer::from_genesis(TestInstanceState {})
+                                .<span class="kw">await
+                                </span>.unwrap(),
                             ConsensusMetricsValue::new(<span class="kw-2">&amp;*</span>data_source.populate_metrics()),
                             hs_storage,
                         )
@@ -535,8 +543,8 @@
 }
 
 <span class="kw">impl</span>&lt;D: DataSourceLifeCycle&gt; MockNetwork&lt;D&gt; {
-    <span class="kw">pub fn </span>handle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SystemContextHandle&lt;MockTypes, MockNodeImpl&gt; {
-        <span class="self">self</span>.nodes[<span class="number">0</span>].hotshot.clone()
+    <span class="kw">pub fn </span>handle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>SystemContextHandle&lt;MockTypes, MockNodeImpl&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.nodes[<span class="number">0</span>].hotshot
     }
 
     <span class="kw">pub async fn </span>submit_transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, tx: MockTransaction) {

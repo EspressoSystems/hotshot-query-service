@@ -432,7 +432,7 @@
 
 <span class="kw">impl</span>&lt;Types: NodeType, P&gt; FileSystemDataSource&lt;Types, P&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload,
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {

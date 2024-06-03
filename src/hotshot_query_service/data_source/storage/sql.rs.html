@@ -4256,6 +4256,14 @@
 <a href="#4254" id="4254">4254</a>
 <a href="#4255" id="4255">4255</a>
 <a href="#4256" id="4256">4256</a>
+<a href="#4257" id="4257">4257</a>
+<a href="#4258" id="4258">4258</a>
+<a href="#4259" id="4259">4259</a>
+<a href="#4260" id="4260">4260</a>
+<a href="#4261" id="4261">4261</a>
+<a href="#4262" id="4262">4262</a>
+<a href="#4263" id="4263">4263</a>
+<a href="#4264" id="4264">4264</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -4748,7 +4756,7 @@
     <span class="doccomment">/// Load a header from storage.
     ///
     /// This function is similar to `AvailabilityStorage::get_header`, but
-    /// * does not require the `QueryablePayload` bound that that trait impl does
+    /// * does not require the `QueryablePayload&lt;Types&gt;` bound that that trait impl does
     /// * makes it easier to specify types since the type parameter is on the function and not on a
     ///   trait impl
     /// * allows type conversions for the `id` parameter
@@ -4926,7 +4934,7 @@
 </span><span class="kw">impl</span>&lt;Types&gt; AvailabilityStorage&lt;Types&gt; <span class="kw">for </span>SqlStorage
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
 {
     <span class="kw">async fn </span>get_leaf(<span class="kw-2">&amp;</span><span class="self">self</span>, id: LeafId&lt;Types&gt;) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt; {
@@ -5098,7 +5106,7 @@
 </span><span class="kw">impl</span>&lt;Types&gt; UpdateAvailabilityData&lt;Types&gt; <span class="kw">for </span>SqlStorage
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
 {
     <span class="kw">type </span>Error = QueryError;
@@ -6134,7 +6142,7 @@
 </span><span class="kw">impl</span>&lt;Types: NodeType&gt; ExplorerStorage&lt;Types&gt; <span class="kw">for </span>SqlStorage
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt; + explorer::traits::ExplorerHeader&lt;Types&gt;,
     <span class="kw">crate</span>::Transaction&lt;Types&gt;: explorer::traits::ExplorerTransaction,
     BalanceAmount&lt;Types&gt;: Into&lt;explorer::monetary_value::MonetaryValue&gt;,
@@ -7021,7 +7029,7 @@
 <span class="kw">fn </span>parse_block&lt;Types&gt;(row: Row) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     <span class="comment">// First, check if we have the payload for this block yet.
     </span><span class="kw">let </span>size: <span class="prelude-ty">Option</span>&lt;i32&gt; = row
@@ -7073,7 +7081,7 @@
 <span class="kw">fn </span>parse_payload&lt;Types&gt;(row: Row) -&gt; QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     parse_block(row).map(PayloadQueryData::from)
 }
@@ -7083,7 +7091,7 @@
 <span class="kw">fn </span>parse_vid_common&lt;Types&gt;(row: Row) -&gt; QueryResult&lt;VidCommonQueryData&lt;Types&gt;&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     <span class="kw">let </span>height = row
         .try_get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"height"</span>)
@@ -7470,7 +7478,7 @@
 </span><span class="attr">#[cfg(all(test, not(target_os = <span class="string">"windows"</span>)))]
 </span><span class="kw">mod </span>test {
 
-    <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
+    <span class="kw">use </span>hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
     <span class="kw">use </span>jf_merkle_tree::{
         universal_merkle_tree::UniversalMerkleTree, LookupResult, UniversalMerkleTreeScheme,
     };
@@ -7570,7 +7578,11 @@
             .port(port);
 
         <span class="kw">let </span><span class="kw-2">mut </span>storage = SqlStorage::connect(cfg).<span class="kw">await</span>.unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
+        <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(
+            <span class="kw-2">&amp;</span>TestValidatedState::default(),
+            <span class="kw-2">&amp;</span>TestInstanceState {},
+        )
+        .<span class="kw">await</span>;
         <span class="comment">// insert some mock data
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">20 </span>{
             leaf.leaf.block_header_mut().block_number = i;
@@ -7640,7 +7652,11 @@
         <span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>storage = SqlStorage::connect(db.config()).<span class="kw">await</span>.unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
+        <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(
+            <span class="kw-2">&amp;</span>TestValidatedState::default(),
+            <span class="kw-2">&amp;</span>TestInstanceState {},
+        )
+        .<span class="kw">await</span>;
         <span class="comment">// insert some mock data
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">20 </span>{
             leaf.leaf.block_header_mut().block_number = i;

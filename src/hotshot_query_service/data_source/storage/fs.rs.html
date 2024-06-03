@@ -634,7 +634,7 @@
 </span><span class="attr">#[derive(custom_debug::Debug)]
 </span><span class="kw">pub struct </span>FileSystemStorage&lt;Types: NodeType&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload,
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     index_by_leaf_hash: HashMap&lt;LeafHash&lt;Types&gt;, u64&gt;,
     index_by_block_hash: HashMap&lt;BlockHash&lt;Types&gt;, u64&gt;,
@@ -651,23 +651,23 @@
 }
 
 <span class="kw">impl</span>&lt;Types: NodeType&gt; PrunerConfig <span class="kw">for </span>FileSystemStorage&lt;Types&gt; <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;
 {
 }
 <span class="kw">impl</span>&lt;Types: NodeType&gt; PrunedHeightStorage <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload,
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     <span class="kw">type </span>Error = Infallible;
 }
 <span class="kw">impl</span>&lt;Types: NodeType&gt; PruneStorage <span class="kw">for </span>FileSystemStorage&lt;Types&gt; <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;
 {
 }
 
 <span class="kw">impl</span>&lt;Types: NodeType&gt; FileSystemStorage&lt;Types&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload,
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
 {
     <span class="doccomment">/// Create a new [FileSystemStorage] with storage at `path`.
@@ -817,7 +817,7 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;Types: NodeType&gt; VersionedDataSource <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload,
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     <span class="kw">type </span>Error = PersistenceError;
 
@@ -882,7 +882,7 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;Types: NodeType&gt; AvailabilityStorage&lt;Types&gt; <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload,
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
 {
     <span class="kw">async fn </span>get_leaf(<span class="kw-2">&amp;</span><span class="self">self</span>, id: LeafId&lt;Types&gt;) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt; {
@@ -984,7 +984,7 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;Types: NodeType&gt; UpdateAvailabilityData&lt;Types&gt; <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload,
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
 {
     <span class="kw">type </span>Error = PersistenceError;
@@ -1058,7 +1058,7 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;Types: NodeType&gt; NodeDataSource&lt;Types&gt; <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload,
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
 {
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
