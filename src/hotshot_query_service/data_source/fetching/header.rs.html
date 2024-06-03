@@ -229,7 +229,7 @@
 <span class="kw">impl</span>&lt;Types, S, P&gt; HeaderCallback&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    Payload&lt;Types&gt;: QueryablePayload,
     S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
@@ -266,7 +266,7 @@
     callback: HeaderCallback&lt;Types, S, P&gt;,
 ) <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    Payload&lt;Types&gt;: QueryablePayload,
     S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {

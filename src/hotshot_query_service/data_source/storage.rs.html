@@ -264,7 +264,7 @@
     UpdateAvailabilityData&lt;Types&gt; + VersionedDataSource + PruneStorage + Send + Sync
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">async fn </span>get_leaf(<span class="kw-2">&amp;</span><span class="self">self</span>, id: LeafId&lt;Types&gt;) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt;;
     <span class="kw">async fn </span>get_block(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;;
@@ -318,7 +318,7 @@
     </span>Types: NodeType,
     Header&lt;Types&gt;: explorer::traits::ExplorerHeader&lt;Types&gt; + QueryableHeader&lt;Types&gt;,
     Transaction&lt;Types&gt;: explorer::traits::ExplorerTransaction,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="doccomment">/// `get_block_detail` is a method that retrieves the details of a specific
     /// block from the blockchain.  The block is identified by the given

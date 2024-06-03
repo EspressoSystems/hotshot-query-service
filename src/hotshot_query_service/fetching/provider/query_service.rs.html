@@ -893,16 +893,6 @@
 <a href="#891" id="891">891</a>
 <a href="#892" id="892">892</a>
 <a href="#893" id="893">893</a>
-<a href="#894" id="894">894</a>
-<a href="#895" id="895">895</a>
-<a href="#896" id="896">896</a>
-<a href="#897" id="897">897</a>
-<a href="#898" id="898">898</a>
-<a href="#899" id="899">899</a>
-<a href="#900" id="900">900</a>
-<a href="#901" id="901">901</a>
-<a href="#902" id="902">902</a>
-<a href="#903" id="903">903</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1747,13 +1737,7 @@
         api.get(<span class="string">"get_payload"</span>, <span class="kw">move </span>|<span class="kw">_</span>, <span class="kw">_</span>| {
             <span class="kw">async move </span>{
                 <span class="comment">// No matter what data we are asked for, always respond with dummy data.
-                </span><span class="prelude-val">Ok</span>(
-                    PayloadQueryData::&lt;MockTypes&gt;::genesis(
-                        <span class="kw-2">&amp;</span>Default::default(),
-                        <span class="kw-2">&amp;</span>Default::default(),
-                    )
-                    .<span class="kw">await</span>,
-                )
+                </span><span class="prelude-val">Ok</span>(PayloadQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>Default::default()))
             }
             .boxed()
         })
@@ -1761,11 +1745,7 @@
         .get(<span class="string">"get_vid_common"</span>, <span class="kw">move </span>|<span class="kw">_</span>, <span class="kw">_</span>| {
             <span class="kw">async move </span>{
                 <span class="comment">// No matter what data we are asked for, always respond with dummy data.
-                </span><span class="prelude-val">Ok</span>(VidCommonQueryData::&lt;MockTypes&gt;::genesis(
-                    <span class="kw-2">&amp;</span>Default::default(),
-                    <span class="kw-2">&amp;</span>Default::default(),
-                )
-                .<span class="kw">await</span>)
+                </span><span class="prelude-val">Ok</span>(VidCommonQueryData::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>Default::default()))
             }
             .boxed()
         })

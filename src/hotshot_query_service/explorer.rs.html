@@ -1186,7 +1186,7 @@
     </span>State: <span class="lifetime">'static </span>+ Send + Sync + ReadState,
     Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt; + QueryableHeader&lt;Types&gt;,
     Transaction&lt;Types&gt;: ExplorerTransaction,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    Payload&lt;Types&gt;: QueryablePayload,
     &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + ExplorerStorage&lt;Types&gt;,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error, Ver&gt;(

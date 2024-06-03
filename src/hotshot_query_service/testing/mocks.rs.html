@@ -283,7 +283,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;Types: NodeType&gt; QueryablePayload&lt;Types&gt; <span class="kw">for </span>MockPayload {
+<span class="kw">impl </span>QueryablePayload <span class="kw">for </span>MockPayload {
     <span class="kw">type </span>TransactionIndex = usize;
     <span class="kw">type </span>Iter&lt;<span class="lifetime">'a</span>&gt; = Range&lt;usize&gt;;
     <span class="kw">type </span>InclusionProof = ();
@@ -293,7 +293,7 @@
     }
 
     <span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>, meta: <span class="kw-2">&amp;</span><span class="self">Self</span>::Metadata) -&gt; <span class="self">Self</span>::Iter&lt;<span class="lifetime">'_</span>&gt; {
-        <span class="number">0</span>..&lt;TestBlockPayload <span class="kw">as </span>QueryablePayload&lt;Types&gt;&gt;::len(<span class="self">self</span>, meta)
+        <span class="number">0</span>..<span class="self">self</span>.len(meta)
     }
 
     <span class="kw">fn </span>transaction_with_proof(

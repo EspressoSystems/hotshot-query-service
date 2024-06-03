@@ -953,7 +953,6 @@
 <a href="#951" id="951">951</a>
 <a href="#952" id="952">952</a>
 <a href="#953" id="953">953</a>
-<a href="#954" id="954">954</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1086,7 +1085,7 @@
 <span class="kw">where
     </span>State: <span class="lifetime">'static </span>+ Send + Sync + ReadState,
     &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + AvailabilityDataSource&lt;Types&gt;,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error, Ver&gt;(
         options.api_path.as_ref(),
@@ -1430,7 +1429,7 @@
     <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>committable::Committable;
     <span class="kw">use </span>futures::future::FutureExt;
-    <span class="kw">use </span>hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
+    <span class="kw">use </span>hotshot_example_types::state_types::TestInstanceState;
     <span class="kw">use </span>hotshot_types::{
         constants::{Version01, STATIC_VER_0_1},
         data::Leaf,
@@ -1826,8 +1825,7 @@
         );
 
         <span class="comment">// mock up some consensus data.
-        </span><span class="kw">let </span>leaf =
-            Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestValidatedState::default(), <span class="kw-2">&amp;</span>TestInstanceState {}).<span class="kw">await</span>;
+        </span><span class="kw">let </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>TestInstanceState {});
 
         <span class="kw">let </span>block = BlockQueryData::new(leaf.block_header().clone(), MockPayload::genesis());
 

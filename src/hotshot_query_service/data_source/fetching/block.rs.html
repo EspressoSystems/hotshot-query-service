@@ -287,6 +287,9 @@
 <a href="#285" id="285">285</a>
 <a href="#286" id="286">286</a>
 <a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -345,7 +348,7 @@
 </span><span class="kw">impl</span>&lt;Types&gt; Fetchable&lt;Types&gt; <span class="kw">for </span>BlockQueryData&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">type </span>Request = BlockId&lt;Types&gt;;
 
@@ -395,7 +398,7 @@
 </span><span class="kw">impl</span>&lt;Types&gt; RangedFetchable&lt;Types&gt; <span class="kw">for </span>BlockQueryData&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">type </span>RangedRequest = BlockId&lt;Types&gt;;
 
@@ -416,7 +419,7 @@
     header: Header&lt;Types&gt;,
 ) <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    Payload&lt;Types&gt;: QueryablePayload,
     S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
     P: AvailabilityProvider&lt;Types&gt;,
 {
@@ -453,7 +456,7 @@
 </span><span class="kw">impl</span>&lt;Types&gt; Fetchable&lt;Types&gt; <span class="kw">for </span>PayloadQueryData&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">type </span>Request = BlockId&lt;Types&gt;;
 
@@ -507,7 +510,7 @@
 </span><span class="kw">impl</span>&lt;Types&gt; RangedFetchable&lt;Types&gt; <span class="kw">for </span>PayloadQueryData&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    Payload&lt;Types&gt;: QueryablePayload,
 {
     <span class="kw">type </span>RangedRequest = BlockId&lt;Types&gt;;
 
@@ -553,7 +556,7 @@
 
 <span class="kw">impl</span>&lt;Types: NodeType, S, P&gt; Callback&lt;Payload&lt;Types&gt;&gt; <span class="kw">for </span>PayloadCallback&lt;Types, S, P&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    </span>Payload&lt;Types&gt;: QueryablePayload,
     S: AvailabilityStorage&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
@@ -566,6 +569,9 @@
         </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>storage = <span class="self">self</span>.fetcher.storage.write().<span class="kw">await</span>;
             <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = store_block(<span class="kw-2">&amp;mut *</span>storage, block).<span class="kw">await </span>{
+                <span class="comment">// Rollback the transaction if insert fails
+                // This prevents subsequent queries from failing, as they would be part of the same transaction block.
+                </span>storage.revert().<span class="kw">await</span>;
                 <span class="comment">// It is unfortunate if this fails, but we can still proceed by returning
                 // the block that we fetched, keeping it in memory. Simply log the error and
                 // move on.
