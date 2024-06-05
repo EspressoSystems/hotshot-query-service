@@ -1847,9 +1847,7 @@
         <span class="kw">let </span>task = {
             BackgroundTask::spawn(<span class="string">"pruner"</span>, <span class="kw">async move </span>{
                 <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>.. {
-                    sleep(cfg.interval()).<span class="kw">await</span>;
-                    <span class="macro">tracing::warn!</span>(<span class="string">"pruner woke up for the {i}th time"</span>);
-
+                    <span class="macro">tracing::warn!</span>(<span class="string">"starting pruner run {i} "</span>);
                     {
                         <span class="kw">let </span><span class="kw-2">mut </span>storage = fetcher.storage.write().<span class="kw">await</span>;
 
@@ -1867,6 +1865,8 @@
                             }
                         }
                     }
+
+                    sleep(cfg.interval()).<span class="kw">await</span>;
                 }
             })
         };

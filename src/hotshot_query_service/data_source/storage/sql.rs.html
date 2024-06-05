@@ -4309,6 +4309,21 @@
 <a href="#4307" id="4307">4307</a>
 <a href="#4308" id="4308">4308</a>
 <a href="#4309" id="4309">4309</a>
+<a href="#4310" id="4310">4310</a>
+<a href="#4311" id="4311">4311</a>
+<a href="#4312" id="4312">4312</a>
+<a href="#4313" id="4313">4313</a>
+<a href="#4314" id="4314">4314</a>
+<a href="#4315" id="4315">4315</a>
+<a href="#4316" id="4316">4316</a>
+<a href="#4317" id="4317">4317</a>
+<a href="#4318" id="4318">4318</a>
+<a href="#4319" id="4319">4319</a>
+<a href="#4320" id="4320">4320</a>
+<a href="#4321" id="4321">4321</a>
+<a href="#4322" id="4322">4322</a>
+<a href="#4323" id="4323">4323</a>
+<a href="#4324" id="4324">4324</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -4885,7 +4900,12 @@
         <span class="prelude-val">Ok</span>(size <span class="kw">as </span>u64)
     }
 
-    <span class="kw">async fn </span>prune(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;, QueryError&gt; {
+    <span class="doccomment">/// Note: The prune operation may not immediately free up space even after rows are deleted.
+    /// This is because a vacuum operation may be necessary to reclaim more space.
+    /// PostgreSQL already performs auto vacuuming, so we are not including it here
+    /// as running a vacuum operation can be resource-intensive.
+
+    </span><span class="kw">async fn </span>prune(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;, QueryError&gt; {
         <span class="kw">let </span>cfg = <span class="self">self</span>.get_pruning_config().ok_or(QueryError::Error {
             message: <span class="string">"Pruning config not found"</span>.to_string(),
         })<span class="question-mark">?</span>;
@@ -4953,13 +4973,6 @@
                 }
             }
         }
-        <span class="comment">// Vacuum the database to reclaim space.
-        // Note: VACUUM FULL is not used as it requires an exclusive lock on the tables, which can
-        // cause downtime for the query service.
-        </span><span class="self">self</span>.client
-            .batch_execute(<span class="string">"VACUUM"</span>)
-            .<span class="kw">await
-            </span>.map_err(postgres_err)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(pruned_height)
     }
@@ -7687,6 +7700,11 @@
         </span>storage.set_pruning_config(PrunerCfg::new());
         <span class="comment">// No data will be pruned
         </span><span class="kw">let </span>pruned_height = storage.prune().<span class="kw">await</span>.unwrap();
+
+        <span class="comment">// Vacuum the database to reclaim space.
+        // This is necessary to ensure the test passes.
+        // Note: We don't perform a vacuum after each pruner run in production because the auto vacuum job handles it automatically.
+        </span>storage.client.batch_execute(<span class="string">"VACUUM"</span>).<span class="kw">await</span>.unwrap();
         <span class="comment">// Pruned height should be none
         </span><span class="macro">assert!</span>(pruned_height.is_none());
 
@@ -7704,6 +7722,10 @@
         <span class="comment">// All of the data is now older than 1s.
         // This would prune all the data as the target retention is set to 1s
         </span><span class="kw">let </span>pruned_height = storage.prune().<span class="kw">await</span>.unwrap();
+        <span class="comment">// Vacuum the database to reclaim space.
+        // This is necessary to ensure the test passes.
+        // Note: We don't perform a vacuum after each pruner run in production because the auto vacuum job handles it automatically.
+        </span>storage.client.batch_execute(<span class="string">"VACUUM"</span>).<span class="kw">await</span>.unwrap();
 
         <span class="comment">// Pruned height should be some
         </span><span class="macro">assert!</span>(pruned_height.is_some());
@@ -7766,6 +7788,10 @@
         <span class="comment">// Pruning would not delete any data
         // All the data is younger than minimum retention period even though the usage &gt; threshold
         </span><span class="kw">let </span>pruned_height = storage.prune().<span class="kw">await</span>.unwrap();
+        <span class="comment">// Vacuum the database to reclaim space.
+        // This is necessary to ensure the test passes.
+        // Note: We don't perform a vacuum after each pruner run in production because the auto vacuum job handles it automatically.
+        </span>storage.client.batch_execute(<span class="string">"VACUUM"</span>).<span class="kw">await</span>.unwrap();
 
         <span class="comment">// Pruned height should be none
         </span><span class="macro">assert!</span>(pruned_height.is_none());
@@ -7786,6 +7812,10 @@
         </span>sleep(Duration::from_secs(<span class="number">2</span>)).<span class="kw">await</span>;
         <span class="comment">// This would prune all the data
         </span><span class="kw">let </span>pruned_height = storage.prune().<span class="kw">await</span>.unwrap();
+        <span class="comment">// Vacuum the database to reclaim space.
+        // This is necessary to ensure the test passes.
+        // Note: We don't perform a vacuum after each pruner run in production because the auto vacuum job handles it automatically.
+        </span>storage.client.batch_execute(<span class="string">"VACUUM"</span>).<span class="kw">await</span>.unwrap();
 
         <span class="comment">// Pruned height should be some
         </span><span class="macro">assert!</span>(pruned_height.is_some());
