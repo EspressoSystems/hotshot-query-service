@@ -3176,7 +3176,7 @@ dependencies = [
 [[package]]
 name = "hotshot"
 version = "0.5.43"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=rc-0.5.56#1138cfeafc061839494391eb52a46d0259008cf0"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=ss/fee-upgrade#8518592046db189d3dff3f92bbeba422e03f77ec"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -3222,7 +3222,7 @@ dependencies = [
 [[package]]
 name = "hotshot-builder-api"
 version = "0.1.7"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=rc-0.5.56#1138cfeafc061839494391eb52a46d0259008cf0"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=ss/fee-upgrade#8518592046db189d3dff3f92bbeba422e03f77ec"
 dependencies = [
  "async-trait",
  "clap",
@@ -3241,7 +3241,7 @@ dependencies = [
 [[package]]
 name = "hotshot-example-types"
 version = "0.5.43"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=rc-0.5.56#1138cfeafc061839494391eb52a46d0259008cf0"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=ss/fee-upgrade#8518592046db189d3dff3f92bbeba422e03f77ec"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -3272,7 +3272,7 @@ dependencies = [
 [[package]]
 name = "hotshot-macros"
 version = "0.5.43"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=rc-0.5.56#1138cfeafc061839494391eb52a46d0259008cf0"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=ss/fee-upgrade#8518592046db189d3dff3f92bbeba422e03f77ec"
 dependencies = [
  "derive_builder",
  "proc-macro2",
@@ -3283,7 +3283,7 @@ dependencies = [
 [[package]]
 name = "hotshot-orchestrator"
 version = "0.5.43"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=rc-0.5.56#1138cfeafc061839494391eb52a46d0259008cf0"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=ss/fee-upgrade#8518592046db189d3dff3f92bbeba422e03f77ec"
 dependencies = [
  "anyhow",
  "async-compatibility-layer",
@@ -3369,7 +3369,7 @@ dependencies = [
 [[package]]
 name = "hotshot-task"
 version = "0.5.43"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=rc-0.5.56#1138cfeafc061839494391eb52a46d0259008cf0"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=ss/fee-upgrade#8518592046db189d3dff3f92bbeba422e03f77ec"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -3384,7 +3384,7 @@ dependencies = [
 [[package]]
 name = "hotshot-task-impls"
 version = "0.5.43"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=rc-0.5.56#1138cfeafc061839494391eb52a46d0259008cf0"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=ss/fee-upgrade#8518592046db189d3dff3f92bbeba422e03f77ec"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -3419,7 +3419,7 @@ dependencies = [
 [[package]]
 name = "hotshot-testing"
 version = "0.5.43"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=rc-0.5.56#1138cfeafc061839494391eb52a46d0259008cf0"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=ss/fee-upgrade#8518592046db189d3dff3f92bbeba422e03f77ec"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -3460,7 +3460,7 @@ dependencies = [
 [[package]]
 name = "hotshot-types"
 version = "0.1.11"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=rc-0.5.56#1138cfeafc061839494391eb52a46d0259008cf0"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=ss/fee-upgrade#8518592046db189d3dff3f92bbeba422e03f77ec"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -3721,7 +3721,7 @@ dependencies = [
  "iana-time-zone-haiku",
  "js-sys",
  "wasm-bindgen",
- "windows-core 0.52.0",
+ "windows-core",
 ]
 
 [[package]]
@@ -4567,13 +4567,14 @@ dependencies = [
 [[package]]
 name = "libp2p-networking"
 version = "0.5.43"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=rc-0.5.56#1138cfeafc061839494391eb52a46d0259008cf0"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=ss/fee-upgrade#8518592046db189d3dff3f92bbeba422e03f77ec"
 dependencies = [
  "anyhow",
  "async-compatibility-layer",
  "async-lock 2.8.0",
  "async-std",
  "async-trait",
+ "bincode",
  "blake3",
  "custom_debug 0.5.1",
  "derive_builder",
@@ -8894,9 +8895,9 @@ dependencies = [
 
 [[package]]
 name = "vbs"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1da07d9ca0c69892851ff70256392d1b0c6408a0007cc87409b1ca3064821e9b"
+checksum = "6a9d83afb293d109ae418271619046cd9d87d63ba83e473e25a5e36101edc453"
 dependencies = [
  "anyhow",
  "bincode",
@@ -9169,7 +9170,7 @@ version = "0.51.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca229916c5ee38c2f2bc1e9d8f04df975b4bd93f9955dc69fabb5d91270045c9"
 dependencies = [
- "windows-core 0.51.1",
+ "windows-core",
  "windows-targets 0.48.5",
 ]
 
@@ -9180,15 +9181,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1f8cf84f35d2db49a46868f947758c7a1138116f7fac3bc844f43ade1292e64"
 dependencies = [
  "windows-targets 0.48.5",
-]
-
-[[package]]
-name = "windows-core"
-version = "0.52.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33ab640c8d7e35bf8ba19b884ba838ceb4fba93a4e8c65a9059d08afcfc683d9"
-dependencies = [
- "windows-targets 0.52.5",
 ]
 
 [[package]]
