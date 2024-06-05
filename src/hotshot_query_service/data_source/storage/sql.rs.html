@@ -7629,11 +7629,11 @@
         // The SQL commands used here will fail if not run in order.
         </span><span class="kw">let </span>migrations = <span class="macro">vec!</span>[
             Migration::unapplied(
-                <span class="string">"V23__create_test_table.sql"</span>,
+                <span class="string">"V33__create_test_table.sql"</span>,
                 <span class="string">"ALTER TABLE test ADD COLUMN data INTEGER;"</span>,
             )
             .unwrap(),
-            Migration::unapplied(<span class="string">"V22__create_test_table.sql"</span>, <span class="string">"CREATE TABLE test ();"</span>).unwrap(),
+            Migration::unapplied(<span class="string">"V32__create_test_table.sql"</span>, <span class="string">"CREATE TABLE test ();"</span>).unwrap(),
         ];
         connect(<span class="bool-val">true</span>, migrations.clone()).<span class="kw">await</span>.unwrap();
 
