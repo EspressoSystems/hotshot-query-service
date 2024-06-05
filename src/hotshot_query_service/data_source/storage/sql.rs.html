@@ -4290,6 +4290,19 @@
 <a href="#4288" id="4288">4288</a>
 <a href="#4289" id="4289">4289</a>
 <a href="#4290" id="4290">4290</a>
+<a href="#4291" id="4291">4291</a>
+<a href="#4292" id="4292">4292</a>
+<a href="#4293" id="4293">4293</a>
+<a href="#4294" id="4294">4294</a>
+<a href="#4295" id="4295">4295</a>
+<a href="#4296" id="4296">4296</a>
+<a href="#4297" id="4297">4297</a>
+<a href="#4298" id="4298">4298</a>
+<a href="#4299" id="4299">4299</a>
+<a href="#4300" id="4300">4300</a>
+<a href="#4301" id="4301">4301</a>
+<a href="#4302" id="4302">4302</a>
+<a href="#4303" id="4303">4303</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -4756,6 +4769,17 @@
 }
 
 <span class="kw">impl </span>SqlStorage {
+    <span class="kw">async fn </span>delete_batch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, height: u64) -&gt; QueryResult&lt;()&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.transaction().<span class="kw">await</span><span class="question-mark">?</span>;
+
+        tx.execute(<span class="string">"DELETE FROM header WHERE height &lt;= $1"</span>, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>(height <span class="kw">as </span>i64)])
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="self">self</span>.save_pruned_height(height).<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="kw">async fn </span>get_minimum_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
         <span class="kw">let </span>row = <span class="self">self
             </span>.query_one_static(<span class="string">"SELECT MIN(height) as height FROM header"</span>)
@@ -4877,11 +4901,13 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(target_height) = target_height {
             <span class="kw">while </span>height &lt; target_height {
                 height = min(height + batch_size, target_height);
-                <span class="self">self</span>.query_opt(<span class="string">"DELETE FROM header WHERE height &lt;= $1"</span>, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>(height <span class="kw">as </span>i64)])
-                    .<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="self">self</span>.delete_batch(height).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="self">self</span>.commit().<span class="kw">await</span>.map_err(|e| QueryError::Error {
+                    message: <span class="macro">format!</span>(<span class="string">"failed to commit {e}"</span>),
+                })<span class="question-mark">?</span>;
                 pruned_height = <span class="prelude-val">Some</span>(height);
 
-                <span class="macro">tracing::info!</span>(<span class="string">"Pruned data up to height {height}"</span>);
+                <span class="macro">tracing::warn!</span>(<span class="string">"Pruned data up to height {height}"</span>);
             }
         }
 
@@ -4908,14 +4934,14 @@
                         &amp;&amp; height &lt; min_retention_height
                     {
                         height = min(height + batch_size, min_retention_height);
-                        <span class="self">self</span>.query_opt(
-                            <span class="string">"DELETE FROM header WHERE height &lt;= $1"</span>,
-                            <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>(height <span class="kw">as </span>i64)],
-                        )
-                        .<span class="kw">await</span><span class="question-mark">?</span>;
-                        usage = <span class="self">self</span>.get_disk_usage().<span class="kw">await</span><span class="question-mark">?</span>;
+                        <span class="self">self</span>.delete_batch(height).<span class="kw">await</span><span class="question-mark">?</span>;
+                        <span class="self">self</span>.commit().<span class="kw">await</span>.map_err(|e| QueryError::Error {
+                            message: <span class="macro">format!</span>(<span class="string">"failed to commit {e}"</span>),
+                        })<span class="question-mark">?</span>;
                         pruned_height = <span class="prelude-val">Some</span>(height);
-                        <span class="macro">tracing::info!</span>(<span class="string">"Pruned data up to height {height}"</span>);
+                        <span class="macro">tracing::warn!</span>(<span class="string">"Pruned data up to height {height}"</span>);
+
+                        usage = <span class="self">self</span>.get_disk_usage().<span class="kw">await</span><span class="question-mark">?</span>;
                     }
                 }
             }

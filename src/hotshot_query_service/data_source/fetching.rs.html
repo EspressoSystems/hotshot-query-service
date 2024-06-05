@@ -1484,9 +1484,6 @@
 <a href="#1482" id="1482">1482</a>
 <a href="#1483" id="1483">1483</a>
 <a href="#1484" id="1484">1484</a>
-<a href="#1485" id="1485">1485</a>
-<a href="#1486" id="1486">1486</a>
-<a href="#1487" id="1487">1487</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1851,7 +1848,7 @@
             BackgroundTask::spawn(<span class="string">"pruner"</span>, <span class="kw">async move </span>{
                 <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>.. {
                     sleep(cfg.interval()).<span class="kw">await</span>;
-                    <span class="macro">tracing::info!</span>(<span class="string">"pruner woke up for the {i}th time"</span>,);
+                    <span class="macro">tracing::warn!</span>(<span class="string">"pruner woke up for the {i}th time"</span>);
 
                     {
                         <span class="kw">let </span><span class="kw-2">mut </span>storage = fetcher.storage.write().<span class="kw">await</span>;
@@ -1859,17 +1856,14 @@
                         <span class="kw">match </span>storage.storage.prune().<span class="kw">await </span>{
                             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(height)) =&gt; {
                                 storage.pruned_height = <span class="prelude-val">Some</span>(height);
-                                <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = storage.storage.save_pruned_height(height).<span class="kw">await </span>{
-                                    <span class="macro">tracing::error!</span>(<span class="string">"failed to save pruned height: {e:?}"</span>);
-                                    <span class="kw">continue</span>;
-                                }
-                                <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = storage.commit().<span class="kw">await </span>{
-                                    <span class="macro">tracing::error!</span>(<span class="string">"failed to commit: {e:?}"</span>)
-                                }
+                                <span class="macro">tracing::warn!</span>(
+                                    <span class="string">"pruner run {i} succeeded. Pruned to height {height}"
+                                </span>);
                             }
                             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; (),
                             <span class="prelude-val">Err</span>(e) =&gt; {
-                                <span class="macro">tracing::error!</span>(<span class="string">"pruning failed: {e:?}"</span>);
+                                <span class="macro">tracing::error!</span>(<span class="string">"pruner run {i} failed: {e:?}"</span>);
+                                storage.revert().<span class="kw">await</span>;
                             }
                         }
                     }
