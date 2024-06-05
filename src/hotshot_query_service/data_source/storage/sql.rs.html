@@ -4264,6 +4264,32 @@
 <a href="#4262" id="4262">4262</a>
 <a href="#4263" id="4263">4263</a>
 <a href="#4264" id="4264">4264</a>
+<a href="#4265" id="4265">4265</a>
+<a href="#4266" id="4266">4266</a>
+<a href="#4267" id="4267">4267</a>
+<a href="#4268" id="4268">4268</a>
+<a href="#4269" id="4269">4269</a>
+<a href="#4270" id="4270">4270</a>
+<a href="#4271" id="4271">4271</a>
+<a href="#4272" id="4272">4272</a>
+<a href="#4273" id="4273">4273</a>
+<a href="#4274" id="4274">4274</a>
+<a href="#4275" id="4275">4275</a>
+<a href="#4276" id="4276">4276</a>
+<a href="#4277" id="4277">4277</a>
+<a href="#4278" id="4278">4278</a>
+<a href="#4279" id="4279">4279</a>
+<a href="#4280" id="4280">4280</a>
+<a href="#4281" id="4281">4281</a>
+<a href="#4282" id="4282">4282</a>
+<a href="#4283" id="4283">4283</a>
+<a href="#4284" id="4284">4284</a>
+<a href="#4285" id="4285">4285</a>
+<a href="#4286" id="4286">4286</a>
+<a href="#4287" id="4287">4287</a>
+<a href="#4288" id="4288">4288</a>
+<a href="#4289" id="4289">4289</a>
+<a href="#4290" id="4290">4290</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -4741,9 +4767,18 @@
     }
 
     <span class="kw">async fn </span>get_height_by_timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>, timestamp: i64) -&gt; QueryResult&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
-        <span class="kw">let </span>row = <span class="self">self
+        <span class="comment">// We order by timestamp and then height, even though logically this is no different than
+        // just ordering by height, since timestamps are monotonic. The reason is that this order
+        // allows the query planner to efficiently solve the where clause and presort the results
+        // based on the timestamp index. The remaining sort on height, which guarantees a unique
+        // block if multiple blocks have the same timestamp, is very efficient, because there are
+        // never more than a handful of blocks with the same timestamp.
+        </span><span class="kw">let </span>row = <span class="self">self
             </span>.query_opt(
-                <span class="string">"SELECT height FROM header WHERE timestamp &lt;= $1 ORDER BY height DESC LIMIT 1"</span>,
+                <span class="string">"SELECT height FROM header
+                  WHERE timestamp &lt;= $1
+                  ORDER BY timestamp DESC, height DESC
+                  LIMIT 1"</span>,
                 [<span class="kw-2">&amp;</span>timestamp],
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
@@ -5440,12 +5475,18 @@
             <span class="prelude-val">None
         </span>};
 
-        <span class="comment">// Find the block just after the window.
+        <span class="comment">// Find the block just after the window. We order by timestamp _then_ height, because the
+        // timestamp order allows the query planner to use the index on timestamp to also
+        // efficiently solve the WHERE clause, but this process may turn up multiple results, due to
+        // the 1-second resolution of block timestamps. The final sort by height guarantees us a
+        // unique, deterministic result (the first block with a given timestamp). This sort may not
+        // be able to use an index, but it shouldn't be too expensive, since there will never be
+        // more than a handful of blocks with the same timestamp.
         </span><span class="kw">let </span>query = <span class="macro">format!</span>(
             <span class="string">"SELECT {HEADER_COLUMNS}
                FROM header AS h
               WHERE h.timestamp &gt;= $1
-              ORDER BY h.height
+              ORDER BY h.timestamp, h.height
               LIMIT 1"
         </span>);
         <span class="kw">let </span>next = <span class="self">self
@@ -5886,12 +5927,18 @@
 
         <span class="kw">let </span>(created, commit) = <span class="kw">match </span>snapshot {
             Snapshot::Commit(commit) =&gt; {
-                <span class="comment">// Get the block height using the merkle commitment.
+                <span class="comment">// Get the block height using the merkle commitment. It is possible that multiple
+                // headers will have the same state commitment. In this case we don't care which
+                // height we get, since any query against equivalent states will yield equivalent
+                // results, regardless of which block the state is from. Thus, we can make this
+                // query fast with `LIMIT 1` and no `ORDER BY`.
                 </span><span class="kw">let </span>query = <span class="self">self
                     </span>.query_one(
                         <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                            <span class="string">"SELECT height FROM Header  where
-                             {header_state_commitment_field} = $1"
+                            <span class="string">"SELECT height
+                               FROM header
+                              WHERE {header_state_commitment_field} = $1
+                              LIMIT 1"
                         </span>),
                         <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>commit.to_string()],
                     )
@@ -6075,15 +6122,20 @@
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
         <span class="comment">// Find all blocks whose timestamps fall within the window [start, end). Block timestamps
         // are monotonically increasing, so this query is guaranteed to return a contiguous range of
-        // blocks ordered by increasing height. Note that we order by height explicitly, rather than
-        // ordering by timestamp (which might be more efficient, since it could reuse the timestamp
-        // index that is used in the WHERE clause) because multiple blocks may have the same
-        // timestamp, due to the 1-second timestamp resolution.
+        // blocks ordered by increasing height.
+        //
+        // We order by timestamp _then_ height, because the timestamp order allows the query planner
+        // to use the index on timestamp to also efficiently solve the WHERE clause, but this
+        // process may turn up multiple results, due to the 1-second resolution of block timestamps.
+        // The final sort by height guarantees us a unique, deterministic result (the first block
+        // with a given timestamp). This sort may not be able to use an index, but it shouldn't be
+        // too expensive, since there will never be more than a handful of blocks with the same
+        // timestamp.
         </span><span class="kw">let </span>query = <span class="macro">format!</span>(
             <span class="string">"SELECT {HEADER_COLUMNS}
                FROM header AS h
               WHERE h.timestamp &gt;= $1 AND h.timestamp &lt; $2
-              ORDER BY h.height"
+              ORDER BY h.timestamp, h.height"
         </span>);
         <span class="kw">let </span>rows = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>query, [<span class="kw-2">&amp;</span>(start <span class="kw">as </span>i64), <span class="kw-2">&amp;</span>(end <span class="kw">as </span>i64)]).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>window: Vec&lt;<span class="kw">_</span>&gt; = rows
@@ -6100,7 +6152,7 @@
             <span class="string">"SELECT {HEADER_COLUMNS}
                FROM header AS h
               WHERE h.timestamp &gt;= $1
-              ORDER BY h.height
+              ORDER BY h.timestamp, h.height
               LIMIT 1"
         </span>);
         <span class="kw">let </span>next = <span class="self">self
@@ -6125,7 +6177,7 @@
             <span class="string">"SELECT {HEADER_COLUMNS}
                FROM header AS h
               WHERE h.timestamp &lt; $1
-              ORDER BY h.height DESC
+              ORDER BY h.timestamp DESC, h.height DESC
               LIMIT 1"
         </span>);
         <span class="kw">let </span>prev = <span class="self">self
