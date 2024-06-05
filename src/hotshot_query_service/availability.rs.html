@@ -948,12 +948,6 @@
 <a href="#946" id="946">946</a>
 <a href="#947" id="947">947</a>
 <a href="#948" id="948">948</a>
-<a href="#949" id="949">949</a>
-<a href="#950" id="950">950</a>
-<a href="#951" id="951">951</a>
-<a href="#952" id="952">952</a>
-<a href="#953" id="953">953</a>
-<a href="#954" id="954">954</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1096,32 +1090,29 @@
     <span class="kw">let </span>timeout = options.fetch_timeout;
 
     api.with_version(<span class="string">"0.0.1"</span>.parse().unwrap())
-        .get(<span class="string">"get_leaf"</span>, <span class="kw">move </span>|req, state| {
+        .at(<span class="string">"get_leaf"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>id = <span class="kw">match </span>req.opt_integer_param(<span class="string">"height"</span>)<span class="question-mark">? </span>{
                     <span class="prelude-val">Some</span>(height) =&gt; LeafId::Number(height),
                     <span class="prelude-val">None </span>=&gt; LeafId::Hash(req.blob_param(<span class="string">"hash"</span>)<span class="question-mark">?</span>),
                 };
-                state
-                    .get_leaf(id)
-                    .<span class="kw">await
-                    </span>.with_timeout(timeout)
-                    .<span class="kw">await
-                    </span>.context(FetchLeafSnafu {
-                        resource: id.to_string(),
-                    })
+                <span class="kw">let </span>fetch = state.read(|state| state.get_leaf(id).boxed()).<span class="kw">await</span>;
+                fetch.with_timeout(timeout).<span class="kw">await</span>.context(FetchLeafSnafu {
+                    resource: id.to_string(),
+                })
             }
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">"get_leaf_range"</span>, <span class="kw">move </span>|req, state| {
+        </span>.at(<span class="string">"get_leaf_range"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>from = req.integer_param::&lt;<span class="kw">_</span>, usize&gt;(<span class="string">"from"</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>until = req.integer_param(<span class="string">"until"</span>)<span class="question-mark">?</span>;
 
-                state
-                    .get_leaf_range(from..until)
-                    .<span class="kw">await
-                    </span>.enumerate()
+                <span class="kw">let </span>leaves = state
+                    .read(|state| state.get_leaf_range(from..until).boxed())
+                    .<span class="kw">await</span>;
+                leaves
+                    .enumerate()
                     .then(|(index, fetch)| <span class="kw">async move </span>{
                         fetch.with_timeout(timeout).<span class="kw">await</span>.context(FetchLeafSnafu {
                             resource: (index + from).to_string(),
@@ -1144,7 +1135,7 @@
             .try_flatten_stream()
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">"get_header"</span>, <span class="kw">move </span>|req, state| {
+        </span>.at(<span class="string">"get_header"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(height) = req.opt_integer_param(<span class="string">"height"</span>)<span class="question-mark">? </span>{
                     BlockId::Number(height)
@@ -1153,10 +1144,9 @@
                 } <span class="kw">else </span>{
                     BlockId::PayloadHash(req.blob_param(<span class="string">"payload-hash"</span>)<span class="question-mark">?</span>)
                 };
-                <span class="prelude-val">Ok</span>(state
-                    .get_block(id)
-                    .<span class="kw">await
-                    </span>.with_timeout(timeout)
+                <span class="kw">let </span>fetch = state.read(|state| state.get_block(id).boxed()).<span class="kw">await</span>;
+                <span class="prelude-val">Ok</span>(fetch
+                    .with_timeout(timeout)
                     .<span class="kw">await
                     </span>.context(FetchBlockSnafu {
                         resource: id.to_string(),
@@ -1166,15 +1156,16 @@
             }
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">"get_header_range"</span>, <span class="kw">move </span>|req, state| {
+        </span>.at(<span class="string">"get_header_range"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>from = req.integer_param::&lt;<span class="kw">_</span>, usize&gt;(<span class="string">"from"</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>until = req.integer_param::&lt;<span class="kw">_</span>, usize&gt;(<span class="string">"until"</span>)<span class="question-mark">?</span>;
 
-                state
-                    .get_block_range(from..until)
-                    .<span class="kw">await
-                    </span>.enumerate()
+                <span class="kw">let </span>headers = state
+                    .read(|state| state.get_block_range(from..until).boxed())
+                    .<span class="kw">await</span>;
+                headers
+                    .enumerate()
                     .then(|(index, fetch)| <span class="kw">async move </span>{
                         fetch.with_timeout(timeout).<span class="kw">await</span>.context(FetchBlockSnafu {
                             resource: (index + from).to_string(),
@@ -1204,7 +1195,7 @@
             .try_flatten_stream()
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">"get_block"</span>, <span class="kw">move </span>|req, state| {
+        </span>.at(<span class="string">"get_block"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(height) = req.opt_integer_param(<span class="string">"height"</span>)<span class="question-mark">? </span>{
                     BlockId::Number(height)
@@ -1213,26 +1204,23 @@
                 } <span class="kw">else </span>{
                     BlockId::PayloadHash(req.blob_param(<span class="string">"payload-hash"</span>)<span class="question-mark">?</span>)
                 };
-                state
-                    .get_block(id)
-                    .<span class="kw">await
-                    </span>.with_timeout(timeout)
-                    .<span class="kw">await
-                    </span>.context(FetchBlockSnafu {
-                        resource: id.to_string(),
-                    })
+                <span class="kw">let </span>fetch = state.read(|state| state.get_block(id).boxed()).<span class="kw">await</span>;
+                fetch.with_timeout(timeout).<span class="kw">await</span>.context(FetchBlockSnafu {
+                    resource: id.to_string(),
+                })
             }
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">"get_block_range"</span>, <span class="kw">move </span>|req, state| {
+        </span>.at(<span class="string">"get_block_range"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>from = req.integer_param::&lt;<span class="kw">_</span>, usize&gt;(<span class="string">"from"</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>until = req.integer_param(<span class="string">"until"</span>)<span class="question-mark">?</span>;
 
-                state
-                    .get_block_range(from..until)
-                    .<span class="kw">await
-                    </span>.enumerate()
+                <span class="kw">let </span>blocks = state
+                    .read(|state| state.get_block_range(from..until).boxed())
+                    .<span class="kw">await</span>;
+                blocks
+                    .enumerate()
                     .then(|(index, fetch)| <span class="kw">async move </span>{
                         fetch.with_timeout(timeout).<span class="kw">await</span>.context(FetchBlockSnafu {
                             resource: (index + from).to_string(),
@@ -1255,7 +1243,7 @@
             .try_flatten_stream()
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">"get_payload"</span>, <span class="kw">move </span>|req, state| {
+        </span>.at(<span class="string">"get_payload"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(height) = req.opt_integer_param(<span class="string">"height"</span>)<span class="question-mark">? </span>{
                     BlockId::Number(height)
@@ -1264,26 +1252,23 @@
                 } <span class="kw">else </span>{
                     BlockId::Hash(req.blob_param(<span class="string">"block-hash"</span>)<span class="question-mark">?</span>)
                 };
-                state
-                    .get_payload(id)
-                    .<span class="kw">await
-                    </span>.with_timeout(timeout)
-                    .<span class="kw">await
-                    </span>.context(FetchBlockSnafu {
-                        resource: id.to_string(),
-                    })
+                <span class="kw">let </span>fetch = state.read(|state| state.get_payload(id).boxed()).<span class="kw">await</span>;
+                fetch.with_timeout(timeout).<span class="kw">await</span>.context(FetchBlockSnafu {
+                    resource: id.to_string(),
+                })
             }
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">"get_payload_range"</span>, <span class="kw">move </span>|req, state| {
+        </span>.at(<span class="string">"get_payload_range"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>from = req.integer_param::&lt;<span class="kw">_</span>, usize&gt;(<span class="string">"from"</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>until = req.integer_param(<span class="string">"until"</span>)<span class="question-mark">?</span>;
 
-                state
-                    .get_payload_range(from..until)
-                    .<span class="kw">await
-                    </span>.enumerate()
+                <span class="kw">let </span>payloads = state
+                    .read(|state| state.get_payload_range(from..until).boxed())
+                    .<span class="kw">await</span>;
+                payloads
+                    .enumerate()
                     .then(|(index, fetch)| <span class="kw">async move </span>{
                         fetch.with_timeout(timeout).<span class="kw">await</span>.context(FetchBlockSnafu {
                             resource: (index + from).to_string(),
@@ -1306,7 +1291,7 @@
             .try_flatten_stream()
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">"get_vid_common"</span>, <span class="kw">move </span>|req, state| {
+        </span>.at(<span class="string">"get_vid_common"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>id = <span class="kw">if let </span><span class="prelude-val">Some</span>(height) = req.opt_integer_param(<span class="string">"height"</span>)<span class="question-mark">? </span>{
                     BlockId::Number(height)
@@ -1315,14 +1300,10 @@
                 } <span class="kw">else </span>{
                     BlockId::PayloadHash(req.blob_param(<span class="string">"payload-hash"</span>)<span class="question-mark">?</span>)
                 };
-                state
-                    .get_vid_common(id)
-                    .<span class="kw">await
-                    </span>.with_timeout(timeout)
-                    .<span class="kw">await
-                    </span>.context(FetchBlockSnafu {
-                        resource: id.to_string(),
-                    })
+                <span class="kw">let </span>fetch = state.read(|state| state.get_vid_common(id).boxed()).<span class="kw">await</span>;
+                fetch.with_timeout(timeout).<span class="kw">await</span>.context(FetchBlockSnafu {
+                    resource: id.to_string(),
+                })
             }
             .boxed()
         })<span class="question-mark">?
@@ -1338,27 +1319,28 @@
             .try_flatten_stream()
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">"get_transaction"</span>, <span class="kw">move </span>|req, state| {
+        </span>.at(<span class="string">"get_transaction"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">match </span>req.opt_blob_param(<span class="string">"hash"</span>)<span class="question-mark">? </span>{
-                    <span class="prelude-val">Some</span>(hash) =&gt; state
-                        .get_transaction(hash)
-                        .<span class="kw">await
-                        </span>.with_timeout(timeout)
-                        .<span class="kw">await
-                        </span>.context(FetchTransactionSnafu {
-                            resource: hash.to_string(),
-                        }),
+                    <span class="prelude-val">Some</span>(hash) =&gt; {
+                        <span class="kw">let </span>fetch = state
+                            .read(|state| state.get_transaction(hash).boxed())
+                            .<span class="kw">await</span>;
+                        fetch
+                            .with_timeout(timeout)
+                            .<span class="kw">await
+                            </span>.context(FetchTransactionSnafu {
+                                resource: hash.to_string(),
+                            })
+                    }
                     <span class="prelude-val">None </span>=&gt; {
                         <span class="kw">let </span>height: u64 = req.integer_param(<span class="string">"height"</span>)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>block = state
-                            .get_block(height <span class="kw">as </span>usize)
-                            .<span class="kw">await
-                            </span>.with_timeout(timeout)
-                            .<span class="kw">await
-                            </span>.context(FetchBlockSnafu {
-                                resource: height.to_string(),
-                            })<span class="question-mark">?</span>;
+                        <span class="kw">let </span>fetch = state
+                            .read(|state| state.get_block(height <span class="kw">as </span>usize).boxed())
+                            .<span class="kw">await</span>;
+                        <span class="kw">let </span>block = fetch.with_timeout(timeout).<span class="kw">await</span>.context(FetchBlockSnafu {
+                            resource: height.to_string(),
+                        })<span class="question-mark">?</span>;
                         <span class="kw">let </span>i: u64 = req.integer_param(<span class="string">"index"</span>)<span class="question-mark">?</span>;
                         <span class="kw">let </span>index = block
                             .payload()
@@ -1371,14 +1353,13 @@
             }
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">"get_block_summary"</span>, <span class="kw">move </span>|req, state| {
+        </span>.at(<span class="string">"get_block_summary"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>id: usize = req.integer_param(<span class="string">"height"</span>)<span class="question-mark">?</span>;
 
-                state
-                    .get_block(id)
-                    .<span class="kw">await
-                    </span>.with_timeout(timeout)
+                <span class="kw">let </span>fetch = state.read(|state| state.get_block(id).boxed()).<span class="kw">await</span>;
+                fetch
+                    .with_timeout(timeout)
                     .<span class="kw">await
                     </span>.context(FetchBlockSnafu {
                         resource: id.to_string(),
@@ -1387,15 +1368,16 @@
             }
             .boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">"get_block_summary_range"</span>, <span class="kw">move </span>|req, state| {
+        </span>.at(<span class="string">"get_block_summary_range"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>from: usize = req.integer_param(<span class="string">"from"</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>until: usize = req.integer_param(<span class="string">"until"</span>)<span class="question-mark">?</span>;
 
-                <span class="kw">let </span>result: Vec&lt;BlockSummaryQueryData&lt;Types&gt;&gt; = state
-                    .get_block_range(from..until)
-                    .<span class="kw">await
-                    </span>.enumerate()
+                <span class="kw">let </span>blocks = state
+                    .read(|state| state.get_block_range(from..until).boxed())
+                    .<span class="kw">await</span>;
+                <span class="kw">let </span>result: Vec&lt;BlockSummaryQueryData&lt;Types&gt;&gt; = blocks
+                    .enumerate()
                     .then(|(index, fetch)| <span class="kw">async move </span>{
                         fetch.with_timeout(timeout).<span class="kw">await</span>.context(FetchBlockSnafu {
                             resource: (index + from).to_string(),
@@ -1718,7 +1700,13 @@
         setup_test();
 
         <span class="comment">// Create the consensus network.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>network = MockNetwork::&lt;D&gt;::init().<span class="kw">await</span>;
+        </span><span class="kw">let </span><span class="kw-2">mut </span>network = MockNetwork::&lt;D&gt;::init_with_config(|cfg| {
+            <span class="comment">// Make the rate of empty block production slower than the API fetching timeout.
+            // Otherwise, we will produce new blocks faster than we can fetch them (particularly in
+            // the no-storage case, where fetching is quite slow) and the test will never finish.
+            </span>cfg.builder_timeout = fetch_timeout + Duration::from_millis(<span class="number">500</span>);
+        })
+        .<span class="kw">await</span>;
         network.start().<span class="kw">await</span>;
 
         <span class="comment">// Start the web server.

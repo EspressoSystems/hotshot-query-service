@@ -329,6 +329,14 @@
 <a href="#327" id="327">327</a>
 <a href="#328" id="328">328</a>
 <a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -399,6 +407,12 @@
 
 <span class="kw">impl</span>&lt;D: DataSourceLifeCycle + UpdateStatusData&gt; MockNetwork&lt;D&gt; {
     <span class="kw">pub async fn </span>init() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::init_with_config(|<span class="kw">_</span>| {}).<span class="kw">await
+    </span>}
+
+    <span class="kw">pub async fn </span>init_with_config(
+        update_config: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;mut </span>HotShotConfig&lt;BLSPubKey&gt;),
+    ) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>(pub_keys, priv_keys): (Vec&lt;<span class="kw">_</span>&gt;, Vec&lt;<span class="kw">_</span>&gt;) = (<span class="number">0</span>..NUM_NODES)
             .map(|i| BLSPubKey::generated_from_seed_indexed([<span class="number">0</span>; <span class="number">32</span>], i <span class="kw">as </span>u64))
             .unzip();
@@ -436,47 +450,49 @@
             )
             .<span class="kw">await</span>;
 
+        <span class="kw">let </span><span class="kw-2">mut </span>config = HotShotConfig {
+            builder_url: builder_url.clone(),
+            fixed_leader_for_gpuvid: <span class="number">0</span>,
+            num_nodes_with_stake: num_staked_nodes,
+            num_nodes_without_stake: <span class="number">0</span>,
+            known_nodes_with_stake: known_nodes_with_stake.clone(),
+            known_nodes_without_stake: <span class="macro">vec!</span>[],
+            my_own_validator_config: Default::default(),
+            start_delay: <span class="number">0</span>,
+            round_start_delay: <span class="number">0</span>,
+            next_view_timeout: <span class="number">10000</span>,
+            timeout_ratio: (<span class="number">11</span>, <span class="number">10</span>),
+            num_bootstrap: <span class="number">0</span>,
+            execution_type: ExecutionType::Continuous,
+            da_staked_committee_size: pub_keys.len(),
+            known_da_nodes: known_nodes_with_stake.clone(),
+            da_non_staked_committee_size: <span class="number">0</span>,
+            data_request_delay: Duration::from_millis(<span class="number">200</span>),
+            view_sync_timeout: Duration::from_millis(<span class="number">250</span>),
+            start_threshold: (
+                known_nodes_with_stake.len() <span class="kw">as </span>u64,
+                known_nodes_with_stake.len() <span class="kw">as </span>u64,
+            ),
+            builder_timeout: Duration::from_secs(<span class="number">1</span>),
+        };
+        update_config(<span class="kw-2">&amp;mut </span>config);
+
         <span class="kw">let </span>nodes = join_all(
             priv_keys
                 .into_iter()
                 .enumerate()
                 .map(|(node_id, priv_key)| {
                     <span class="kw">let </span>memberships = memberships.clone();
-                    <span class="kw">let </span>my_own_validator_config = ValidatorConfig {
+                    <span class="kw">let </span><span class="kw-2">mut </span>config = config.clone();
+                    config.my_own_validator_config = ValidatorConfig {
                         public_key: pub_keys[node_id],
                         private_key: priv_key.clone(),
                         stake_value: stake,
                         state_key_pair: state_key_pairs[node_id].clone(),
                         is_da: <span class="bool-val">true</span>,
                     };
-                    <span class="kw">let </span>config = HotShotConfig {
-                        builder_url: builder_url.clone(),
-                        fixed_leader_for_gpuvid: <span class="number">0</span>,
-                        num_nodes_with_stake: num_staked_nodes,
-                        num_nodes_without_stake: <span class="number">0</span>,
-                        known_nodes_with_stake: known_nodes_with_stake.clone(),
-                        known_nodes_without_stake: <span class="macro">vec!</span>[],
-                        my_own_validator_config,
-                        start_delay: <span class="number">0</span>,
-                        round_start_delay: <span class="number">0</span>,
-                        next_view_timeout: <span class="number">10000</span>,
-                        timeout_ratio: (<span class="number">11</span>, <span class="number">10</span>),
-                        num_bootstrap: <span class="number">0</span>,
-                        execution_type: ExecutionType::Continuous,
-                        da_staked_committee_size: pub_keys.len(),
-                        known_da_nodes: known_nodes_with_stake.clone(),
-                        da_non_staked_committee_size: <span class="number">0</span>,
-                        data_request_delay: Duration::from_millis(<span class="number">200</span>),
-                        view_sync_timeout: Duration::from_millis(<span class="number">250</span>),
-                        start_threshold: (
-                            known_nodes_with_stake.len() <span class="kw">as </span>u64,
-                            known_nodes_with_stake.len() <span class="kw">as </span>u64,
-                        ),
-                        builder_timeout: Duration::from_secs(<span class="number">1</span>),
-                    };
 
                     <span class="kw">let </span>pub_keys = pub_keys.clone();
-                    <span class="kw">let </span>config = config.clone();
                     <span class="kw">let </span>master_map = master_map.clone();
 
                     <span class="kw">let </span>span = <span class="macro">info_span!</span>(<span class="string">"initialize node"</span>, node_id);

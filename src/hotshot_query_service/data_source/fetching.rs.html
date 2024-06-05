@@ -2225,7 +2225,7 @@
         <span class="self">self</span>.storage().<span class="kw">await</span>.vid_share(id).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, QueryResult&lt;SyncStatus&gt;&gt; {
         <span class="self">self</span>.storage().<span class="kw">await</span>.sync_status().<span class="kw">await
     </span>}
 

@@ -577,6 +577,7 @@
 <a href="#575" id="575">575</a>
 <a href="#576" id="576">576</a>
 <a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -613,8 +614,8 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>atomic_store::{AtomicStore, AtomicStoreLoader, PersistenceError};
 <span class="kw">use </span>committable::Committable;
+<span class="kw">use </span>futures::future::{<span class="self">self</span>, BoxFuture, FutureExt};
 <span class="kw">use </span>hotshot_types::traits::{block_contents::BlockHeader, node_implementation::NodeType};
-
 <span class="kw">use </span>serde::{de::DeserializeOwned, Serialize};
 <span class="kw">use </span>snafu::OptionExt;
 <span class="kw">use </span>std::collections::{
@@ -1086,8 +1087,8 @@
             </span>.context(MissingSnafu)
     }
 
-    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
-        <span class="kw">let </span>height = <span class="self">self</span>.block_height().<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, QueryResult&lt;SyncStatus&gt;&gt; {
+        <span class="kw">let </span>height = <span class="self">self</span>.leaf_storage.iter().len();
 
         <span class="comment">// The number of missing VID common is just the number of completely missing VID entries,
         // since every entry we have is guaranteed to have the common data.
@@ -1099,13 +1100,14 @@
             .iter()
             .map(|res| <span class="kw">if </span><span class="macro">matches!</span>(res, <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="prelude-val">None</span>))) { <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>})
             .sum();
-        <span class="prelude-val">Ok</span>(SyncStatus {
+        future::ready(<span class="prelude-val">Ok</span>(SyncStatus {
             missing_blocks: <span class="self">self</span>.block_storage.missing(height),
             missing_leaves: <span class="self">self</span>.leaf_storage.missing(height),
             missing_vid_common: missing_vid,
             missing_vid_shares: missing_vid + null_vid_shares,
             pruned_height: <span class="prelude-val">None</span>,
-        })
+        }))
+        .boxed()
     }
 
     <span class="kw">async fn </span>get_header_window(

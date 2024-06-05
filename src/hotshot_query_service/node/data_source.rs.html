@@ -64,6 +64,16 @@
 <a href="#62" id="62">62</a>
 <a href="#63" id="63">63</a>
 <a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -95,6 +105,7 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>derive_more::From;
+<span class="kw">use </span>futures::future::BoxFuture;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 
 <span class="attr">#[derive(Derivative, From)]
@@ -121,11 +132,20 @@
     <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync;
-    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt;;
     <span class="kw">async fn </span>get_header_window(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
         end: u64,
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt;;
+
+    <span class="doccomment">/// Search the database for missing objects and generate a report.
+    ///
+    /// The query to find missing objects can be quite expensive while the database is large, but it
+    /// is read-only and thus should not block other operations. This function returns a future
+    /// which runs the bulk of the query and _does not borrow from `self`_. This allows the caller
+    /// to release a lock on the storage layer and run the expensive query asynchronously, while
+    /// other operations, including write that require exclusive access to the API state, are able
+    /// to proceed.
+    </span><span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, QueryResult&lt;SyncStatus&gt;&gt;;
 }
 </code></pre></div></section></main></body></html>

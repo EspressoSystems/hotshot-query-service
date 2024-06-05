@@ -4303,6 +4303,12 @@
 <a href="#4301" id="4301">4301</a>
 <a href="#4302" id="4302">4302</a>
 <a href="#4303" id="4303">4303</a>
+<a href="#4304" id="4304">4304</a>
+<a href="#4305" id="4305">4305</a>
+<a href="#4306" id="4306">4306</a>
+<a href="#4307" id="4307">4307</a>
+<a href="#4308" id="4308">4308</a>
+<a href="#4309" id="4309">4309</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -4357,6 +4363,7 @@
 <span class="kw">use </span>chrono::Utc;
 <span class="kw">use </span>committable::Committable;
 <span class="kw">use </span>futures::{
+    future::{BoxFuture, FutureExt},
     stream::{<span class="self">self</span>, BoxStream, StreamExt, TryStreamExt},
     task::{Context, Poll},
     AsyncRead, AsyncWrite,
@@ -5386,73 +5393,78 @@
         })
     }
 
-    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
-        <span class="comment">// A leaf can only be missing if there is no row for it in the database (all its columns are
-        // non-nullable). A block can be missing if its corresponding leaf is missing or if the
-        // block's `data` field is `NULL`. We can find the number of missing leaves and blocks by
-        // getting the number of fully missing leaf rows and the number of present but null-payload
-        // block rows.
-        //
-        // Note that it should not be possible for a block's row to be missing (as opposed to
-        // present but having a `NULL` payload) if the corresponding leaf is present. The schema
-        // enforces this, since the payload table `REFERENCES` the corresponding leaf row. Thus,
-        // missing block rows should be a subset of missing leaf rows and do not need to be counted
-        // separately. This is very important: if we had to count the number of block rows that were
-        // missing whose corresponding leaf row was present, this would require an expensive join
-        // and table traversal.
-        //
-        // We can get the number of missing leaf rows very efficiently, by subtracting the total
-        // number of leaf rows from the block height (since the block height by definition is the
-        // height of the highest leaf we do have). We can also get the number of null payloads
-        // directly using an `IS NULL` filter.
-        //
-        // For VID, common data can only be missing if the entire row is missing. Shares can be
-        // missing in that case _or_ if the row is present but share data is NULL. Thus, we also
-        // need to select the total number of VID rows and the number of present VID rows with a
-        // NULL share.
-        </span><span class="kw">let </span>row = <span class="self">self
-            </span>.query_one_static(
-                <span class="string">"SELECT max_height, total_leaves, null_payloads, total_vid, null_vid, pruned_height FROM
-                    (SELECT max(leaf.height) AS max_height, count(*) AS total_leaves FROM leaf),
-                    (SELECT count(*) AS null_payloads FROM payload WHERE data IS NULL),
-                    (SELECT count(*) AS total_vid FROM vid),
-                    (SELECT count(*) AS null_vid FROM vid WHERE share IS NULL),
+    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, QueryResult&lt;SyncStatus&gt;&gt; {
+        <span class="kw">let </span>client = <span class="self">self</span>.client.clone();
+
+        <span class="kw">async move </span>{
+            <span class="comment">// A leaf can only be missing if there is no row for it in the database (all its columns
+            // are non-nullable). A block can be missing if its corresponding leaf is missing or if
+            // the block's `data` field is `NULL`. We can find the number of missing leaves and
+            // blocks by getting the number of fully missing leaf rows and the number of present but
+            // null-payload block rows.
+            //
+            // Note that it should not be possible for a block's row to be missing (as opposed to
+            // present but having a `NULL` payload) if the corresponding leaf is present. The schema
+            // enforces this, since the payload table `REFERENCES` the corresponding leaf row. Thus,
+            // missing block rows should be a subset of missing leaf rows and do not need to be
+            // counted separately. This is very important: if we had to count the number of block
+            // rows that were missing whose corresponding leaf row was present, this would require
+            // an expensive join and table traversal.
+            //
+            // We can get the number of missing leaf rows very efficiently, by subtracting the total
+            // number of leaf rows from the block height (since the block height by definition is
+            // the height of the highest leaf we do have). We can also get the number of null
+            // payloads directly using an `IS NULL` filter.
+            //
+            // For VID, common data can only be missing if the entire row is missing. Shares can be
+            // missing in that case _or_ if the row is present but share data is NULL. Thus, we also
+            // need to select the total number of VID rows and the number of present VID rows with a
+            // NULL share.
+            </span><span class="kw">let </span>query = <span class="string">"SELECT l.max_height, l.total_leaves, p.null_payloads, v.total_vid, vn.null_vid, pruned_height FROM
+                    (SELECT max(leaf.height) AS max_height, count(*) AS total_leaves FROM leaf) AS l,
+                    (SELECT count(*) AS null_payloads FROM payload WHERE data IS NULL) AS p,
+                    (SELECT count(*) AS total_vid FROM vid) AS v,
+                    (SELECT count(*) AS null_vid FROM vid WHERE share IS NULL) AS vn,
                     coalesce((SELECT last_height FROM pruned_height ORDER BY id DESC LIMIT 1)) as pruned_height
-                "</span>,
-            )
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+                "</span>;
+            <span class="kw">let </span>row = client
+                .query_opt(query, <span class="kw-2">&amp;</span>[])
+                .<span class="kw">await
+                </span>.map_err(postgres_err)<span class="question-mark">?
+                </span>.context(NotFoundSnafu)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>block_height = <span class="kw">match </span>row.get::&lt;<span class="kw">_</span>, <span class="prelude-ty">Option</span>&lt;i64&gt;&gt;(<span class="string">"max_height"</span>) {
-            <span class="prelude-val">Some</span>(height) =&gt; {
-                <span class="comment">// The height of the block is the number of blocks below it, so the total number of
-                // blocks is one more than the height of the highest block.
-                </span>height <span class="kw">as </span>usize + <span class="number">1
-            </span>}
-            <span class="prelude-val">None </span>=&gt; {
-                <span class="comment">// If there are no blocks yet, the height is 0.
-                </span><span class="number">0
-            </span>}
-        };
-        <span class="kw">let </span>total_leaves = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"total_leaves"</span>) <span class="kw">as </span>usize;
-        <span class="kw">let </span>null_payloads = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"null_payloads"</span>) <span class="kw">as </span>usize;
-        <span class="kw">let </span>total_vid = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"total_vid"</span>) <span class="kw">as </span>usize;
-        <span class="kw">let </span>null_vid = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"null_vid"</span>) <span class="kw">as </span>usize;
-        <span class="kw">let </span>pruned_height = row
-            .get::&lt;<span class="kw">_</span>, <span class="prelude-ty">Option</span>&lt;i64&gt;&gt;(<span class="string">"pruned_height"</span>)
-            .map(|h| h <span class="kw">as </span>usize);
+            <span class="kw">let </span>block_height = <span class="kw">match </span>row.get::&lt;<span class="kw">_</span>, <span class="prelude-ty">Option</span>&lt;i64&gt;&gt;(<span class="string">"max_height"</span>) {
+                <span class="prelude-val">Some</span>(height) =&gt; {
+                    <span class="comment">// The height of the block is the number of blocks below it, so the total number of
+                    // blocks is one more than the height of the highest block.
+                    </span>height <span class="kw">as </span>usize + <span class="number">1
+                </span>}
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="comment">// If there are no blocks yet, the height is 0.
+                    </span><span class="number">0
+                </span>}
+            };
+            <span class="kw">let </span>total_leaves = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"total_leaves"</span>) <span class="kw">as </span>usize;
+            <span class="kw">let </span>null_payloads = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"null_payloads"</span>) <span class="kw">as </span>usize;
+            <span class="kw">let </span>total_vid = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"total_vid"</span>) <span class="kw">as </span>usize;
+            <span class="kw">let </span>null_vid = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"null_vid"</span>) <span class="kw">as </span>usize;
+            <span class="kw">let </span>pruned_height = row
+                .get::&lt;<span class="kw">_</span>, <span class="prelude-ty">Option</span>&lt;i64&gt;&gt;(<span class="string">"pruned_height"</span>)
+                .map(|h| h <span class="kw">as </span>usize);
 
-        <span class="kw">let </span>missing_leaves = block_height.saturating_sub(total_leaves);
-        <span class="kw">let </span>missing_blocks = missing_leaves + null_payloads;
-        <span class="kw">let </span>missing_vid_common = block_height.saturating_sub(total_vid);
-        <span class="kw">let </span>missing_vid_shares = missing_vid_common + null_vid;
+            <span class="kw">let </span>missing_leaves = block_height.saturating_sub(total_leaves);
+            <span class="kw">let </span>missing_blocks = missing_leaves + null_payloads;
+            <span class="kw">let </span>missing_vid_common = block_height.saturating_sub(total_vid);
+            <span class="kw">let </span>missing_vid_shares = missing_vid_common + null_vid;
 
-        <span class="prelude-val">Ok</span>(SyncStatus {
-            missing_leaves,
-            missing_blocks,
-            missing_vid_common,
-            missing_vid_shares,
-            pruned_height,
-        })
+            <span class="prelude-val">Ok</span>(SyncStatus {
+                missing_leaves,
+                missing_blocks,
+                missing_vid_common,
+                missing_vid_shares,
+                pruned_height,
+            })
+        }.boxed()
     }
 
     <span class="kw">async fn </span>get_header_window(

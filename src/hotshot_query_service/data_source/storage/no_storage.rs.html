@@ -591,6 +591,7 @@
 <a href="#589" id="589">589</a>
 <a href="#590" id="590">590</a>
 <a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -619,6 +620,7 @@
     Header, Payload, QueryError, QueryResult, VidShare,
 };
 <span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>futures::future::{<span class="self">self</span>, BoxFuture, FutureExt};
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>std::{convert::Infallible, ops::RangeBounds};
 
@@ -767,8 +769,8 @@
         <span class="prelude-val">Err</span>(QueryError::Missing)
     }
 
-    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
-        <span class="prelude-val">Err</span>(QueryError::Missing)
+    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, QueryResult&lt;SyncStatus&gt;&gt; {
+        future::ready(<span class="prelude-val">Err</span>(QueryError::Missing)).boxed()
     }
 
     <span class="kw">async fn </span>get_header_window(
@@ -1126,7 +1128,7 @@
             }
         }
 
-        <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+        <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, QueryResult&lt;SyncStatus&gt;&gt; {
             <span class="kw">match </span><span class="self">self </span>{
                 <span class="self">Self</span>::Sql(data_source) =&gt; data_source.sync_status().<span class="kw">await</span>,
                 <span class="self">Self</span>::NoStorage(data_source) =&gt; data_source.sync_status().<span class="kw">await</span>,

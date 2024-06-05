@@ -1798,14 +1798,14 @@
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
         <span class="comment">// At first, the node is fully synced.
-        </span><span class="macro">assert!</span>(ds.sync_status().<span class="kw">await</span>.unwrap().is_fully_synced());
+        </span><span class="macro">assert!</span>(ds.sync_status().<span class="kw">await</span>.<span class="kw">await</span>.unwrap().is_fully_synced());
 
         <span class="comment">// Insert a leaf without the corresponding block or VID info, make sure we detect that the
         // block and VID info are missing.
         </span>ds.insert_leaf(leaves[<span class="number">0</span>].clone()).<span class="kw">await</span>.unwrap();
         ds.commit().<span class="kw">await</span>.unwrap();
         <span class="macro">assert_eq!</span>(
-            ds.sync_status().<span class="kw">await</span>.unwrap(),
+            ds.sync_status().<span class="kw">await</span>.<span class="kw">await</span>.unwrap(),
             SyncStatus {
                 missing_blocks: <span class="number">1</span>,
                 missing_vid_common: <span class="number">1</span>,
@@ -1820,7 +1820,7 @@
         </span>ds.insert_leaf(leaves[<span class="number">2</span>].clone()).<span class="kw">await</span>.unwrap();
         ds.commit().<span class="kw">await</span>.unwrap();
         <span class="macro">assert_eq!</span>(
-            ds.sync_status().<span class="kw">await</span>.unwrap(),
+            ds.sync_status().<span class="kw">await</span>.<span class="kw">await</span>.unwrap(),
             SyncStatus {
                 missing_blocks: <span class="number">3</span>,
                 missing_vid_common: <span class="number">3</span>,
@@ -1834,7 +1834,7 @@
         </span>ds.insert_vid(vid[<span class="number">0</span>].<span class="number">0</span>.clone(), <span class="prelude-val">None</span>).<span class="kw">await</span>.unwrap();
         ds.commit().<span class="kw">await</span>.unwrap();
         <span class="macro">assert_eq!</span>(
-            ds.sync_status().<span class="kw">await</span>.unwrap(),
+            ds.sync_status().<span class="kw">await</span>.<span class="kw">await</span>.unwrap(),
             SyncStatus {
                 missing_blocks: <span class="number">3</span>,
                 missing_vid_common: <span class="number">2</span>,
@@ -1879,12 +1879,12 @@
             missing_vid_shares: expected_missing,
             pruned_height: <span class="prelude-val">None</span>,
         };
-        <span class="macro">assert_eq!</span>(ds.sync_status().<span class="kw">await</span>.unwrap(), expected_sync_status);
+        <span class="macro">assert_eq!</span>(ds.sync_status().<span class="kw">await</span>.<span class="kw">await</span>.unwrap(), expected_sync_status);
 
         <span class="comment">// If we re-insert one of the VID entries without a share, it should not overwrite the share
         // that we already have; that is, `insert_vid` should be monotonic.
         </span>ds.insert_vid(vid[<span class="number">0</span>].<span class="number">0</span>.clone(), <span class="prelude-val">None</span>).<span class="kw">await</span>.unwrap();
-        <span class="macro">assert_eq!</span>(ds.sync_status().<span class="kw">await</span>.unwrap(), expected_sync_status);
+        <span class="macro">assert_eq!</span>(ds.sync_status().<span class="kw">await</span>.<span class="kw">await</span>.unwrap(), expected_sync_status);
     }
 
     <span class="attr">#[async_std::test]

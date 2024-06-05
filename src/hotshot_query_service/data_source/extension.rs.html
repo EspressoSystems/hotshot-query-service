@@ -455,6 +455,7 @@
 <a href="#453" id="453">453</a>
 <a href="#454" id="454">454</a>
 <a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -485,6 +486,7 @@
     Header, Payload, QueryResult, Transaction, VidShare,
 };
 <span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>futures::future::BoxFuture;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>jf_merkle_tree::prelude::MerkleProof;
 <span class="kw">use </span>std::ops::RangeBounds;
@@ -712,7 +714,7 @@
     {
         <span class="self">self</span>.data_source.vid_share(id).<span class="kw">await
     </span>}
-    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, QueryResult&lt;SyncStatus&gt;&gt; {
         <span class="self">self</span>.data_source.sync_status().<span class="kw">await
     </span>}
     <span class="kw">async fn </span>get_header_window(

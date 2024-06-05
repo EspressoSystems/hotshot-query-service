@@ -815,6 +815,7 @@
 <a href="#813" id="813">813</a>
 <a href="#814" id="814">814</a>
 <a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1081,6 +1082,7 @@
 //!
 //! ```
 //! # use async_trait::async_trait;
+//! # use futures::future::BoxFuture;
 //! # use hotshot_query_service::{Header, QueryResult, VidShare};
 //! # use hotshot_query_service::availability::{
 //! #   AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
@@ -1173,7 +1175,7 @@
 //!         self.hotshot_qs.vid_share(id).await
 //!     }
 //!
-//!     async fn sync_status(&amp;self) -&gt; QueryResult&lt;SyncStatus&gt; {
+//!     async fn sync_status(&amp;self) -&gt; BoxFuture&lt;'static, QueryResult&lt;SyncStatus&gt;&gt; {
 //!         self.hotshot_qs.sync_status().await
 //!     }
 //!
@@ -1378,7 +1380,7 @@
     <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>async_trait::async_trait;
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
-    <span class="kw">use </span>futures::FutureExt;
+    <span class="kw">use </span>futures::future::{BoxFuture, FutureExt};
     <span class="kw">use </span>hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
     <span class="kw">use </span>hotshot_types::constants::{Version01, STATIC_VER_0_1};
     <span class="kw">use </span>portpicker::pick_unused_port;
@@ -1496,7 +1498,7 @@
         {
             <span class="self">self</span>.hotshot_qs.vid_share(id).<span class="kw">await
         </span>}
-        <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+        <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, QueryResult&lt;SyncStatus&gt;&gt; {
             <span class="self">self</span>.hotshot_qs.sync_status().<span class="kw">await
         </span>}
         <span class="kw">async fn </span>get_header_window(
