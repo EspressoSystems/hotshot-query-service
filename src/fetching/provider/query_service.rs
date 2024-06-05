@@ -181,13 +181,14 @@ mod test {
         stream::StreamExt,
     };
     use generic_array::GenericArray;
-    use hotshot_types::constants::{Version01, STATIC_VER_0_1};
+    use hotshot_types::constants::Base;
     use portpicker::pick_unused_port;
     use rand::RngCore;
     use std::{future::IntoFuture, time::Duration};
     use tide_disco::{error::ServerError, App};
+    use vbs::version::StaticVersion;
 
-    type Provider = TestProvider<QueryServiceProvider<Version01>>;
+    type Provider = TestProvider<QueryServiceProvider<StaticVersion<0, 1>>>;
 
     fn ignore<T>(_: T) {}
 
@@ -225,19 +226,22 @@ mod test {
         let mut app = App::<_, Error>::with_state(network.data_source());
         app.register_module(
             "availability",
-            define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
+            define_api(&Default::default(), vbs::version::StaticVersion::<0, 1> {}).unwrap(),
         )
         .unwrap();
         network.spawn(
             "server",
-            app.serve(format!("0.0.0.0:{port}"), STATIC_VER_0_1),
+            app.serve(
+                format!("0.0.0.0:{port}"),
+                vbs::version::StaticVersion::<0, 1> {},
+            ),
         );
 
         // Start a data source which is not receiving events from consensus, only from a peer.
         let db = TmpDb::init().await;
         let provider = Provider::new(QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
-            STATIC_VER_0_1,
+            vbs::version::StaticVersion::<0, 1> {},
         ));
         let mut data_source = data_source(&db, &provider).await;
 
@@ -452,19 +456,22 @@ mod test {
         let mut app = App::<_, Error>::with_state(network.data_source());
         app.register_module(
             "availability",
-            define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
+            define_api(&Default::default(), vbs::version::StaticVersion::<0, 1> {}).unwrap(),
         )
         .unwrap();
         network.spawn(
             "server",
-            app.serve(format!("0.0.0.0:{port}"), STATIC_VER_0_1),
+            app.serve(
+                format!("0.0.0.0:{port}"),
+                vbs::version::StaticVersion::<0, 1> {},
+            ),
         );
 
         // Start a data source which is not receiving events from consensus, only from a peer.
         let db = TmpDb::init().await;
         let provider = Provider::new(QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
-            STATIC_VER_0_1,
+            vbs::version::StaticVersion::<0, 1> {},
         ));
         let mut data_source = data_source(&db, &provider).await;
 
@@ -511,19 +518,22 @@ mod test {
         let mut app = App::<_, Error>::with_state(network.data_source());
         app.register_module(
             "availability",
-            define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
+            define_api(&Default::default(), vbs::version::StaticVersion::<0, 1> {}).unwrap(),
         )
         .unwrap();
         network.spawn(
             "server",
-            app.serve(format!("0.0.0.0:{port}"), STATIC_VER_0_1),
+            app.serve(
+                format!("0.0.0.0:{port}"),
+                vbs::version::StaticVersion::<0, 1> {},
+            ),
         );
 
         // Start a data source which is not receiving events from consensus, only from a peer.
         let db = TmpDb::init().await;
         let provider = Provider::new(QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
-            STATIC_VER_0_1,
+            vbs::version::StaticVersion::<0, 1> {},
         ));
         let mut data_source = data_source(&db, &provider).await;
 
@@ -574,19 +584,22 @@ mod test {
         let mut app = App::<_, Error>::with_state(network.data_source());
         app.register_module(
             "availability",
-            define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
+            define_api(&Default::default(), vbs::version::StaticVersion::<0, 1> {}).unwrap(),
         )
         .unwrap();
         network.spawn(
             "server",
-            app.serve(format!("0.0.0.0:{port}"), STATIC_VER_0_1),
+            app.serve(
+                format!("0.0.0.0:{port}"),
+                vbs::version::StaticVersion::<0, 1> {},
+            ),
         );
 
         // Start a data source which is not receiving events from consensus, only from a peer.
         let db = TmpDb::init().await;
         let provider = Provider::new(QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
-            STATIC_VER_0_1,
+            vbs::version::StaticVersion::<0, 1> {},
         ));
         let mut data_source = data_source(&db, &provider).await;
 
@@ -634,19 +647,22 @@ mod test {
         let mut app = App::<_, Error>::with_state(network.data_source());
         app.register_module(
             "availability",
-            define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
+            define_api(&Default::default(), vbs::version::StaticVersion::<0, 1> {}).unwrap(),
         )
         .unwrap();
         network.spawn(
             "server",
-            app.serve(format!("0.0.0.0:{port}"), STATIC_VER_0_1),
+            app.serve(
+                format!("0.0.0.0:{port}"),
+                vbs::version::StaticVersion::<0, 1> {},
+            ),
         );
 
         // Start a data source which is not receiving events from consensus, only from a peer.
         let db = TmpDb::init().await;
         let provider = Provider::new(QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
-            STATIC_VER_0_1,
+            vbs::version::StaticVersion::<0, 1> {},
         ));
         let mut data_source = data_source(&db, &provider).await;
 
@@ -695,12 +711,15 @@ mod test {
         let mut app = App::<_, Error>::with_state(network.data_source());
         app.register_module(
             "availability",
-            define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
+            define_api(&Default::default(), vbs::version::StaticVersion::<0, 1> {}).unwrap(),
         )
         .unwrap();
         network.spawn(
             "server",
-            app.serve(format!("0.0.0.0:{port}"), STATIC_VER_0_1),
+            app.serve(
+                format!("0.0.0.0:{port}"),
+                vbs::version::StaticVersion::<0, 1> {},
+            ),
         );
 
         // Start a data source which is not receiving events from consensus. We don't give it a
@@ -765,19 +784,22 @@ mod test {
         let mut app = App::<_, Error>::with_state(network.data_source());
         app.register_module(
             "availability",
-            define_api(&Default::default(), STATIC_VER_0_1).unwrap(),
+            define_api(&Default::default(), vbs::version::StaticVersion::<0, 1> {}).unwrap(),
         )
         .unwrap();
         network.spawn(
             "server",
-            app.serve(format!("0.0.0.0:{port}"), STATIC_VER_0_1),
+            app.serve(
+                format!("0.0.0.0:{port}"),
+                vbs::version::StaticVersion::<0, 1> {},
+            ),
         );
 
         // Start a data source which is not receiving events from consensus.
         let db = TmpDb::init().await;
         let provider = Provider::new(QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
-            STATIC_VER_0_1,
+            vbs::version::StaticVersion::<0, 1> {},
         ));
         let mut data_source = builder(&db, &provider)
             .await
@@ -832,7 +854,7 @@ mod test {
     }
 
     async fn malicious_server(port: u16) {
-        let mut api = load_api::<(), ServerError, Version01>(
+        let mut api = load_api::<(), ServerError, Base>(
             None::<std::path::PathBuf>,
             include_str!("../../../api/availability.toml"),
             vec![],
@@ -868,9 +890,12 @@ mod test {
 
         let mut app = App::<(), ServerError>::with_state(());
         app.register_module("availability", api).unwrap();
-        app.serve(format!("0.0.0.0:{port}"), STATIC_VER_0_1)
-            .await
-            .ok();
+        app.serve(
+            format!("0.0.0.0:{port}"),
+            vbs::version::StaticVersion::<0, 1> {},
+        )
+        .await
+        .ok();
     }
 
     #[async_std::test]
@@ -882,7 +907,7 @@ mod test {
 
         let provider = QueryServiceProvider::new(
             format!("http://localhost:{port}").parse().unwrap(),
-            STATIC_VER_0_1,
+            vbs::version::StaticVersion::<0, 1> {},
         );
         provider.client.connect(None).await;
 

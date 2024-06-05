@@ -142,6 +142,10 @@ impl<D: DataSourceLifeCycle + UpdateStatusData> MockNetwork<D> {
                             known_nodes_with_stake.len() as u64,
                         ),
                         builder_timeout: Duration::from_secs(1),
+                        start_proposing_view: 0,
+                        stop_proposing_view: 0,
+                        start_voting_view: 0,
+                        stop_voting_view: 0,
                     };
 
                     let pub_keys = pub_keys.clone();

@@ -475,10 +475,7 @@ mod test {
     use committable::Committable;
     use futures::future::FutureExt;
     use hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
-    use hotshot_types::{
-        constants::{Version01, STATIC_VER_0_1},
-        data::Leaf,
-    };
+    use hotshot_types::{constants::Base, data::Leaf};
     use portpicker::pick_unused_port;
     use std::time::Duration;
     use surf_disco::Client;
@@ -488,7 +485,7 @@ mod test {
 
     /// Get the current ledger height and a list of non-empty leaf/block pairs.
     async fn get_non_empty_blocks(
-        client: &Client<Error, Version01>,
+        client: &Client<Error, Base>,
     ) -> (
         u64,
         Vec<(LeafQueryData<MockTypes>, BlockQueryData<MockTypes>)>,
@@ -521,7 +518,7 @@ mod test {
         unreachable!()
     }
 
-    async fn validate(client: &Client<Error, Version01>, height: u64) {
+    async fn validate(client: &Client<Error, Base>, height: u64) {
         // Check the consistency of every block/leaf pair.
         for i in 0..height {
             // Limit the number of blocks we validate in order to
@@ -775,18 +772,21 @@ mod test {
                     fetch_timeout,
                     ..Default::default()
                 },
-                STATIC_VER_0_1,
+                vbs::version::StaticVersion::<0, 1> {},
             )
             .unwrap(),
         )
         .unwrap();
         network.spawn(
             "server",
-            app.serve(format!("0.0.0.0:{}", port), STATIC_VER_0_1),
+            app.serve(
+                format!("0.0.0.0:{}", port),
+                vbs::version::StaticVersion::<0, 1> {},
+            ),
         );
 
         // Start a client.
-        let client = Client::<Error, Version01>::new(
+        let client = Client::<Error, Base>::new(
             format!("http://localhost:{}/availability", port)
                 .parse()
                 .unwrap(),
@@ -899,12 +899,12 @@ mod test {
         };
 
         let mut api =
-            define_api::<RwLock<ExtensibleDataSource<MockDataSource, u64>>, MockTypes, Version01>(
+            define_api::<RwLock<ExtensibleDataSource<MockDataSource, u64>>, MockTypes, Base>(
                 &Options {
                     extensions: vec![extensions.into()],
                     ..Default::default()
                 },
-                STATIC_VER_0_1,
+                vbs::version::StaticVersion::<0, 1> {},
             )
             .unwrap();
         api.get("get_ext", |_, state| {
@@ -926,10 +926,13 @@ mod test {
         let port = pick_unused_port().unwrap();
         let _server = BackgroundTask::spawn(
             "server",
-            app.serve(format!("0.0.0.0:{}", port), STATIC_VER_0_1),
+            app.serve(
+                format!("0.0.0.0:{}", port),
+                vbs::version::StaticVersion::<0, 1> {},
+            ),
         );
 
-        let client = Client::<Error, Version01>::new(
+        let client = Client::<Error, Base>::new(
             format!("http://localhost:{}/availability", port)
                 .parse()
                 .unwrap(),

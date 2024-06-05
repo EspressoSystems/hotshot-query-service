@@ -114,8 +114,6 @@ async fn main() -> Result<(), Error> {
     let nodes = init_consensus(&data_sources).await;
 
     // Use version 0.1, for no particular reason
-    let bind_version: hotshot_types::constants::Version01 =
-        hotshot_types::constants::STATIC_VER_0_1;
 
     // Start the servers.
     try_join_all(
@@ -128,7 +126,13 @@ async fn main() -> Result<(), Error> {
                     port,
                     ..Default::default()
                 };
-                run_standalone_service(opt, data_source, node, bind_version).await
+                run_standalone_service(
+                    opt,
+                    data_source,
+                    node,
+                    vbs::version::StaticVersion::<0, 1> {},
+                )
+                .await
             }),
     )
     .await?;
@@ -201,6 +205,10 @@ async fn init_consensus(
             known_nodes_with_stake.len() as u64,
         ),
         builder_timeout: Duration::from_secs(1),
+        start_proposing_view: 0,
+        stop_proposing_view: 0,
+        start_voting_view: 0,
+        stop_voting_view: 0,
     };
 
     let nodes = join_all(priv_keys.into_iter().zip(data_sources).enumerate().map(
