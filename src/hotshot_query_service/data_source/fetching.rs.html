@@ -1484,6 +1484,10 @@
 <a href="#1482" id="1482">1482</a>
 <a href="#1483" id="1483">1483</a>
 <a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a>
+<a href="#1488" id="1488">1488</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1844,32 +1848,36 @@
             };
         };
 
-        <span class="kw">let </span>task = {
-            BackgroundTask::spawn(<span class="string">"pruner"</span>, <span class="kw">async move </span>{
-                <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>.. {
-                    <span class="macro">tracing::warn!</span>(<span class="string">"starting pruner run {i} "</span>);
-                    {
-                        <span class="kw">let </span><span class="kw-2">mut </span>storage = fetcher.storage.write().<span class="kw">await</span>;
+        <span class="kw">let </span>future = <span class="kw">async move </span>{
+            <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>.. {
+                <span class="macro">tracing::warn!</span>(<span class="string">"starting pruner run {i} "</span>);
+                <span class="comment">// We loop until the whole run pruner run is complete
+                // This allows write lock to be released after each batch delete
+                </span><span class="kw">loop </span>{
+                    <span class="kw">let </span><span class="kw-2">mut </span>storage = fetcher.storage.write().<span class="kw">await</span>;
 
-                        <span class="kw">match </span>storage.storage.prune().<span class="kw">await </span>{
-                            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(height)) =&gt; {
-                                storage.pruned_height = <span class="prelude-val">Some</span>(height);
-                                <span class="macro">tracing::warn!</span>(
-                                    <span class="string">"pruner run {i} succeeded. Pruned to height {height}"
-                                </span>);
-                            }
-                            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; (),
-                            <span class="prelude-val">Err</span>(e) =&gt; {
-                                <span class="macro">tracing::error!</span>(<span class="string">"pruner run {i} failed: {e:?}"</span>);
-                                storage.revert().<span class="kw">await</span>;
-                            }
+                    <span class="kw">match </span>storage.storage.prune().<span class="kw">await </span>{
+                        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(height)) =&gt; {
+                            storage.pruned_height = <span class="prelude-val">Some</span>(height);
+                            <span class="macro">tracing::warn!</span>(<span class="string">"Pruned to height {height}"</span>);
+                        }
+                        <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; {
+                            <span class="macro">tracing::warn!</span>(<span class="string">"pruner run {i} complete."</span>);
+                            <span class="kw">break</span>;
+                        }
+                        <span class="prelude-val">Err</span>(e) =&gt; {
+                            <span class="macro">tracing::error!</span>(<span class="string">"pruner run {i} failed: {e:?}"</span>);
+                            storage.revert().<span class="kw">await</span>;
+                            <span class="kw">break</span>;
                         }
                     }
-
-                    sleep(cfg.interval()).<span class="kw">await</span>;
                 }
-            })
+
+                sleep(cfg.interval()).<span class="kw">await</span>;
+            }
         };
+
+        <span class="kw">let </span>task = BackgroundTask::spawn(<span class="string">"pruner"</span>, future);
 
         <span class="self">Self </span>{
             handle: <span class="prelude-val">Some</span>(task),
