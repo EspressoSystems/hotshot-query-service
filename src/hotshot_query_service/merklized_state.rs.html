@@ -180,7 +180,7 @@
 <span class="kw">impl </span>Error {
     <span class="kw">pub fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Request { .. } =&gt; StatusCode::BadRequest,
+            <span class="self">Self</span>::Request { .. } =&gt; StatusCode::BAD_REQUEST,
             <span class="self">Self</span>::Query { source, .. } =&gt; source.status(),
             <span class="self">Self</span>::Custom { status, .. } =&gt; <span class="kw-2">*</span>status,
         }
@@ -221,7 +221,7 @@
                 <span class="kw">let </span>key = req.string_param(<span class="string">"key"</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>key = key.parse::&lt;M::Key&gt;().map_err(|<span class="kw">_</span>| Error::Custom {
                     message: <span class="string">"failed to parse Key param"</span>.to_string(),
-                    status: StatusCode::InternalServerError,
+                    status: StatusCode::INTERNAL_SERVER_ERROR,
                 })<span class="question-mark">?</span>;
 
                 state.get_path(snapshot, key).<span class="kw">await</span>.context(QuerySnafu)

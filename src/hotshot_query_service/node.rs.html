@@ -509,13 +509,13 @@
     <span class="kw">pub fn </span>internal&lt;M: Display&gt;(message: M) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Custom {
             message: message.to_string(),
-            status: StatusCode::InternalServerError,
+            status: StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
     <span class="kw">pub fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Request { .. } =&gt; StatusCode::BadRequest,
+            <span class="self">Self</span>::Request { .. } =&gt; StatusCode::BAD_REQUEST,
             <span class="self">Self</span>::Query { source, .. }
             | <span class="self">Self</span>::QueryVid { source, .. }
             | <span class="self">Self</span>::QueryWindow { source, .. } =&gt; source.status(),

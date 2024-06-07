@@ -1025,7 +1025,7 @@
 //!             .await
 //!             .ok_or_else(|| availability::Error::Custom {
 //!                 message: format!("no such UTXO {}", utxo_index),
-//!                 status: StatusCode::NotFound,
+//!                 status: StatusCode::NOT_FOUND,
 //!             })?;
 //!         let block = state
 //!             .get_block(block_index)
@@ -1286,8 +1286,8 @@
 <span class="kw">impl </span>QueryError {
     <span class="kw">pub fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::NotFound | <span class="self">Self</span>::Missing =&gt; StatusCode::NotFound,
-            <span class="self">Self</span>::Error { .. } =&gt; StatusCode::InternalServerError,
+            <span class="self">Self</span>::NotFound | <span class="self">Self</span>::Missing =&gt; StatusCode::NOT_FOUND,
+            <span class="self">Self</span>::Error { .. } =&gt; StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

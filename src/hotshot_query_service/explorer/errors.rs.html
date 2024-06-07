@@ -518,7 +518,7 @@
 
 <span class="kw">impl </span>Unimplemented {
     <span class="kw">pub fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
-        StatusCode::NotImplemented
+        StatusCode::NOT_IMPLEMENTED
     }
 }
 
@@ -557,7 +557,7 @@
 
 <span class="kw">impl </span>InvalidLimit {
     <span class="kw">pub fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
-        StatusCode::BadRequest
+        StatusCode::BAD_REQUEST
     }
 }
 
@@ -600,7 +600,7 @@
 
 <span class="kw">impl </span>NotFound {
     <span class="kw">pub fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
-        StatusCode::NotFound
+        StatusCode::NOT_FOUND
     }
 
     <span class="kw">pub fn </span>key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
@@ -702,7 +702,7 @@
 
 <span class="kw">impl </span>BadQuery {
     <span class="kw">pub fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
-        StatusCode::BadRequest
+        StatusCode::BAD_REQUEST
     }
 }
 
