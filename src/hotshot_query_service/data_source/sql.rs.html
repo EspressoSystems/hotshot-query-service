@@ -466,7 +466,6 @@
 <a href="#464" id="464">464</a>
 <a href="#465" id="465">465</a>
 <a href="#466" id="466">466</a>
-<a href="#467" id="467">467</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -483,7 +482,7 @@
 
 </span><span class="kw">use super</span>::{
     fetching,
-    storage::sql::{<span class="self">self</span>, SqlStorage},
+    storage::sql::{<span class="self">self</span>, Client, SqlStorage},
     AvailabilityProvider, FetchingDataSource,
 };
 <span class="kw">pub use </span><span class="kw">crate</span>::include_migrations;
@@ -498,7 +497,6 @@
 <span class="kw">pub use </span>refinery::Migration;
 <span class="kw">use </span>std::borrow::Cow;
 <span class="kw">pub use </span>tokio_postgres <span class="kw">as </span>postgres;
-<span class="kw">use </span>tokio_postgres::Client;
 
 <span class="kw">pub use </span>sql::{Config, Query, Transaction};
 
@@ -902,7 +900,7 @@
     <span class="comment">// This function should be generic, but the file system data source does not currently support
     // storing VID common and later the corresponding share.
     </span><span class="attr">#[async_std::test]
-    </span><span class="kw">pub async fn </span>test_vid_monotonicity() {
+    </span><span class="kw">async fn </span>test_vid_monotonicity() {
         setup_test();
 
         <span class="kw">let </span>storage = D::create(<span class="number">0</span>).<span class="kw">await</span>;
