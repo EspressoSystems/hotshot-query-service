@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><title>lib.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../hotshot_query_service/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../hotshot_query_service/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -816,6 +814,8 @@
 <a href="#814" id="814">814</a>
 <a href="#815" id="815">815</a>
 <a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -856,7 +856,8 @@
 //!
 //! use async_std::{sync::{Arc, RwLock}, task::spawn};
 //! use futures::StreamExt;
-//! use hotshot_types::constants::{Version01, STATIC_VER_0_1};
+//! use vbs::version::StaticVersionType;
+//! use hotshot_types::constants::Base;
 //! use hotshot::SystemContext;
 //! use tide_disco::App;
 //!
@@ -873,11 +874,11 @@
 //! ).await.map_err(Error::internal)?.0;
 //!
 //! // Create API modules.
-//! let availability_api = availability::define_api(&amp;Default::default(), STATIC_VER_0_1)
+//! let availability_api = availability::define_api(&amp;Default::default(),  Base::instance())
 //!     .map_err(Error::internal)?;
-//! let node_api = node::define_api(&amp;Default::default(), STATIC_VER_0_1)
+//! let node_api = node::define_api(&amp;Default::default(),  Base::instance())
 //!     .map_err(Error::internal)?;
-//! let status_api = status::define_api(&amp;Default::default(), STATIC_VER_0_1)
+//! let status_api = status::define_api(&amp;Default::default(),  Base::instance())
 //!     .map_err(Error::internal)?;
 //!
 //! // Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
@@ -892,7 +893,7 @@
 //!     .map_err(Error::internal)?;
 //!
 //! // Serve app.
-//! spawn(app.serve("0.0.0.0:8080", STATIC_VER_0_1));
+//! spawn(app.serve("0.0.0.0:8080",  Base::instance()));
 //!
 //! // Update query data using HotShot events.
 //! let mut events = hotshot.event_stream();
@@ -914,7 +915,8 @@
 //! ```
 //! # use async_std::task::spawn;
 //! # use hotshot::types::SystemContextHandle;
-//! # use hotshot_types::constants::STATIC_VER_0_1;
+//! # use vbs::version::StaticVersionType;
+//! # use hotshot_types::constants::Base;
 //! # use hotshot_query_service::{data_source::FileSystemDataSource, Error, Options};
 //! # use hotshot_query_service::fetching::provider::NoFetching;
 //! # use hotshot_query_service::testing::mocks::{MockNodeImpl, MockTypes};
@@ -923,7 +925,7 @@
 //! use hotshot_query_service::run_standalone_service;
 //!
 //! let data_source = FileSystemDataSource::create(storage_path, NoFetching).await.map_err(Error::internal)?;
-//! spawn(run_standalone_service(options, data_source, hotshot, STATIC_VER_0_1));
+//! spawn(run_standalone_service(options, data_source, hotshot,  Base::instance()));
 //! # Ok(())
 //! # }
 //! ```
@@ -995,7 +997,7 @@
 //! # use async_std::sync::RwLock;
 //! # use async_trait::async_trait;
 //! # use futures::FutureExt;
-//! # use hotshot_types::constants::STATIC_VER_0_1;
+//! # use hotshot_types::constants::Base;
 //! # use hotshot_query_service::availability::{
 //! #   self, AvailabilityDataSource, FetchBlockSnafu, TransactionIndex,
 //! # };
@@ -1382,7 +1384,7 @@
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
     <span class="kw">use </span>futures::future::{BoxFuture, FutureExt};
     <span class="kw">use </span>hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
-    <span class="kw">use </span>hotshot_types::constants::{Version01, STATIC_VER_0_1};
+    <span class="kw">use </span>hotshot_types::constants::Base;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::ops::RangeBounds;
     <span class="kw">use </span>std::time::Duration;
@@ -1557,20 +1559,20 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(RwLock::new(state));
         app.register_module(
             <span class="string">"availability"</span>,
-            availability::define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
+            availability::define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
         )
         .unwrap()
         .register_module(
             <span class="string">"node"</span>,
-            node::define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
+            node::define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
         )
         .unwrap()
         .register_module(
             <span class="string">"status"</span>,
-            status::define_api(<span class="kw-2">&amp;</span>Default::default(), STATIC_VER_0_1).unwrap(),
+            status::define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
         )
         .unwrap()
-        .module::&lt;Error, Version01&gt;(<span class="string">"mod"</span>, module_spec)
+        .module::&lt;Error, Base&gt;(<span class="string">"mod"</span>, module_spec)
         .unwrap()
         .get(<span class="string">"get_ext"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async move </span>{ state.module_state.load_latest().map_err(Error::internal) }.boxed()
@@ -1600,11 +1602,11 @@
         <span class="kw">let </span>port = pick_unused_port().unwrap();
         <span class="kw">let </span>_server = BackgroundTask::spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), STATIC_VER_0_1),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), Base::instance()),
         );
 
         <span class="kw">let </span>client =
-            Client::&lt;Error, Version01&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}"</span>, port).parse().unwrap());
+            Client::&lt;Error, Base&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}"</span>, port).parse().unwrap());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
         client.post::&lt;()&gt;(<span class="string">"mod/ext/42"</span>).send().<span class="kw">await</span>.unwrap();
