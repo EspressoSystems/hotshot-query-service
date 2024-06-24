@@ -142,6 +142,6 @@ generic-array = "0.14"
 hotshot-example-types = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "rc-0.5.59" }
 portpicker = "0.1"
 rand = "0.8"
-reqwest = "0.12.3"
+reqwest = "0.12.5"
 spin_sleep = "1.2"
 tempfile = "3.10"
