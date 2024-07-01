@@ -382,13 +382,13 @@
         task::BackgroundTask,
         testing::{
             consensus::{MockDataSource, MockNetwork},
+            mocks::MockBase,
             setup_test, sleep,
         },
         Error,
     };
     <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>futures::FutureExt;
-    <span class="kw">use </span>hotshot_types::constants::Base;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>reqwest::redirect::Policy;
     <span class="kw">use </span>std::str::FromStr;
@@ -410,17 +410,17 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"status"</span>,
-            define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap();
         network.spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), MockBase::instance()),
         );
 
         <span class="comment">// Start a client.
         </span><span class="kw">let </span>url = Url::from_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"http://localhost:{}/status"</span>, port)).unwrap();
-        <span class="kw">let </span>client = Client::&lt;Error, Base&gt;::new(url.clone());
+        <span class="kw">let </span>client = Client::&lt;Error, MockBase&gt;::new(url.clone());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
         <span class="comment">// The block height is initially zero.
@@ -493,12 +493,12 @@
             METHOD = <span class="string">"GET"
         </span>};
 
-        <span class="kw">let </span><span class="kw-2">mut </span>api = define_api::&lt;RwLock&lt;ExtensibleDataSource&lt;MockDataSource, u64&gt;&gt;, Base&gt;(
+        <span class="kw">let </span><span class="kw-2">mut </span>api = define_api::&lt;RwLock&lt;ExtensibleDataSource&lt;MockDataSource, u64&gt;&gt;, MockBase&gt;(
             <span class="kw-2">&amp;</span>Options {
                 extensions: <span class="macro">vec!</span>[extensions.into()],
                 ..Default::default()
             },
-            Base::instance(),
+            MockBase::instance(),
         )
         .unwrap();
         api.get(<span class="string">"get_ext"</span>, |<span class="kw">_</span>, state| {
@@ -520,10 +520,10 @@
         <span class="kw">let </span>port = pick_unused_port().unwrap();
         <span class="kw">let </span>_server = BackgroundTask::spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), MockBase::instance()),
         );
 
-        <span class="kw">let </span>client = Client::&lt;Error, Base&gt;::new(
+        <span class="kw">let </span>client = Client::&lt;Error, MockBase&gt;::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{}/status"</span>, port).parse().unwrap(),
         );
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);

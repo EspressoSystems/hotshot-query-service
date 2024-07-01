@@ -940,7 +940,6 @@
 <a href="#940" id="940">940</a>
 <a href="#941" id="941">941</a>
 <a href="#942" id="942">942</a>
-<a href="#943" id="943">943</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1341,19 +1340,18 @@
         availability,
         testing::{
             consensus::{MockNetwork, MockSqlDataSource},
-            mocks::{mock_transaction, MockTypes},
+            mocks::{mock_transaction, MockBase, MockTypes},
             setup_test,
         },
         Error,
     };
     <span class="kw">use </span>futures::StreamExt;
-    <span class="kw">use </span>hotshot_types::constants::Base;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::{cmp::min, time::Duration};
     <span class="kw">use </span>surf_disco::Client;
     <span class="kw">use </span>tide_disco::App;
 
-    <span class="kw">async fn </span>validate(client: <span class="kw-2">&amp;</span>Client&lt;Error, Base&gt;) {
+    <span class="kw">async fn </span>validate(client: <span class="kw-2">&amp;</span>Client&lt;Error, MockBase&gt;) {
         <span class="kw">let </span>explorer_summary_response: ExplorerSummaryResponse&lt;MockTypes&gt; =
             client.get(<span class="string">"explorer-summary"</span>).send().<span class="kw">await</span>.unwrap();
 
@@ -1812,7 +1810,7 @@
         <span class="comment">// Start the web server.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
-        app.register_module(<span class="string">"explorer"</span>, define_api(Base::instance()).unwrap())
+        app.register_module(<span class="string">"explorer"</span>, define_api(MockBase::instance()).unwrap())
             .unwrap();
         app.register_module(
             <span class="string">"availability"</span>,
@@ -1821,7 +1819,7 @@
                     fetch_timeout: Duration::from_secs(<span class="number">5</span>),
                     ..Default::default()
                 },
-                Base::instance(),
+                MockBase::instance(),
             )
             .unwrap(),
         )
@@ -1829,16 +1827,16 @@
 
         network.spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), MockBase::instance()),
         );
 
         <span class="comment">// Start a client.
-        </span><span class="kw">let </span>availability_client = Client::&lt;Error, Base&gt;::new(
+        </span><span class="kw">let </span>availability_client = Client::&lt;Error, MockBase&gt;::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{}/availability"</span>, port)
                 .parse()
                 .unwrap(),
         );
-        <span class="kw">let </span>explorer_client = Client::&lt;Error, Base&gt;::new(
+        <span class="kw">let </span>explorer_client = Client::&lt;Error, MockBase&gt;::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{}/explorer"</span>, port)
                 .parse()
                 .unwrap(),

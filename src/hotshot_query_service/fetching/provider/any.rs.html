@@ -287,6 +287,7 @@
 <a href="#287" id="287">287</a>
 <a href="#288" id="288">288</a>
 <a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -355,17 +356,19 @@
 /// Fetching from multiple query services, for resiliency.
 ///
 /// ```
-/// # use hotshot_types::constants::Base;
 /// # use vbs::version::StaticVersionType;
 /// # use hotshot_types::traits::node_implementation::NodeType;
 /// # async fn doc&lt;Types&gt;() -&gt; anyhow::Result&lt;()&gt;
 /// # where
 /// #   Types: NodeType,
 /// # {
-/// use hotshot_query_service::fetching::provider::{AnyProvider, QueryServiceProvider};
+/// use hotshot_query_service::{
+///     fetching::provider::{AnyProvider, QueryServiceProvider},
+///     testing::mocks::MockBase,
+/// };
 ///
-/// let qs1 = QueryServiceProvider::new("https://backup.query-service.1".parse()?, Base::instance());
-/// let qs2 = QueryServiceProvider::new("https://backup.query-service.2".parse()?, Base::instance());
+/// let qs1 = QueryServiceProvider::new("https://backup.query-service.1".parse()?, MockBase::instance());
+/// let qs2 = QueryServiceProvider::new("https://backup.query-service.2".parse()?, MockBase::instance());
 /// let provider = AnyProvider::&lt;Types&gt;::default()
 ///     .with_provider(qs1)
 ///     .with_provider(qs2);
@@ -496,14 +499,13 @@
         task::BackgroundTask,
         testing::{
             consensus::{MockDataSource, MockNetwork},
-            mocks::MockTypes,
+            mocks::{MockBase, MockTypes},
             setup_test,
         },
         types::HeightIndexed,
         Error,
     };
     <span class="kw">use </span>futures::stream::StreamExt;
-    <span class="kw">use </span>hotshot_types::constants::Base;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>tide_disco::App;
     <span class="kw">use </span>vbs::version::StaticVersionType;
@@ -522,12 +524,12 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
-            define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap();
         <span class="kw">let </span>_server = BackgroundTask::spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), MockBase::instance()),
         );
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
@@ -537,7 +539,7 @@
                 .with_provider(NoFetching)
                 .with_provider(QueryServiceProvider::new(
                     <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
-                    Base::instance(),
+                    MockBase::instance(),
                 ));
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = db.config().connect(provider.clone()).<span class="kw">await</span>.unwrap();
 

@@ -1057,7 +1057,6 @@
 <a href="#1057" id="1057">1057</a>
 <a href="#1058" id="1058">1058</a>
 <a href="#1059" id="1059">1059</a>
-<a href="#1060" id="1060">1060</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1233,7 +1232,7 @@
         task::BackgroundTask,
         testing::{
             consensus::{MockDataSource, MockNetwork},
-            mocks::{mock_transaction, MockTypes},
+            mocks::{mock_transaction, MockBase, MockTypes},
             setup_test, sleep,
         },
         types::HeightIndexed,
@@ -1245,13 +1244,12 @@
         stream::StreamExt,
     };
     <span class="kw">use </span>generic_array::GenericArray;
-    <span class="kw">use </span>hotshot_types::constants::Base;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>rand::RngCore;
     <span class="kw">use </span>std::{future::IntoFuture, time::Duration};
     <span class="kw">use </span>tide_disco::{error::ServerError, App};
 
-    <span class="kw">type </span>Provider = TestProvider&lt;QueryServiceProvider&lt;Base&gt;&gt;;
+    <span class="kw">type </span>Provider = TestProvider&lt;QueryServiceProvider&lt;MockBase&gt;&gt;;
 
     <span class="kw">fn </span>ignore&lt;T&gt;(<span class="kw">_</span>: T) {}
 
@@ -1289,19 +1287,19 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
-            define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap();
         network.spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), MockBase::instance()),
         );
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
         <span class="kw">let </span>provider = Provider::new(QueryServiceProvider::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
-            Base::instance(),
+            MockBase::instance(),
         ));
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
 
@@ -1516,19 +1514,19 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
-            define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap();
         network.spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), MockBase::instance()),
         );
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
         <span class="kw">let </span>provider = Provider::new(QueryServiceProvider::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
-            Base::instance(),
+            MockBase::instance(),
         ));
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
 
@@ -1575,19 +1573,19 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
-            define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap();
         network.spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), MockBase::instance()),
         );
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
         <span class="kw">let </span>provider = Provider::new(QueryServiceProvider::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
-            Base::instance(),
+            MockBase::instance(),
         ));
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
 
@@ -1638,19 +1636,19 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
-            define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap();
         network.spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), MockBase::instance()),
         );
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
         <span class="kw">let </span>provider = Provider::new(QueryServiceProvider::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
-            Base::instance(),
+            MockBase::instance(),
         ));
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
 
@@ -1698,19 +1696,19 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
-            define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap();
         network.spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), MockBase::instance()),
         );
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
         <span class="kw">let </span>provider = Provider::new(QueryServiceProvider::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
-            Base::instance(),
+            MockBase::instance(),
         ));
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
 
@@ -1759,12 +1757,12 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
-            define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap();
         network.spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), MockBase::instance()),
         );
 
         <span class="comment">// Start a data source which is not receiving events from consensus. We don't give it a
@@ -1829,19 +1827,19 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
-            define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap();
         network.spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), MockBase::instance()),
         );
 
         <span class="comment">// Start a data source which is not receiving events from consensus.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
         <span class="kw">let </span>provider = Provider::new(QueryServiceProvider::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
-            Base::instance(),
+            MockBase::instance(),
         ));
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = builder(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider)
             .<span class="kw">await
@@ -1896,7 +1894,7 @@
     }
 
     <span class="kw">async fn </span>malicious_server(port: u16) {
-        <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;(), ServerError, Base&gt;(
+        <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;(), ServerError, MockBase&gt;(
             <span class="prelude-val">None</span>::&lt;std::path::PathBuf&gt;,
             <span class="macro">include_str!</span>(<span class="string">"../../../api/availability.toml"</span>),
             <span class="macro">vec!</span>[],
@@ -1932,7 +1930,7 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;(), ServerError&gt;::with_state(());
         app.register_module(<span class="string">"availability"</span>, api).unwrap();
-        app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), Base::instance())
+        app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), MockBase::instance())
             .<span class="kw">await
             </span>.ok();
     }
@@ -1946,7 +1944,7 @@
 
         <span class="kw">let </span>provider = QueryServiceProvider::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
-            Base::instance(),
+            MockBase::instance(),
         );
         provider.client.connect(<span class="prelude-val">None</span>).<span class="kw">await</span>;
 
@@ -1977,12 +1975,12 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"availability"</span>,
-            define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap();
         network.spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{port}"</span>), MockBase::instance()),
         );
 
         <span class="comment">// Start a data source which is not receiving events from consensus, only from a peer. The
@@ -1990,7 +1988,7 @@
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
         <span class="kw">let </span>provider = Provider::new(QueryServiceProvider::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
-            Base::instance(),
+            MockBase::instance(),
         ));
         <span class="kw">let </span><span class="kw-2">mut </span>data_source = db
             .config()

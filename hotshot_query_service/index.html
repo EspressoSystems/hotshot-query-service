@@ -11,13 +11,13 @@ extensible library, which makes it easy to add additional, application-specific 
     fetching::provider::NoFetching,
     node,
     status::UpdateStatusData,
-    status, Error
+    status, Error,
+    testing::mocks::MockBase,
 };
 
 <span class="kw">use </span>async_std::{sync::{Arc, RwLock}, task::spawn};
 <span class="kw">use </span>futures::StreamExt;
 <span class="kw">use </span>vbs::version::StaticVersionType;
-<span class="kw">use </span>hotshot_types::constants::Base;
 <span class="kw">use </span>hotshot::SystemContext;
 <span class="kw">use </span>tide_disco::App;
 
@@ -29,15 +29,16 @@ extensible library, which makes it easy to add additional, application-specific 
 <span class="comment">// Create hotshot, giving it a handle to the status metrics.
 </span><span class="kw">let </span>hotshot = SystemContext::&lt;AppTypes, AppNodeImpl&gt;::init(
     ConsensusMetricsValue::new(<span class="kw-2">&amp;*</span>data_source.populate_metrics()), <span class="macro">panic!</span>(),
+    <span class="macro">panic!</span>()
     <span class="comment">// Other fields omitted
 </span>).<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>.<span class="number">0</span>;
 
 <span class="comment">// Create API modules.
-</span><span class="kw">let </span>availability_api = availability::define_api(<span class="kw-2">&amp;</span>Default::default(),  Base::instance())
+</span><span class="kw">let </span>availability_api = availability::define_api(<span class="kw-2">&amp;</span>Default::default(),  MockBase::instance())
     .map_err(Error::internal)<span class="question-mark">?</span>;
-<span class="kw">let </span>node_api = node::define_api(<span class="kw-2">&amp;</span>Default::default(),  Base::instance())
+<span class="kw">let </span>node_api = node::define_api(<span class="kw-2">&amp;</span>Default::default(),  MockBase::instance())
     .map_err(Error::internal)<span class="question-mark">?</span>;
-<span class="kw">let </span>status_api = status::define_api(<span class="kw-2">&amp;</span>Default::default(),  Base::instance())
+<span class="kw">let </span>status_api = status::define_api(<span class="kw-2">&amp;</span>Default::default(),  MockBase::instance())
     .map_err(Error::internal)<span class="question-mark">?</span>;
 
 <span class="comment">// Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
@@ -52,7 +53,7 @@ app
     .map_err(Error::internal)<span class="question-mark">?</span>;
 
 <span class="comment">// Serve app.
-</span>spawn(app.serve(<span class="string">"0.0.0.0:8080"</span>,  Base::instance()));
+</span>spawn(app.serve(<span class="string">"0.0.0.0:8080"</span>,  MockBase::instance()));
 
 <span class="comment">// Update query data using HotShot events.
 </span><span class="kw">let </span><span class="kw-2">mut </span>events = hotshot.event_stream();
@@ -70,7 +71,7 @@ nothing more):</p>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>hotshot_query_service::run_standalone_service;
 
 <span class="kw">let </span>data_source = FileSystemDataSource::create(storage_path, NoFetching).<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
-spawn(run_standalone_service(options, data_source, hotshot,  Base::instance()));</code></pre></div>
+spawn(run_standalone_service(options, data_source, hotshot,  MockBase::instance()));</code></pre></div>
 <h2 id="persistence"><a class="doc-anchor" href="#persistence">§</a>Persistence</h2>
 <p>Naturally, an archival query service such as this is heavily dependent on a persistent storage
 implementation. The APIs provided by this query service are generic over the specific type of

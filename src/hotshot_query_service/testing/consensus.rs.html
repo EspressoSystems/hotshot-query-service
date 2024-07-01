@@ -338,6 +338,15 @@
 <a href="#338" id="338">338</a>
 <a href="#339" id="339">339</a>
 <a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -369,12 +378,13 @@
 <span class="kw">use </span>hotshot::{
     traits::implementations::{MasterMap, MemoryNetwork},
     types::{Event, SystemContextHandle},
-    HotShotInitializer, Memberships, Networks, SystemContext,
+    HotShotInitializer, Memberships, SystemContext,
 };
-<span class="kw">use </span>hotshot_example_types::{state_types::TestInstanceState, storage_types::TestStorage};
-<span class="kw">use </span>hotshot_testing::block_builder::{
-    SimpleBuilderConfig, SimpleBuilderImplementation, TestBuilderImplementation,
+<span class="kw">use </span>hotshot_example_types::{
+    auction_results_provider_types::TestAuctionResultsProvider, state_types::TestInstanceState,
+    storage_types::TestStorage,
 };
+<span class="kw">use </span>hotshot_testing::block_builder::{SimpleBuilderImplementation, TestBuilderImplementation};
 <span class="kw">use </span>hotshot_types::{
     consensus::ConsensusMetricsValue,
     light_client::StateKeyPair,
@@ -386,6 +396,7 @@
 <span class="kw">use </span>std::num::NonZeroUsize;
 <span class="kw">use </span>std::time::Duration;
 <span class="kw">use </span>tracing::{info_span, Instrument};
+<span class="kw">use </span>url::Url;
 
 <span class="kw">struct </span>MockNode&lt;D: DataSourceLifeCycle&gt; {
     hotshot: SystemContextHandle&lt;MockTypes, MockNodeImpl&gt;,
@@ -443,11 +454,19 @@
             view_sync_membership: membership.clone(),
         };
 
+        <span class="comment">// Pick a random, unused port for the builder server
+        </span><span class="kw">let </span>builder_port = portpicker::pick_unused_port().expect(<span class="string">"No ports available"</span>);
+
+        <span class="comment">// Create the bind URL from the random port
+        </span><span class="kw">let </span>builder_url =
+            Url::parse(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"http://0.0.0.0:{builder_port}"</span>)).expect(<span class="string">"Failed to parse URL"</span>);
+
         <span class="comment">// Start the builder server
-        </span><span class="kw">let </span>(builder_task, builder_url) =
+        </span><span class="kw">let </span>builder_task =
             &lt;SimpleBuilderImplementation <span class="kw">as </span>TestBuilderImplementation&lt;MockTypes&gt;&gt;::start(
                 NUM_NODES,
-                SimpleBuilderConfig::default(),
+                builder_url.clone(),
+                (),
                 Default::default(),
             )
             .<span class="kw">await</span>;
@@ -480,6 +499,10 @@
             stop_proposing_view: <span class="number">0</span>,
             start_voting_view: <span class="number">0</span>,
             stop_voting_view: <span class="number">0</span>,
+            start_proposing_time: <span class="number">0</span>,
+            stop_proposing_time: <span class="number">0</span>,
+            start_voting_time: <span class="number">0</span>,
+            stop_voting_time: <span class="number">0</span>,
         };
         update_config(<span class="kw-2">&amp;mut </span>config);
 
@@ -512,12 +535,6 @@
                             <span class="prelude-val">None</span>,
                         ));
 
-                        <span class="kw">let </span>networks = Networks {
-                            quorum_network: network.clone(),
-                            da_network: network,
-                            _pd: std::marker::PhantomData,
-                        };
-
                         <span class="kw">let </span>hs_storage: TestStorage&lt;MockTypes&gt; = TestStorage::default();
 
                         <span class="kw">let </span>hotshot = SystemContext::init(
@@ -526,12 +543,13 @@
                             node_id <span class="kw">as </span>u64,
                             config,
                             memberships,
-                            networks,
+                            network,
                             HotShotInitializer::from_genesis(TestInstanceState {})
                                 .<span class="kw">await
                                 </span>.unwrap(),
                             ConsensusMetricsValue::new(<span class="kw-2">&amp;*</span>data_source.populate_metrics()),
                             hs_storage,
+                            TestAuctionResultsProvider::default(),
                         )
                         .<span class="kw">await
                         </span>.unwrap()

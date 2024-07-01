@@ -421,6 +421,7 @@
 <a href="#421" id="421">421</a>
 <a href="#422" id="422">422</a>
 <a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -596,7 +597,7 @@
         task::BackgroundTask,
         testing::{
             consensus::{MockDataSource, MockNetwork},
-            mocks::MockTypes,
+            mocks::{MockBase, MockTypes},
             setup_test,
         },
         Error, Header, VidShare,
@@ -604,7 +605,6 @@
     <span class="kw">use </span>async_std::{sync::RwLock, task::sleep};
     <span class="kw">use </span>committable::Committable;
     <span class="kw">use </span>futures::{FutureExt, StreamExt};
-    <span class="kw">use </span>hotshot_types::constants::Base;
     <span class="kw">use </span>hotshot_types::event::EventType;
     <span class="kw">use </span>hotshot_types::event::LeafInfo;
     <span class="kw">use </span>portpicker::pick_unused_port;
@@ -628,17 +628,18 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
         app.register_module(
             <span class="string">"node"</span>,
-            define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap();
         network.spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), MockBase::instance()),
         );
 
         <span class="comment">// Start a client.
-        </span><span class="kw">let </span>client =
-            Client::&lt;Error, Base&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap());
+        </span><span class="kw">let </span>client = Client::&lt;Error, MockBase&gt;::new(
+            <span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap(),
+        );
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
         <span class="comment">// Wait until a few blocks have been sequenced.
@@ -801,12 +802,12 @@
         </span>};
 
         <span class="kw">let </span><span class="kw-2">mut </span>api =
-            define_api::&lt;RwLock&lt;ExtensibleDataSource&lt;MockDataSource, u64&gt;&gt;, MockTypes, Base&gt;(
+            define_api::&lt;RwLock&lt;ExtensibleDataSource&lt;MockDataSource, u64&gt;&gt;, MockTypes, MockBase&gt;(
                 <span class="kw-2">&amp;</span>Options {
                     extensions: <span class="macro">vec!</span>[extensions.into()],
                     ..Default::default()
                 },
-                Base::instance(),
+                MockBase::instance(),
             )
             .unwrap();
         api.get(<span class="string">"get_ext"</span>, |<span class="kw">_</span>, state| {
@@ -828,11 +829,12 @@
         <span class="kw">let </span>port = pick_unused_port().unwrap();
         <span class="kw">let </span>_server = BackgroundTask::spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), MockBase::instance()),
         );
 
-        <span class="kw">let </span>client =
-            Client::&lt;Error, Base&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap());
+        <span class="kw">let </span>client = Client::&lt;Error, MockBase&gt;::new(
+            <span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap(),
+        );
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
         <span class="macro">assert_eq!</span>(client.get::&lt;u64&gt;(<span class="string">"ext"</span>).send().<span class="kw">await</span>.unwrap(), <span class="number">0</span>);

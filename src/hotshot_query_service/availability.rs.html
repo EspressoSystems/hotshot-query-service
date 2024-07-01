@@ -943,7 +943,6 @@
 <a href="#943" id="943">943</a>
 <a href="#944" id="944">944</a>
 <a href="#945" id="945">945</a>
-<a href="#946" id="946">946</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1399,7 +1398,7 @@
         task::BackgroundTask,
         testing::{
             consensus::{MockDataSource, MockNetwork, TestableDataSource},
-            mocks::{mock_transaction, MockHeader, MockPayload, MockTypes},
+            mocks::{mock_transaction, MockBase, MockHeader, MockPayload, MockTypes},
             setup_test,
         },
         types::HeightIndexed,
@@ -1409,7 +1408,6 @@
     <span class="kw">use </span>committable::Committable;
     <span class="kw">use </span>futures::future::FutureExt;
     <span class="kw">use </span>hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
-    <span class="kw">use </span>hotshot_types::constants::Base;
     <span class="kw">use </span>hotshot_types::data::Leaf;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::time::Duration;
@@ -1420,7 +1418,7 @@
 
     <span class="doccomment">/// Get the current ledger height and a list of non-empty leaf/block pairs.
     </span><span class="kw">async fn </span>get_non_empty_blocks(
-        client: <span class="kw-2">&amp;</span>Client&lt;Error, Base&gt;,
+        client: <span class="kw-2">&amp;</span>Client&lt;Error, MockBase&gt;,
     ) -&gt; (
         u64,
         Vec&lt;(LeafQueryData&lt;MockTypes&gt;, BlockQueryData&lt;MockTypes&gt;)&gt;,
@@ -1453,7 +1451,7 @@
         <span class="macro">unreachable!</span>()
     }
 
-    <span class="kw">async fn </span>validate(client: <span class="kw-2">&amp;</span>Client&lt;Error, Base&gt;, height: u64) {
+    <span class="kw">async fn </span>validate(client: <span class="kw-2">&amp;</span>Client&lt;Error, MockBase&gt;, height: u64) {
         <span class="comment">// Check the consistency of every block/leaf pair.
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..height {
             <span class="comment">// Limit the number of blocks we validate in order to
@@ -1713,18 +1711,18 @@
                     fetch_timeout,
                     ..Default::default()
                 },
-                Base::instance(),
+                MockBase::instance(),
             )
             .unwrap(),
         )
         .unwrap();
         network.spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), MockBase::instance()),
         );
 
         <span class="comment">// Start a client.
-        </span><span class="kw">let </span>client = Client::&lt;Error, Base&gt;::new(
+        </span><span class="kw">let </span>client = Client::&lt;Error, MockBase&gt;::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{}/availability"</span>, port)
                 .parse()
                 .unwrap(),
@@ -1837,12 +1835,12 @@
         </span>};
 
         <span class="kw">let </span><span class="kw-2">mut </span>api =
-            define_api::&lt;RwLock&lt;ExtensibleDataSource&lt;MockDataSource, u64&gt;&gt;, MockTypes, Base&gt;(
+            define_api::&lt;RwLock&lt;ExtensibleDataSource&lt;MockDataSource, u64&gt;&gt;, MockTypes, MockBase&gt;(
                 <span class="kw-2">&amp;</span>Options {
                     extensions: <span class="macro">vec!</span>[extensions.into()],
                     ..Default::default()
                 },
-                Base::instance(),
+                MockBase::instance(),
             )
             .unwrap();
         api.get(<span class="string">"get_ext"</span>, |<span class="kw">_</span>, state| {
@@ -1864,10 +1862,10 @@
         <span class="kw">let </span>port = pick_unused_port().unwrap();
         <span class="kw">let </span>_server = BackgroundTask::spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), MockBase::instance()),
         );
 
-        <span class="kw">let </span>client = Client::&lt;Error, Base&gt;::new(
+        <span class="kw">let </span>client = Client::&lt;Error, MockBase&gt;::new(
             <span class="macro">format!</span>(<span class="string">"http://localhost:{}/availability"</span>, port)
                 .parse()
                 .unwrap(),

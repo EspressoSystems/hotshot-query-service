@@ -851,13 +851,13 @@
 //!     fetching::provider::NoFetching,
 //!     node,
 //!     status::UpdateStatusData,
-//!     status, Error
+//!     status, Error,
+//!     testing::mocks::MockBase,
 //! };
 //!
 //! use async_std::{sync::{Arc, RwLock}, task::spawn};
 //! use futures::StreamExt;
 //! use vbs::version::StaticVersionType;
-//! use hotshot_types::constants::Base;
 //! use hotshot::SystemContext;
 //! use tide_disco::App;
 //!
@@ -870,15 +870,16 @@
 //! let hotshot = SystemContext::&lt;AppTypes, AppNodeImpl&gt;::init(
 //! #   panic!(), panic!(), panic!(), panic!(), panic!(), panic!(), panic!(),
 //!     ConsensusMetricsValue::new(&amp;*data_source.populate_metrics()), panic!(),
+//!     panic!()
 //!     // Other fields omitted
 //! ).await.map_err(Error::internal)?.0;
 //!
 //! // Create API modules.
-//! let availability_api = availability::define_api(&amp;Default::default(),  Base::instance())
+//! let availability_api = availability::define_api(&amp;Default::default(),  MockBase::instance())
 //!     .map_err(Error::internal)?;
-//! let node_api = node::define_api(&amp;Default::default(),  Base::instance())
+//! let node_api = node::define_api(&amp;Default::default(),  MockBase::instance())
 //!     .map_err(Error::internal)?;
-//! let status_api = status::define_api(&amp;Default::default(),  Base::instance())
+//! let status_api = status::define_api(&amp;Default::default(),  MockBase::instance())
 //!     .map_err(Error::internal)?;
 //!
 //! // Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
@@ -893,7 +894,7 @@
 //!     .map_err(Error::internal)?;
 //!
 //! // Serve app.
-//! spawn(app.serve("0.0.0.0:8080",  Base::instance()));
+//! spawn(app.serve("0.0.0.0:8080",  MockBase::instance()));
 //!
 //! // Update query data using HotShot events.
 //! let mut events = hotshot.event_stream();
@@ -916,16 +917,15 @@
 //! # use async_std::task::spawn;
 //! # use hotshot::types::SystemContextHandle;
 //! # use vbs::version::StaticVersionType;
-//! # use hotshot_types::constants::Base;
 //! # use hotshot_query_service::{data_source::FileSystemDataSource, Error, Options};
 //! # use hotshot_query_service::fetching::provider::NoFetching;
-//! # use hotshot_query_service::testing::mocks::{MockNodeImpl, MockTypes};
+//! # use hotshot_query_service::testing::mocks::{MockBase, MockNodeImpl, MockTypes};
 //! # use std::path::Path;
 //! # async fn doc(storage_path: &amp;Path, options: Options, hotshot: SystemContextHandle&lt;MockTypes, MockNodeImpl&gt;) -&gt; Result&lt;(), Error&gt; {
 //! use hotshot_query_service::run_standalone_service;
 //!
 //! let data_source = FileSystemDataSource::create(storage_path, NoFetching).await.map_err(Error::internal)?;
-//! spawn(run_standalone_service(options, data_source, hotshot,  Base::instance()));
+//! spawn(run_standalone_service(options, data_source, hotshot,  MockBase::instance()));
 //! # Ok(())
 //! # }
 //! ```
@@ -997,11 +997,11 @@
 //! # use async_std::sync::RwLock;
 //! # use async_trait::async_trait;
 //! # use futures::FutureExt;
-//! # use hotshot_types::constants::Base;
 //! # use hotshot_query_service::availability::{
 //! #   self, AvailabilityDataSource, FetchBlockSnafu, TransactionIndex,
 //! # };
 //! # use hotshot_query_service::testing::mocks::MockTypes as AppTypes;
+//! # use hotshot_query_service::testing::mocks::MockBase;
 //! # use hotshot_query_service::Error;
 //! # use snafu::ResultExt;
 //! # use tide_disco::{api::ApiError, method::ReadState, Api, App, StatusCode};
@@ -1384,12 +1384,12 @@
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
     <span class="kw">use </span>futures::future::{BoxFuture, FutureExt};
     <span class="kw">use </span>hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
-    <span class="kw">use </span>hotshot_types::constants::Base;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::ops::RangeBounds;
     <span class="kw">use </span>std::time::Duration;
     <span class="kw">use </span>surf_disco::Client;
     <span class="kw">use </span>tempfile::TempDir;
+    <span class="kw">use </span>testing::mocks::MockBase;
     <span class="kw">use </span>tide_disco::App;
     <span class="kw">use </span>toml::toml;
 
@@ -1559,20 +1559,20 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(RwLock::new(state));
         app.register_module(
             <span class="string">"availability"</span>,
-            availability::define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            availability::define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap()
         .register_module(
             <span class="string">"node"</span>,
-            node::define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            node::define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap()
         .register_module(
             <span class="string">"status"</span>,
-            status::define_api(<span class="kw-2">&amp;</span>Default::default(), Base::instance()).unwrap(),
+            status::define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
         )
         .unwrap()
-        .module::&lt;Error, Base&gt;(<span class="string">"mod"</span>, module_spec)
+        .module::&lt;Error, MockBase&gt;(<span class="string">"mod"</span>, module_spec)
         .unwrap()
         .get(<span class="string">"get_ext"</span>, |<span class="kw">_</span>, state| {
             <span class="kw">async move </span>{ state.module_state.load_latest().map_err(Error::internal) }.boxed()
@@ -1602,11 +1602,11 @@
         <span class="kw">let </span>port = pick_unused_port().unwrap();
         <span class="kw">let </span>_server = BackgroundTask::spawn(
             <span class="string">"server"</span>,
-            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), Base::instance()),
+            app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port), MockBase::instance()),
         );
 
         <span class="kw">let </span>client =
-            Client::&lt;Error, Base&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}"</span>, port).parse().unwrap());
+            Client::&lt;Error, MockBase&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}"</span>, port).parse().unwrap());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
 
         client.post::&lt;()&gt;(<span class="string">"mod/ext/42"</span>).send().<span class="kw">await</span>.unwrap();
