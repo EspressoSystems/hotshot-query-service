@@ -3196,7 +3196,7 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "sha2 0.10.8",
- "snafu 0.8.3",
+ "snafu 0.8.4",
  "surf-disco",
  "time 0.3.36",
  "tokio",
@@ -3216,7 +3216,7 @@ dependencies = [
  "futures",
  "hotshot-types",
  "serde",
- "snafu 0.8.3",
+ "snafu 0.8.4",
  "tagged-base64",
  "tide-disco",
  "toml",
@@ -3247,7 +3247,7 @@ dependencies = [
  "serde",
  "sha2 0.10.8",
  "sha3",
- "snafu 0.8.3",
+ "snafu 0.8.4",
  "time 0.3.36",
  "tokio",
  "tracing",
@@ -3337,7 +3337,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "snafu 0.8.3",
+ "snafu 0.8.4",
  "spin_sleep",
  "surf-disco",
  "tagged-base64",
@@ -3396,7 +3396,7 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "sha2 0.10.8",
- "snafu 0.8.3",
+ "snafu 0.8.4",
  "surf-disco",
  "tagged-base64",
  "time 0.3.36",
@@ -3439,7 +3439,7 @@ dependencies = [
  "serde",
  "sha2 0.10.8",
  "sha3",
- "snafu 0.8.3",
+ "snafu 0.8.4",
  "tagged-base64",
  "tide-disco",
  "tokio",
@@ -3491,7 +3491,7 @@ dependencies = [
  "rand_chacha 0.3.1",
  "serde",
  "sha2 0.10.8",
- "snafu 0.8.3",
+ "snafu 0.8.4",
  "tagged-base64",
  "time 0.3.36",
  "tokio",
@@ -4598,7 +4598,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_json",
- "snafu 0.8.3",
+ "snafu 0.8.4",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -7349,11 +7349,11 @@ dependencies = [
 
 [[package]]
 name = "snafu"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "418b8136fec49956eba89be7da2847ec1909df92a9ae4178b5ff0ff092c8d95e"
+checksum = "2b835cb902660db3415a672d862905e791e54d306c6e8189168c7f3d9ae1c79d"
 dependencies = [
- "snafu-derive 0.8.3",
+ "snafu-derive 0.8.4",
 ]
 
 [[package]]
@@ -7370,9 +7370,9 @@ dependencies = [
 
 [[package]]
 name = "snafu-derive"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a4812a669da00d17d8266a0439eddcacbc88b17f732f927e52eeb9d196f7fb5"
+checksum = "38d1e02fca405f6280643174a50c942219f0bbf4dbf7d480f1dd864d6f211ae5"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -7966,7 +7966,7 @@ dependencies = [
  "base64 0.22.1",
  "crc-any",
  "serde",
- "snafu 0.8.3",
+ "snafu 0.8.4",
  "tagged-base64-macros",
  "wasm-bindgen",
 ]
@@ -8097,7 +8097,7 @@ dependencies = [
  "shellexpand",
  "signal-hook",
  "signal-hook-async-std",
- "snafu 0.8.3",
+ "snafu 0.8.4",
  "strum",
  "strum_macros",
  "tagged-base64",
