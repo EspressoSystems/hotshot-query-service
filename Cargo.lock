@@ -1104,6 +1104,12 @@ name = "bit-vec"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "349f9b6a179ed607305526ca489b34ad0a41aed5f7980fa90eb03160b69598fb"
+
+[[package]]
+name = "bit-vec"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e764a1d40d510daf35e07be9eb06e75770908c27d411ee6c92109c9840eaaf7"
 dependencies = [
  "serde",
 ]
@@ -3197,7 +3203,7 @@ dependencies = [
  "atomic_store",
  "backtrace-on-stack-overflow",
  "bincode",
- "bit-vec",
+ "bit-vec 0.8.0",
  "chrono",
  "clap",
  "committable",
@@ -5581,7 +5587,7 @@ version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02048d9e032fb3cc3413bbf7b83a15d84a5d419778e2628751896d856498eee9"
 dependencies = [
- "bit-vec",
+ "bit-vec 0.6.3",
  "bytes",
  "fallible-iterator",
  "postgres-protocol",
