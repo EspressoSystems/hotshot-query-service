@@ -159,7 +159,7 @@ where
     ///
     /// The [FileSystemDataSource] will manage its own persistence synchronization.
     pub async fn create(path: &Path, provider: P) -> anyhow::Result<Self> {
-        FetchingDataSource::builder(FileSystemStorage::create(path).await?, provider)
+        FileSystemDataSource::builder(FileSystemStorage::create(path).await?, provider)
             .build()
             .await
     }
@@ -170,7 +170,7 @@ where
     ///
     /// The [FileSystemDataSource] will manage its own persistence synchronization.
     pub async fn open(path: &Path, provider: P) -> anyhow::Result<Self> {
-        FetchingDataSource::builder(FileSystemStorage::open(path).await?, provider)
+        FileSystemDataSource::builder(FileSystemStorage::open(path).await?, provider)
             .build()
             .await
     }
@@ -187,7 +187,7 @@ where
         loader: &mut AtomicStoreLoader,
         provider: P,
     ) -> anyhow::Result<Self> {
-        FetchingDataSource::builder(
+        FileSystemDataSource::builder(
             FileSystemStorage::create_with_store(loader).await?,
             provider,
         )
@@ -207,7 +207,7 @@ where
         loader: &mut AtomicStoreLoader,
         provider: P,
     ) -> anyhow::Result<Self> {
-        FetchingDataSource::builder(FileSystemStorage::open_with_store(loader).await?, provider)
+        FileSystemDataSource::builder(FileSystemStorage::open_with_store(loader).await?, provider)
             .build()
             .await
     }
@@ -222,8 +222,8 @@ where
     /// this [FileSystemDataSource] must be advanced, either by
     /// [commit](super::VersionedDataSource::commit) or, if there are no outstanding changes,
     /// [skip_version](Self::skip_version).
-    pub async fn skip_version(&mut self) -> anyhow::Result<()> {
-        self.storage_mut().await.skip_version()?;
+    pub async fn skip_version(&self) -> anyhow::Result<()> {
+        self.as_ref().skip_version().await?;
         Ok(())
     }
 }
@@ -232,7 +232,7 @@ where
 mod impl_testable_data_source {
     use super::*;
     use crate::{
-        data_source::{UpdateDataSource, VersionedDataSource},
+        data_source::{Transaction, UpdateDataSource, VersionedDataSource},
         testing::{consensus::DataSourceLifeCycle, mocks::MockTypes},
     };
     use async_trait::async_trait;
@@ -262,8 +262,9 @@ mod impl_testable_data_source {
         }
 
         async fn handle_event(&mut self, event: &Event<MockTypes>) {
-            self.update(event).await.unwrap();
-            self.commit().await.unwrap();
+            let mut tx = self.transaction().await.unwrap();
+            tx.update(event).await.unwrap();
+            tx.commit().await.unwrap();
         }
     }
 }
