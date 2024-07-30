@@ -347,6 +347,13 @@
 <a href="#347" id="347">347</a>
 <a href="#348" id="348">348</a>
 <a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -389,7 +396,7 @@
     consensus::ConsensusMetricsValue,
     light_client::StateKeyPair,
     signature_key::BLSPubKey,
-    traits::{election::Membership, signature_key::SignatureKey <span class="kw">as _</span>},
+    traits::{election::Membership, network::Topic, signature_key::SignatureKey <span class="kw">as _</span>},
     ExecutionType, HotShotConfig, PeerConfig, ValidatorConfig,
 };
 <span class="kw">use </span>std::fmt::Display;
@@ -441,17 +448,23 @@
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">let </span>membership = MockMembership::create_election(
+        <span class="kw">let </span>da_membership = MockMembership::create_election(
             known_nodes_with_stake.clone(),
             known_nodes_with_stake.clone(),
+            Topic::Da,
             <span class="number">0</span>,
         );
-
+        <span class="kw">let </span>non_da_membership = MockMembership::create_election(
+            known_nodes_with_stake.clone(),
+            known_nodes_with_stake.clone(),
+            Topic::Global,
+            <span class="number">0</span>,
+        );
         <span class="kw">let </span>memberships = Memberships {
-            quorum_membership: membership.clone(),
-            da_membership: membership.clone(),
-            vid_membership: membership.clone(),
-            view_sync_membership: membership.clone(),
+            quorum_membership: non_da_membership.clone(),
+            da_membership: da_membership.clone(),
+            vid_membership: non_da_membership.clone(),
+            view_sync_membership: non_da_membership.clone(),
         };
 
         <span class="comment">// Pick a random, unused port for the builder server
@@ -530,8 +543,9 @@
                         <span class="kw">let </span>data_source = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
                         <span class="kw">let </span>network = Arc::new(MemoryNetwork::new(
-                            pub_keys[node_id],
+                            <span class="kw-2">&amp;</span>pub_keys[node_id],
                             <span class="kw-2">&amp;</span>master_map.clone(),
+                            <span class="kw-2">&amp;</span>[Topic::Global, Topic::Da],
                             <span class="prelude-val">None</span>,
                         ));
 
