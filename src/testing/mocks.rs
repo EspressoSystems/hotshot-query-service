@@ -20,7 +20,9 @@ use hotshot::traits::{
     election::static_committee::GeneralStaticCommittee, implementations::MemoryNetwork,
     NodeImplementation,
 };
-use hotshot_example_types::auction_results_provider_types::TestAuctionResultsProvider;
+use hotshot_example_types::auction_results_provider_types::{
+    TestAuctionResult, TestAuctionResultsProvider,
+};
 use hotshot_example_types::{
     auction_results_provider_types::TestAuctionResult,
     block_types::{TestBlockHeader, TestBlockPayload, TestTransaction},
@@ -137,7 +139,7 @@ impl NodeType for MockTypes {
     type BuilderSignatureKey = BLSPubKey;
     type Base = StaticVersion<0, 1>;
     type Upgrade = StaticVersion<0, 2>;
-    type AuctionResult = MockAuctionResults;
+    type AuctionResult = TestAuctionResult;
     const UPGRADE_HASH: [u8; 32] = [
         1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
         0, 0,
