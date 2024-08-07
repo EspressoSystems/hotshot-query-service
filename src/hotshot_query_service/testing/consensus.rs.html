@@ -354,6 +354,11 @@
 <a href="#354" id="354">354</a>
 <a href="#355" id="355">355</a>
 <a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -385,7 +390,7 @@
 <span class="kw">use </span>hotshot::{
     traits::implementations::{MasterMap, MemoryNetwork},
     types::{Event, SystemContextHandle},
-    HotShotInitializer, Memberships, SystemContext,
+    HotShotInitializer, MarketplaceConfig, Memberships, SystemContext,
 };
 <span class="kw">use </span>hotshot_example_types::{
     auction_results_provider_types::TestAuctionResultsProvider, state_types::TestInstanceState,
@@ -399,9 +404,9 @@
     traits::{election::Membership, network::Topic, signature_key::SignatureKey <span class="kw">as _</span>},
     ExecutionType, HotShotConfig, PeerConfig, ValidatorConfig,
 };
-<span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>std::num::NonZeroUsize;
 <span class="kw">use </span>std::time::Duration;
+<span class="kw">use </span>std::{fmt::Display, str::FromStr};
 <span class="kw">use </span>tracing::{info_span, Instrument};
 <span class="kw">use </span>url::Url;
 
@@ -563,7 +568,12 @@
                                 </span>.unwrap(),
                             ConsensusMetricsValue::new(<span class="kw-2">&amp;*</span>data_source.populate_metrics()),
                             hs_storage,
-                            TestAuctionResultsProvider::default(),
+                            MarketplaceConfig {
+                                auction_results_provider: Arc::new(
+                                    TestAuctionResultsProvider::default(),
+                                ),
+                                generic_builder_url: Url::from_str(<span class="string">"https://some.url"</span>).unwrap(),
+                            },
                         )
                         .<span class="kw">await
                         </span>.unwrap()
