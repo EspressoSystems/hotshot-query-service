@@ -3187,7 +3187,7 @@ dependencies = [
 
 [[package]]
 name = "hotshot-query-service"
-version = "0.1.49"
+version = "0.1.51"
 dependencies = [
  "anyhow",
  "ark-serialize",
