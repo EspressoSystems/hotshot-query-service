@@ -20,11 +20,8 @@ use hotshot::traits::{
     election::static_committee::GeneralStaticCommittee, implementations::MemoryNetwork,
     NodeImplementation,
 };
-use hotshot_example_types::auction_results_provider_types::{
-    TestAuctionResult, TestAuctionResultsProvider,
-};
 use hotshot_example_types::{
-    auction_results_provider_types::TestAuctionResult,
+    auction_results_provider_types::{TestAuctionResult, TestAuctionResultsProvider},
     block_types::{TestBlockHeader, TestBlockPayload, TestTransaction},
     state_types::{TestInstanceState, TestValidatedState},
     storage_types::TestStorage,
