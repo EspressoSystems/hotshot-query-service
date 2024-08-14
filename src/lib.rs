@@ -720,8 +720,13 @@ mod test {
             .unwrap();
 
         // Mock up some data and add a block to the store.
-        let leaf =
-            Leaf::<MockTypes>::genesis(&TestValidatedState::default(), &TestInstanceState {}).await;
+        let leaf = Leaf::<MockTypes>::genesis(
+            &TestValidatedState::default(),
+            &TestInstanceState {
+                delay_config: Default::default(),
+            },
+        )
+        .await;
         let block = BlockQueryData::new(leaf.block_header().clone(), MockPayload::genesis());
         hotshot_qs.insert_block(block.clone()).await.unwrap();
 

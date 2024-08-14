@@ -444,7 +444,9 @@ mod test {
         // Insert test data with VID common but no share.
         let leaf = LeafQueryData::<MockTypes>::genesis(
             &TestValidatedState::default(),
-            &TestInstanceState {},
+            &TestInstanceState {
+                delay_config: Default::default(),
+            },
         )
         .await;
         let common = VidCommonQueryData::new(leaf.header().clone(), disperse.common);
