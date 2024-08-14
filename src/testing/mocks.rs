@@ -41,7 +41,6 @@ use jf_merkle_tree::{
 };
 use serde::{Deserialize, Serialize};
 use std::ops::Range;
-use vbs::version::StaticVersion;
 
 pub type MockHeader = TestBlockHeader;
 pub type MockPayload = TestBlockPayload;
