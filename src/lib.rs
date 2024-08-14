@@ -431,7 +431,7 @@ use async_std::sync::{Arc, RwLock};
 use futures::StreamExt;
 use hotshot::types::SystemContextHandle;
 use hotshot_types::traits::{
-    node_implementation::{NodeImplementation, NodeType},
+    node_implementation::{NodeImplementation, NodeType, Versions},
     BlockPayload,
 };
 use serde::{Deserialize, Serialize};
@@ -487,10 +487,16 @@ pub struct Options {
 }
 
 /// Run an instance of the HotShot Query service with no customization.
-pub async fn run_standalone_service<Types: NodeType, I: NodeImplementation<Types>, D, Ver>(
+pub async fn run_standalone_service<
+    Types: NodeType,
+    I: NodeImplementation<Types>,
+    D,
+    Ver,
+    V: Versions,
+>(
     options: Options,
     data_source: D,
-    hotshot: SystemContextHandle<Types, I>,
+    hotshot: SystemContextHandle<Types, I, V>,
     bind_version: Ver,
 ) -> Result<(), Error>
 where
