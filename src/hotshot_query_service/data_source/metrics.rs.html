@@ -114,6 +114,7 @@
 <a href="#114" id="114">114</a>
 <a href="#115" id="115">115</a>
 <a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -155,9 +156,10 @@
 /// #   Error,
 /// # };
 /// # use hotshot_types::consensus::ConsensusMetricsValue;
+/// # use hotshot_example_types::node_types::TestVersions;
 /// # async fn doc() -&gt; Result&lt;(), hotshot_query_service::Error&gt; {
 /// let data_source = MetricsDataSource::default();
-/// let hotshot = SystemContext::&lt;AppTypes, AppNodeImpl&gt;::init(
+/// let hotshot = SystemContext::&lt;AppTypes, AppNodeImpl, TestVersions&gt;::init(
 /// #   panic!(), panic!(), panic!(), panic!(), panic!(), panic!(), panic!(),
 ///     ConsensusMetricsValue::new(&amp;*data_source.populate_metrics()), panic!(),
 ///     panic!(),

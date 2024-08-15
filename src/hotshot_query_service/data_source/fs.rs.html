@@ -279,6 +279,7 @@
 <a href="#279" id="279">279</a>
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -380,6 +381,7 @@
 /// # use hotshot_query_service::testing::mocks::{
 /// #   MockNodeImpl as AppNodeImpl, MockTypes as AppTypes,
 /// # };
+/// # use hotshot_example_types::node_types::TestVersions;
 /// # use std::path::Path;
 /// # use tide_disco::App;
 /// # use vbs::version::StaticVersionType;
@@ -392,7 +394,7 @@
 ///
 /// async fn init_server&lt;Ver: StaticVersionType + 'static&gt;(
 ///     storage_path: &amp;Path,
-///     hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl&gt;,
+///     hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl, TestVersions&gt;,
 /// ) -&gt; Result&lt;App&lt;Arc&lt;RwLock&lt;AppState&gt;&gt;, Error&gt;, Error&gt; {
 ///     let mut loader = AtomicStoreLoader::create(storage_path, "my_app") // or `open`
 ///         .map_err(Error::internal)?;

@@ -464,6 +464,9 @@
 <a href="#464" id="464">464</a>
 <a href="#465" id="465">465</a>
 <a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -729,6 +732,7 @@
 /// # use hotshot_query_service::testing::mocks::{
 /// #   MockNodeImpl as AppNodeImpl, MockTypes as AppTypes,
 /// # };
+/// # use hotshot_example_types::node_types::TestVersions;
 /// # use tide_disco::App;
 /// # use vbs::version::StaticVersionType;
 /// struct AppState {
@@ -738,7 +742,7 @@
 ///
 /// async fn init_server&lt;Ver: StaticVersionType + 'static&gt;(
 ///     config: Config,
-///     hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl&gt;,
+///     hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl, TestVersions&gt;,
 /// ) -&gt; Result&lt;App&lt;Arc&lt;RwLock&lt;AppState&gt;&gt;, Error&gt;, Error&gt; {
 ///     let mut hotshot_qs = config.connect(NoFetching).await.map_err(Error::internal)?;
 ///     // Initialize storage for other modules, using `hotshot_qs` to access the database.
@@ -910,7 +914,9 @@
         <span class="comment">// Insert test data with VID common but no share.
         </span><span class="kw">let </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(
             <span class="kw-2">&amp;</span>TestValidatedState::default(),
-            <span class="kw-2">&amp;</span>TestInstanceState {},
+            <span class="kw-2">&amp;</span>TestInstanceState {
+                delay_config: Default::default(),
+            },
         )
         .<span class="kw">await</span>;
         <span class="kw">let </span>common = VidCommonQueryData::new(leaf.header().clone(), disperse.common);
