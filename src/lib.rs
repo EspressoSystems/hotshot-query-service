@@ -24,6 +24,7 @@
 //! # use hotshot_query_service::testing::mocks::{
 //! #   MockNodeImpl as AppNodeImpl, MockTypes as AppTypes,
 //! # };
+//! # use hotshot_example_types::node_types::TestVersions;
 //! # use hotshot_types::consensus::ConsensusMetricsValue;
 //! # use std::path::Path;
 //! # async fn doc(storage_path: &std::path::Path) -> Result<(), hotshot_query_service::Error> {
@@ -49,7 +50,7 @@
 //!     .map_err(Error::internal)?;
 //!
 //! // Create hotshot, giving it a handle to the status metrics.
-//! let hotshot = SystemContext::<AppTypes, AppNodeImpl>::init(
+//! let hotshot = SystemContext::<AppTypes, AppNodeImpl, TestVersions>::init(
 //! #   panic!(), panic!(), panic!(), panic!(), panic!(), panic!(), panic!(),
 //!     ConsensusMetricsValue::new(&*data_source.populate_metrics()), panic!(),
 //!     panic!()
@@ -102,8 +103,9 @@
 //! # use hotshot_query_service::{data_source::FileSystemDataSource, Error, Options};
 //! # use hotshot_query_service::fetching::provider::NoFetching;
 //! # use hotshot_query_service::testing::mocks::{MockBase, MockNodeImpl, MockTypes};
+//! # use hotshot_example_types::node_types::TestVersions;
 //! # use std::path::Path;
-//! # async fn doc(storage_path: &Path, options: Options, hotshot: SystemContextHandle<MockTypes, MockNodeImpl>) -> Result<(), Error> {
+//! # async fn doc(storage_path: &Path, options: Options, hotshot: SystemContextHandle<MockTypes, MockNodeImpl, TestVersions>) -> Result<(), Error> {
 //! use hotshot_query_service::run_standalone_service;
 //!
 //! let data_source = FileSystemDataSource::create(storage_path, NoFetching).await.map_err(Error::internal)?;
