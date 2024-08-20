@@ -152,14 +152,14 @@
 /// # use hotshot_query_service::{
 /// #   data_source::MetricsDataSource,
 /// #   status::UpdateStatusData,
-/// #   testing::mocks::{MockNodeImpl as AppNodeImpl, MockTypes as AppTypes},
+/// #   testing::mocks::{MockNodeImpl as AppNodeImpl, MockTypes as AppTypes, MockVersions as AppVersions},
 /// #   Error,
 /// # };
 /// # use hotshot_types::consensus::ConsensusMetricsValue;
 /// # use hotshot_example_types::node_types::TestVersions;
 /// # async fn doc() -&gt; Result&lt;(), hotshot_query_service::Error&gt; {
 /// let data_source = MetricsDataSource::default();
-/// let hotshot = SystemContext::&lt;AppTypes, AppNodeImpl, TestVersions&gt;::init(
+/// let hotshot = SystemContext::&lt;AppTypes, AppNodeImpl, AppVersions&gt;::init(
 /// #   panic!(), panic!(), panic!(), panic!(), panic!(), panic!(), panic!(),
 ///     ConsensusMetricsValue::new(&amp;*data_source.populate_metrics()), panic!(),
 ///     panic!(),

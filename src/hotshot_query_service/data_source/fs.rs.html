@@ -379,7 +379,7 @@
 /// # };
 /// # use hotshot_query_service::fetching::provider::NoFetching;
 /// # use hotshot_query_service::testing::mocks::{
-/// #   MockNodeImpl as AppNodeImpl, MockTypes as AppTypes,
+/// #   MockNodeImpl as AppNodeImpl, MockTypes as AppTypes, MockVersions as AppVersions
 /// # };
 /// # use hotshot_example_types::node_types::TestVersions;
 /// # use std::path::Path;
@@ -394,7 +394,7 @@
 ///
 /// async fn init_server&lt;Ver: StaticVersionType + 'static&gt;(
 ///     storage_path: &amp;Path,
-///     hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl, TestVersions&gt;,
+///     hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl, AppVersions&gt;,
 /// ) -&gt; Result&lt;App&lt;Arc&lt;RwLock&lt;AppState&gt;&gt;, Error&gt;, Error&gt; {
 ///     let mut loader = AtomicStoreLoader::create(storage_path, "my_app") // or `open`
 ///         .map_err(Error::internal)?;

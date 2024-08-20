@@ -4306,10 +4306,6 @@
 <a href="#4306" id="4306">4306</a>
 <a href="#4307" id="4307">4307</a>
 <a href="#4308" id="4308">4308</a>
-<a href="#4309" id="4309">4309</a>
-<a href="#4310" id="4310">4310</a>
-<a href="#4311" id="4311">4311</a>
-<a href="#4312" id="4312">4312</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -7653,9 +7649,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>storage = SqlStorage::connect(cfg).<span class="kw">await</span>.unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(
             <span class="kw-2">&amp;</span>TestValidatedState::default(),
-            <span class="kw-2">&amp;</span>TestInstanceState {
-                delay_config: Default::default(),
-            },
+            <span class="kw-2">&amp;</span>TestInstanceState::default(),
         )
         .<span class="kw">await</span>;
         <span class="comment">// insert some mock data
@@ -7738,9 +7732,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>storage = SqlStorage::connect(db.config()).<span class="kw">await</span>.unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(
             <span class="kw-2">&amp;</span>TestValidatedState::default(),
-            <span class="kw-2">&amp;</span>TestInstanceState {
-                delay_config: Default::default(),
-            },
+            <span class="kw-2">&amp;</span>TestInstanceState::default(),
         )
         .<span class="kw">await</span>;
         <span class="comment">// insert some mock data

@@ -54,7 +54,7 @@ synchronize all persistent storage.</p>
 
 <span class="kw">async fn </span>init_server&lt;Ver: StaticVersionType + <span class="lifetime">'static</span>&gt;(
     storage_path: <span class="kw-2">&amp;</span>Path,
-    hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl, TestVersions&gt;,
+    hotshot: SystemContextHandle&lt;AppTypes, AppNodeImpl, AppVersions&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;App&lt;Arc&lt;RwLock&lt;AppState&gt;&gt;, Error&gt;, Error&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(storage_path, <span class="string">"my_app"</span>) <span class="comment">// or `open`
         </span>.map_err(Error::internal)<span class="question-mark">?</span>;
@@ -140,7 +140,7 @@ this <a href="type.FileSystemDataSource.html" title="type hotshot_query_service:
 ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.80.1/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.80.1/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.80.1/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="primitive" href="https://doc.rust-lang.org/1.80.1/std/primitive.unit.html">()</a>&gt; + <a class="trait" href="https://doc.rust-lang.org/1.80.1/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
     Self: 'async_trait,
     'life0: 'async_trait,
-    'life1: 'async_trait,</div></h4></section><details class="toggle method-toggle" open><summary><section id="method.setup" class="method trait-impl"><a class="src rightside" href="../../src/hotshot_query_service/testing/consensus.rs.html#342">source</a><a href="#method.setup" class="anchor">§</a><h4 class="code-header">fn <a href="../testing/consensus/trait.DataSourceLifeCycle.html#method.setup" class="fn">setup</a>&lt;'life0, 'async_trait&gt;(
+    'life1: 'async_trait,</div></h4></section><details class="toggle method-toggle" open><summary><section id="method.setup" class="method trait-impl"><a class="src rightside" href="../../src/hotshot_query_service/testing/consensus.rs.html#340">source</a><a href="#method.setup" class="anchor">§</a><h4 class="code-header">fn <a href="../testing/consensus/trait.DataSourceLifeCycle.html#method.setup" class="fn">setup</a>&lt;'life0, 'async_trait&gt;(
     _network: &amp;'life0 mut <a class="struct" href="../testing/consensus/struct.MockNetwork.html" title="struct hotshot_query_service::testing::consensus::MockNetwork">MockNetwork</a>&lt;Self&gt;,
 ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.80.1/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.80.1/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.80.1/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="primitive" href="https://doc.rust-lang.org/1.80.1/std/primitive.unit.html">()</a>&gt; + <a class="trait" href="https://doc.rust-lang.org/1.80.1/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
     Self: 'async_trait,
