@@ -146,3 +146,9 @@ rand = "0.8"
 reqwest = "0.12.3"
 spin_sleep = "1.2"
 tempfile = "3.10"
+
+[patch."https://github.com/EspressoSystems/HotShot.git"]
+hotshot = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "bump/rc-0.5.72" }
+hotshot-testing = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "bump/rc-0.5.72" }
+hotshot-types = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "bump/rc-0.5.72" }
+hotshot-example-types = { git = "https://github.com/EspressoSystems//HotShot.git", branch = "bump/rc-0.5.72", optional = true }
