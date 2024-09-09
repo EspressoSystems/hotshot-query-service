@@ -72,7 +72,7 @@ chrono = "0.4"
 committable = "0.2"
 custom_debug = "0.6"
 derivative = "2.2"
-derive_more = "0.99"
+derive_more = "1.0"
 either = "1.12"
 futures = "0.3"
 hotshot = { git = "https://github.com/EspressoSystems/HotShot.git", tag = "0.5.74" }
