@@ -1343,7 +1343,7 @@
             mocks::{mock_transaction, MockBase, MockTypes},
             setup_test,
         },
-        Error,
+        ApiState, Error,
     };
     <span class="kw">use </span>futures::StreamExt;
     <span class="kw">use </span>portpicker::pick_unused_port;
@@ -1809,7 +1809,7 @@
 
         <span class="comment">// Start the web server.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState::from(network.data_source()));
         app.register_module(<span class="string">"explorer"</span>, define_api(MockBase::instance()).unwrap())
             .unwrap();
         app.register_module(

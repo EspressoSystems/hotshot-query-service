@@ -97,13 +97,15 @@
 
 </span><span class="doccomment">//! Transaction fetching.
 
-</span><span class="kw">use super</span>::{AvailabilityProvider, FetchRequest, Fetchable, Fetcher, NotifyStorage};
+</span><span class="kw">use super</span>::{AvailabilityProvider, FetchRequest, Fetchable, Fetcher, Notifiers};
 <span class="kw">use crate</span>::{
-    availability::{QueryablePayload, TransactionHash, TransactionQueryData},
-    data_source::storage::AvailabilityStorage,
+    availability::{
+        QueryablePayload, TransactionHash, TransactionQueryData, UpdateAvailabilityData,
+    },
+    data_source::{storage::AvailabilityStorage, update::VersionedDataSource},
     Payload, QueryResult,
 };
-<span class="kw">use </span>async_std::sync::{Arc, RwLockReadGuard};
+<span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::future::{BoxFuture, FutureExt};
@@ -126,17 +128,14 @@
         req.<span class="number">0 </span>== <span class="self">self</span>.hash()
     }
 
-    <span class="kw">async fn </span>passive_fetch&lt;S&gt;(
-        storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;,
+    <span class="kw">async fn </span>passive_fetch(
+        notifications: <span class="kw-2">&amp;</span>Notifiers&lt;Types&gt;,
         req: <span class="self">Self</span>::Request,
-    ) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt;
-    <span class="kw">where
-        </span>S: AvailabilityStorage&lt;Types&gt;,
-    {
+    ) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt; {
         <span class="comment">// Any block might satisfy the request; we won't know until we receive a new payload and
         // check if it contains the desired transaction.
-        </span><span class="kw">let </span>wait_block = storage
-            .block_notifier
+        </span><span class="kw">let </span>wait_block = notifications
+            .block
             .wait_for(<span class="kw">move </span>|block| block.transaction_by_hash(req.<span class="number">0</span>).is_some())
             .<span class="kw">await</span>;
 
@@ -148,11 +147,12 @@
     }
 
     <span class="kw">async fn </span>active_fetch&lt;S, P&gt;(
+        _tx: <span class="kw-2">&amp;</span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
         _fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
-        _storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
-        </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
+        </span>S: VersionedDataSource + <span class="lifetime">'static</span>,
+        <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
         P: AvailabilityProvider&lt;Types&gt;,
     {
         <span class="comment">// We don't actively fetch transactions, because without a satisfying block payload, we have
@@ -161,11 +161,11 @@
         </span><span class="macro">tracing::debug!</span>(<span class="string">"not fetching unknown transaction {req:?}"</span>);
     }
 
-    <span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;
+    <span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;</span>S, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
     {
-        storage.storage.get_transaction(req.<span class="number">0</span>).<span class="kw">await
+        storage.get_transaction(req.<span class="number">0</span>).<span class="kw">await
     </span>}
 }
 </code></pre></div></section></main></body></html>

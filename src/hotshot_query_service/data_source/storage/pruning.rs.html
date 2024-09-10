@@ -163,6 +163,15 @@
 <a href="#163" id="163">163</a>
 <a href="#164" id="164">164</a>
 <a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -175,9 +184,10 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use </span>anyhow::bail;
+</span><span class="kw">use </span><span class="kw">crate</span>::data_source::ReadOnly;
+<span class="kw">use </span>anyhow::bail;
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>std::{error::Error, fmt::Debug, time::Duration};
+<span class="kw">use </span>std::{fmt::Debug, time::Duration};
 
 <span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>PrunerCfg {
@@ -190,25 +200,33 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">pub trait </span>PruneStorage: PrunerConfig + PrunedHeightStorage {
-    <span class="kw">async fn </span>get_disk_usage(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u64, <span class="self">Self</span>::Error&gt; {
+</span><span class="kw">pub trait </span>PruneStorage: PrunerConfig {
+    <span class="kw">type </span>Pruner: Default + Send;
+
+    <span class="kw">async fn </span>get_disk_usage(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;u64&gt; {
         <span class="prelude-val">Ok</span>(<span class="number">0</span>)
     }
 
-    <span class="kw">async fn </span>prune(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;, <span class="self">Self</span>::Error&gt; {
+    <span class="kw">async fn </span>prune(<span class="kw-2">&amp;</span><span class="self">self</span>, _pruner: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Pruner) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
 }
 
 <span class="attr">#[async_trait]
 </span><span class="kw">pub trait </span>PrunedHeightStorage {
-    <span class="kw">type </span>Error: Error + Debug + Send + Sync + <span class="lifetime">'static</span>;
-    <span class="kw">async fn </span>save_pruned_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _height: u64) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
-        <span class="prelude-val">Ok</span>(())
-    }
-    <span class="kw">async fn </span>load_pruned_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;, <span class="self">Self</span>::Error&gt; {
+    <span class="kw">async fn </span>load_pruned_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;T&gt; PrunedHeightStorage <span class="kw">for </span>ReadOnly&lt;T&gt;
+<span class="kw">where
+    </span>T: PrunedHeightStorage + Sync,
+{
+    <span class="kw">async fn </span>load_pruned_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
+        (<span class="kw-2">**</span><span class="self">self</span>).load_pruned_height().<span class="kw">await
+    </span>}
 }
 
 <span class="kw">pub trait </span>PrunerConfig {

@@ -576,6 +576,111 @@
 <a href="#576" id="576">576</a>
 <a href="#577" id="577">577</a>
 <a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -604,15 +709,16 @@
             QueryablePayload, TransactionHash, TransactionQueryData, VidCommonQueryData,
         },
     },
-    data_source::VersionedDataSource,
+    data_source::{update, VersionedDataSource},
     node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
     types::HeightIndexed,
     ErrorSnafu, Header, MissingSnafu, NotFoundSnafu, Payload, QueryResult, VidCommitment, VidShare,
 };
+<span class="kw">use </span>async_std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>atomic_store::{AtomicStore, AtomicStoreLoader, PersistenceError};
 <span class="kw">use </span>committable::Committable;
-<span class="kw">use </span>futures::future::{<span class="self">self</span>, BoxFuture, FutureExt};
+<span class="kw">use </span>futures::future::Future;
 <span class="kw">use </span>hotshot_types::traits::{block_contents::BlockHeader, node_implementation::NodeType};
 <span class="kw">use </span>serde::{de::DeserializeOwned, Serialize};
 <span class="kw">use </span>snafu::OptionExt;
@@ -620,20 +726,19 @@
     hash_map::{Entry, HashMap},
     BTreeMap,
 };
-<span class="kw">use </span>std::convert::Infallible;
 <span class="kw">use </span>std::hash::Hash;
-<span class="kw">use </span>std::ops::{Bound, RangeBounds};
+<span class="kw">use </span>std::ops::{Bound, Deref, RangeBounds};
 <span class="kw">use </span>std::path::Path;
 
 <span class="kw">const </span>CACHED_LEAVES_COUNT: usize = <span class="number">100</span>;
 <span class="kw">const </span>CACHED_BLOCKS_COUNT: usize = <span class="number">100</span>;
 <span class="kw">const </span>CACHED_VID_COMMON_COUNT: usize = <span class="number">100</span>;
 
-<span class="doccomment">/// Storage for the APIs provided in this crate, backed by a remote PostgreSQL database.
-</span><span class="attr">#[derive(custom_debug::Debug)]
-</span><span class="kw">pub struct </span>FileSystemStorage&lt;Types: NodeType&gt;
+<span class="attr">#[derive(custom_debug::Debug)]
+</span><span class="kw">pub struct </span>FileSystemStorageInner&lt;Types&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    </span>Types: NodeType,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
     index_by_leaf_hash: HashMap&lt;LeafHash&lt;Types&gt;, u64&gt;,
     index_by_block_hash: HashMap&lt;BlockHash&lt;Types&gt;, u64&gt;,
@@ -649,19 +754,61 @@
     vid_storage: LedgerLog&lt;(VidCommonQueryData&lt;Types&gt;, <span class="prelude-ty">Option</span>&lt;VidShare&gt;)&gt;,
 }
 
+<span class="kw">impl</span>&lt;Types&gt; FileSystemStorageInner&lt;Types&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+{
+    <span class="kw">fn </span>get_block_index(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">match </span>id {
+            BlockId::Number(n) =&gt; <span class="prelude-val">Ok</span>(n),
+            BlockId::Hash(h) =&gt; {
+                <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="self">self</span>.index_by_block_hash.get(<span class="kw-2">&amp;</span>h).context(NotFoundSnafu)<span class="question-mark">? </span><span class="kw">as </span>usize)
+            }
+            BlockId::PayloadHash(h) =&gt; {
+                <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="self">self</span>.index_by_payload_hash.get(<span class="kw-2">&amp;</span>h).context(NotFoundSnafu)<span class="question-mark">? </span><span class="kw">as </span>usize)
+            }
+        }
+    }
+
+    <span class="kw">fn </span>get_block(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt; {
+        <span class="self">self</span>.block_storage
+            .iter()
+            .nth(<span class="self">self</span>.get_block_index(id)<span class="question-mark">?</span>)
+            .context(NotFoundSnafu)<span class="question-mark">?
+            </span>.context(MissingSnafu)
+    }
+
+    <span class="kw">fn </span>get_header(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;Header&lt;Types&gt;&gt; {
+        <span class="self">self</span>.get_block(id).map(|block| block.header)
+    }
+
+    <span class="kw">fn </span>get_block_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;&gt;&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send,
+    {
+        <span class="prelude-val">Ok</span>(range_iter(<span class="self">self</span>.block_storage.iter(), range).collect())
+    }
+}
+
+<span class="doccomment">/// Storage for the APIs provided in this crate, backed by a remote PostgreSQL database.
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>FileSystemStorage&lt;Types: NodeType&gt;
+<span class="kw">where
+    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+{
+    inner: RwLock&lt;FileSystemStorageInner&lt;Types&gt;&gt;,
+}
+
 <span class="kw">impl</span>&lt;Types: NodeType&gt; PrunerConfig <span class="kw">for </span>FileSystemStorage&lt;Types&gt; <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;
 {
 }
-<span class="kw">impl</span>&lt;Types: NodeType&gt; PrunedHeightStorage <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
+<span class="kw">impl</span>&lt;Types: NodeType&gt; PruneStorage <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
-    <span class="kw">type </span>Error = Infallible;
-}
-<span class="kw">impl</span>&lt;Types: NodeType&gt; PruneStorage <span class="kw">for </span>FileSystemStorage&lt;Types&gt; <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;
-{
+    <span class="kw">type </span>Pruner = ();
 }
 
 <span class="kw">impl</span>&lt;Types: NodeType&gt; FileSystemStorage&lt;Types&gt;
@@ -677,8 +824,8 @@
     </span><span class="kw">pub async fn </span>create(path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(path, <span class="string">"hotshot_data_source"</span>)<span class="question-mark">?</span>;
         loader.retain_archives(<span class="number">1</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>data_source = <span class="self">Self</span>::create_with_store(<span class="kw-2">&amp;mut </span>loader).<span class="kw">await</span><span class="question-mark">?</span>;
-        data_source.top_storage = <span class="prelude-val">Some</span>(AtomicStore::open(loader)<span class="question-mark">?</span>);
+        <span class="kw">let </span>data_source = <span class="self">Self</span>::create_with_store(<span class="kw-2">&amp;mut </span>loader).<span class="kw">await</span><span class="question-mark">?</span>;
+        data_source.inner.write().<span class="kw">await</span>.top_storage = <span class="prelude-val">Some</span>(AtomicStore::open(loader)<span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(data_source)
     }
 
@@ -690,8 +837,8 @@
     </span><span class="kw">pub async fn </span>open(path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::load(path, <span class="string">"hotshot_data_source"</span>)<span class="question-mark">?</span>;
         loader.retain_archives(<span class="number">1</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>data_source = <span class="self">Self</span>::open_with_store(<span class="kw-2">&amp;mut </span>loader).<span class="kw">await</span><span class="question-mark">?</span>;
-        data_source.top_storage = <span class="prelude-val">Some</span>(AtomicStore::open(loader)<span class="question-mark">?</span>);
+        <span class="kw">let </span>data_source = <span class="self">Self</span>::open_with_store(<span class="kw-2">&amp;mut </span>loader).<span class="kw">await</span><span class="question-mark">?</span>;
+        data_source.inner.write().<span class="kw">await</span>.top_storage = <span class="prelude-val">Some</span>(AtomicStore::open(loader)<span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(data_source)
     }
 
@@ -707,17 +854,19 @@
         loader: <span class="kw-2">&amp;mut </span>AtomicStoreLoader,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PersistenceError&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            index_by_leaf_hash: Default::default(),
-            index_by_block_hash: Default::default(),
-            index_by_payload_hash: Default::default(),
-            index_by_txn_hash: Default::default(),
-            index_by_time: Default::default(),
-            num_transactions: <span class="number">0</span>,
-            payload_size: <span class="number">0</span>,
-            top_storage: <span class="prelude-val">None</span>,
-            leaf_storage: LedgerLog::create(loader, <span class="string">"leaves"</span>, CACHED_LEAVES_COUNT)<span class="question-mark">?</span>,
-            block_storage: LedgerLog::create(loader, <span class="string">"blocks"</span>, CACHED_BLOCKS_COUNT)<span class="question-mark">?</span>,
-            vid_storage: LedgerLog::create(loader, <span class="string">"vid_common"</span>, CACHED_VID_COMMON_COUNT)<span class="question-mark">?</span>,
+            inner: RwLock::new(FileSystemStorageInner {
+                index_by_leaf_hash: Default::default(),
+                index_by_block_hash: Default::default(),
+                index_by_payload_hash: Default::default(),
+                index_by_txn_hash: Default::default(),
+                index_by_time: Default::default(),
+                num_transactions: <span class="number">0</span>,
+                payload_size: <span class="number">0</span>,
+                top_storage: <span class="prelude-val">None</span>,
+                leaf_storage: LedgerLog::create(loader, <span class="string">"leaves"</span>, CACHED_LEAVES_COUNT)<span class="question-mark">?</span>,
+                block_storage: LedgerLog::create(loader, <span class="string">"blocks"</span>, CACHED_BLOCKS_COUNT)<span class="question-mark">?</span>,
+                vid_storage: LedgerLog::create(loader, <span class="string">"vid_common"</span>, CACHED_VID_COMMON_COUNT)<span class="question-mark">?</span>,
+            }),
         })
     }
 
@@ -775,65 +924,103 @@
         }
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            index_by_leaf_hash,
-            index_by_block_hash,
-            index_by_payload_hash,
-            index_by_txn_hash,
-            index_by_time,
-            num_transactions,
-            payload_size,
-            leaf_storage,
-            block_storage,
-            vid_storage,
-            top_storage: <span class="prelude-val">None</span>,
+            inner: RwLock::new(FileSystemStorageInner {
+                index_by_leaf_hash,
+                index_by_block_hash,
+                index_by_payload_hash,
+                index_by_txn_hash,
+                index_by_time,
+                num_transactions,
+                payload_size,
+                leaf_storage,
+                block_storage,
+                vid_storage,
+                top_storage: <span class="prelude-val">None</span>,
+            }),
         })
     }
 
     <span class="doccomment">/// Advance the version of the persistent store without committing changes to persistent state.
-    </span><span class="kw">pub fn </span>skip_version(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), PersistenceError&gt; {
-        <span class="self">self</span>.leaf_storage.skip_version()<span class="question-mark">?</span>;
-        <span class="self">self</span>.block_storage.skip_version()<span class="question-mark">?</span>;
-        <span class="self">self</span>.vid_storage.skip_version()<span class="question-mark">?</span>;
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(store) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.top_storage {
+    </span><span class="kw">pub async fn </span>skip_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), PersistenceError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="self">self</span>.inner.write().<span class="kw">await</span>;
+        inner.leaf_storage.skip_version()<span class="question-mark">?</span>;
+        inner.block_storage.skip_version()<span class="question-mark">?</span>;
+        inner.vid_storage.skip_version()<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(store) = <span class="kw-2">&amp;mut </span>inner.top_storage {
+            store.commit_version()<span class="question-mark">?</span>;
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Transaction&lt;T&gt; {
+    inner: T,
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types&gt; update::Transaction
+    <span class="kw">for </span>Transaction&lt;RwLockWriteGuard&lt;<span class="lifetime">'a</span>, FileSystemStorageInner&lt;Types&gt;&gt;&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+{
+    <span class="kw">async fn </span>commit(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="self">self</span>.inner.leaf_storage.commit_version().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.inner.block_storage.commit_version().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.inner.vid_storage.commit_version().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(store) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.top_storage {
             store.commit_version()<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>get_block_index(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">match </span>id {
-            BlockId::Number(n) =&gt; <span class="prelude-val">Ok</span>(n),
-            BlockId::Hash(h) =&gt; {
-                <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="self">self</span>.index_by_block_hash.get(<span class="kw-2">&amp;</span>h).context(NotFoundSnafu)<span class="question-mark">? </span><span class="kw">as </span>usize)
-            }
-            BlockId::PayloadHash(h) =&gt; {
-                <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="self">self</span>.index_by_payload_hash.get(<span class="kw-2">&amp;</span>h).context(NotFoundSnafu)<span class="question-mark">? </span><span class="kw">as </span>usize)
-            }
+    <span class="kw">fn </span>revert(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Future + Send {
+        <span class="kw">async move </span>{
+            <span class="self">self</span>.inner.leaf_storage.revert_version().unwrap();
+            <span class="self">self</span>.inner.block_storage.revert_version().unwrap();
+            <span class="self">self</span>.inner.vid_storage.revert_version().unwrap();
         }
     }
 }
 
-<span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types: NodeType&gt; VersionedDataSource <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types&gt; update::Transaction
+    <span class="kw">for </span>Transaction&lt;RwLockReadGuard&lt;<span class="lifetime">'a</span>, FileSystemStorageInner&lt;Types&gt;&gt;&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+{
+    <span class="kw">async fn </span>commit(<span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="comment">// Nothing to commit for a read-only transaction.
+        </span><span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>revert(<span class="self">self</span>) -&gt; <span class="kw">impl </span>Future + Send {
+        <span class="comment">// Nothing to revert for a read-only transaction.
+        </span><span class="kw">async </span>{}
+    }
+}
+
+<span class="kw">impl</span>&lt;Types: NodeType&gt; VersionedDataSource <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
-    <span class="kw">type </span>Error = PersistenceError;
+    <span class="kw">type </span>Transaction&lt;<span class="lifetime">'a</span>&gt; = Transaction&lt;RwLockWriteGuard&lt;<span class="lifetime">'a</span>, FileSystemStorageInner&lt;Types&gt;&gt;&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">'a</span>;
+    <span class="kw">type </span>ReadOnly&lt;<span class="lifetime">'a</span>&gt; = Transaction&lt;RwLockReadGuard&lt;<span class="lifetime">'a</span>, FileSystemStorageInner&lt;Types&gt;&gt;&gt;
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">'a</span>;
 
-    <span class="kw">async fn </span>commit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), PersistenceError&gt; {
-        <span class="self">self</span>.leaf_storage.commit_version().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.block_storage.commit_version().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.vid_storage.commit_version().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(store) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.top_storage {
-            store.commit_version()<span class="question-mark">?</span>;
-        }
-        <span class="prelude-val">Ok</span>(())
+    <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;<span class="self">Self</span>::Transaction&lt;<span class="lifetime">'_</span>&gt;&gt; {
+        <span class="prelude-val">Ok</span>(Transaction {
+            inner: <span class="self">self</span>.inner.write().<span class="kw">await</span>,
+        })
     }
 
-    <span class="kw">async fn </span>revert(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.leaf_storage.revert_version().unwrap();
-        <span class="self">self</span>.block_storage.revert_version().unwrap();
-        <span class="self">self</span>.vid_storage.revert_version().unwrap();
+    <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;<span class="self">Self</span>::ReadOnly&lt;<span class="lifetime">'_</span>&gt;&gt; {
+        <span class="prelude-val">Ok</span>(Transaction {
+            inner: <span class="self">self</span>.inner.read().<span class="kw">await</span>,
+        })
     }
 }
 
@@ -879,17 +1066,24 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types: NodeType&gt; AvailabilityStorage&lt;Types&gt; <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
+</span><span class="kw">impl</span>&lt;Types, T&gt; AvailabilityStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;T&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    </span>Types: NodeType,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
+    T: Deref&lt;Target = FileSystemStorageInner&lt;Types&gt;&gt; + Send + Sync,
 {
     <span class="kw">async fn </span>get_leaf(<span class="kw-2">&amp;</span><span class="self">self</span>, id: LeafId&lt;Types&gt;) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt; {
         <span class="kw">let </span>n = <span class="kw">match </span>id {
             LeafId::Number(n) =&gt; n,
-            LeafId::Hash(h) =&gt; <span class="kw-2">*</span><span class="self">self</span>.index_by_leaf_hash.get(<span class="kw-2">&amp;</span>h).context(NotFoundSnafu)<span class="question-mark">? </span><span class="kw">as </span>usize,
+            LeafId::Hash(h) =&gt; <span class="kw-2">*</span><span class="self">self
+                </span>.inner
+                .index_by_leaf_hash
+                .get(<span class="kw-2">&amp;</span>h)
+                .context(NotFoundSnafu)<span class="question-mark">? </span><span class="kw">as </span>usize,
         };
-        <span class="self">self</span>.leaf_storage
+        <span class="self">self</span>.inner
+            .leaf_storage
             .iter()
             .nth(n)
             .context(NotFoundSnafu)<span class="question-mark">?
@@ -897,15 +1091,11 @@
     }
 
     <span class="kw">async fn </span>get_block(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt; {
-        <span class="self">self</span>.block_storage
-            .iter()
-            .nth(<span class="self">self</span>.get_block_index(id)<span class="question-mark">?</span>)
-            .context(NotFoundSnafu)<span class="question-mark">?
-            </span>.context(MissingSnafu)
+        <span class="self">self</span>.inner.get_block(id)
     }
 
     <span class="kw">async fn </span>get_header(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;Header&lt;Types&gt;&gt; {
-        <span class="self">self</span>.get_block(id).<span class="kw">await</span>.map(|block| block.header)
+        <span class="self">self</span>.inner.get_header(id)
     }
 
     <span class="kw">async fn </span>get_payload(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt; {
@@ -914,9 +1104,10 @@
 
     <span class="kw">async fn </span>get_vid_common(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;VidCommonQueryData&lt;Types&gt;&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">self
-            </span>.vid_storage
+            </span>.inner
+            .vid_storage
             .iter()
-            .nth(<span class="self">self</span>.get_block_index(id)<span class="question-mark">?</span>)
+            .nth(<span class="self">self</span>.inner.get_block_index(id)<span class="question-mark">?</span>)
             .context(NotFoundSnafu)<span class="question-mark">?
             </span>.context(MissingSnafu)<span class="question-mark">?
             </span>.<span class="number">0</span>)
@@ -929,7 +1120,7 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send,
     {
-        <span class="prelude-val">Ok</span>(range_iter(<span class="self">self</span>.leaf_storage.iter(), range).collect())
+        <span class="prelude-val">Ok</span>(range_iter(<span class="self">self</span>.inner.leaf_storage.iter(), range).collect())
     }
 
     <span class="kw">async fn </span>get_block_range&lt;R&gt;(
@@ -939,7 +1130,7 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send,
     {
-        <span class="prelude-val">Ok</span>(range_iter(<span class="self">self</span>.block_storage.iter(), range).collect())
+        <span class="self">self</span>.inner.get_block_range(range)
     }
 
     <span class="kw">async fn </span>get_payload_range&lt;R&gt;(
@@ -949,7 +1140,7 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send,
     {
-        <span class="prelude-val">Ok</span>(range_iter(<span class="self">self</span>.block_storage.iter(), range)
+        <span class="prelude-val">Ok</span>(range_iter(<span class="self">self</span>.inner.block_storage.iter(), range)
             .map(|res| res.map(PayloadQueryData::from))
             .collect())
     }
@@ -961,7 +1152,7 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send,
     {
-        <span class="prelude-val">Ok</span>(range_iter(<span class="self">self</span>.vid_storage.iter(), range)
+        <span class="prelude-val">Ok</span>(range_iter(<span class="self">self</span>.inner.vid_storage.iter(), range)
             .map(|res| res.map(|(common, <span class="kw">_</span>)| common))
             .collect())
     }
@@ -970,8 +1161,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hash: TransactionHash&lt;Types&gt;,
     ) -&gt; QueryResult&lt;TransactionQueryData&lt;Types&gt;&gt; {
-        <span class="kw">let </span>height = <span class="self">self</span>.index_by_txn_hash.get(<span class="kw-2">&amp;</span>hash).context(NotFoundSnafu)<span class="question-mark">?</span>;
-        <span class="kw">let </span>block = <span class="self">self</span>.get_block((<span class="kw-2">*</span>height <span class="kw">as </span>usize).into()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>height = <span class="self">self
+            </span>.inner
+            .index_by_txn_hash
+            .get(<span class="kw-2">&amp;</span>hash)
+            .context(NotFoundSnafu)<span class="question-mark">?</span>;
+        <span class="kw">let </span>block = <span class="self">self</span>.inner.get_block((<span class="kw-2">*</span>height <span class="kw">as </span>usize).into())<span class="question-mark">?</span>;
         TransactionQueryData::with_hash(<span class="kw-2">&amp;</span>block, hash).context(ErrorSnafu {
             message: <span class="macro">format!</span>(
                 <span class="string">"transaction index inconsistent: block {height} contains no transaction {hash}"
@@ -981,46 +1176,54 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types: NodeType&gt; UpdateAvailabilityData&lt;Types&gt; <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types: NodeType&gt; UpdateAvailabilityData&lt;Types&gt;
+    <span class="kw">for </span>Transaction&lt;RwLockWriteGuard&lt;<span class="lifetime">'a</span>, FileSystemStorageInner&lt;Types&gt;&gt;&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
 {
-    <span class="kw">type </span>Error = PersistenceError;
-
-    <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
-        <span class="self">self</span>.leaf_storage
+    <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="self">self</span>.inner
+            .leaf_storage
             .insert(leaf.height() <span class="kw">as </span>usize, leaf.clone())<span class="question-mark">?</span>;
-        <span class="self">self</span>.index_by_leaf_hash.insert(leaf.hash(), leaf.height());
+        <span class="self">self</span>.inner
+            .index_by_leaf_hash
+            .insert(leaf.hash(), leaf.height());
         update_index_by_hash(
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.index_by_block_hash,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.index_by_block_hash,
             leaf.block_hash(),
             leaf.height(),
         );
         update_index_by_hash(
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.index_by_payload_hash,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.index_by_payload_hash,
             leaf.payload_hash(),
             leaf.height(),
         );
-        <span class="self">self</span>.index_by_time
+        <span class="self">self</span>.inner
+            .index_by_time
             .entry(leaf.header().timestamp())
             .or_default()
             .push(leaf.height());
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">async fn </span>insert_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: BlockQueryData&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+    <span class="kw">async fn </span>insert_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: BlockQueryData&lt;Types&gt;) -&gt; anyhow::Result&lt;()&gt; {
         <span class="kw">if </span>!<span class="self">self
-            </span>.block_storage
+            </span>.inner
+            .block_storage
             .insert(block.height() <span class="kw">as </span>usize, block.clone())<span class="question-mark">?
         </span>{
             <span class="comment">// The block was already present.
             </span><span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
-        <span class="self">self</span>.num_transactions += block.len();
-        <span class="self">self</span>.payload_size += block.size() <span class="kw">as </span>usize;
+        <span class="self">self</span>.inner.num_transactions += block.len();
+        <span class="self">self</span>.inner.payload_size += block.size() <span class="kw">as </span>usize;
         <span class="kw">for </span>(<span class="kw">_</span>, txn) <span class="kw">in </span>block.enumerate() {
-            update_index_by_hash(<span class="kw-2">&amp;mut </span><span class="self">self</span>.index_by_txn_hash, txn.commit(), block.height());
+            update_index_by_hash(
+                <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner.index_by_txn_hash,
+                txn.commit(),
+                block.height(),
+            );
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -1029,8 +1232,9 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         common: VidCommonQueryData&lt;Types&gt;,
         share: <span class="prelude-ty">Option</span>&lt;VidShare&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
-        <span class="self">self</span>.vid_storage
+    ) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="self">self</span>.inner
+            .vid_storage
             .insert(common.height() <span class="kw">as </span>usize, (common, share))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -1055,57 +1259,60 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types: NodeType&gt; NodeDataSource&lt;Types&gt; <span class="kw">for </span>FileSystemStorage&lt;Types&gt;
+</span><span class="kw">impl</span>&lt;Types, T&gt; NodeDataSource&lt;Types&gt; <span class="kw">for </span>Transaction&lt;T&gt;
 <span class="kw">where
-    </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    </span>Types: NodeType,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
+    T: Deref&lt;Target = FileSystemStorageInner&lt;Types&gt;&gt; + Sync,
 {
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.leaf_storage.iter().len())
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.inner.leaf_storage.iter().len())
     }
 
     <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.num_transactions)
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.inner.num_transactions)
     }
 
     <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.payload_size)
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.inner.payload_size)
     }
 
     <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
     {
-        <span class="self">self</span>.vid_storage
+        <span class="self">self</span>.inner
+            .vid_storage
             .iter()
-            .nth(<span class="self">self</span>.get_block_index(id.into())<span class="question-mark">?</span>)
+            .nth(<span class="self">self</span>.inner.get_block_index(id.into())<span class="question-mark">?</span>)
             .context(NotFoundSnafu)<span class="question-mark">?
             </span>.context(MissingSnafu)<span class="question-mark">?
             </span>.<span class="number">1
             </span>.context(MissingSnafu)
     }
 
-    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, QueryResult&lt;SyncStatus&gt;&gt; {
-        <span class="kw">let </span>height = <span class="self">self</span>.leaf_storage.iter().len();
+    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+        <span class="kw">let </span>height = <span class="self">self</span>.inner.leaf_storage.iter().len();
 
-        <span class="comment">// The number of missing VID common is just the number of completely missing VID entries,
-        // since every entry we have is guaranteed to have the common data.
-        </span><span class="kw">let </span>missing_vid = <span class="self">self</span>.vid_storage.missing(height);
-        <span class="comment">// Missing shares includes the completely missing VID entries, plus any entry which is _not_
-        // messing but which has a null share.
+        <span class="comment">// The number of missing VID common is just the number of completely missing VID
+        // entries, since every entry we have is guaranteed to have the common data.
+        </span><span class="kw">let </span>missing_vid = <span class="self">self</span>.inner.vid_storage.missing(height);
+        <span class="comment">// Missing shares includes the completely missing VID entries, plus any entry which
+        // is _not_ messing but which has a null share.
         </span><span class="kw">let </span>null_vid_shares: usize = <span class="self">self
-            </span>.vid_storage
+            </span>.inner
+            .vid_storage
             .iter()
             .map(|res| <span class="kw">if </span><span class="macro">matches!</span>(res, <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="prelude-val">None</span>))) { <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>})
             .sum();
-        future::ready(<span class="prelude-val">Ok</span>(SyncStatus {
-            missing_blocks: <span class="self">self</span>.block_storage.missing(height),
-            missing_leaves: <span class="self">self</span>.leaf_storage.missing(height),
+        <span class="prelude-val">Ok</span>(SyncStatus {
+            missing_blocks: <span class="self">self</span>.inner.block_storage.missing(height),
+            missing_leaves: <span class="self">self</span>.inner.leaf_storage.missing(height),
             missing_vid_common: missing_vid,
             missing_vid_shares: missing_vid + null_vid_shares,
             pruned_height: <span class="prelude-val">None</span>,
-        }))
-        .boxed()
+        })
     }
 
     <span class="kw">async fn </span>get_header_window(
@@ -1115,20 +1322,21 @@
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
         <span class="kw">let </span>first_block = <span class="kw">match </span>start.into() {
             WindowStart::Height(h) =&gt; h,
-            WindowStart::Hash(h) =&gt; <span class="self">self</span>.get_header(h.into()).<span class="kw">await</span><span class="question-mark">?</span>.block_number(),
+            WindowStart::Hash(h) =&gt; <span class="self">self</span>.inner.get_header(h.into())<span class="question-mark">?</span>.block_number(),
             WindowStart::Time(t) =&gt; {
-                <span class="comment">// Find the minimum timestamp which is at least `t`, and all the blocks with that
-                // timestamp.
+                <span class="comment">// Find the minimum timestamp which is at least `t`, and all the blocks with
+                // that timestamp.
                 </span><span class="kw">let </span>blocks = <span class="self">self
-                    </span>.index_by_time
+                    </span>.inner
+                    .index_by_time
                     .range(t..)
                     .next()
                     .context(NotFoundSnafu)<span class="question-mark">?
                     </span>.<span class="number">1</span>;
-                <span class="comment">// Multiple blocks can have the same timestamp (when truncated to seconds); we want
-                // the first one. It is an invariant that any timestamp which has an entry in
-                // `index_by_time` has a non-empty list associated with it, so this indexing is
-                // safe.
+                <span class="comment">// Multiple blocks can have the same timestamp (when truncated to seconds);
+                // we want the first one. It is an invariant that any timestamp which has an
+                // entry in `index_by_time` has a non-empty list associated with it, so this
+                // indexing is safe.
                 </span>blocks[<span class="number">0</span>]
             }
         } <span class="kw">as </span>usize;
@@ -1137,12 +1345,12 @@
 
         <span class="comment">// Include the block just before the start of the window, if there is one.
         </span><span class="kw">if </span>first_block &gt; <span class="number">0 </span>{
-            res.prev = <span class="prelude-val">Some</span>(<span class="self">self</span>.get_header((first_block - <span class="number">1</span>).into()).<span class="kw">await</span><span class="question-mark">?</span>);
+            res.prev = <span class="prelude-val">Some</span>(<span class="self">self</span>.inner.get_header((first_block - <span class="number">1</span>).into())<span class="question-mark">?</span>);
         }
 
-        <span class="comment">// Add blocks to the window, starting from `first_block`, until we reach the end of the
-        // requested time window.
-        </span><span class="kw">for </span>block <span class="kw">in </span><span class="self">self</span>.get_block_range(first_block..).<span class="kw">await</span><span class="question-mark">? </span>{
+        <span class="comment">// Add blocks to the window, starting from `first_block`, until we reach the end of
+        // the requested time window.
+        </span><span class="kw">for </span>block <span class="kw">in </span><span class="self">self</span>.inner.get_block_range(first_block..)<span class="question-mark">? </span>{
             <span class="kw">let </span>header = block<span class="question-mark">?</span>.header().clone();
             <span class="kw">if </span>header.timestamp() &gt;= end {
                 res.next = <span class="prelude-val">Some</span>(header);
@@ -1154,4 +1362,6 @@
         <span class="prelude-val">Ok</span>(res)
     }
 }
+
+<span class="kw">impl</span>&lt;T&gt; PrunedHeightStorage <span class="kw">for </span>Transaction&lt;T&gt; {}
 </code></pre></div></section></main></body></html>

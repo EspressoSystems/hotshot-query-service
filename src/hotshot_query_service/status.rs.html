@@ -385,7 +385,7 @@
             mocks::MockBase,
             setup_test, sleep,
         },
-        Error,
+        ApiState, Error,
     };
     <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>futures::FutureExt;
@@ -407,7 +407,7 @@
 
         <span class="comment">// Start the web server.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState::from(network.data_source()));
         app.register_module(
             <span class="string">"status"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),

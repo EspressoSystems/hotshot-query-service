@@ -72,6 +72,36 @@
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -99,11 +129,10 @@
 //! trait](crate::availability::UpdateAvailabilityData).
 
 </span><span class="kw">use </span><span class="kw">super</span>::query_data::{BlockHash, BlockId, SyncStatus, TimeWindowQueryData};
-<span class="kw">use crate</span>::{Header, QueryResult, VidShare};
+<span class="kw">use crate</span>::{data_source::ReadOnly, Header, QueryResult, VidShare};
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>derive_more::From;
-<span class="kw">use </span>futures::future::BoxFuture;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 
 <span class="attr">#[derive(Derivative, From)]
@@ -137,13 +166,44 @@
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt;;
 
     <span class="doccomment">/// Search the database for missing objects and generate a report.
-    ///
-    /// The query to find missing objects can be quite expensive while the database is large, but it
-    /// is read-only and thus should not block other operations. This function returns a future
-    /// which runs the bulk of the query and _does not borrow from `self`_. This allows the caller
-    /// to release a lock on the storage layer and run the expensive query asynchronously, while
-    /// other operations, including write that require exclusive access to the API state, are able
-    /// to proceed.
-    </span><span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, QueryResult&lt;SyncStatus&gt;&gt;;
+    </span><span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt;;
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;Types, T&gt; NodeDataSource&lt;Types&gt; <span class="kw">for </span>ReadOnly&lt;T&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+    T: NodeDataSource&lt;Types&gt; + Sync,
+{
+    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        (<span class="kw-2">**</span><span class="self">self</span>).block_height().<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        (<span class="kw-2">**</span><span class="self">self</span>).count_transactions().<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        (<span class="kw-2">**</span><span class="self">self</span>).payload_size().<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
+    {
+        (<span class="kw-2">**</span><span class="self">self</span>).vid_share(id).<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+        (<span class="kw-2">**</span><span class="self">self</span>).sync_status().<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>get_header_window(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
+        end: u64,
+    ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
+        (<span class="kw-2">**</span><span class="self">self</span>).get_header_window(start, end).<span class="kw">await
+    </span>}
 }
 </code></pre></div></section></main></body></html>

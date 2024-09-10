@@ -896,7 +896,6 @@
 <a href="#896" id="896">896</a>
 <a href="#897" id="897">897</a>
 <a href="#898" id="898">898</a>
-<a href="#899" id="899">899</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1411,10 +1410,9 @@
 }
 
 <span class="doccomment">/// [GetBlockDetailError] represents an error that has occurred in response to
-/// the [GetBlockDetail] request.
+/// the `get_block_detail` request.
 </span><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-
 </span><span class="kw">pub enum </span>GetBlockDetailError {
     Unimplemented(Unimplemented),
     BlockNotFound(NotFound),
@@ -1468,7 +1466,7 @@
 }
 
 <span class="doccomment">/// [GetBlockSummariesError] represents an error that has occurred in response
-/// to the [GetBlockSummaries] request.
+/// to the [GetBlockSummariesRequest] request.
 </span><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 </span><span class="kw">pub enum </span>GetBlockSummariesError {
@@ -1529,7 +1527,7 @@
 }
 
 <span class="doccomment">/// [GetTransactionDetailError] represents an error that has occurred in
-/// response to the [GetTransactionDetail] request.
+/// response to the `get_tranaction_detail` request.
 </span><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 </span><span class="kw">pub enum </span>GetTransactionDetailError {
@@ -1595,7 +1593,7 @@
 }
 
 <span class="doccomment">/// [GetTransactionSummariesError] represents an error that has occurred in
-/// response to the [GetTransactionSummaries] request.
+/// response to the [GetTransactionSummariesRequest] request.
 </span><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 </span><span class="kw">pub enum </span>GetTransactionSummariesError {
@@ -1656,7 +1654,7 @@
 }
 
 <span class="doccomment">/// [GetExplorerSummaryError] represents an error that has occurred in response
-/// to the [GetExplorerSummary] request.
+/// to the `get_explorer_summary` request.
 </span><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 </span><span class="kw">pub enum </span>GetExplorerSummaryError {
@@ -1742,7 +1740,7 @@
 }
 
 <span class="doccomment">/// [GetSearchResultsError] represents an error that has occurred in response
-/// to the [GetSearchResults] request.
+/// to the `get_search_results` request.
 </span><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 </span><span class="kw">pub enum </span>GetSearchResultsError {

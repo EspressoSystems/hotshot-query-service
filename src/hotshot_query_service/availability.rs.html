@@ -946,6 +946,7 @@
 <a href="#946" id="946">946</a>
 <a href="#947" id="947">947</a>
 <a href="#948" id="948">948</a>
+<a href="#949" id="949">949</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1396,7 +1397,9 @@
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
-        data_source::{storage::no_storage, ExtensibleDataSource},
+        data_source::{
+            storage::no_storage, ExtensibleDataSource, Transaction, VersionedDataSource,
+        },
         status::StatusDataSource,
         task::BackgroundTask,
         testing::{
@@ -1405,13 +1408,12 @@
             setup_test,
         },
         types::HeightIndexed,
-        Error, Header,
+        ApiState, Error, Header,
     };
     <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>committable::Committable;
     <span class="kw">use </span>futures::future::FutureExt;
-    <span class="kw">use </span>hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
-    <span class="kw">use </span>hotshot_types::data::Leaf;
+    <span class="kw">use </span>hotshot_types::{data::Leaf, simple_certificate::QuorumCertificate};
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::time::Duration;
     <span class="kw">use </span>surf_disco::Client;
@@ -1706,7 +1708,7 @@
 
         <span class="comment">// Start the web server.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState::from(network.data_source()));
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(
@@ -1801,7 +1803,7 @@
         setup_test();
 
         <span class="kw">let </span>dir = TempDir::with_prefix(<span class="string">"test_availability_extensions"</span>).unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>data_source = ExtensibleDataSource::new(
+        <span class="kw">let </span>data_source = ExtensibleDataSource::new(
             MockDataSource::create(dir.path(), Default::default())
                 .<span class="kw">await
                 </span>.unwrap(),
@@ -1809,15 +1811,15 @@
         );
 
         <span class="comment">// mock up some consensus data.
-        </span><span class="kw">let </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(
-            <span class="kw-2">&amp;</span>TestValidatedState::default(),
-            <span class="kw-2">&amp;</span>TestInstanceState::default(),
-        )
-        .<span class="kw">await</span>;
+        </span><span class="kw">let </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>Default::default(), <span class="kw-2">&amp;</span>Default::default()).<span class="kw">await</span>;
+        <span class="kw">let </span>qc = QuorumCertificate::genesis(<span class="kw-2">&amp;</span>Default::default(), <span class="kw-2">&amp;</span>Default::default()).<span class="kw">await</span>;
+        <span class="kw">let </span>leaf = LeafQueryData::new(leaf, qc).unwrap();
+        <span class="kw">let </span>block = BlockQueryData::new(leaf.header().clone(), MockPayload::genesis());
 
-        <span class="kw">let </span>block = BlockQueryData::new(leaf.block_header().clone(), MockPayload::genesis());
-
-        data_source.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.unwrap();
+        tx.insert_leaf(leaf).<span class="kw">await</span>.unwrap();
+        tx.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
+        tx.commit().<span class="kw">await</span>.unwrap();
 
         <span class="comment">// assert that the store has data before we move on to API requests
         </span><span class="macro">assert_eq!</span>(

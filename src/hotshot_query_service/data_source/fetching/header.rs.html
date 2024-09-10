@@ -152,6 +152,7 @@
 <a href="#152" id="152">152</a>
 <a href="#153" id="153">153</a>
 <a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -168,15 +169,15 @@
 
 </span><span class="kw">use super</span>::{
     block::fetch_block_with_header, leaf::fetch_leaf_with_callbacks,
-    vid::fetch_vid_common_with_header, AvailabilityProvider, Fetcher, NotifyStorage, ResultExt,
+    vid::fetch_vid_common_with_header, AvailabilityProvider, Fetcher, ResultExt,
 };
 <span class="kw">use crate</span>::{
-    availability::{BlockId, QueryablePayload},
-    data_source::storage::AvailabilityStorage,
+    availability::{BlockId, QueryablePayload, UpdateAvailabilityData},
+    data_source::{storage::AvailabilityStorage, update::VersionedDataSource},
     Header, Payload,
 };
 <span class="kw">use </span>anyhow::Context;
-<span class="kw">use </span>async_std::sync::{Arc, RwLockReadGuard};
+<span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>hotshot_types::traits::{block_contents::BlockHeader, node_implementation::NodeType};
 <span class="kw">use </span>std::cmp::Ordering;
@@ -228,7 +229,8 @@
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
-    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
+    S: VersionedDataSource + <span class="lifetime">'static</span>,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="kw">fn </span>fetcher(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;Fetcher&lt;Types, S, P&gt;&gt; {
@@ -259,13 +261,14 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>fetch_header_and_then&lt;Types, S, P&gt;(
-    storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
+    tx: <span class="kw-2">&amp;</span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
     req: BlockId&lt;Types&gt;,
     callback: HeaderCallback&lt;Types, S, P&gt;,
 ) <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
-    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
+    S: VersionedDataSource + <span class="lifetime">'static</span>,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="comment">// Check if at least the header is available in local storage. If it is, we benefit two ways:
@@ -276,8 +279,7 @@
     //    be able to provide certain data. For example, the HotShot DA committee members may be able
     //    to provide paylaods, but not full blocks. Or, in the case where VID recovery is needed,
     //    the VID common data may be available but the full block may not exist anywhere.
-    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(header) = storage
-        .storage
+    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(header) = tx
         .get_header(req)
         .<span class="kw">await
         </span>.context(<span class="macro">format!</span>(<span class="string">"loading header for block {req}"</span>))

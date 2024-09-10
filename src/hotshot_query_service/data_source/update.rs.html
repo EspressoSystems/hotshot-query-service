@@ -195,6 +195,38 @@
 <a href="#195" id="195">195</a>
 <a href="#196" id="196">196</a>
 <a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -212,10 +244,11 @@
     availability::{
         BlockQueryData, LeafQueryData, QueryablePayload, UpdateAvailabilityData, VidCommonQueryData,
     },
-    status::UpdateStatusData,
     Leaf, Payload,
 };
 <span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>derive_more::{Deref, From};
+<span class="kw">use </span>futures::future::Future;
 <span class="kw">use </span>hotshot::types::{Event, EventType};
 <span class="kw">use </span>hotshot_types::event::LeafInfo;
 <span class="kw">use </span>hotshot_types::{
@@ -226,20 +259,20 @@
     vid::vid_scheme,
 };
 <span class="kw">use </span>jf_vid::VidScheme;
-<span class="kw">use </span>std::{error::Error, fmt::Debug, iter::once};
+<span class="kw">use </span>std::iter::once;
 
 <span class="doccomment">/// An extension trait for types which implement the update trait for each API module.
 ///
-/// If a type implements both [UpdateAvailabilityData] and [UpdateStatusData], then it can be fully
-/// kept up to date through two interfaces:
-/// * [populate_metrics](UpdateStatusData::populate_metrics), to get a handle for populating the
-///   status metrics, which should be used when initializing a
+/// If a type implements [UpdateAvailabilityData] and
+/// [UpdateStatusData](crate::status::UpdateStatusData), then it can be fully kept up to date
+/// through two interfaces:
+/// * [populate_metrics](crate::status::UpdateStatusData::populate_metrics), to get a handle for
+///   populating the status metrics, which should be used when initializing a
 ///   [SystemContextHandle](hotshot::types::SystemContextHandle)
-/// * [update](Self::update), to update the query state when a new HotShot event is emitted
+/// * [update](Self::update), provided by this extension trait, to update the query state when a new
+///   HotShot event is emitted
 </span><span class="attr">#[async_trait]
-</span><span class="kw">pub trait </span>UpdateDataSource&lt;Types: NodeType&gt;:
-    UpdateAvailabilityData&lt;Types&gt; + UpdateStatusData
-{
+</span><span class="kw">pub trait </span>UpdateDataSource&lt;Types: NodeType&gt;: UpdateAvailabilityData&lt;Types&gt; {
     <span class="doccomment">/// Update query state based on a new consensus event.
     ///
     /// The caller is responsible for authenticating `event`. This function does not perform any
@@ -251,23 +284,17 @@
     ///
     /// If you want to update the data source with an untrusted event, for example one received from
     /// a peer over the network, you must authenticate it first.
-    </span><span class="kw">async fn </span>update(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        event: <span class="kw-2">&amp;</span>Event&lt;Types&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), &lt;<span class="self">Self </span><span class="kw">as </span>UpdateAvailabilityData&lt;Types&gt;&gt;::Error&gt;;
+    </span><span class="kw">async fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;Types&gt;) -&gt; anyhow::Result&lt;()&gt;;
 }
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;Types: NodeType, T&gt; UpdateDataSource&lt;Types&gt; <span class="kw">for </span>T
 <span class="kw">where
-    </span>T: UpdateAvailabilityData&lt;Types&gt; + UpdateStatusData + Send,
+    </span>T: UpdateAvailabilityData&lt;Types&gt; + Send,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     &lt;Types <span class="kw">as </span>NodeType&gt;::InstanceState: Default,
 {
-    <span class="kw">async fn </span>update(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        event: <span class="kw-2">&amp;</span>Event&lt;Types&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), &lt;<span class="self">Self </span><span class="kw">as </span>UpdateAvailabilityData&lt;Types&gt;&gt;::Error&gt; {
+    <span class="kw">async fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;Types&gt;) -&gt; anyhow::Result&lt;()&gt; {
         <span class="kw">if let </span>EventType::Decide { leaf_chain, qc, .. } = <span class="kw-2">&amp;</span>event.event {
             <span class="comment">// `qc` justifies the first (most recent) leaf...
             </span><span class="kw">let </span>qcs = once((<span class="kw-2">**</span>qc).clone())
@@ -365,31 +392,68 @@
 
 <span class="doccomment">/// A data source with an atomic transaction-based synchronization interface.
 ///
-/// Any changes made to a versioned data source are initially visible when queried through that same
-/// data source object only. They are not immediately written back to storage, which means that a
-/// new data source object opened against the same persistent storage will not reflect the changes.
-/// In particular, this means that if the process restarts and reopens its storage, uncommitted
-/// changes will be lost.
+/// Changes are made to a versioned data source through a [`Transaction`]. Any changes made in a
+/// [`Transaction`] are initially visible only when queried through that same [`Transaction`]. They
+/// are not immediately written back to storage, which means that a new data source object opened
+/// against the same persistent storage will not reflect the changes. In particular, this means that
+/// if the process restarts and reopens its storage, uncommitted changes will be lost.
+///
+/// Only when a [`Transaction`] is committed are changes written back to storage, synchronized with
+/// any concurrent changes, and made visible to other connections to the same data source.
+</span><span class="kw">pub trait </span>VersionedDataSource: Send + Sync {
+    <span class="doccomment">/// A transaction which can read and modify the data source.
+    </span><span class="kw">type </span>Transaction&lt;<span class="lifetime">'a</span>&gt;: Transaction
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">'a</span>;
+
+    <span class="kw">type </span>ReadOnly&lt;<span class="lifetime">'a</span>&gt;: Transaction
+    <span class="kw">where
+        </span><span class="self">Self</span>: <span class="lifetime">'a</span>;
+
+    <span class="doccomment">/// Start an atomic transaction on the data source.
+    </span><span class="kw">fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Future&lt;Output = anyhow::Result&lt;<span class="self">Self</span>::Transaction&lt;<span class="lifetime">'_</span>&gt;&gt;&gt; + Send;
+
+    <span class="doccomment">/// Start a read-only transaction on the data source.
+    ///
+    /// A read-only transaction allows the owner to string together multiple queries of the data
+    /// source, which otherwise would not be atomic with respect to concurrent writes, in an atomic
+    /// fashion. Upon returning, [`read`](Self::read) locks in a fully consistent snapshot of the
+    /// data source, and any read operations performed upon the transaction thereafter read from the
+    /// same consistent snapshot. Concurrent modifications to the data source may occur (for
+    /// example, from concurrent [`write`](Self::write) transactions being committed), but their
+    /// results will not be reflected in a successful read-only transaction which was opened before
+    /// the write was committed.
+    ///
+    /// Read-only transactions do not need to be committed, and reverting has no effect.
+    </span><span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Future&lt;Output = anyhow::Result&lt;<span class="self">Self</span>::ReadOnly&lt;<span class="lifetime">'_</span>&gt;&gt;&gt; + Send;
+}
+
+<span class="doccomment">/// A unit of atomicity for updating a shared data sourec.
 ///
 /// The methods provided by this trait can be used to write such pending changes back to persistent
 /// storage ([commit](Self::commit)) so that they become visible to other clients of the same
 /// underlying storage, and are saved if the process restarts. It also allows pending changes to be
 /// rolled back ([revert](Self::revert)) so that they are never written back to storage and are no
 /// longer reflected even through the data source object which was used to make the changes.
-</span><span class="attr">#[async_trait]
-</span><span class="kw">pub trait </span>VersionedDataSource {
-    <span class="kw">type </span>Error: Error + Debug + Send + Sync + <span class="lifetime">'static</span>;
+</span><span class="kw">pub trait </span>Transaction: Send + Sync {
+    <span class="kw">fn </span>commit(<span class="self">self</span>) -&gt; <span class="kw">impl </span>Future&lt;Output = anyhow::Result&lt;()&gt;&gt; + Send;
+    <span class="kw">fn </span>revert(<span class="self">self</span>) -&gt; <span class="kw">impl </span>Future + Send;
+}
 
-    <span class="doccomment">/// Atomically commit to all outstanding modifications to the data.
-    ///
-    /// If this method fails, outstanding changes are left unmodified. The caller may opt to retry
-    /// or to erase outstanding changes with [`revert`](Self::revert).
-    </span><span class="kw">async fn </span>commit(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;;
+<span class="doccomment">/// A wrapper around a [`Transaction`] that permits immutable operations only.
+</span><span class="attr">#[derive(Debug, Deref, From)]
+</span><span class="kw">pub struct </span>ReadOnly&lt;T&gt;(T);
 
-    <span class="doccomment">/// Erase all oustanding modifications to the data.
-    ///
-    /// This function must not return if it has failed to revert changes. Inability to revert
-    /// changes to the database is considered a fatal error, and this function may panic.
-    </span><span class="kw">async fn </span>revert(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
+<span class="kw">impl</span>&lt;T&gt; Transaction <span class="kw">for </span>ReadOnly&lt;T&gt;
+<span class="kw">where
+    </span>T: Transaction,
+{
+    <span class="kw">async fn </span>commit(<span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.commit().<span class="kw">await
+    </span>}
+
+    <span class="kw">fn </span>revert(<span class="self">self</span>) -&gt; <span class="kw">impl </span>Future + Send {
+        <span class="self">self</span>.<span class="number">0</span>.revert()
+    }
 }
 </code></pre></div></section></main></body></html>

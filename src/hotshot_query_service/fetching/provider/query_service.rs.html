@@ -1057,6 +1057,8 @@
 <a href="#1057" id="1057">1057</a>
 <a href="#1058" id="1058">1058</a>
 <a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1225,7 +1227,7 @@
                 pruning::{PrunedHeightStorage, PrunerCfg},
                 sql::testing::TmpDb,
             },
-            AvailabilityProvider, VersionedDataSource,
+            AvailabilityProvider, Transaction, VersionedDataSource,
         },
         fetching::provider::{NoFetching, Provider <span class="kw">as </span>ProviderTrait, TestProvider},
         node::{data_source::NodeDataSource, SyncStatus},
@@ -1236,7 +1238,7 @@
             setup_test, sleep,
         },
         types::HeightIndexed,
-        VidCommitment,
+        ApiState, VidCommitment,
     };
     <span class="kw">use </span>committable::Committable;
     <span class="kw">use </span>futures::{
@@ -1284,7 +1286,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState::from(network.data_source()));
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
@@ -1301,7 +1303,7 @@
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
             MockBase::instance(),
         ));
-        <span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
+        <span class="kw">let </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
 
         <span class="comment">// Start consensus.
         </span>network.start().<span class="kw">await</span>;
@@ -1312,7 +1314,7 @@
         // * Block
         // * Payload
         // * VID common
-        </span><span class="kw">let </span>leaves = { network.data_source().read().<span class="kw">await</span>.subscribe_leaves(<span class="number">1</span>).<span class="kw">await </span>};
+        </span><span class="kw">let </span>leaves = network.data_source().subscribe_leaves(<span class="number">1</span>).<span class="kw">await</span>;
         <span class="kw">let </span>leaves = leaves.take(<span class="number">5</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
         <span class="kw">let </span>test_leaf = <span class="kw-2">&amp;</span>leaves[<span class="number">0</span>];
         <span class="kw">let </span>test_block = <span class="kw-2">&amp;</span>leaves[<span class="number">1</span>];
@@ -1390,11 +1392,11 @@
         <span class="comment">// Now we will actually fetch the missing data. First, since our node is not really
         // connected to consensus, we need to give it a leaf after the range of interest so it
         // learns about the correct block height.
-        </span>data_source
-            .insert_leaf(leaves.last().cloned().unwrap())
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.unwrap();
+        tx.insert_leaf(leaves.last().cloned().unwrap())
             .<span class="kw">await
             </span>.unwrap();
-        data_source.commit().<span class="kw">await</span>.unwrap();
+        tx.commit().<span class="kw">await</span>.unwrap();
 
         <span class="comment">// Block requests to the provider so that we can verify that without the provider, the node
         // does _not_ get the data.
@@ -1442,7 +1444,6 @@
         {
             <span class="comment">// Verify the data.
             </span><span class="kw">let </span>truth = network.data_source();
-            <span class="kw">let </span>truth = truth.read().<span class="kw">await</span>;
             <span class="macro">assert_eq!</span>(
                 leaf,
                 truth.get_leaf(test_leaf.height() <span class="kw">as </span>usize).<span class="kw">await</span>.<span class="kw">await
@@ -1511,7 +1512,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState::from(network.data_source()));
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
@@ -1528,20 +1529,21 @@
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
             MockBase::instance(),
         ));
-        <span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
+        <span class="kw">let </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
 
         <span class="comment">// Start consensus.
         </span>network.start().<span class="kw">await</span>;
 
         <span class="comment">// Wait until the block height reaches 3. This gives us the genesis block, one additional
         // block at the end, and then one block that we can use to test fetching.
-        </span><span class="kw">let </span>leaves = { network.data_source().read().<span class="kw">await</span>.subscribe_leaves(<span class="number">1</span>).<span class="kw">await </span>};
+        </span><span class="kw">let </span>leaves = network.data_source().subscribe_leaves(<span class="number">1</span>).<span class="kw">await</span>;
         <span class="kw">let </span>leaves = leaves.take(<span class="number">2</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
         <span class="kw">let </span>test_leaf = <span class="kw-2">&amp;</span>leaves[<span class="number">0</span>];
 
         <span class="comment">// Tell the node about a leaf after the one of interest so it learns about the block height.
-        </span>data_source.insert_leaf(leaves[<span class="number">1</span>].clone()).<span class="kw">await</span>.unwrap();
-        data_source.commit().<span class="kw">await</span>.unwrap();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.unwrap();
+        tx.insert_leaf(leaves[<span class="number">1</span>].clone()).<span class="kw">await</span>.unwrap();
+        tx.commit().<span class="kw">await</span>.unwrap();
 
         <span class="comment">// Fetch a leaf and the corresponding block at the same time. This will result in two tasks
         // trying to fetch the same leaf, but one should win and notify the other, which ultimately
@@ -1570,7 +1572,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState::from(network.data_source()));
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
@@ -1587,23 +1589,23 @@
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
             MockBase::instance(),
         ));
-        <span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
+        <span class="kw">let </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
 
         <span class="comment">// Start consensus.
         </span>network.start().<span class="kw">await</span>;
 
         <span class="comment">// Wait until the block height reaches 4. This gives us the genesis block, one additional
         // block at the end, and then two blocks that we can use to test fetching.
-        </span><span class="kw">let </span>leaves = { network.data_source().read().<span class="kw">await</span>.subscribe_leaves(<span class="number">1</span>).<span class="kw">await </span>};
+        </span><span class="kw">let </span>leaves = network.data_source().subscribe_leaves(<span class="number">1</span>).<span class="kw">await</span>;
         <span class="kw">let </span>leaves = leaves.take(<span class="number">4</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
 
         <span class="comment">// Tell the node about a leaf after the range of interest so it learns about the block
         // height.
-        </span>data_source
-            .insert_leaf(leaves.last().cloned().unwrap())
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.unwrap();
+        tx.insert_leaf(leaves.last().cloned().unwrap())
             .<span class="kw">await
             </span>.unwrap();
-        data_source.commit().<span class="kw">await</span>.unwrap();
+        tx.commit().<span class="kw">await</span>.unwrap();
 
         <span class="comment">// All the blocks here are empty, so they have the same payload:
         </span><span class="macro">assert_eq!</span>(leaves[<span class="number">0</span>].payload_hash(), leaves[<span class="number">1</span>].payload_hash());
@@ -1633,7 +1635,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState::from(network.data_source()));
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
@@ -1650,7 +1652,7 @@
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
             MockBase::instance(),
         ));
-        <span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
+        <span class="kw">let </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
 
         <span class="comment">// Start consensus.
         </span>network.start().<span class="kw">await</span>;
@@ -1661,16 +1663,16 @@
         <span class="kw">let </span>common = data_source.subscribe_vid_common(<span class="number">0</span>).<span class="kw">await</span>;
 
         <span class="comment">// Wait for a few blocks to be finalized.
-        </span><span class="kw">let </span>finalized_leaves = { network.data_source().read().<span class="kw">await</span>.subscribe_leaves(<span class="number">0</span>).<span class="kw">await </span>};
+        </span><span class="kw">let </span>finalized_leaves = network.data_source().subscribe_leaves(<span class="number">0</span>).<span class="kw">await</span>;
         <span class="kw">let </span>finalized_leaves = finalized_leaves.take(<span class="number">5</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
 
         <span class="comment">// Tell the node about a leaf after the range of interest so it learns about the block
         // height.
-        </span>data_source
-            .insert_leaf(finalized_leaves.last().cloned().unwrap())
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.unwrap();
+        tx.insert_leaf(finalized_leaves.last().cloned().unwrap())
             .<span class="kw">await
             </span>.unwrap();
-        data_source.commit().<span class="kw">await</span>.unwrap();
+        tx.commit().<span class="kw">await</span>.unwrap();
 
         <span class="comment">// Check the subscriptions.
         </span><span class="kw">let </span>blocks = blocks.take(<span class="number">5</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
@@ -1693,7 +1695,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState::from(network.data_source()));
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
@@ -1710,27 +1712,22 @@
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
             MockBase::instance(),
         ));
-        <span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
+        <span class="kw">let </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider).<span class="kw">await</span>;
 
         <span class="comment">// Start consensus.
         </span>network.start().<span class="kw">await</span>;
 
         <span class="comment">// Wait for a few blocks to be finalized.
-        </span><span class="kw">let </span>finalized_leaves = { network.data_source().read().<span class="kw">await</span>.subscribe_leaves(<span class="number">0</span>).<span class="kw">await </span>};
+        </span><span class="kw">let </span>finalized_leaves = network.data_source().subscribe_leaves(<span class="number">0</span>).<span class="kw">await</span>;
         <span class="kw">let </span>finalized_leaves = finalized_leaves.take(<span class="number">5</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
 
         <span class="comment">// Tell the node about a leaf after the range of interest (so it learns about the block
         // height) and one in the middle of the range, to test what happens when data is missing
         // from the beginning of the range but other data is available.
-        </span>data_source
-            .insert_leaf(finalized_leaves[<span class="number">2</span>].clone())
-            .<span class="kw">await
-            </span>.unwrap();
-        data_source
-            .insert_leaf(finalized_leaves[<span class="number">4</span>].clone())
-            .<span class="kw">await
-            </span>.unwrap();
-        data_source.commit().<span class="kw">await</span>.unwrap();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.unwrap();
+        tx.insert_leaf(finalized_leaves[<span class="number">2</span>].clone()).<span class="kw">await</span>.unwrap();
+        tx.insert_leaf(finalized_leaves[<span class="number">4</span>].clone()).<span class="kw">await</span>.unwrap();
+        tx.commit().<span class="kw">await</span>.unwrap();
 
         <span class="comment">// Get the whole range of leaves.
         </span><span class="kw">let </span>leaves = data_source
@@ -1754,7 +1751,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState::from(network.data_source()));
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
@@ -1768,11 +1765,11 @@
         <span class="comment">// Start a data source which is not receiving events from consensus. We don't give it a
         // fetcher since transactions are always fetched passively anyways.
         </span><span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>NoFetching).<span class="kw">await</span>;
+        <span class="kw">let </span>data_source = data_source(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>NoFetching).<span class="kw">await</span>;
 
         <span class="comment">// Subscribe to blocks.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>leaves = { network.data_source().read().<span class="kw">await</span>.subscribe_leaves(<span class="number">1</span>).<span class="kw">await </span>};
-        <span class="kw">let </span><span class="kw-2">mut </span>blocks = { network.data_source().read().<span class="kw">await</span>.subscribe_blocks(<span class="number">1</span>).<span class="kw">await </span>};
+        </span><span class="kw">let </span><span class="kw-2">mut </span>leaves = network.data_source().subscribe_leaves(<span class="number">1</span>).<span class="kw">await</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>blocks = network.data_source().subscribe_blocks(<span class="number">1</span>).<span class="kw">await</span>;
 
         <span class="comment">// Start consensus.
         </span>network.start().<span class="kw">await</span>;
@@ -1792,9 +1789,12 @@
             <span class="kw">let </span>leaf = leaves.next().<span class="kw">await</span>.unwrap();
             <span class="kw">let </span>block = blocks.next().<span class="kw">await</span>.unwrap();
 
-            data_source.insert_leaf(leaf).<span class="kw">await</span>.unwrap();
-            data_source.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
-            data_source.commit().<span class="kw">await</span>.unwrap();
+            {
+                <span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.unwrap();
+                tx.insert_leaf(leaf).<span class="kw">await</span>.unwrap();
+                tx.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
+                tx.commit().<span class="kw">await</span>.unwrap();
+            }
 
             <span class="kw">if </span>block.transaction_by_hash(tx.commit()).is_some() {
                 <span class="kw">break </span>block;
@@ -1824,7 +1824,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState::from(network.data_source()));
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
@@ -1841,7 +1841,7 @@
             <span class="macro">format!</span>(<span class="string">"http://localhost:{port}"</span>).parse().unwrap(),
             MockBase::instance(),
         ));
-        <span class="kw">let </span><span class="kw-2">mut </span>data_source = builder(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider)
+        <span class="kw">let </span>data_source = builder(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>provider)
             .<span class="kw">await
             </span>.with_retry_delay(Duration::from_secs(<span class="number">1</span>))
             .build()
@@ -1853,17 +1853,17 @@
 
         <span class="comment">// Wait until the block height reaches 3. This gives us the genesis block, one additional
         // block at the end, and one block to try fetching.
-        </span><span class="kw">let </span>leaves = { network.data_source().read().<span class="kw">await</span>.subscribe_leaves(<span class="number">1</span>).<span class="kw">await </span>};
+        </span><span class="kw">let </span>leaves = network.data_source().subscribe_leaves(<span class="number">1</span>).<span class="kw">await</span>;
         <span class="kw">let </span>leaves = leaves.take(<span class="number">2</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
         <span class="kw">let </span>test_leaf = <span class="kw-2">&amp;</span>leaves[<span class="number">0</span>];
 
         <span class="comment">// Give the node a leaf after the range of interest so it learns about the correct block
         // height.
-        </span>data_source
-            .insert_leaf(leaves.last().cloned().unwrap())
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.unwrap();
+        tx.insert_leaf(leaves.last().cloned().unwrap())
             .<span class="kw">await
             </span>.unwrap();
-        data_source.commit().<span class="kw">await</span>.unwrap();
+        tx.commit().<span class="kw">await</span>.unwrap();
 
         <span class="comment">// Cause requests to fail temporarily, so we can test retries.
         </span>provider.fail();
@@ -1972,7 +1972,7 @@
 
         <span class="comment">// Start a web server that the non-consensus node can use to fetch blocks.
         </span><span class="kw">let </span>port = pick_unused_port().unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(network.data_source());
+        <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState::from(network.data_source()));
         app.register_module(
             <span class="string">"availability"</span>,
             define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
@@ -2006,26 +2006,27 @@
         </span>network.start().<span class="kw">await</span>;
 
         <span class="comment">// Wait until a few blocks are produced.
-        </span><span class="kw">let </span>leaves = { network.data_source().read().<span class="kw">await</span>.subscribe_leaves(<span class="number">1</span>).<span class="kw">await </span>};
+        </span><span class="kw">let </span>leaves = network.data_source().subscribe_leaves(<span class="number">1</span>).<span class="kw">await</span>;
         <span class="kw">let </span>leaves = leaves.take(<span class="number">5</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
 
         <span class="comment">// The disconnected data source has no data yet, so it hasn't done any pruning.
-        </span><span class="kw">let </span>pruned_height = {
-            data_source
-                .storage()
-                .<span class="kw">await
-                </span>.load_pruned_height()
-                .<span class="kw">await
-                </span>.unwrap()
-        };
+        </span><span class="kw">let </span>pruned_height = data_source
+            .read()
+            .<span class="kw">await
+            </span>.unwrap()
+            .as_ref()
+            .load_pruned_height()
+            .<span class="kw">await
+            </span>.unwrap();
         <span class="comment">// Either None or 0 is acceptable, depending on whether or not the prover has run yet.
         </span><span class="macro">assert!</span>(<span class="macro">matches!</span>(pruned_height, <span class="prelude-val">None </span>| <span class="prelude-val">Some</span>(<span class="number">0</span>)), <span class="string">"{pruned_height:?}"</span>);
 
         <span class="comment">// Send the last leaf to the disconnected data source so it learns about the height and
         // fetches the missing data.
         </span><span class="kw">let </span>last_leaf = leaves.last().unwrap();
-        data_source.insert_leaf(last_leaf.clone()).<span class="kw">await</span>.unwrap();
-        data_source.commit().<span class="kw">await</span>.unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.unwrap();
+        tx.insert_leaf(last_leaf.clone()).<span class="kw">await</span>.unwrap();
+        tx.commit().<span class="kw">await</span>.unwrap();
 
         <span class="comment">// Trigger a fetch of each leaf so the database gets populated.
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..=last_leaf.height() {
@@ -2039,9 +2040,11 @@
         <span class="comment">// After a bit of time, the pruner has run and deleted all the missing data we just fetched.
         </span><span class="kw">loop </span>{
             <span class="kw">let </span>pruned_height = data_source
-                .storage()
+                .read()
                 .<span class="kw">await
-                </span>.load_pruned_height()
+                </span>.unwrap()
+                .as_ref()
+                .load_pruned_height()
                 .<span class="kw">await
                 </span>.unwrap();
             <span class="kw">if </span>pruned_height == <span class="prelude-val">Some</span>(last_leaf.height()) {
@@ -2069,25 +2072,26 @@
             </span>.unwrap();
 
         <span class="comment">// Pruned height should be reset.
-        </span><span class="kw">let </span>pruned_height = {
-            data_source
-                .storage()
-                .<span class="kw">await
-                </span>.load_pruned_height()
-                .<span class="kw">await
-                </span>.unwrap()
-        };
+        </span><span class="kw">let </span>pruned_height = data_source
+            .read()
+            .<span class="kw">await
+            </span>.unwrap()
+            .as_ref()
+            .load_pruned_height()
+            .<span class="kw">await
+            </span>.unwrap();
         <span class="macro">assert_eq!</span>(pruned_height, <span class="prelude-val">None</span>);
 
         <span class="comment">// The node has pruned all of it's data including the latest block, so it's forgotten the
         // block height. We need to give it another leaf with some height so it will be willing to
         // fetch.
-        </span>data_source.insert_leaf(last_leaf.clone()).<span class="kw">await</span>.unwrap();
-        data_source.commit().<span class="kw">await</span>.unwrap();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.unwrap();
+        tx.insert_leaf(last_leaf.clone()).<span class="kw">await</span>.unwrap();
+        tx.commit().<span class="kw">await</span>.unwrap();
 
         <span class="comment">// Wait for the data to be restored. It should be restored by the next major scan.
         </span><span class="kw">loop </span>{
-            <span class="kw">let </span>sync_status = data_source.sync_status().<span class="kw">await</span>.<span class="kw">await</span>.unwrap();
+            <span class="kw">let </span>sync_status = data_source.sync_status().<span class="kw">await</span>.unwrap();
 
             <span class="comment">// VID shares are unique to a node and will never be fetched from a peer; this is
             // acceptable since there is redundancy built into the VID scheme. Ignore missing VID
@@ -2105,7 +2109,7 @@
 
         <span class="comment">// The node remains fully synced even after some time; no pruning.
         </span>sleep(Duration::from_secs(<span class="number">3</span>)).<span class="kw">await</span>;
-        <span class="kw">let </span>sync_status = data_source.sync_status().<span class="kw">await</span>.<span class="kw">await</span>.unwrap();
+        <span class="kw">let </span>sync_status = data_source.sync_status().<span class="kw">await</span>.unwrap();
         <span class="macro">assert!</span>(
             (SyncStatus {
                 missing_vid_shares: <span class="number">0</span>,

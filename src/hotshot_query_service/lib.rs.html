@@ -826,6 +826,31 @@
 <a href="#826" id="826">826</a>
 <a href="#827" id="827">827</a>
 <a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -855,18 +880,19 @@
 //! # use hotshot_example_types::node_types::TestVersions;
 //! # use hotshot_types::consensus::ConsensusMetricsValue;
 //! # use std::path::Path;
-//! # async fn doc(storage_path: &amp;std::path::Path) -&gt; Result&lt;(), hotshot_query_service::Error&gt; {
+//! # async fn doc(storage_path: &amp;std::path::Path) -&gt; anyhow::Result&lt;()&gt; {
 //! use hotshot_query_service::{
 //!     availability,
-//!     data_source::{FileSystemDataSource, UpdateDataSource, VersionedDataSource},
+//!     data_source::{FileSystemDataSource, Transaction, UpdateDataSource, VersionedDataSource},
 //!     fetching::provider::NoFetching,
 //!     node,
 //!     status::UpdateStatusData,
-//!     status, Error,
+//!     status,
 //!     testing::mocks::MockBase,
+//!     ApiState, Error,
 //! };
 //!
-//! use async_std::{sync::{Arc, RwLock}, task::spawn};
+//! use async_std::{sync::Arc, task::spawn};
 //! use futures::StreamExt;
 //! use vbs::version::StaticVersionType;
 //! use hotshot::SystemContext;
@@ -874,8 +900,7 @@
 //!
 //! // Create or open a data source.
 //! let data_source = FileSystemDataSource::&lt;AppTypes, NoFetching&gt;::create(storage_path, NoFetching)
-//!     .await
-//!     .map_err(Error::internal)?;
+//!     .await?;
 //!
 //! // Create hotshot, giving it a handle to the status metrics.
 //! let hotshot = SystemContext::&lt;AppTypes, AppNodeImpl, AppVersions&gt;::init(
@@ -883,39 +908,32 @@
 //!     ConsensusMetricsValue::new(&amp;*data_source.populate_metrics()), panic!(),
 //!     panic!()
 //!     // Other fields omitted
-//! ).await.map_err(Error::internal)?.0;
+//! ).await?.0;
 //!
 //! // Create API modules.
-//! let availability_api = availability::define_api(&amp;Default::default(),  MockBase::instance())
-//!     .map_err(Error::internal)?;
-//! let node_api = node::define_api(&amp;Default::default(),  MockBase::instance())
-//!     .map_err(Error::internal)?;
-//! let status_api = status::define_api(&amp;Default::default(),  MockBase::instance())
-//!     .map_err(Error::internal)?;
+//! let availability_api = availability::define_api(&amp;Default::default(),  MockBase::instance())?;
+//! let node_api = node::define_api(&amp;Default::default(),  MockBase::instance())?;
+//! let status_api = status::define_api(&amp;Default::default(),  MockBase::instance())?;
 //!
-//! // Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
-//! let data_source = Arc::new(RwLock::new(data_source));
+//! // Create app.
+//! let data_source = ApiState::from(data_source);
 //! let mut app = App::&lt;_, Error&gt;::with_state(data_source.clone());
 //! app
-//!     .register_module("availability", availability_api)
-//!     .map_err(Error::internal)?
-//!     .register_module("node", node_api)
-//!     .map_err(Error::internal)?
-//!     .register_module("status", status_api)
-//!     .map_err(Error::internal)?;
+//!     .register_module("availability", availability_api)?
+//!     .register_module("node", node_api)?
+//!     .register_module("status", status_api)?;
 //!
 //! // Serve app.
-//! spawn(app.serve("0.0.0.0:8080",  MockBase::instance()));
+//! spawn(app.serve("0.0.0.0:8080", MockBase::instance()));
 //!
 //! // Update query data using HotShot events.
 //! let mut events = hotshot.event_stream();
 //! while let Some(event) = events.next().await {
-//!     // Re-lock the mutex each time we get a new event.
-//!     let mut data_source = data_source.write().await;
+//!     let mut tx = data_source.write().await?;
 //!
 //!     // Update the query data based on this event.
-//!     data_source.update(&amp;event);
-//!     data_source.commit().await.map_err(Error::internal)?;
+//!     tx.update(&amp;event).await?;
+//!     tx.commit().await?;
 //! }
 //! # Ok(())
 //! # }
@@ -1095,7 +1113,6 @@
 //!
 //! ```
 //! # use async_trait::async_trait;
-//! # use futures::future::BoxFuture;
 //! # use hotshot_query_service::{Header, QueryResult, VidShare};
 //! # use hotshot_query_service::availability::{
 //! #   AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
@@ -1188,7 +1205,7 @@
 //!         self.hotshot_qs.vid_share(id).await
 //!     }
 //!
-//!     async fn sync_status(&amp;self) -&gt; BoxFuture&lt;'static, QueryResult&lt;SyncStatus&gt;&gt; {
+//!     async fn sync_status(&amp;self) -&gt; QueryResult&lt;SyncStatus&gt; {
 //!         self.hotshot_qs.sync_status().await
 //!     }
 //!
@@ -1256,8 +1273,11 @@
 <span class="kw">pub use </span>error::Error;
 <span class="kw">pub use </span>resolvable::Resolvable;
 
-<span class="kw">use </span>async_std::sync::{Arc, RwLock};
-<span class="kw">use </span>futures::StreamExt;
+<span class="kw">use </span>async_std::sync::Arc;
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>data_source::{Transaction <span class="kw">as _</span>, UpdateDataSource};
+<span class="kw">use </span>derive_more::{Deref, From, Into};
+<span class="kw">use </span>futures::{future::BoxFuture, stream::StreamExt};
 <span class="kw">use </span>hotshot::types::SystemContextHandle;
 <span class="kw">use </span>hotshot_types::traits::{
     node_implementation::{NodeImplementation, NodeType, Versions},
@@ -1266,7 +1286,7 @@
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::Snafu;
 <span class="kw">use </span>task::BackgroundTask;
-<span class="kw">use </span>tide_disco::{App, StatusCode};
+<span class="kw">use </span>tide_disco::{method::ReadState, App, StatusCode};
 <span class="kw">use </span>vbs::version::StaticVersionType;
 
 <span class="kw">pub use </span>hotshot_types::{
@@ -1315,6 +1335,27 @@
     <span class="kw">pub </span>port: u16,
 }
 
+<span class="doccomment">/// Read-only wrapper for API state which does not require locking.
+</span><span class="attr">#[derive(Clone, Debug, Deref, From, Into)]
+</span><span class="kw">pub struct </span>ApiState&lt;D&gt;(Arc&lt;D&gt;);
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl</span>&lt;D: <span class="lifetime">'static </span>+ Send + Sync&gt; ReadState <span class="kw">for </span>ApiState&lt;D&gt; {
+    <span class="kw">type </span>State = D;
+    <span class="kw">async fn </span>read&lt;T&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        op: <span class="kw">impl </span>Send + <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; FnOnce(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">Self</span>::State) -&gt; BoxFuture&lt;<span class="lifetime">'a</span>, T&gt; + <span class="lifetime">'async_trait</span>,
+    ) -&gt; T {
+        op(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>).<span class="kw">await
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;D&gt; From&lt;D&gt; <span class="kw">for </span>ApiState&lt;D&gt; {
+    <span class="kw">fn </span>from(d: D) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::from(Arc::new(d))
+    }
+}
+
 <span class="doccomment">/// Run an instance of the HotShot Query service with no customization.
 </span><span class="kw">pub async fn </span>run_standalone_service&lt;
     Types: NodeType,
@@ -1334,11 +1375,11 @@
     D: availability::AvailabilityDataSource&lt;Types&gt;
         + node::NodeDataSource&lt;Types&gt;
         + status::StatusDataSource
-        + data_source::UpdateDataSource&lt;Types&gt;
         + data_source::VersionedDataSource
         + Send
         + Sync
         + <span class="lifetime">'static</span>,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: data_source::UpdateDataSource&lt;Types&gt;,
     ApiVer: StaticVersionType + <span class="lifetime">'static</span>,
 {
     <span class="comment">// Create API modules.
@@ -1347,9 +1388,9 @@
     <span class="kw">let </span>node_api = node::define_api(<span class="kw-2">&amp;</span>options.node, bind_version).map_err(Error::internal)<span class="question-mark">?</span>;
     <span class="kw">let </span>status_api = status::define_api(<span class="kw-2">&amp;</span>options.status, bind_version).map_err(Error::internal)<span class="question-mark">?</span>;
 
-    <span class="comment">// Create app. We wrap `data_source` into an `RwLock` so we can share it with the web server.
-    </span><span class="kw">let </span>data_source = Arc::new(RwLock::new(data_source));
-    <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(data_source.clone());
+    <span class="comment">// Create app.
+    </span><span class="kw">let </span>data_source = Arc::new(data_source);
+    <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState(data_source.clone()));
     app.register_module(<span class="string">"availability"</span>, availability_api)
         .map_err(Error::internal)<span class="question-mark">?
         </span>.register_module(<span class="string">"node"</span>, node_api)
@@ -1368,12 +1409,10 @@
 
     <span class="comment">// Update query data using HotShot events.
     </span><span class="kw">while let </span><span class="prelude-val">Some</span>(event) = events.next().<span class="kw">await </span>{
-        <span class="comment">// Re-lock the mutex each time we get a new event.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>data_source = data_source.write().<span class="kw">await</span>;
-
         <span class="comment">// Update the query data based on this event.
-        </span>data_source.update(<span class="kw-2">&amp;</span>event).<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
-        data_source.commit().<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
+        tx.update(<span class="kw-2">&amp;</span>event).<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
+        tx.commit().<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
     }
 
     <span class="prelude-val">Ok</span>(())
@@ -1388,6 +1427,7 @@
             PayloadQueryData, TransactionHash, TransactionQueryData, UpdateAvailabilityData,
             VidCommonQueryData,
         },
+        data_source::VersionedDataSource,
         metrics::PrometheusMetrics,
         node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
         status::StatusDataSource,
@@ -1399,8 +1439,8 @@
     <span class="kw">use </span>async_std::sync::RwLock;
     <span class="kw">use </span>async_trait::async_trait;
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
-    <span class="kw">use </span>futures::future::{BoxFuture, FutureExt};
-    <span class="kw">use </span>hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
+    <span class="kw">use </span>futures::future::FutureExt;
+    <span class="kw">use </span>hotshot_types::simple_certificate::QuorumCertificate;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>std::ops::RangeBounds;
     <span class="kw">use </span>std::time::Duration;
@@ -1517,7 +1557,7 @@
         {
             <span class="self">self</span>.hotshot_qs.vid_share(id).<span class="kw">await
         </span>}
-        <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, QueryResult&lt;SyncStatus&gt;&gt; {
+        <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
             <span class="self">self</span>.hotshot_qs.sync_status().<span class="kw">await
         </span>}
         <span class="kw">async fn </span>get_header_window(
@@ -1544,18 +1584,19 @@
     </span><span class="kw">async fn </span>test_composition() {
         <span class="kw">let </span>dir = TempDir::with_prefix(<span class="string">"test_composition"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">"test_composition"</span>).unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>hotshot_qs = MockDataSource::create_with_store(<span class="kw-2">&amp;mut </span>loader, Default::default())
+        <span class="kw">let </span>hotshot_qs = MockDataSource::create_with_store(<span class="kw-2">&amp;mut </span>loader, Default::default())
             .<span class="kw">await
             </span>.unwrap();
 
         <span class="comment">// Mock up some data and add a block to the store.
-        </span><span class="kw">let </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(
-            <span class="kw-2">&amp;</span>TestValidatedState::default(),
-            <span class="kw-2">&amp;</span>TestInstanceState::default(),
-        )
-        .<span class="kw">await</span>;
-        <span class="kw">let </span>block = BlockQueryData::new(leaf.block_header().clone(), MockPayload::genesis());
-        hotshot_qs.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
+        </span><span class="kw">let </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>Default::default(), <span class="kw-2">&amp;</span>Default::default()).<span class="kw">await</span>;
+        <span class="kw">let </span>qc = QuorumCertificate::genesis(<span class="kw-2">&amp;</span>Default::default(), <span class="kw-2">&amp;</span>Default::default()).<span class="kw">await</span>;
+        <span class="kw">let </span>leaf = LeafQueryData::new(leaf, qc).unwrap();
+        <span class="kw">let </span>block = BlockQueryData::new(leaf.header().clone(), MockPayload::genesis());
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = hotshot_qs.write().<span class="kw">await</span>.unwrap();
+        tx.insert_leaf(leaf).<span class="kw">await</span>.unwrap();
+        tx.insert_block(block).<span class="kw">await</span>.unwrap();
+        tx.commit().<span class="kw">await</span>.unwrap();
 
         <span class="kw">let </span>module_state =
             RollingLog::create(<span class="kw-2">&amp;mut </span>loader, Default::default(), <span class="string">"module_state"</span>, <span class="number">1024</span>).unwrap();
@@ -1642,7 +1683,16 @@
             <span class="number">1
         </span>);
         <span class="kw">let </span>sync_status: SyncStatus = client.get(<span class="string">"node/sync-status"</span>).send().<span class="kw">await</span>.unwrap();
-        <span class="macro">assert!</span>(sync_status.is_fully_synced(), <span class="string">"{sync_status:?}"</span>);
+        <span class="macro">assert_eq!</span>(
+            sync_status,
+            SyncStatus {
+                missing_blocks: <span class="number">0</span>,
+                missing_leaves: <span class="number">0</span>,
+                missing_vid_common: <span class="number">1</span>,
+                missing_vid_shares: <span class="number">1</span>,
+                pruned_height: <span class="prelude-val">None
+            </span>}
+        );
         <span class="macro">assert_eq!</span>(
             client
                 .get::&lt;MockHeader&gt;(<span class="string">"availability/header/0"</span>)

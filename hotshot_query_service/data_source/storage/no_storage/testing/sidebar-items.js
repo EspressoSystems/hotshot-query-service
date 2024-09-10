@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["DataSource","Storage"]};
+window.SIDEBAR_ITEMS = {"enum":["DataSource","Storage","Transaction"]};

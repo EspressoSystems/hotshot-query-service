@@ -356,9 +356,6 @@
 <a href="#356" id="356">356</a>
 <a href="#357" id="357">357</a>
 <a href="#358" id="358">358</a>
-<a href="#359" id="359">359</a>
-<a href="#360" id="360">360</a>
-<a href="#361" id="361">361</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -374,14 +371,14 @@
 </span><span class="kw">use </span><span class="kw">super</span>::mocks::{MockMembership, MockNodeImpl, MockTransaction, MockTypes, MockVersions};
 <span class="kw">use crate</span>::{
     availability::AvailabilityDataSource,
-    data_source::{FileSystemDataSource, SqlDataSource, UpdateDataSource, VersionedDataSource},
+    data_source::{FileSystemDataSource, SqlDataSource, VersionedDataSource},
     fetching::provider::NoFetching,
     node::NodeDataSource,
     status::{StatusDataSource, UpdateStatusData},
     task::BackgroundTask,
     SignatureKey,
 };
-<span class="kw">use </span>async_std::sync::{Arc, RwLock};
+<span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>futures::{
     future::{join_all, Future},
@@ -412,7 +409,7 @@
 
 <span class="kw">struct </span>MockNode&lt;D: DataSourceLifeCycle&gt; {
     hotshot: SystemContextHandle&lt;MockTypes, MockNodeImpl, MockVersions&gt;,
-    data_source: Arc&lt;RwLock&lt;D&gt;&gt;,
+    data_source: D,
     storage: D::Storage,
 }
 
@@ -581,7 +578,7 @@
 
                         MockNode {
                             hotshot,
-                            data_source: Arc::new(RwLock::new(data_source)),
+                            data_source,
                             storage,
                         }
                     }
@@ -621,11 +618,11 @@
         <span class="self">self</span>.pub_keys[i]
     }
 
-    <span class="kw">pub fn </span>data_source_index(<span class="kw-2">&amp;</span><span class="self">self</span>, i: usize) -&gt; Arc&lt;RwLock&lt;D&gt;&gt; {
+    <span class="kw">pub fn </span>data_source_index(<span class="kw-2">&amp;</span><span class="self">self</span>, i: usize) -&gt; D {
         <span class="self">self</span>.nodes[i].data_source.clone()
     }
 
-    <span class="kw">pub fn </span>data_source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;RwLock&lt;D&gt;&gt; {
+    <span class="kw">pub fn </span>data_source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; D {
         <span class="self">self</span>.data_source_index(<span class="number">0</span>)
     }
 
@@ -660,7 +657,6 @@
                     <span class="kw">while let </span><span class="prelude-val">Some</span>(event) = events.next().<span class="kw">await </span>{
                         <span class="macro">tracing::info!</span>(node = i, event = <span class="question-mark">?</span>event.event, <span class="string">"EVENT"</span>);
                         {
-                            <span class="kw">let </span><span class="kw-2">mut </span>ds = ds.write().<span class="kw">await</span>;
                             ds.handle_event(<span class="kw-2">&amp;</span>event).<span class="kw">await</span>;
                         }
                         async_std::task::yield_now().<span class="kw">await</span>;
@@ -685,7 +681,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">pub trait </span>DataSourceLifeCycle: Send + Sync + Sized + <span class="lifetime">'static </span>{
+</span><span class="kw">pub trait </span>DataSourceLifeCycle: Clone + Send + Sync + Sized + <span class="lifetime">'static </span>{
     <span class="doccomment">/// Backing storage for the data source.
     ///
     /// This can be used to connect to data sources to the same underlying data. It must be kept
@@ -695,7 +691,7 @@
     <span class="kw">async fn </span>create(node_id: usize) -&gt; <span class="self">Self</span>::Storage;
     <span class="kw">async fn </span>connect(storage: <span class="kw-2">&amp;</span><span class="self">Self</span>::Storage) -&gt; <span class="self">Self</span>;
     <span class="kw">async fn </span>reset(storage: <span class="kw-2">&amp;</span><span class="self">Self</span>::Storage) -&gt; <span class="self">Self</span>;
-    <span class="kw">async fn </span>handle_event(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;MockTypes&gt;);
+    <span class="kw">async fn </span>handle_event(<span class="kw-2">&amp;</span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;MockTypes&gt;);
 
     <span class="doccomment">/// Setup runs after setting up the network but before starting a test.
     </span><span class="kw">async fn </span>setup(_network: <span class="kw-2">&amp;mut </span>MockNetwork&lt;<span class="self">Self</span>&gt;) {}
@@ -706,7 +702,6 @@
     + AvailabilityDataSource&lt;MockTypes&gt;
     + NodeDataSource&lt;MockTypes&gt;
     + StatusDataSource
-    + UpdateDataSource&lt;MockTypes&gt;
     + VersionedDataSource
 {
 }
@@ -716,7 +711,6 @@
         + AvailabilityDataSource&lt;MockTypes&gt;
         + NodeDataSource&lt;MockTypes&gt;
         + StatusDataSource
-        + UpdateDataSource&lt;MockTypes&gt;
         + VersionedDataSource
 {
 }

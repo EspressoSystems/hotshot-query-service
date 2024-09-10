@@ -366,6 +366,16 @@
 <a href="#366" id="366">366</a>
 <a href="#367" id="367">367</a>
 <a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -441,7 +451,7 @@
 </span><span class="kw">use </span>async_compatibility_layer::channel::{
     oneshot, unbounded, OneShotReceiver, OneShotSender, UnboundedReceiver, UnboundedSender,
 };
-<span class="kw">use </span>async_std::sync::Arc;
+<span class="kw">use </span>async_std::sync::{Arc, Mutex};
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>futures::future::{BoxFuture, FutureExt};
 <span class="kw">use </span>std::{
@@ -504,13 +514,14 @@
 #[derivative(Debug)]
 </span><span class="kw">pub struct </span>Notifier&lt;T&gt; {
     <span class="comment">// Active subscribers.
-    </span>active: Vec&lt;Subscriber&lt;T&gt;&gt;,
+    </span>active: Mutex&lt;Vec&lt;Subscriber&lt;T&gt;&gt;&gt;,
     <span class="comment">// Pending subscribers.
     //
     // When a new subscriber joins the subscriber set, they do not immediately add themselves to
-    // `active`. Instead, they simply send themselves to this channel. Every time a message is
-    // sent, it will drain pending subscribers from here and add them to `active`. In this way,
-    // almost all of the cost is paid by senders, rather than receivers. We adopt this design for
+    // `active`. Instead, they simply send themselves to this channel. Every time a message is sent,
+    // it will drain pending subscribers from here and add them to `active`. In this way, almost all
+    // of the cost is paid by senders, rather than receivers, and receivers do not contend with
+    // senders. We adopt this design for
     // two reasons:
     // 1. Most basically, more messages are received than sent, since the intended use of this
     //    channel is broadcast, with each message being delivered to multiple receivers. Thus,
@@ -536,7 +547,7 @@
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>(subscribe, pending) = unbounded();
         <span class="self">Self </span>{
-            active: <span class="macro">vec!</span>[],
+            active: Default::default(),
             pending,
             subscribe,
         }
@@ -545,15 +556,17 @@
 
 <span class="kw">impl</span>&lt;T: Clone&gt; Notifier&lt;T&gt; {
     <span class="doccomment">/// Notify all subscribers whose predicate is satisfied by `msg`.
-    </span><span class="kw">pub fn </span>notify(<span class="kw-2">&amp;mut </span><span class="self">self</span>, msg: <span class="kw-2">&amp;</span>T) {
+    </span><span class="kw">pub async fn </span>notify(<span class="kw-2">&amp;</span><span class="self">self</span>, msg: <span class="kw-2">&amp;</span>T) {
+        <span class="kw">let </span><span class="kw-2">mut </span>active = <span class="self">self</span>.active.lock().<span class="kw">await</span>;
+
         <span class="comment">// Try sending the message to each active subscriber.
-        </span><span class="kw">for </span>subscriber <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.active {
+        </span><span class="kw">for </span>subscriber <span class="kw">in </span><span class="kw-2">&amp;mut *</span>active {
             subscriber.notify(msg);
         }
 
         <span class="comment">// Some subscribers may be closed, either because the receiver was dropped or because we
         // just sent it its message. Remove these from the `active` list.
-        </span><span class="self">self</span>.active.retain(|subscriber| !subscriber.is_closed());
+        </span>active.retain(|subscriber| !subscriber.is_closed());
 
         <span class="comment">// Promote pending subscribers to active and send them the message.
         </span><span class="kw">for </span><span class="kw-2">mut </span>subscriber <span class="kw">in </span><span class="self">self</span>.pending.drain().unwrap_or_default() {
@@ -561,7 +574,7 @@
             <span class="kw">if </span>!subscriber.is_closed() {
                 <span class="comment">// If that message didn't satisfy the subscriber, or it was dropped, at it to the
                 // active list so it will get future messages.
-                </span><span class="self">self</span>.active.push(subscriber);
+                </span>active.push(subscriber);
             }
         }
     }
@@ -651,14 +664,14 @@
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_notify_drop() {
         setup_test();
-        <span class="kw">let </span><span class="kw-2">mut </span>n = Notifier::new();
+        <span class="kw">let </span>n = Notifier::new();
 
         <span class="comment">// Create two subscribers with different predicates.
         </span><span class="kw">let </span>wait_for_zero = n.wait_for(|i| <span class="kw-2">*</span>i == <span class="number">0</span>).<span class="kw">await</span>;
         <span class="kw">let </span>wait_for_one = n.wait_for(|i| <span class="kw-2">*</span>i == <span class="number">1</span>).<span class="kw">await</span>;
 
         <span class="comment">// Send a message which satisfies only one of the subscribers.
-        </span>n.notify(<span class="kw-2">&amp;</span><span class="number">0</span>);
+        </span>n.notify(<span class="kw-2">&amp;</span><span class="number">0</span>).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(wait_for_zero.<span class="kw">await</span>.unwrap(), <span class="number">0</span>);
 
         <span class="comment">// Check that the other subscriber was not notified.
@@ -669,14 +682,15 @@
         <span class="comment">// Check subscribers. The first subsciber should have been cleaned up when it was notified.
         // The second should have been closed when it was dropped without completing, but not yet
         // garbage collected.
-        </span><span class="macro">assert_eq!</span>(n.active.len(), <span class="number">1</span>);
-        <span class="macro">assert!</span>(n.active[<span class="number">0</span>].is_closed());
+        </span><span class="kw">let </span>active = n.active.lock().<span class="kw">await</span>;
+        <span class="macro">assert_eq!</span>(active.len(), <span class="number">1</span>);
+        <span class="macro">assert!</span>(active[<span class="number">0</span>].is_closed());
     }
 
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_notify_active() {
         setup_test();
-        <span class="kw">let </span><span class="kw-2">mut </span>n = Notifier::new();
+        <span class="kw">let </span>n = Notifier::new();
 
         <span class="comment">// Create two subscribers.
         </span><span class="kw">let </span>s1 = n.wait_for(|i| <span class="kw-2">*</span>i == <span class="number">1</span>).<span class="kw">await</span>;
@@ -684,46 +698,52 @@
 
         <span class="comment">// Send a message that doesn't notify either subscriber, but just promotes them from pending
         // to active.
-        </span>n.notify(<span class="kw-2">&amp;</span><span class="number">0</span>);
+        </span>n.notify(<span class="kw-2">&amp;</span><span class="number">0</span>).<span class="kw">await</span>;
         <span class="comment">// Check active subscribers.
-        </span><span class="macro">assert_eq!</span>(n.active.len(), <span class="number">2</span>);
-        <span class="macro">assert!</span>(!n.active[<span class="number">0</span>].is_closed());
-        <span class="macro">assert!</span>(!n.active[<span class="number">1</span>].is_closed());
+        </span>{
+            <span class="kw">let </span>active = n.active.lock().<span class="kw">await</span>;
+            <span class="macro">assert_eq!</span>(active.len(), <span class="number">2</span>);
+            <span class="macro">assert!</span>(!active[<span class="number">0</span>].is_closed());
+            <span class="macro">assert!</span>(!active[<span class="number">1</span>].is_closed());
+        }
 
         <span class="comment">// Drop one of the subscribers, then send another non-satisfying message. This should cause
         // the dropped subscriber to get garbage collected.
         </span>drop(s2);
-        n.notify(<span class="kw-2">&amp;</span><span class="number">0</span>);
-        <span class="macro">assert_eq!</span>(n.active.len(), <span class="number">1</span>);
-        <span class="macro">assert!</span>(!n.active[<span class="number">0</span>].is_closed());
+        n.notify(<span class="kw-2">&amp;</span><span class="number">0</span>).<span class="kw">await</span>;
+        {
+            <span class="kw">let </span>active = n.active.lock().<span class="kw">await</span>;
+            <span class="macro">assert_eq!</span>(active.len(), <span class="number">1</span>);
+            <span class="macro">assert!</span>(!active[<span class="number">0</span>].is_closed());
+        }
 
         <span class="comment">// Satisfy the final subscriber.
-        </span>n.notify(<span class="kw-2">&amp;</span><span class="number">1</span>);
+        </span>n.notify(<span class="kw-2">&amp;</span><span class="number">1</span>).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(s1.<span class="kw">await</span>.unwrap(), <span class="number">1</span>);
     }
 
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_pending_dropped() {
         setup_test();
-        <span class="kw">let </span><span class="kw-2">mut </span>n = Notifier::new();
+        <span class="kw">let </span>n = Notifier::new();
 
         <span class="comment">// Create and immediately drop a pending subscriber.
         </span>drop(n.wait_for(|<span class="kw">_</span>| <span class="bool-val">false</span>).<span class="kw">await</span>);
 
         <span class="comment">// Check that the subscriber gets garbage collected on the next notification.
-        </span>n.notify(<span class="kw-2">&amp;</span><span class="number">0</span>);
-        <span class="macro">assert_eq!</span>(n.active.len(), <span class="number">0</span>);
+        </span>n.notify(<span class="kw-2">&amp;</span><span class="number">0</span>).<span class="kw">await</span>;
+        <span class="macro">assert_eq!</span>(n.active.lock().<span class="kw">await</span>.len(), <span class="number">0</span>);
     }
 
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_notifier_dropped() {
         setup_test();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>n = Notifier::new();
+        <span class="kw">let </span>n = Notifier::new();
 
         <span class="comment">// Create an active subscriber.
         </span><span class="kw">let </span>fut1 = n.wait_for(|<span class="kw">_</span>| <span class="bool-val">false</span>).<span class="kw">await</span>;
-        n.notify(<span class="kw-2">&amp;</span><span class="number">0</span>);
+        n.notify(<span class="kw-2">&amp;</span><span class="number">0</span>).<span class="kw">await</span>;
 
         <span class="comment">// Create a pending subscriber.
         </span><span class="kw">let </span>fut2 = n.wait_for(|<span class="kw">_</span>| <span class="bool-val">false</span>).<span class="kw">await</span>;

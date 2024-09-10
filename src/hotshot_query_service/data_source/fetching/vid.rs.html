@@ -214,6 +214,10 @@
 <a href="#214" id="214">214</a>
 <a href="#215" id="215">215</a>
 <a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -230,16 +234,17 @@
 
 </span><span class="kw">use super</span>::{
     header::{fetch_header_and_then, HeaderCallback},
-    AvailabilityProvider, FetchRequest, Fetchable, Fetcher, NotifyStorage, RangedFetchable,
+    AvailabilityProvider, FetchRequest, Fetchable, Fetcher, Heights, Notifiers, NotifyStorage,
+    RangedFetchable,
 };
 <span class="kw">use crate</span>::{
     availability::{BlockId, QueryablePayload, UpdateAvailabilityData, VidCommonQueryData},
-    data_source::{storage::AvailabilityStorage, VersionedDataSource},
+    data_source::{storage::AvailabilityStorage, update::Transaction, VersionedDataSource},
     fetching::{<span class="self">self</span>, request, Callback},
     types::HeightIndexed,
     Header, Payload, QueryResult, VidCommon,
 };
-<span class="kw">use </span>async_std::sync::{Arc, RwLockReadGuard};
+<span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>derive_more::From;
@@ -263,8 +268,8 @@
 <span class="kw">where
     </span>Types: NodeType,
 {
-    <span class="kw">fn </span>might_exist(<span class="self">self</span>, block_height: usize, pruned_height: <span class="prelude-ty">Option</span>&lt;usize&gt;) -&gt; bool {
-        <span class="self">self</span>.<span class="number">0</span>.might_exist(block_height, pruned_height)
+    <span class="kw">fn </span>might_exist(<span class="self">self</span>, heights: Heights) -&gt; bool {
+        <span class="self">self</span>.<span class="number">0</span>.might_exist(heights)
     }
 }
 
@@ -284,15 +289,12 @@
         }
     }
 
-    <span class="kw">async fn </span>passive_fetch&lt;S&gt;(
-        storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;,
+    <span class="kw">async fn </span>passive_fetch(
+        notifiers: <span class="kw-2">&amp;</span>Notifiers&lt;Types&gt;,
         req: <span class="self">Self</span>::Request,
-    ) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt;
-    <span class="kw">where
-        </span>S: AvailabilityStorage&lt;Types&gt;,
-    {
-        storage
-            .vid_common_notifier
+    ) -&gt; BoxFuture&lt;<span class="lifetime">'static</span>, <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt;&gt; {
+        notifiers
+            .vid_common
             .wait_for(<span class="kw">move </span>|vid| vid.satisfies(req))
             .<span class="kw">await
             </span>.into_future()
@@ -300,21 +302,29 @@
     }
 
     <span class="kw">async fn </span>active_fetch&lt;S, P&gt;(
+        tx: <span class="kw-2">&amp;</span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
         fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
-        storage: <span class="kw-2">&amp;</span>RwLockReadGuard&lt;<span class="lifetime">'_</span>, NotifyStorage&lt;Types, S&gt;&gt;,
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
-        </span>S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
+        </span>S: VersionedDataSource + <span class="lifetime">'static</span>,
+        <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
         P: AvailabilityProvider&lt;Types&gt;,
     {
-        fetch_header_and_then(storage, req.<span class="number">0</span>, HeaderCallback::VidCommon { fetcher }).<span class="kw">await
+        fetch_header_and_then(
+            tx,
+            req.<span class="number">0</span>,
+            HeaderCallback::VidCommon {
+                fetcher: fetcher.clone(),
+            },
+        )
+        .<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;
+    <span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;</span>S, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
     {
-        storage.storage.get_vid_common(req.<span class="number">0</span>).<span class="kw">await
+        storage.get_vid_common(req.<span class="number">0</span>).<span class="kw">await
     </span>}
 }
 
@@ -326,15 +336,12 @@
 {
     <span class="kw">type </span>RangedRequest = VidCommonRequest&lt;Types&gt;;
 
-    <span class="kw">async fn </span>load_range&lt;S, R&gt;(
-        storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;,
-        range: R,
-    ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;<span class="self">Self</span>&gt;&gt;&gt;
+    <span class="kw">async fn </span>load_range&lt;S, R&gt;(storage: <span class="kw-2">&amp;</span>S, range: R) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;<span class="self">Self</span>&gt;&gt;&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
         R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
     {
-        storage.storage.get_vid_common_range(range).<span class="kw">await
+        storage.get_vid_common_range(range).<span class="kw">await
     </span>}
 }
 
@@ -344,7 +351,8 @@
 ) <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
-    S: AvailabilityStorage&lt;Types&gt; + <span class="lifetime">'static</span>,
+    S: VersionedDataSource + <span class="lifetime">'static</span>,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="comment">// Now that we have the header, we only need to retrieve the VID common data.
@@ -364,15 +372,18 @@
 }
 
 <span class="kw">async fn </span>store_vid_common&lt;Types, S&gt;(
-    storage: <span class="kw-2">&amp;mut </span>NotifyStorage&lt;Types, S&gt;,
+    storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;,
     common: VidCommonQueryData&lt;Types&gt;,
 ) -&gt; anyhow::Result&lt;()&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    S: UpdateAvailabilityData&lt;Types&gt; + VersionedDataSource,
+    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
+    S: VersionedDataSource,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
 {
-    storage.insert_vid(common, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    storage.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>tx = storage.write().<span class="kw">await</span><span class="question-mark">?</span>;
+    tx.insert_vid(common, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -407,7 +418,8 @@
 <span class="kw">impl</span>&lt;Types: NodeType, S, P&gt; Callback&lt;VidCommon&gt; <span class="kw">for </span>VidCommonCallback&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
-    S: AvailabilityStorage&lt;Types&gt;,
+    S: VersionedDataSource + <span class="lifetime">'static</span>,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="kw">async fn </span>run(<span class="self">self</span>, common: VidCommon) {
@@ -417,11 +429,7 @@
 
         <span class="comment">// Store the data in local storage, so we can avoid fetching it in the future.
         </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>storage = <span class="self">self</span>.fetcher.storage.write().<span class="kw">await</span>;
-            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = store_vid_common(<span class="kw-2">&amp;mut *</span>storage, common).<span class="kw">await </span>{
-                <span class="comment">// Rollback the transaction if insert fails
-                // This prevents subsequent queries from failing, as they would be part of the same transaction block.
-                </span>storage.revert().<span class="kw">await</span>;
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = store_vid_common(<span class="kw-2">&amp;</span><span class="self">self</span>.fetcher.storage, common).<span class="kw">await </span>{
                 <span class="comment">// It is unfortunate if this fails, but we can still proceed by returning
                 // the block that we fetched, keeping it in memory. Simply log the error and
                 // move on.

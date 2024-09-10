@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["testing"],"struct":["NoStorage"]};
+window.SIDEBAR_ITEMS = {"mod":["testing"],"struct":["NoStorage","Transaction"]};
