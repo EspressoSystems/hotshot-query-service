@@ -3240,7 +3240,7 @@ dependencies = [
  "committable",
  "custom_debug 0.6.1",
  "derivative",
- "derive_more 0.99.18",
+ "derive_more 1.0.0",
  "either",
  "espresso-macros",
  "futures",
