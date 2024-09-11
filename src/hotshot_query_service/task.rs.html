@@ -87,6 +87,44 @@
 <a href="#87" id="87">87</a>
 <a href="#88" id="88">88</a>
 <a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -105,15 +143,10 @@
     sync::Arc,
     task::{spawn, JoinHandle},
 };
+<span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>futures::future::Future;
 <span class="kw">use </span>std::fmt::Display;
 <span class="kw">use </span>tracing::{info_span, Instrument};
-
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">struct </span>BackgroundTaskInner {
-    name: String,
-    handle: JoinHandle&lt;()&gt;,
-}
 
 <span class="doccomment">/// A background task which is cancelled on [`Drop`]
 ///
@@ -122,10 +155,9 @@
 /// dropped.
 </span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>BackgroundTask {
-    <span class="comment">// The task handle is an `Option` so we can `take()` out of it during `drop`, where we have a
-    // mutable reference but need to move out of the underlying task handle to cancel it. This will
-    // always be `Some` except during cancellation.
-    </span>inner: <span class="prelude-ty">Option</span>&lt;Arc&lt;BackgroundTaskInner&gt;&gt;,
+    <span class="comment">// A handle to the inner task. This exists solely so that we can hold it and have it be dropped
+    // when the last clone of this object is dropped.
+    </span>_inner: Arc&lt;Task&lt;()&gt;&gt;,
 }
 
 <span class="kw">impl </span>BackgroundTask {
@@ -141,38 +173,82 @@
     </span><span class="kw">where
         </span>F: Future + Send + <span class="lifetime">'static</span>,
     {
+        <span class="comment">// Ignore the output of the background task.
+        </span><span class="kw">let </span>future = <span class="kw">async move </span>{
+            future.<span class="kw">await</span>;
+        };
+        <span class="self">Self </span>{
+            _inner: Arc::new(Task::spawn(name, future)),
+        }
+    }
+}
+
+<span class="attr">#[derive(Derivative)]
+#[derivative(Debug(bound = <span class="string">""</span>))]
+</span><span class="kw">struct </span>TaskInner&lt;T&gt; {
+    name: String,
+    <span class="attr">#[derivative(Debug = <span class="string">"ignore"</span>)]
+    </span>handle: JoinHandle&lt;T&gt;,
+}
+
+<span class="doccomment">/// A task handle which can be joined, but is cancelled on [`Drop`]
+</span><span class="attr">#[derive(Derivative)]
+#[derivative(Debug(bound = <span class="string">""</span>))]
+</span><span class="kw">pub struct </span>Task&lt;T&gt; {
+    <span class="comment">// The task handle is an `Option` so we can `take()` out of it during `join` and `drop`. This
+    // will always be `Some` except during joining or cancellation.
+    </span>inner: <span class="prelude-ty">Option</span>&lt;TaskInner&lt;T&gt;&gt;,
+}
+
+<span class="kw">impl</span>&lt;T: Send + <span class="lifetime">'static</span>&gt; Task&lt;T&gt; {
+    <span class="doccomment">/// Spawn a task, which will be cancelled when dropped.
+    ///
+    /// The caller should ensure that `future` yields back to the executor fairly frequently, to
+    /// ensure timely cancellation in case the task is dropped. If an operation in `future` may run
+    /// for a long time without blocking or yielding, consider using
+    /// [`yield_now`](async_std::task::yield_now) periodically, or using
+    /// [`spawn`](async_std::task::spawn) or [`spawn_blocking`](async_std::task::spawn_blocking) to
+    /// run long operations in a sub-task.
+    </span><span class="kw">pub fn </span>spawn&lt;F&gt;(name: <span class="kw">impl </span>Display, future: F) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>F: Future&lt;Output = T&gt; + Send + <span class="lifetime">'static</span>,
+    {
         <span class="kw">let </span>name = name.to_string();
         <span class="kw">let </span>handle = {
             <span class="kw">let </span>span = <span class="macro">info_span!</span>(<span class="string">"task"</span>, name);
             spawn(
                 <span class="kw">async move </span>{
-                    <span class="macro">tracing::info!</span>(<span class="string">"spawning background task"</span>);
-                    future.<span class="kw">await</span>;
-                    <span class="macro">tracing::info!</span>(<span class="string">"completed background task"</span>);
+                    <span class="macro">tracing::info!</span>(<span class="string">"spawning task"</span>);
+                    <span class="kw">let </span>res = future.<span class="kw">await</span>;
+                    <span class="macro">tracing::info!</span>(<span class="string">"completed task"</span>);
+                    res
                 }
                 .instrument(span),
             )
         };
 
         <span class="self">Self </span>{
-            inner: <span class="prelude-val">Some</span>(Arc::new(BackgroundTaskInner { name, handle })),
+            inner: <span class="prelude-val">Some</span>(TaskInner { name, handle }),
         }
     }
+
+    <span class="doccomment">/// Wait for the task to complete and get its output.
+    </span><span class="kw">pub async fn </span>join(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; T {
+        <span class="comment">// We take here so that we will not attempt to cancel the joined task when this handle is
+        // dropped at the end of the function. We can unwrap here because `inner` is only `None`
+        // during `join` or `drop`. Since `join` consumes `self`, it is not possible that `join`
+        // already ran, and of course `self` has not been dropped yet.
+        </span><span class="kw">let </span>inner = <span class="self">self</span>.inner.take().unwrap();
+        inner.handle.<span class="kw">await
+    </span>}
 }
 
-<span class="kw">impl </span>Drop <span class="kw">for </span>BackgroundTask {
+<span class="kw">impl</span>&lt;T&gt; Drop <span class="kw">for </span>Task&lt;T&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="comment">// `inner` should never be [`None`] here, we only `take` it because we are given `&amp;mut
-        // self` (so that this can be called from [`drop`]) and thus we cannot move out of `self`.
-        // Nevertheless, it doesn't hurt to explicitly check for [`Some`].
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(inner) = <span class="self">self</span>.inner.take() {
-            <span class="comment">// Check if this is the last instance of the [`Arc`] and, if so, cancel the underlying
-            // task.
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(inner) = Arc::into_inner(inner) {
-                <span class="macro">tracing::info!</span>(name = inner.name, <span class="string">"cancelling background task"</span>);
-                async_std::task::block_on(inner.handle.cancel());
-                <span class="macro">tracing::info!</span>(name = inner.name, <span class="string">"cancelled background task"</span>);
-            }
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(inner) = <span class="self">self</span>.inner.take() {
+            <span class="macro">tracing::info!</span>(name = inner.name, <span class="string">"cancelling task"</span>);
+            async_std::task::block_on(inner.handle.cancel());
+            <span class="macro">tracing::info!</span>(name = inner.name, <span class="string">"cancelled task"</span>);
         }
     }
 }
