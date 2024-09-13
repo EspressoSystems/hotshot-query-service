@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["FileSystemStorage","FileSystemStorageInner","Transaction"]};
+window.SIDEBAR_ITEMS = {"struct":["FileSystemStorage","FileSystemStorageInner","Transaction"],"trait":["Revert"]};
