@@ -851,6 +851,10 @@
 <a href="#851" id="851">851</a>
 <a href="#852" id="852">852</a>
 <a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1582,6 +1586,8 @@
 
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_composition() {
+        <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
+
         <span class="kw">let </span>dir = TempDir::with_prefix(<span class="string">"test_composition"</span>).unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>loader = AtomicStoreLoader::create(dir.path(), <span class="string">"test_composition"</span>).unwrap();
         <span class="kw">let </span>hotshot_qs = MockDataSource::create_with_store(<span class="kw-2">&amp;mut </span>loader, Default::default())
@@ -1590,7 +1596,9 @@
 
         <span class="comment">// Mock up some data and add a block to the store.
         </span><span class="kw">let </span>leaf = Leaf::&lt;MockTypes&gt;::genesis(<span class="kw-2">&amp;</span>Default::default(), <span class="kw-2">&amp;</span>Default::default()).<span class="kw">await</span>;
-        <span class="kw">let </span>qc = QuorumCertificate::genesis(<span class="kw-2">&amp;</span>Default::default(), <span class="kw-2">&amp;</span>Default::default()).<span class="kw">await</span>;
+        <span class="kw">let </span>qc =
+            QuorumCertificate::genesis::&lt;TestVersions&gt;(<span class="kw-2">&amp;</span>Default::default(), <span class="kw-2">&amp;</span>Default::default())
+                .<span class="kw">await</span>;
         <span class="kw">let </span>leaf = LeafQueryData::new(leaf, qc).unwrap();
         <span class="kw">let </span>block = BlockQueryData::new(leaf.header().clone(), MockPayload::genesis());
         <span class="kw">let </span><span class="kw-2">mut </span>tx = hotshot_qs.write().<span class="kw">await</span>.unwrap();

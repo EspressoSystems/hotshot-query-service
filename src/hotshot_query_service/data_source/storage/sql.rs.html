@@ -1248,6 +1248,9 @@
 <a href="#1248" id="1248">1248</a>
 <a href="#1249" id="1249">1249</a>
 <a href="#1250" id="1250">1250</a>
+<a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
+<a href="#1253" id="1253">1253</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -2199,7 +2202,10 @@
 </span><span class="attr">#[cfg(all(test, not(target_os = <span class="string">"windows"</span>)))]
 </span><span class="kw">mod </span>test {
     <span class="kw">use </span>async_std::task::sleep;
-    <span class="kw">use </span>hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
+    <span class="kw">use </span>hotshot_example_types::{
+        node_types::TestVersions,
+        state_types::{TestInstanceState, TestValidatedState},
+    };
     <span class="kw">use </span>std::time::Duration;
 
     <span class="kw">use super</span>::{testing::TmpDb, <span class="kw-2">*</span>};
@@ -2298,7 +2304,7 @@
             .port(port);
 
         <span class="kw">let </span><span class="kw-2">mut </span>storage = SqlStorage::connect(cfg).<span class="kw">await</span>.unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(
+        <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis::&lt;TestVersions&gt;(
             <span class="kw-2">&amp;</span>TestValidatedState::default(),
             <span class="kw-2">&amp;</span>TestInstanceState::default(),
         )
@@ -2388,7 +2394,7 @@
         <span class="kw">let </span>db = TmpDb::init().<span class="kw">await</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>storage = SqlStorage::connect(db.config()).<span class="kw">await</span>.unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(
+        <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis::&lt;TestVersions&gt;(
             <span class="kw-2">&amp;</span>TestValidatedState::default(),
             <span class="kw-2">&amp;</span>TestInstanceState::default(),
         )

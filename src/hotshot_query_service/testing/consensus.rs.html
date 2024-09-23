@@ -352,10 +352,6 @@
 <a href="#352" id="352">352</a>
 <a href="#353" id="353">353</a>
 <a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
-<a href="#356" id="356">356</a>
-<a href="#357" id="357">357</a>
-<a href="#358" id="358">358</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -450,23 +446,19 @@
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">let </span>da_membership = MockMembership::create_election(
+        <span class="kw">let </span>da_membership = MockMembership::new(
             known_nodes_with_stake.clone(),
             known_nodes_with_stake.clone(),
             Topic::Da,
-            <span class="number">0</span>,
         );
-        <span class="kw">let </span>non_da_membership = MockMembership::create_election(
+        <span class="kw">let </span>non_da_membership = MockMembership::new(
             known_nodes_with_stake.clone(),
             known_nodes_with_stake.clone(),
             Topic::Global,
-            <span class="number">0</span>,
         );
         <span class="kw">let </span>memberships = Memberships {
             quorum_membership: non_da_membership.clone(),
             da_membership: da_membership.clone(),
-            vid_membership: non_da_membership.clone(),
-            view_sync_membership: non_da_membership.clone(),
         };
 
         <span class="comment">// Pick a random, unused port for the builder server
@@ -490,7 +482,6 @@
             builder_urls: <span class="macro">vec1::vec1!</span>[builder_url.clone()],
             fixed_leader_for_gpuvid: <span class="number">0</span>,
             num_nodes_with_stake: num_staked_nodes,
-            num_nodes_without_stake: <span class="number">0</span>,
             known_nodes_with_stake: known_nodes_with_stake.clone(),
             known_nodes_without_stake: <span class="macro">vec!</span>[],
             my_own_validator_config: Default::default(),
@@ -502,7 +493,6 @@
             execution_type: ExecutionType::Continuous,
             da_staked_committee_size: pub_keys.len(),
             known_da_nodes: known_nodes_with_stake.clone(),
-            da_non_staked_committee_size: <span class="number">0</span>,
             data_request_delay: Duration::from_millis(<span class="number">200</span>),
             view_sync_timeout: Duration::from_millis(<span class="number">250</span>),
             start_threshold: (
@@ -560,9 +550,11 @@
                             config,
                             memberships,
                             network,
-                            HotShotInitializer::from_genesis(TestInstanceState::default())
-                                .<span class="kw">await
-                                </span>.unwrap(),
+                            HotShotInitializer::from_genesis::&lt;MockVersions&gt;(
+                                TestInstanceState::default(),
+                            )
+                            .<span class="kw">await
+                            </span>.unwrap(),
                             ConsensusMetricsValue::new(<span class="kw-2">&amp;*</span>data_source.populate_metrics()),
                             hs_storage,
                             MarketplaceConfig {

@@ -1317,6 +1317,31 @@
 <a href="#1317" id="1317">1317</a>
 <a href="#1318" id="1318">1318</a>
 <a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1447,6 +1472,7 @@
     };
     <span class="kw">use </span>committable::Committable;
     <span class="kw">use </span>futures::stream::StreamExt;
+    <span class="kw">use </span>hotshot_types::data::Leaf;
     <span class="kw">use </span>std::collections::HashMap;
     <span class="kw">use </span>std::fmt::Debug;
     <span class="kw">use </span>std::ops::{Bound, RangeBounds};
@@ -1459,7 +1485,10 @@
         <span class="kw">let </span><span class="kw-2">mut </span>leaves = leaf_range(ds, ..).<span class="kw">await</span>.enumerate();
         <span class="kw">while let </span><span class="prelude-val">Some</span>((i, leaf)) = leaves.next().<span class="kw">await </span>{
             <span class="macro">assert_eq!</span>(leaf.height(), i <span class="kw">as </span>u64);
-            <span class="macro">assert_eq!</span>(leaf.hash(), leaf.leaf().commit());
+            <span class="macro">assert_eq!</span>(
+                leaf.hash(),
+                &lt;Leaf&lt;MockTypes&gt; <span class="kw">as </span>Committable&gt;::commit(<span class="kw-2">&amp;</span>leaf.leaf)
+            );
 
             <span class="comment">// Check indices.
             </span><span class="macro">tracing::info!</span>(<span class="string">"looking up leaf {i} various ways"</span>);
@@ -1786,13 +1815,15 @@
             + NodeDataSource&lt;MockTypes&gt;
             + AvailabilityStorage&lt;MockTypes&gt;,
     {
+        <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
+
         setup_test();
 
         <span class="kw">let </span>storage = D::create(<span class="number">0</span>).<span class="kw">await</span>;
         <span class="kw">let </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Mock up some consensus data.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>qc = QuorumCertificate::&lt;MockTypes&gt;::genesis(
+        </span><span class="kw">let </span><span class="kw-2">mut </span>qc = QuorumCertificate::&lt;MockTypes&gt;::genesis::&lt;TestVersions&gt;(
             <span class="kw-2">&amp;</span>TestValidatedState::default(),
             <span class="kw-2">&amp;</span>TestInstanceState::default(),
         )
@@ -1805,7 +1836,7 @@
         <span class="comment">// Increment the block number, to distinguish this block from the genesis block, which
         // already exists.
         </span>leaf.block_header_mut().block_number += <span class="number">1</span>;
-        qc.data.leaf_commit = leaf.commit();
+        qc.data.leaf_commit = &lt;Leaf&lt;MockTypes&gt; <span class="kw">as </span>Committable&gt;::commit(<span class="kw-2">&amp;</span>leaf);
 
         <span class="kw">let </span>block = BlockQueryData::new(leaf.block_header().clone(), MockPayload::genesis());
         <span class="kw">let </span>leaf = LeafQueryData::new(leaf, qc).unwrap();
@@ -1858,13 +1889,15 @@
     <span class="kw">where
         for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateDataSource&lt;MockTypes&gt;,
     {
+        <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
+
         setup_test();
 
         <span class="kw">let </span>storage = D::create(<span class="number">0</span>).<span class="kw">await</span>;
         <span class="kw">let </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Mock up some consensus data.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>qc = QuorumCertificate::&lt;MockTypes&gt;::genesis(
+        </span><span class="kw">let </span><span class="kw-2">mut </span>qc = QuorumCertificate::&lt;MockTypes&gt;::genesis::&lt;TestVersions&gt;(
             <span class="kw-2">&amp;</span>TestValidatedState::default(),
             <span class="kw-2">&amp;</span>TestInstanceState::default(),
         )
@@ -1877,7 +1910,7 @@
         <span class="comment">// Increment the block number, to distinguish this block from the genesis block, which
         // already exists.
         </span>leaf.block_header_mut().block_number += <span class="number">1</span>;
-        qc.data.leaf_commit = leaf.commit();
+        qc.data.leaf_commit = &lt;Leaf&lt;MockTypes&gt; <span class="kw">as </span>Committable&gt;::commit(<span class="kw-2">&amp;</span>leaf);
 
         <span class="kw">let </span>block = BlockQueryData::new(leaf.block_header().clone(), MockPayload::genesis());
         <span class="kw">let </span>leaf = LeafQueryData::new(leaf, qc).unwrap();
@@ -1919,13 +1952,15 @@
             + AvailabilityStorage&lt;MockTypes&gt;,
         <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; D::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: NodeDataSource&lt;MockTypes&gt;,
     {
+        <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
+
         setup_test();
 
         <span class="kw">let </span>storage = D::create(<span class="number">0</span>).<span class="kw">await</span>;
         <span class="kw">let </span>ds = D::connect(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Mock up some consensus data.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>mock_qc = QuorumCertificate::&lt;MockTypes&gt;::genesis(
+        </span><span class="kw">let </span><span class="kw-2">mut </span>mock_qc = QuorumCertificate::&lt;MockTypes&gt;::genesis::&lt;TestVersions&gt;(
             <span class="kw-2">&amp;</span>TestValidatedState::default(),
             <span class="kw-2">&amp;</span>TestInstanceState::default(),
         )
@@ -1938,7 +1973,7 @@
         <span class="comment">// Increment the block number, to distinguish this block from the genesis block, which
         // already exists.
         </span>mock_leaf.block_header_mut().block_number += <span class="number">1</span>;
-        mock_qc.data.leaf_commit = mock_leaf.commit();
+        mock_qc.data.leaf_commit = &lt;Leaf&lt;MockTypes&gt; <span class="kw">as </span>Committable&gt;::commit(<span class="kw-2">&amp;</span>mock_leaf);
 
         <span class="kw">let </span>block = BlockQueryData::new(mock_leaf.block_header().clone(), MockPayload::genesis());
         <span class="kw">let </span>leaf = LeafQueryData::new(mock_leaf.clone(), mock_qc.clone()).unwrap();
@@ -1964,7 +1999,7 @@
 
         <span class="comment">// Get a mutable transaction again, insert different data.
         </span>mock_leaf.block_header_mut().block_number += <span class="number">1</span>;
-        mock_qc.data.leaf_commit = mock_leaf.commit();
+        mock_qc.data.leaf_commit = &lt;Leaf&lt;MockTypes&gt; <span class="kw">as </span>Committable&gt;::commit(<span class="kw-2">&amp;</span>mock_leaf);
         <span class="kw">let </span>block = BlockQueryData::new(mock_leaf.block_header().clone(), MockPayload::genesis());
         <span class="kw">let </span>leaf = LeafQueryData::new(mock_leaf, mock_qc).unwrap();
 
@@ -2031,6 +2066,8 @@
     <span class="kw">where
         for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateDataSource&lt;MockTypes&gt;,
     {
+        <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
+
         setup_test();
 
         <span class="kw">let </span>storage = D::create(<span class="number">0</span>).<span class="kw">await</span>;
@@ -2041,7 +2078,7 @@
 
         <span class="comment">// Generate some mock leaves and blocks to insert.
         </span><span class="kw">let </span><span class="kw-2">mut </span>leaves = <span class="macro">vec!</span>[
-            LeafQueryData::&lt;MockTypes&gt;::genesis(
+            LeafQueryData::&lt;MockTypes&gt;::genesis::&lt;TestVersions&gt;(
                 <span class="kw-2">&amp;</span>TestValidatedState::default(),
                 <span class="kw-2">&amp;</span>TestInstanceState::default(),
             )
@@ -2187,6 +2224,8 @@
     <span class="kw">where
         for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateDataSource&lt;MockTypes&gt;,
     {
+        <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
+
         setup_test();
 
         <span class="kw">let </span>storage = D::create(<span class="number">0</span>).<span class="kw">await</span>;
@@ -2222,9 +2261,13 @@
                     &lt;TestBlockPayload <span class="kw">as </span>BlockPayload&lt;TestTypes&gt;&gt;::builder_commitment(
                         <span class="kw-2">&amp;</span>payload, <span class="kw-2">&amp;</span>metadata,
                     ),
-            };
+                metadata: TestMetadata {
+                    num_transactions: <span class="number">7</span>, <span class="comment">// arbitrary
+                </span>},
+                random: <span class="number">1</span>, <span class="comment">// arbitrary
+            </span>};
 
-            <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(
+            <span class="kw">let </span><span class="kw-2">mut </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis::&lt;TestVersions&gt;(
                 <span class="kw-2">&amp;</span>TestValidatedState::default(),
                 <span class="kw-2">&amp;</span>TestInstanceState::default(),
             )
@@ -2280,6 +2323,8 @@
         for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateDataSource&lt;MockTypes&gt;,
         <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; D::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: NodeDataSource&lt;MockTypes&gt;,
     {
+        <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
+
         setup_test();
 
         <span class="kw">let </span>storage = D::create(<span class="number">0</span>).<span class="kw">await</span>;
@@ -2290,7 +2335,7 @@
         <span class="kw">let </span>disperse = vid.disperse([]).unwrap();
 
         <span class="comment">// Insert test data with VID common and a share.
-        </span><span class="kw">let </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(
+        </span><span class="kw">let </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis::&lt;TestVersions&gt;(
             <span class="kw-2">&amp;</span>TestValidatedState::default(),
             <span class="kw-2">&amp;</span>TestInstanceState::default(),
         )
@@ -2385,7 +2430,12 @@
         <span class="comment">// Recover payload.
         </span><span class="macro">tracing::info!</span>(<span class="string">"recovering payload"</span>);
         <span class="kw">let </span>bytes = vid.recover_payload(<span class="kw-2">&amp;</span>shares, common).unwrap();
-        <span class="kw">let </span>recovered = &lt;MockPayload <span class="kw">as </span>BlockPayload&lt;TestTypes&gt;&gt;::from_bytes(<span class="kw-2">&amp;</span>bytes, <span class="kw-2">&amp;</span>TestMetadata);
+        <span class="kw">let </span>recovered = &lt;MockPayload <span class="kw">as </span>BlockPayload&lt;TestTypes&gt;&gt;::from_bytes(
+            <span class="kw-2">&amp;</span>bytes,
+            <span class="kw-2">&amp;</span>TestMetadata {
+                num_transactions: <span class="number">7</span>, <span class="comment">// arbitrary
+            </span>},
+        );
         <span class="macro">assert_eq!</span>(recovered, <span class="kw-2">*</span>block.payload());
         <span class="macro">assert_eq!</span>(recovered.transactions, <span class="macro">vec!</span>[txn]);
     }

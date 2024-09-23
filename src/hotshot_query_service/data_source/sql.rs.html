@@ -425,6 +425,8 @@
 <a href="#425" id="425">425</a>
 <a href="#426" id="426">426</a>
 <a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -816,6 +818,8 @@
     // storing VID common and later the corresponding share.
     </span><span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_vid_monotonicity() {
+        <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
+
         setup_test();
 
         <span class="kw">let </span>storage = D::create(<span class="number">0</span>).<span class="kw">await</span>;
@@ -825,7 +829,7 @@
         </span><span class="kw">let </span>disperse = vid_scheme(<span class="number">2</span>).disperse([]).unwrap();
 
         <span class="comment">// Insert test data with VID common but no share.
-        </span><span class="kw">let </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis(
+        </span><span class="kw">let </span>leaf = LeafQueryData::&lt;MockTypes&gt;::genesis::&lt;TestVersions&gt;(
             <span class="kw-2">&amp;</span>TestValidatedState::default(),
             <span class="kw-2">&amp;</span>TestInstanceState::default(),
         )
