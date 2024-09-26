@@ -1366,8 +1366,8 @@
 /// `block_transactions` for those `block_heights`.
 </span><span class="attr">#[derive(Debug, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>ExplorerHistograms {
-    <span class="kw">pub </span>block_time: Vec&lt;u64&gt;,
-    <span class="kw">pub </span>block_size: Vec&lt;u64&gt;,
+    <span class="kw">pub </span>block_time: Vec&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt;,
+    <span class="kw">pub </span>block_size: Vec&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt;,
     <span class="kw">pub </span>block_transactions: Vec&lt;u64&gt;,
     <span class="kw">pub </span>block_heights: Vec&lt;u64&gt;,
 }

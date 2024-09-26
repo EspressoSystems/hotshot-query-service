@@ -554,26 +554,6 @@
 <a href="#554" id="554">554</a>
 <a href="#555" id="555">555</a>
 <a href="#556" id="556">556</a>
-<a href="#557" id="557">557</a>
-<a href="#558" id="558">558</a>
-<a href="#559" id="559">559</a>
-<a href="#560" id="560">560</a>
-<a href="#561" id="561">561</a>
-<a href="#562" id="562">562</a>
-<a href="#563" id="563">563</a>
-<a href="#564" id="564">564</a>
-<a href="#565" id="565">565</a>
-<a href="#566" id="566">566</a>
-<a href="#567" id="567">567</a>
-<a href="#568" id="568">568</a>
-<a href="#569" id="569">569</a>
-<a href="#570" id="570">570</a>
-<a href="#571" id="571">571</a>
-<a href="#572" id="572">572</a>
-<a href="#573" id="573">573</a>
-<a href="#574" id="574">574</a>
-<a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -980,30 +960,12 @@
                         <span class="kw">let </span>time: <span class="prelude-ty">Option</span>&lt;i64&gt; = row.try_get(<span class="string">"time"</span>).map_err(|e| QueryError::Error {
                             message: <span class="macro">format!</span>(<span class="string">"failed to get column time {e}"</span>),
                         })<span class="question-mark">?</span>;
-                        <span class="kw">let </span>size: i32 = row.try_get(<span class="string">"size"</span>).map_err(|e| QueryError::Error {
+                        <span class="kw">let </span>size: <span class="prelude-ty">Option</span>&lt;i32&gt; = row.try_get(<span class="string">"size"</span>).map_err(|e| QueryError::Error {
                             message: <span class="macro">format!</span>(<span class="string">"failed to get column size {e}"</span>),
                         })<span class="question-mark">?</span>;
                         <span class="kw">let </span>num_transactions: i64 =
                             row.try_get(<span class="string">"transactions"</span>).map_err(|e| QueryError::Error {
                                 message: <span class="macro">format!</span>(<span class="string">"failed to get column transactions {e}"</span>),
-                            })<span class="question-mark">?</span>;
-
-                        <span class="kw">let </span>height: u64 = height.try_into().map_err(|e| QueryError::Error {
-                            message: <span class="macro">format!</span>(<span class="string">"failed to convert height to u64 {e}"</span>),
-                        })<span class="question-mark">?</span>;
-                        <span class="kw">let </span>timestamp: u64 =
-                            timestamp.try_into().map_err(|e| QueryError::Error {
-                                message: <span class="macro">format!</span>(<span class="string">"failed to convert timestamp to u64 {e}"</span>),
-                            })<span class="question-mark">?</span>;
-                        <span class="kw">let </span>time: u64 = time.unwrap_or(<span class="number">0</span>).try_into().map_err(|e| QueryError::Error {
-                            message: <span class="macro">format!</span>(<span class="string">"failed to convert time to u64 {e}"</span>),
-                        })<span class="question-mark">?</span>;
-                        <span class="kw">let </span>size: u64 = size.try_into().map_err(|e| QueryError::Error {
-                            message: <span class="macro">format!</span>(<span class="string">"failed to convert size to u64 {e}"</span>),
-                        })<span class="question-mark">?</span>;
-                        <span class="kw">let </span>num_transactions: u64 =
-                            num_transactions.try_into().map_err(|e| QueryError::Error {
-                                message: <span class="macro">format!</span>(<span class="string">"failed to convert num_transactions to u64 {e}"</span>),
                             })<span class="question-mark">?</span>;
 
                         <span class="prelude-val">Ok</span>((height, timestamp, time, size, num_transactions))
@@ -1017,14 +979,12 @@
                         block_heights: Vec::with_capacity(<span class="number">50</span>),
                     },
                     |<span class="kw-2">mut </span>histograms: ExplorerHistograms,
-                     row: <span class="prelude-ty">Result</span>&lt;(u64, u64, u64, u64, u64), QueryError&gt;| <span class="kw">async </span>{
+                     row: <span class="prelude-ty">Result</span>&lt;(i64, i64, <span class="prelude-ty">Option</span>&lt;i64&gt;, <span class="prelude-ty">Option</span>&lt;i32&gt;, i64), QueryError&gt;| <span class="kw">async </span>{
                         <span class="kw">let </span>(height, _timestamp, time, size, num_transactions) = row<span class="question-mark">?</span>;
-                        histograms
-                            .block_time
-                            .push(time);
-                        histograms.block_size.push(size);
-                        histograms.block_transactions.push(num_transactions);
-                        histograms.block_heights.push(height);
+                        histograms.block_time.push(time.map(|i| i <span class="kw">as </span>u64));
+                        histograms.block_size.push(size.map(|i| i <span class="kw">as </span>u64));
+                        histograms.block_transactions.push(num_transactions <span class="kw">as </span>u64);
+                        histograms.block_heights.push(height <span class="kw">as </span>u64);
                         <span class="prelude-val">Ok</span>(histograms)
                     },
                 ).<span class="kw">await</span>;
