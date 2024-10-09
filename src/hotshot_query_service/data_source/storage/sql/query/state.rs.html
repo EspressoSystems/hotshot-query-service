@@ -1394,6 +1394,7 @@
 <a href="#1394" id="1394">1394</a>
 <a href="#1395" id="1395">1395</a>
 <a href="#1396" id="1396">1396</a>
+<a href="#1397" id="1397">1397</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1688,7 +1689,8 @@
                         <span class="kw-2">&amp;</span><span class="macro">format!</span>(
                             <span class="string">"SELECT {header_state_commitment_field} AS root_commmitment
                          FROM header
-                         WHERE height = $1"
+                         WHERE height = $1
+                         LIMIT 1"
                         </span>),
                         [sql_param(<span class="kw-2">&amp;</span>created)],
                     )
