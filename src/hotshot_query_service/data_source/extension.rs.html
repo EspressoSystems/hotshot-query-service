@@ -471,14 +471,14 @@
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
-</span><span class="kw">use super</span>::{storage::ExplorerStorage, VersionedDataSource};
+</span><span class="kw">use </span><span class="kw">super</span>::VersionedDataSource;
 <span class="kw">use crate</span>::{
     availability::{
         AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
         PayloadQueryData, QueryableHeader, QueryablePayload, TransactionHash, TransactionQueryData,
         UpdateAvailabilityData, VidCommonQueryData,
     },
-    explorer::{<span class="self">self</span>, ExplorerHeader, ExplorerTransaction},
+    explorer::{<span class="self">self</span>, ExplorerDataSource, ExplorerHeader, ExplorerTransaction},
     merklized_state::{
         MerklizedState, MerklizedStateDataSource, MerklizedStateHeightPersistence, Snapshot,
         UpdateStateData,
@@ -750,7 +750,7 @@
 </span><span class="kw">impl</span>&lt;D, U, Types, State, <span class="kw">const </span>ARITY: usize&gt; MerklizedStateDataSource&lt;Types, State, ARITY&gt;
     <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
 <span class="kw">where
-    </span>D: MerklizedStateDataSource&lt;Types, State, ARITY&gt; + Send + Sync,
+    </span>D: MerklizedStateDataSource&lt;Types, State, ARITY&gt; + Sync,
     U: Send + Sync,
     Types: NodeType,
     State: MerklizedState&lt;Types, ARITY&gt;,
@@ -767,7 +767,7 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;D, U&gt; MerklizedStateHeightPersistence <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
 <span class="kw">where
-    </span>D: MerklizedStateHeightPersistence + Send + Sync,
+    </span>D: MerklizedStateHeightPersistence + Sync,
     U: Send + Sync,
 {
     <span class="kw">async fn </span>get_last_state_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
@@ -801,9 +801,9 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;D, U, Types&gt; ExplorerStorage&lt;Types&gt; <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
+</span><span class="kw">impl</span>&lt;D, U, Types&gt; ExplorerDataSource&lt;Types&gt; <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
 <span class="kw">where
-    </span>D: ExplorerStorage&lt;Types&gt; + Send + Sync,
+    </span>D: ExplorerDataSource&lt;Types&gt; + Sync,
     U: Send + Sync,
     Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,

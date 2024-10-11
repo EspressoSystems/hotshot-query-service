@@ -302,7 +302,7 @@
     }
 
     <span class="kw">async fn </span>active_fetch&lt;S, P&gt;(
-        _tx: <span class="kw-2">&amp;</span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
+        _tx: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
         fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
@@ -313,7 +313,7 @@
         fetch_leaf_with_callbacks(fetcher, req, <span class="prelude-val">None</span>)
     }
 
-    <span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;</span>S, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;
+    <span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;mut </span>S, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
     {
@@ -376,7 +376,7 @@
 {
     <span class="kw">type </span>RangedRequest = LeafId&lt;Types&gt;;
 
-    <span class="kw">async fn </span>load_range&lt;S, R&gt;(storage: <span class="kw-2">&amp;</span>S, range: R) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;<span class="self">Self</span>&gt;&gt;&gt;
+    <span class="kw">async fn </span>load_range&lt;S, R&gt;(storage: <span class="kw-2">&amp;mut </span>S, range: R) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;<span class="self">Self</span>&gt;&gt;&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
         R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,

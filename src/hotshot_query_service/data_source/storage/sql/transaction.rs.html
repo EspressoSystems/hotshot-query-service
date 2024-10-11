@@ -703,110 +703,6 @@
 <a href="#703" id="703">703</a>
 <a href="#704" id="704">704</a>
 <a href="#705" id="705">705</a>
-<a href="#706" id="706">706</a>
-<a href="#707" id="707">707</a>
-<a href="#708" id="708">708</a>
-<a href="#709" id="709">709</a>
-<a href="#710" id="710">710</a>
-<a href="#711" id="711">711</a>
-<a href="#712" id="712">712</a>
-<a href="#713" id="713">713</a>
-<a href="#714" id="714">714</a>
-<a href="#715" id="715">715</a>
-<a href="#716" id="716">716</a>
-<a href="#717" id="717">717</a>
-<a href="#718" id="718">718</a>
-<a href="#719" id="719">719</a>
-<a href="#720" id="720">720</a>
-<a href="#721" id="721">721</a>
-<a href="#722" id="722">722</a>
-<a href="#723" id="723">723</a>
-<a href="#724" id="724">724</a>
-<a href="#725" id="725">725</a>
-<a href="#726" id="726">726</a>
-<a href="#727" id="727">727</a>
-<a href="#728" id="728">728</a>
-<a href="#729" id="729">729</a>
-<a href="#730" id="730">730</a>
-<a href="#731" id="731">731</a>
-<a href="#732" id="732">732</a>
-<a href="#733" id="733">733</a>
-<a href="#734" id="734">734</a>
-<a href="#735" id="735">735</a>
-<a href="#736" id="736">736</a>
-<a href="#737" id="737">737</a>
-<a href="#738" id="738">738</a>
-<a href="#739" id="739">739</a>
-<a href="#740" id="740">740</a>
-<a href="#741" id="741">741</a>
-<a href="#742" id="742">742</a>
-<a href="#743" id="743">743</a>
-<a href="#744" id="744">744</a>
-<a href="#745" id="745">745</a>
-<a href="#746" id="746">746</a>
-<a href="#747" id="747">747</a>
-<a href="#748" id="748">748</a>
-<a href="#749" id="749">749</a>
-<a href="#750" id="750">750</a>
-<a href="#751" id="751">751</a>
-<a href="#752" id="752">752</a>
-<a href="#753" id="753">753</a>
-<a href="#754" id="754">754</a>
-<a href="#755" id="755">755</a>
-<a href="#756" id="756">756</a>
-<a href="#757" id="757">757</a>
-<a href="#758" id="758">758</a>
-<a href="#759" id="759">759</a>
-<a href="#760" id="760">760</a>
-<a href="#761" id="761">761</a>
-<a href="#762" id="762">762</a>
-<a href="#763" id="763">763</a>
-<a href="#764" id="764">764</a>
-<a href="#765" id="765">765</a>
-<a href="#766" id="766">766</a>
-<a href="#767" id="767">767</a>
-<a href="#768" id="768">768</a>
-<a href="#769" id="769">769</a>
-<a href="#770" id="770">770</a>
-<a href="#771" id="771">771</a>
-<a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a>
-<a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a>
-<a href="#778" id="778">778</a>
-<a href="#779" id="779">779</a>
-<a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
-<a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a>
-<a href="#784" id="784">784</a>
-<a href="#785" id="785">785</a>
-<a href="#786" id="786">786</a>
-<a href="#787" id="787">787</a>
-<a href="#788" id="788">788</a>
-<a href="#789" id="789">789</a>
-<a href="#790" id="790">790</a>
-<a href="#791" id="791">791</a>
-<a href="#792" id="792">792</a>
-<a href="#793" id="793">793</a>
-<a href="#794" id="794">794</a>
-<a href="#795" id="795">795</a>
-<a href="#796" id="796">796</a>
-<a href="#797" id="797">797</a>
-<a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a>
-<a href="#800" id="800">800</a>
-<a href="#801" id="801">801</a>
-<a href="#802" id="802">802</a>
-<a href="#803" id="803">803</a>
-<a href="#804" id="804">804</a>
-<a href="#805" id="805">805</a>
-<a href="#806" id="806">806</a>
-<a href="#807" id="807">807</a>
-<a href="#808" id="808">808</a>
-<a href="#809" id="809">809</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -828,284 +724,228 @@
 //! transaction.
 
 </span><span class="kw">use super</span>::{
-    postgres::{types::BorrowToSql, Client, Row, ToStatement},
-    query::{
-        sql_param,
-        state::{HashTableRow, Node, ParseError},
+    queries::{
+        state::{build_hash_batch_insert, Node},
+        DecodeError,
     },
+    Database, Db,
 };
 <span class="kw">use crate</span>::{
     availability::{
         BlockQueryData, LeafQueryData, QueryableHeader, QueryablePayload, UpdateAvailabilityData,
         VidCommonQueryData,
     },
-    data_source::{
-        storage::pruning::PrunedHeightStorage,
-        update::{<span class="self">self</span>, ReadOnly},
-    },
+    data_source::{storage::pruning::PrunedHeightStorage, update},
     merklized_state::{MerklizedState, UpdateStateData},
-    task::Task,
     types::HeightIndexed,
-    Header, Payload,
-    QueryError::{<span class="self">self</span>, NotFound},
-    QueryResult, VidShare,
+    Header, Payload, QueryError, VidShare,
 };
 <span class="kw">use </span>anyhow::{bail, ensure, Context};
 <span class="kw">use </span>ark_serialize::CanonicalSerialize;
-<span class="kw">use </span>async_std::{
-    sync::{Arc, MutexGuard},
-    task::sleep,
-};
+<span class="kw">use </span>async_std::task::sleep;
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>bit_vec::BitVec;
 <span class="kw">use </span>committable::Committable;
-<span class="kw">use </span>derivative::Derivative;
-<span class="kw">use </span>derive_more::{Deref, DerefMut, From};
-<span class="kw">use </span>futures::{
-    future::Future,
-    stream::{BoxStream, StreamExt, TryStreamExt},
-};
+<span class="kw">use </span>derive_more::{Deref, DerefMut};
+<span class="kw">use </span>futures::{future::Future, stream::TryStreamExt};
 <span class="kw">use </span>hotshot_types::traits::{
     block_contents::BlockHeader, node_implementation::NodeType, EncodeBytes,
 };
-<span class="kw">use </span>itertools::{izip, Itertools};
+<span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>jf_merkle_tree::prelude::{MerkleNode, MerkleProof};
+<span class="kw">use </span>sqlx::{pool::Pool, types::BitVec, Encode, Execute, FromRow, Type};
 <span class="kw">use </span>std::{
     collections::{HashMap, HashSet},
-    fmt::Display,
+    marker::PhantomData,
     time::Duration,
 };
 
-<span class="attr">#[derive(Debug, Deref, DerefMut)]
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Connection {
-    <span class="attr">#[deref]
-    #[deref_mut]
-    </span>client: Arc&lt;Client&gt;,
+<span class="kw">pub use </span>sqlx::Executor;
 
-    <span class="comment">// When the connection is dropped in a synchronous context, we spawn a task to revert the
-    // in-progress transaction, so the revert can run asynchronously without blocking the dropping
-    // thread. If such a revert is in progress, a handle to the task will be stored here. The handle
-    // _must_ be awaited to allow the revert to finish before the connection can be used again.
-    </span>revert: <span class="prelude-ty">Option</span>&lt;Task&lt;anyhow::Result&lt;()&gt;&gt;&gt;,
+<span class="kw">pub type </span>Query&lt;<span class="lifetime">'q</span>&gt; = sqlx::query::Query&lt;<span class="lifetime">'q</span>, Db, &lt;Db <span class="kw">as </span>Database&gt;::Arguments&lt;<span class="lifetime">'q</span>&gt;&gt;;
+<span class="kw">pub type </span>QueryAs&lt;<span class="lifetime">'q</span>, T&gt; = sqlx::query::QueryAs&lt;<span class="lifetime">'q</span>, Db, T, &lt;Db <span class="kw">as </span>Database&gt;::Arguments&lt;<span class="lifetime">'q</span>&gt;&gt;;
+
+<span class="kw">pub fn </span>query(sql: <span class="kw-2">&amp;</span>str) -&gt; Query&lt;<span class="lifetime">'_</span>&gt; {
+    sqlx::query(sql)
 }
 
-<span class="kw">impl </span>From&lt;Client&gt; <span class="kw">for </span>Connection {
-    <span class="kw">fn </span>from(client: Client) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            client: Arc::new(client),
-            revert: <span class="prelude-val">None</span>,
-        }
-    }
+<span class="kw">pub fn </span>query_as&lt;<span class="lifetime">'q</span>, T&gt;(sql: <span class="kw-2">&amp;</span><span class="lifetime">'q </span>str) -&gt; QueryAs&lt;<span class="lifetime">'q</span>, T&gt;
+<span class="kw">where
+    </span>T: <span class="kw">for</span>&lt;<span class="lifetime">'r</span>&gt; FromRow&lt;<span class="lifetime">'r</span>, &lt;Db <span class="kw">as </span>Database&gt;::Row&gt;,
+{
+    sqlx::query_as(sql)
 }
 
-<span class="kw">impl </span>Connection {
-    <span class="doccomment">/// Prepare the connection for use.
-    ///
-    /// This will wait for any async operations to finish which were spawned when the connection was
-    /// dropped in a synchronous context. This _must_ be called the first time the connection is
-    /// invoked in an async context after being dropped in a sync context.
-    </span><span class="kw">async fn </span>acquire(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(revert) = <span class="self">self</span>.revert.take() {
-            <span class="comment">// If a revert was started when this connection was released in a synchronous context,
-            // we must wait for it to finish before reusing the connection.
-            </span>revert.join().<span class="kw">await</span><span class="question-mark">?</span>;
-        }
+<span class="doccomment">/// Marker type indicating a transaction with read-write access to the database.
+</span><span class="attr">#[derive(Clone, Copy, Debug, Default)]
+</span><span class="kw">pub struct </span>Write;
+
+<span class="doccomment">/// Marker type indicating a transaction with read-only access to the database.
+</span><span class="attr">#[derive(Clone, Copy, Debug, Default)]
+</span><span class="kw">pub struct </span>Read;
+
+<span class="doccomment">/// Trait for marker types indicating what type of access a transaction has to the database.
+</span><span class="kw">pub trait </span>TransactionMode: Send + Sync {
+    <span class="kw">fn </span>begin(
+        conn: <span class="kw-2">&amp;mut </span>&lt;Db <span class="kw">as </span>Database&gt;::Connection,
+    ) -&gt; <span class="kw">impl </span>Future&lt;Output = anyhow::Result&lt;()&gt;&gt; + Send;
+}
+
+<span class="kw">impl </span>TransactionMode <span class="kw">for </span>Write {
+    <span class="kw">async fn </span>begin(conn: <span class="kw-2">&amp;mut </span>&lt;Db <span class="kw">as </span>Database&gt;::Connection) -&gt; anyhow::Result&lt;()&gt; {
+        conn.execute(<span class="string">"SET TRANSACTION ISOLATION LEVEL SERIALIZABLE"</span>)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
+}
 
-    <span class="doccomment">/// Spawn a revert to run asynchronously.
-    </span><span class="kw">fn </span>spawn_revert(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="comment">// Consistency check.
-        </span><span class="macro">assert!</span>(
-            <span class="self">self</span>.revert.is_none(),
-            <span class="string">"attempting to queue revert while a queued revert is in progress; this should not be possible"</span>,
-        );
-
-        <span class="comment">// Get a client that is not connected to the lifetime of this reference, so we can run the
-        // revert command in the background.
-        </span><span class="kw">let </span>client = <span class="self">self</span>.client.clone();
-        <span class="self">self</span>.revert = <span class="prelude-val">Some</span>(Task::spawn(<span class="string">"revert postgres transaction"</span>, <span class="kw">async move </span>{
-            client.batch_execute(<span class="string">"ROLLBACK"</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(())
-        }));
-    }
-
-    <span class="attr">#[cfg(test)]
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>vacuum(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
-        <span class="self">self</span>.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.batch_execute(<span class="string">"VACUUM"</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+<span class="kw">impl </span>TransactionMode <span class="kw">for </span>Read {
+    <span class="kw">async fn </span>begin(conn: <span class="kw-2">&amp;mut </span>&lt;Db <span class="kw">as </span>Database&gt;::Connection) -&gt; anyhow::Result&lt;()&gt; {
+        conn.execute(<span class="string">"SET TRANSACTION ISOLATION LEVEL SERIALIZABLE, READ ONLY, DEFERRABLE"</span>)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
 
 <span class="doccomment">/// An atomic SQL transaction.
-</span><span class="attr">#[derive(Derivative, From)]
-#[derivative(Debug)]
-</span><span class="kw">pub struct </span>Transaction&lt;<span class="lifetime">'a</span>&gt; {
-    inner: MutexGuard&lt;<span class="lifetime">'a</span>, Connection&gt;,
-    finalized: bool,
+</span><span class="attr">#[derive(Debug, Deref, DerefMut)]
+</span><span class="kw">pub struct </span>Transaction&lt;Mode&gt; {
+    <span class="attr">#[deref]
+    #[deref_mut]
+    </span>inner: sqlx::Transaction&lt;<span class="lifetime">'static</span>, Db&gt;,
+    _mode: PhantomData&lt;Mode&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Transaction&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>read(
-        <span class="kw-2">mut </span>inner: MutexGuard&lt;<span class="lifetime">'a</span>, Connection&gt;,
-    ) -&gt; anyhow::Result&lt;ReadOnly&lt;<span class="self">Self</span>&gt;&gt; {
-        inner.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-        inner
-            .batch_execute(<span class="string">"BEGIN ISOLATION LEVEL SERIALIZABLE READ ONLY DEFERRABLE"</span>)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+<span class="kw">impl</span>&lt;Mode: TransactionMode&gt; Transaction&lt;Mode&gt; {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>new(pool: <span class="kw-2">&amp;</span>Pool&lt;Db&gt;) -&gt; anyhow::Result&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = pool.begin().<span class="kw">await</span><span class="question-mark">?</span>;
+        Mode::begin(tx.as_mut()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            inner,
-            finalized: <span class="bool-val">false</span>,
-        }
-        .into())
-    }
-
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>write(<span class="kw-2">mut </span>inner: MutexGuard&lt;<span class="lifetime">'a</span>, Connection&gt;) -&gt; anyhow::Result&lt;<span class="self">Self</span>&gt; {
-        inner.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
-        inner
-            .batch_execute(<span class="string">"BEGIN ISOLATION LEVEL SERIALIZABLE"</span>)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            inner,
-            finalized: <span class="bool-val">false</span>,
+            inner: tx,
+            _mode: Default::default(),
         })
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; update::Transaction <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">async fn </span>commit(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
-        <span class="self">self</span>.inner.batch_execute(<span class="string">"COMMIT"</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.finalized = <span class="bool-val">true</span>;
+<span class="kw">impl</span>&lt;Mode: TransactionMode&gt; update::Transaction <span class="kw">for </span>Transaction&lt;Mode&gt; {
+    <span class="kw">async fn </span>commit(<span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="self">self</span>.inner.commit().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="kw">fn </span>revert(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Future + Send {
+    <span class="kw">fn </span>revert(<span class="self">self</span>) -&gt; <span class="kw">impl </span>Future + Send {
         <span class="kw">async move </span>{
-            <span class="self">self</span>.inner.batch_execute(<span class="string">"ROLLBACK"</span>).<span class="kw">await</span>.unwrap();
-            <span class="self">self</span>.finalized = <span class="bool-val">true</span>;
+            <span class="self">self</span>.inner.rollback().<span class="kw">await</span>.unwrap();
         }
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Drop <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span>!<span class="self">self</span>.finalized {
-            <span class="comment">// Since `drop` is synchronous, we can't execute the asynchronous revert process here,
-            // at least not without blocking the current thread (which may be an async executor
-            // thread, blocking other unrelated futures and causing deadlocks). Instead, we will
-            // revert the transaction asynchronously.
-            </span><span class="self">self</span>.inner.spawn_revert();
+<span class="doccomment">/// A collection of parameters which can be bound to a SQL query.
+///
+/// This trait allows us to carry around hetergenous lists of parameters (e.g. tuples) and bind them
+/// to a query at the last moment before executing. This means we can manipulate the parameters
+/// independently of the query before executing it. For example, by requiring a trait bound of
+/// `Params&lt;'p&gt; + Clone`, we get a list (or tuple) of parameters which can be cloned and then bound
+/// to a query, which allows us to keep a copy of the parameters around in order to retry the query
+/// if it fails.
+///
+/// # Lifetimes
+///
+/// A SQL [`Query`] with lifetime `'q` borrows from both it's SQL statement (`&amp;'q str`) and its
+/// parameters (bound via `bind&lt;'q&gt;`). Sometimes, though, it is necessary for the statement and its
+/// parameters to have different (but overlapping) lifetimes. For example, the parameters might be
+/// passed in and owned by the caller, while the query string is constructed in the callee and its
+/// lifetime is limited to the callee scope. (See for example the [`upsert`](Transaction::upsert)
+/// function which does exactly this.)
+///
+/// We could rectify this situation with a trait bound like `P: for&lt;'q&gt; Params&lt;'q&gt;`, meaning `P`
+/// must be bindable to a query with a lifetime chosen by the callee. However, when `P` is an
+/// associated type, such as an element of an iterator, as in
+/// `&lt;I as IntoIter&gt;::Item: for&lt;'q&gt; Params&lt;'q&gt;`, [a current limitation](https://blog.rust-lang.org/2022/10/28/gats-stabilization.html#implied-static-requirement-from-higher-ranked-trait-bounds.)
+/// in the Rust compiler then requires `P: 'static`, which we don't necessarily want: the caller
+/// should be able to pass in a reference to avoid expensive cloning.
+///
+/// So, instead, we work around this by making it explicit in the [`Params`] trait that the lifetime
+/// of the query we're binding to (`'q`) may be different than the lifetime of the parameters (`'p`)
+/// as long as the parameters outlive the duration of the query (the `'p: 'q`) bound on the
+/// [`bind`](Self::bind) function.
+</span><span class="kw">pub trait </span>Params&lt;<span class="lifetime">'p</span>&gt; {
+    <span class="kw">fn </span>bind&lt;<span class="lifetime">'q</span>&gt;(<span class="self">self</span>, q: Query&lt;<span class="lifetime">'q</span>&gt;) -&gt; Query&lt;<span class="lifetime">'q</span>&gt;
+    <span class="kw">where
+        </span><span class="lifetime">'p</span>: <span class="lifetime">'q</span>;
+}
+
+<span class="doccomment">/// A collection of parameters with a statically known length.
+///
+/// This is a simple trick for enforcing at compile time that a list of parameters has a certain
+/// length, such as matching the length of a list of column names. This can prevent easy mistakes
+/// like leaving out a parameter. It is implemented for tuples up to length 8.
+</span><span class="kw">pub trait </span>FixedLengthParams&lt;<span class="lifetime">'p</span>, <span class="kw">const </span>N: usize&gt;: Params&lt;<span class="lifetime">'p</span>&gt; {}
+
+<span class="macro">macro_rules!</span> impl_tuple_params {
+    (<span class="macro-nonterminal">$n</span>:literal, ($(<span class="macro-nonterminal">$t</span>:ident,)+)) =&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">'p</span>, $(<span class="macro-nonterminal">$t</span>),+&gt; Params&lt;<span class="lifetime">'p</span>&gt; <span class="kw">for </span>($(<span class="macro-nonterminal">$t</span>,)+)
+        <span class="kw">where </span>$(
+            <span class="macro-nonterminal">$t</span>: <span class="lifetime">'p </span>+ <span class="kw">for</span>&lt;<span class="lifetime">'q</span>&gt; Encode&lt;<span class="lifetime">'q</span>, Db&gt; + Type&lt;Db&gt;
+        ),+ {
+            <span class="kw">fn </span>bind&lt;<span class="lifetime">'q</span>&gt;(<span class="self">self</span>, q: Query&lt;<span class="lifetime">'q</span>&gt;) -&gt; Query&lt;<span class="lifetime">'q</span>&gt;
+            <span class="kw">where
+                </span><span class="lifetime">'p</span>: <span class="lifetime">'q
+            </span>{
+                <span class="attr">#[allow(non_snake_case)]
+                </span><span class="kw">let </span>($(<span class="macro-nonterminal">$t</span>,)+) = <span class="self">self</span>;
+                q $(
+                    .bind(<span class="macro-nonterminal">$t</span>)
+                )+
+            }
         }
+
+        <span class="kw">impl</span>&lt;<span class="lifetime">'p</span>, $(<span class="macro-nonterminal">$t</span>),+&gt; FixedLengthParams&lt;<span class="lifetime">'p</span>, <span class="macro-nonterminal">$n</span>&gt; <span class="kw">for </span>($(<span class="macro-nonterminal">$t</span>,)+)
+        <span class="kw">where </span>$(
+            <span class="macro-nonterminal">$t</span>: <span class="lifetime">'p </span>+ <span class="kw">for</span>&lt;<span class="lifetime">'q</span>&gt; Encode&lt;<span class="lifetime">'q</span>, Db&gt; + Type&lt;Db&gt;
+        ),+ {
+        }
+    };
+}
+
+<span class="macro">impl_tuple_params!</span>(<span class="number">1</span>, (T,));
+<span class="macro">impl_tuple_params!</span>(<span class="number">2</span>, (T1, T2,));
+<span class="macro">impl_tuple_params!</span>(<span class="number">3</span>, (T1, T2, T3,));
+<span class="macro">impl_tuple_params!</span>(<span class="number">4</span>, (T1, T2, T3, T4,));
+<span class="macro">impl_tuple_params!</span>(<span class="number">5</span>, (T1, T2, T3, T4, T5,));
+<span class="macro">impl_tuple_params!</span>(<span class="number">6</span>, (T1, T2, T3, T4, T5, T6,));
+<span class="macro">impl_tuple_params!</span>(<span class="number">7</span>, (T1, T2, T3, T4, T5, T6, T7,));
+<span class="macro">impl_tuple_params!</span>(<span class="number">8</span>, (T1, T2, T3, T4, T5, T6, T7, T8,));
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'p</span>, T&gt; Params&lt;<span class="lifetime">'p</span>&gt; <span class="kw">for </span>Vec&lt;T&gt;
+<span class="kw">where
+    </span>T: Params&lt;<span class="lifetime">'p</span>&gt;,
+{
+    <span class="kw">fn </span>bind&lt;<span class="lifetime">'q</span>&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>q: Query&lt;<span class="lifetime">'q</span>&gt;) -&gt; Query&lt;<span class="lifetime">'q</span>&gt;
+    <span class="kw">where
+        </span><span class="lifetime">'p</span>: <span class="lifetime">'q</span>,
+    {
+        <span class="kw">for </span>params <span class="kw">in </span><span class="self">self </span>{
+            q = params.bind(q);
+        }
+        q
     }
 }
 
 <span class="doccomment">/// Low-level, general database queries and mutation.
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Transaction&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub async fn </span>query&lt;T, P&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        query: <span class="kw-2">&amp;</span>T,
-        params: P,
-    ) -&gt; QueryResult&lt;BoxStream&lt;<span class="lifetime">'static</span>, QueryResult&lt;Row&gt;&gt;&gt;
-    <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
-        P: IntoIterator + Send,
-        P::IntoIter: ExactSizeIterator,
-        P::Item: BorrowToSql,
-    {
-        <span class="prelude-val">Ok</span>(<span class="self">self
-            </span>.inner
-            .query_raw(query, params)
-            .<span class="kw">await
-            </span>.map_err(postgres_err)<span class="question-mark">?
-            </span>.map_err(postgres_err)
-            .boxed())
-    }
-
-    <span class="doccomment">/// Query the underlying SQL database with no parameters.
-    </span><span class="kw">pub async fn </span>query_static&lt;T&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        query: <span class="kw-2">&amp;</span>T,
-    ) -&gt; QueryResult&lt;BoxStream&lt;<span class="lifetime">'static</span>, QueryResult&lt;Row&gt;&gt;&gt;
-    <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
-    {
-        <span class="self">self</span>.query::&lt;T, [i64; <span class="number">0</span>]&gt;(query, []).<span class="kw">await
-    </span>}
-
-    <span class="doccomment">/// Query the underlying SQL database, returning exactly one result or failing.
-    </span><span class="kw">pub async fn </span>query_one&lt;T, P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T, params: P) -&gt; QueryResult&lt;Row&gt;
-    <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
-        P: IntoIterator + Send,
-        P::IntoIter: ExactSizeIterator,
-        P::Item: BorrowToSql,
-    {
-        <span class="self">self</span>.query_opt(query, params).<span class="kw">await</span><span class="question-mark">?</span>.ok_or(NotFound)
-    }
-
-    <span class="doccomment">/// Query the underlying SQL database with no parameters, returning exactly one result or
-    /// failing.
-    </span><span class="kw">pub async fn </span>query_one_static&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T) -&gt; QueryResult&lt;Row&gt;
-    <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
-    {
-        <span class="self">self</span>.query_one::&lt;T, [i64; <span class="number">0</span>]&gt;(query, []).<span class="kw">await
-    </span>}
-
-    <span class="doccomment">/// Query the underlying SQL database, returning zero or one results.
-    </span><span class="kw">pub async fn </span>query_opt&lt;T, P&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T, params: P) -&gt; QueryResult&lt;<span class="prelude-ty">Option</span>&lt;Row&gt;&gt;
-    <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
-        P: IntoIterator + Send,
-        P::IntoIter: ExactSizeIterator,
-        P::Item: BorrowToSql,
-    {
-        <span class="self">self</span>.query(query, params).<span class="kw">await</span><span class="question-mark">?</span>.try_next().<span class="kw">await
-    </span>}
-
-    <span class="doccomment">/// Query the underlying SQL database with no parameters, returning zero or one results.
-    </span><span class="kw">pub async fn </span>query_opt_static&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query: <span class="kw-2">&amp;</span>T) -&gt; QueryResult&lt;<span class="prelude-ty">Option</span>&lt;Row&gt;&gt;
-    <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Sync,
-    {
-        <span class="self">self</span>.query_opt::&lt;T, [i64; <span class="number">0</span>]&gt;(query, []).<span class="kw">await
-    </span>}
-
-    <span class="doccomment">/// Execute a statement against the underlying database.
-    ///
-    /// The results of the statement will be reflected immediately in future statements made within
-    /// this transaction, but will not be reflected in the underlying database until the transaction
-    /// is committed with [`commit`](update::Transaction::commit).
-    </span><span class="kw">pub async fn </span>execute&lt;T, P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: <span class="kw-2">&amp;</span>T, params: P) -&gt; anyhow::Result&lt;u64&gt;
-    <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement,
-        P: IntoIterator,
-        P::IntoIter: ExactSizeIterator,
-        P::Item: BorrowToSql,
-    {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.inner.execute_raw(statement, params).<span class="kw">await</span><span class="question-mark">?</span>)
-    }
-
+</span><span class="kw">impl </span>Transaction&lt;Write&gt; {
     <span class="doccomment">/// Execute a statement that is expected to modify exactly one row.
     ///
     /// Returns an error if the database is not modified.
-    </span><span class="kw">pub async fn </span>execute_one&lt;T, P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: <span class="kw-2">&amp;</span>T, params: P) -&gt; anyhow::Result&lt;()&gt;
+    </span><span class="kw">pub async fn </span>execute_one&lt;<span class="lifetime">'q</span>, E&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: E) -&gt; anyhow::Result&lt;()&gt;
     <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Display,
-        P: IntoIterator,
-        P::IntoIter: ExactSizeIterator,
-        P::Item: BorrowToSql,
+        </span>E: <span class="lifetime">'q </span>+ Execute&lt;<span class="lifetime">'q</span>, Db&gt;,
     {
-        <span class="kw">let </span>nrows = <span class="self">self</span>.execute_many(statement, params).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>nrows = <span class="self">self</span>.execute_many(statement).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">if </span>nrows &gt; <span class="number">1 </span>{
             <span class="comment">// If more than one row is affected, we don't return an error, because clearly
             // _something_ happened and modified the database. So we don't necessarily want the
             // caller to retry. But we do log an error, because it seems the query did something
             // different than the caller intended.
-            </span><span class="macro">tracing::error!</span>(
-                %statement,
-                <span class="string">"statement modified more rows ({nrows}) than expected (1)"
-            </span>);
+            </span><span class="macro">tracing::error!</span>(<span class="string">"statement modified more rows ({nrows}) than expected (1)"</span>);
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -1113,21 +953,18 @@
     <span class="doccomment">/// Execute a statement that is expected to modify exactly one row.
     ///
     /// Returns an error if the database is not modified. Retries several times before failing.
-    </span><span class="kw">pub async fn </span>execute_one_with_retries&lt;T, P&gt;(
+    </span><span class="kw">pub async fn </span>execute_one_with_retries&lt;<span class="lifetime">'q</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        statement: <span class="kw-2">&amp;</span>T,
-        params: P,
-    ) -&gt; anyhow::Result&lt;()&gt;
-    <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Display,
-        P: IntoIterator + Clone,
-        P::IntoIter: ExactSizeIterator,
-        P::Item: BorrowToSql,
-    {
+        statement: <span class="kw-2">&amp;</span><span class="lifetime">'q </span>str,
+        params: <span class="kw">impl </span>Params&lt;<span class="lifetime">'q</span>&gt; + Clone,
+    ) -&gt; anyhow::Result&lt;()&gt; {
         <span class="kw">let </span>interval = Duration::from_secs(<span class="number">1</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>retries = <span class="number">5</span>;
 
-        <span class="kw">while let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.execute_one(statement, params.clone()).<span class="kw">await </span>{
+        <span class="kw">while let </span><span class="prelude-val">Err</span>(err) = <span class="self">self
+            </span>.execute_one(params.clone().bind(query(statement)))
+            .<span class="kw">await
+        </span>{
             <span class="macro">tracing::error!</span>(
                 %statement,
                 <span class="string">"error in statement execution ({retries} tries remaining): {err}"
@@ -1145,40 +982,34 @@
     <span class="doccomment">/// Execute a statement that is expected to modify at least one row.
     ///
     /// Returns an error if the database is not modified.
-    </span><span class="kw">pub async fn </span>execute_many&lt;T, P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: <span class="kw-2">&amp;</span>T, params: P) -&gt; anyhow::Result&lt;u64&gt;
+    </span><span class="kw">pub async fn </span>execute_many&lt;<span class="lifetime">'q</span>, E&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, statement: E) -&gt; anyhow::Result&lt;u64&gt;
     <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Display,
-        P: IntoIterator,
-        P::IntoIter: ExactSizeIterator,
-        P::Item: BorrowToSql,
+        </span>E: <span class="lifetime">'q </span>+ Execute&lt;<span class="lifetime">'q</span>, Db&gt;,
     {
-        <span class="kw">let </span>nrows = <span class="self">self</span>.execute(statement, params).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="macro">ensure!</span>(
-            nrows &gt; <span class="number">0</span>,
-            <span class="string">"statement failed: 0 rows affected. Statement: {statement}"
-        </span>);
+        <span class="kw">let </span>nrows = <span class="self">self</span>.execute(statement).<span class="kw">await</span><span class="question-mark">?</span>.rows_affected();
+        <span class="macro">ensure!</span>(nrows &gt; <span class="number">0</span>, <span class="string">"statement failed: 0 rows affected"</span>);
         <span class="prelude-val">Ok</span>(nrows)
     }
 
     <span class="doccomment">/// Execute a statement that is expected to modify at least one row.
     ///
     /// Returns an error if the database is not modified. Retries several times before failing.
-    </span><span class="kw">pub async fn </span>execute_many_with_retries&lt;T, P&gt;(
+    </span><span class="kw">pub async fn </span>execute_many_with_retries&lt;<span class="lifetime">'q</span>, <span class="lifetime">'p</span>&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        statement: <span class="kw-2">&amp;</span>T,
-        params: P,
+        statement: <span class="kw-2">&amp;</span><span class="lifetime">'q </span>str,
+        params: <span class="kw">impl </span>Params&lt;<span class="lifetime">'p</span>&gt; + Clone,
     ) -&gt; anyhow::Result&lt;u64&gt;
     <span class="kw">where
-        </span>T: <span class="question-mark">?</span>Sized + ToStatement + Display,
-        P: IntoIterator + Clone,
-        P::IntoIter: ExactSizeIterator,
-        P::Item: BorrowToSql,
+        </span><span class="lifetime">'p</span>: <span class="lifetime">'q</span>,
     {
         <span class="kw">let </span>interval = Duration::from_secs(<span class="number">1</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>retries = <span class="number">5</span>;
 
         <span class="kw">loop </span>{
-            <span class="kw">match </span><span class="self">self</span>.execute_many(statement, params.clone()).<span class="kw">await </span>{
+            <span class="kw">match </span><span class="self">self
+                </span>.execute_many(params.clone().bind(query(statement)))
+                .<span class="kw">await
+            </span>{
                 <span class="prelude-val">Ok</span>(nrows) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(nrows),
                 <span class="prelude-val">Err</span>(err) =&gt; {
                     <span class="macro">tracing::error!</span>(
@@ -1195,15 +1026,16 @@
         }
     }
 
-    <span class="kw">pub async fn </span>upsert&lt;<span class="kw">const </span>N: usize, P&gt;(
+    <span class="kw">pub async fn </span>upsert&lt;<span class="lifetime">'p</span>, <span class="kw">const </span>N: usize, R&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         table: <span class="kw-2">&amp;</span>str,
         columns: [<span class="kw-2">&amp;</span>str; N],
         pk: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw-2">&amp;</span>str&gt;,
-        rows: <span class="kw">impl </span>IntoIterator&lt;Item = [P; N]&gt;,
+        rows: R,
     ) -&gt; anyhow::Result&lt;()&gt;
     <span class="kw">where
-        </span>P: BorrowToSql + Clone,
+        </span>R: IntoIterator,
+        R::Item: <span class="lifetime">'p </span>+ FixedLengthParams&lt;<span class="lifetime">'p</span>, N&gt; + Clone,
     {
         <span class="kw">let </span>set_columns = columns
             .iter()
@@ -1221,7 +1053,7 @@
             <span class="kw">let </span>row_params = (start..end).map(|i| <span class="macro">format!</span>(<span class="string">"${}"</span>, i + <span class="number">1</span>)).join(<span class="string">","</span>);
 
             values.push(<span class="macro">format!</span>(<span class="string">"({row_params})"</span>));
-            params.extend(entries);
+            params.push(entries);
             num_rows += <span class="number">1</span>;
         }
 
@@ -1249,10 +1081,10 @@
 }
 
 <span class="doccomment">/// Query service specific mutations.
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Transaction&lt;<span class="lifetime">'a</span>&gt; {
+</span><span class="kw">impl </span>Transaction&lt;Write&gt; {
     <span class="doccomment">/// Delete a batch of data for pruning.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>delete_batch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, height: u64) -&gt; anyhow::Result&lt;()&gt; {
-        <span class="self">self</span>.execute(<span class="string">"DELETE FROM header WHERE height &lt;= $1"</span>, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>(height <span class="kw">as </span>i64)])
+        <span class="self">self</span>.execute(query(<span class="string">"DELETE FROM header WHERE height &lt;= $1"</span>).bind(height <span class="kw">as </span>i64))
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="self">self</span>.save_pruned_height(height).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
@@ -1266,14 +1098,14 @@
             <span class="string">"pruned_height"</span>,
             [<span class="string">"id"</span>, <span class="string">"last_height"</span>],
             [<span class="string">"id"</span>],
-            [[sql_param(<span class="kw-2">&amp;</span>(<span class="number">1_i32</span>)), sql_param(<span class="kw-2">&amp;</span>(height <span class="kw">as </span>i64))]],
+            [(<span class="number">1i32</span>, height <span class="kw">as </span>i64)],
         )
         .<span class="kw">await
     </span>}
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types&gt; UpdateAvailabilityData&lt;Types&gt; <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt;
+</span><span class="kw">impl</span>&lt;Types&gt; UpdateAvailabilityData&lt;Types&gt; <span class="kw">for </span>Transaction&lt;Write&gt;
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
@@ -1288,20 +1120,20 @@
             <span class="string">"header"</span>,
             [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"data"</span>, <span class="string">"timestamp"</span>],
             [<span class="string">"height"</span>],
-            [[
-                sql_param(<span class="kw-2">&amp;</span>(leaf.height() <span class="kw">as </span>i64)),
-                sql_param(<span class="kw-2">&amp;</span>leaf.block_hash().to_string()),
-                sql_param(<span class="kw-2">&amp;</span>leaf.leaf().block_header().payload_commitment().to_string()),
-                sql_param(<span class="kw-2">&amp;</span>header_json),
-                sql_param(<span class="kw-2">&amp;</span>(leaf.leaf().block_header().timestamp() <span class="kw">as </span>i64)),
-            ]],
+            [(
+                leaf.height() <span class="kw">as </span>i64,
+                leaf.block_hash().to_string(),
+                leaf.leaf().block_header().payload_commitment().to_string(),
+                header_json,
+                leaf.leaf().block_header().timestamp() <span class="kw">as </span>i64,
+            )],
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Similarly, we can initialize the payload table with a null payload, which can help us
         // distinguish between blocks that haven't been produced yet and blocks we haven't received
         // yet when answering queries.
-        </span><span class="self">self</span>.upsert(<span class="string">"payload"</span>, [<span class="string">"height"</span>], [<span class="string">"height"</span>], [[leaf.height() <span class="kw">as </span>i64]])
+        </span><span class="self">self</span>.upsert(<span class="string">"payload"</span>, [<span class="string">"height"</span>], [<span class="string">"height"</span>], [(leaf.height() <span class="kw">as </span>i64,)])
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Finally, we insert the leaf itself, which references the header row we created.
@@ -1312,13 +1144,13 @@
             <span class="string">"leaf"</span>,
             [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"block_hash"</span>, <span class="string">"leaf"</span>, <span class="string">"qc"</span>],
             [<span class="string">"height"</span>],
-            [[
-                sql_param(<span class="kw-2">&amp;</span>(leaf.height() <span class="kw">as </span>i64)),
-                sql_param(<span class="kw-2">&amp;</span>leaf.hash().to_string()),
-                sql_param(<span class="kw-2">&amp;</span>leaf.block_hash().to_string()),
-                sql_param(<span class="kw-2">&amp;</span>leaf_json),
-                sql_param(<span class="kw-2">&amp;</span>qc_json),
-            ]],
+            [(
+                leaf.height() <span class="kw">as </span>i64,
+                leaf.hash().to_string(),
+                leaf.block_hash().to_string(),
+                leaf_json,
+                qc_json,
+            )],
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -1333,43 +1165,23 @@
             <span class="string">"payload"</span>,
             [<span class="string">"height"</span>, <span class="string">"data"</span>, <span class="string">"size"</span>],
             [<span class="string">"height"</span>],
-            [[
-                sql_param(<span class="kw-2">&amp;</span>(block.height() <span class="kw">as </span>i64)),
-                sql_param(<span class="kw-2">&amp;</span>payload.as_ref()),
-                sql_param(<span class="kw-2">&amp;</span>(block.size() <span class="kw">as </span>i32)),
-            ]],
+            [(block.height() <span class="kw">as </span>i64, payload.as_ref(), block.size() <span class="kw">as </span>i32)],
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="comment">// Index the transactions in the block. For each transaction, collect, separately, its hash,
-        // height, and index. These items all have different types, so we collect them into
-        // different vecs.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>tx_hashes = <span class="macro">vec!</span>[];
-        <span class="kw">let </span><span class="kw-2">mut </span>tx_block_heights = <span class="macro">vec!</span>[];
-        <span class="kw">let </span><span class="kw-2">mut </span>tx_indexes = <span class="macro">vec!</span>[];
+        <span class="comment">// Index the transactions in the block.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>rows = <span class="macro">vec!</span>[];
         <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.enumerate() {
             <span class="kw">let </span>txn_ix =
                 serde_json::to_value(<span class="kw-2">&amp;</span>txn_ix).context(<span class="string">"failed to serialize transaction index"</span>)<span class="question-mark">?</span>;
-            tx_hashes.push(txn.commit().to_string());
-            tx_block_heights.push(block.height() <span class="kw">as </span>i64);
-            tx_indexes.push(txn_ix);
+            rows.push((txn.commit().to_string(), block.height() <span class="kw">as </span>i64, txn_ix));
         }
-        <span class="kw">if </span>!tx_hashes.is_empty() {
+        <span class="kw">if </span>!rows.is_empty() {
             <span class="self">self</span>.upsert(
                 <span class="string">"transaction"</span>,
                 [<span class="string">"hash"</span>, <span class="string">"block_height"</span>, <span class="string">"index"</span>],
                 [<span class="string">"block_height"</span>, <span class="string">"index"</span>],
-                <span class="comment">// Now that we have the transaction hashes, block heights, and indexes collected in
-                // memory, we can combine them all into a single vec using type erasure: all the
-                // values get converted to `&amp;dyn ToSql`. The references all borrow from one of
-                // `tx_hashes`, `tx_block_heights`, or `tx_indexes`, which all outlive this function
-                // call, so the lifetimes work out.
-                </span><span class="macro">izip!</span>(
-                    tx_hashes.iter().map(sql_param),
-                    tx_block_heights.iter().map(sql_param),
-                    tx_indexes.iter().map(sql_param),
-                )
-                .map(|(hash, height, index)| [hash, height, index]),
+                rows,
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
         }
@@ -1390,11 +1202,7 @@
                 <span class="string">"vid"</span>,
                 [<span class="string">"height"</span>, <span class="string">"common"</span>, <span class="string">"share"</span>],
                 [<span class="string">"height"</span>],
-                [[
-                    sql_param(<span class="kw-2">&amp;</span>(common.height() <span class="kw">as </span>i64)),
-                    sql_param(<span class="kw-2">&amp;</span>common_data),
-                    sql_param(<span class="kw-2">&amp;</span>share_data),
-                ]],
+                [(common.height() <span class="kw">as </span>i64, common_data, share_data)],
             )
             .<span class="kw">await
         </span>} <span class="kw">else </span>{
@@ -1405,10 +1213,7 @@
                 <span class="string">"vid"</span>,
                 [<span class="string">"height"</span>, <span class="string">"common"</span>],
                 [<span class="string">"height"</span>],
-                [[
-                    sql_param(<span class="kw-2">&amp;</span>(common.height() <span class="kw">as </span>i64)),
-                    sql_param(<span class="kw-2">&amp;</span>common_data),
-                ]],
+                [(common.height() <span class="kw">as </span>i64, common_data)],
             )
             .<span class="kw">await
         </span>}
@@ -1416,15 +1221,15 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types: NodeType, State: MerklizedState&lt;Types, ARITY&gt;, <span class="kw">const </span>ARITY: usize&gt;
-    UpdateStateData&lt;Types, State, ARITY&gt; <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt;
+</span><span class="kw">impl</span>&lt;Types: NodeType, State: MerklizedState&lt;Types, ARITY&gt;, <span class="kw">const </span>ARITY: usize&gt;
+    UpdateStateData&lt;Types, State, ARITY&gt; <span class="kw">for </span>Transaction&lt;Write&gt;
 {
     <span class="kw">async fn </span>set_last_state_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>, height: usize) -&gt; anyhow::Result&lt;()&gt; {
         <span class="self">self</span>.upsert(
             <span class="string">"last_merklized_state_height"</span>,
             [<span class="string">"id"</span>, <span class="string">"height"</span>],
             [<span class="string">"id"</span>],
-            [[sql_param(<span class="kw-2">&amp;</span>(<span class="number">1_i32</span>)), sql_param(<span class="kw-2">&amp;</span>(height <span class="kw">as </span>i64))]],
+            [(<span class="number">1i32</span>, height <span class="kw">as </span>i64)],
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -1453,7 +1258,8 @@
         <span class="kw">for </span>node <span class="kw">in </span>path.iter() {
             <span class="kw">match </span>node {
                 MerkleNode::Empty =&gt; {
-                    <span class="kw">let </span>index = serde_json::to_value(pos.clone()).map_err(ParseError::Serde)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>index = serde_json::to_value(pos.clone())
+                        .decode_error(<span class="string">"malformed merkle position"</span>)<span class="question-mark">?</span>;
                     <span class="comment">// The node path represents the sequence of nodes from the root down to a specific node.
                     // Therefore, the traversal path needs to be reversed
                     // The root node path is an empty array.
@@ -1477,12 +1283,14 @@
                     <span class="comment">// Serialize the leaf node hash value into a vector
                     </span>value
                         .serialize_compressed(<span class="kw-2">&amp;mut </span>leaf_commit)
-                        .map_err(ParseError::Serialize)<span class="question-mark">?</span>;
+                        .decode_error(<span class="string">"malformed merkle leaf commitment"</span>)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>path = traversal_path.clone().rev().collect();
 
-                    <span class="kw">let </span>index = serde_json::to_value(pos.clone()).map_err(ParseError::Serde)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>entry = serde_json::to_value(elem).map_err(ParseError::Serde)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>index = serde_json::to_value(pos.clone())
+                        .decode_error(<span class="string">"malformed merkle position"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>entry =
+                        serde_json::to_value(elem).decode_error(<span class="string">"malformed merkle element"</span>)<span class="question-mark">?</span>;
 
                     nodes.push((
                         Node {
@@ -1502,7 +1310,7 @@
                     </span><span class="kw">let </span><span class="kw-2">mut </span>branch_hash = Vec::new();
                     value
                         .serialize_compressed(<span class="kw-2">&amp;mut </span>branch_hash)
-                        .map_err(ParseError::Serialize)<span class="question-mark">?</span>;
+                        .decode_error(<span class="string">"malformed merkle branch hash"</span>)<span class="question-mark">?</span>;
 
                     <span class="comment">// We only insert the non-empty children in the children field of the table
                     // BitVec is used to separate out Empty children positions
@@ -1520,7 +1328,7 @@
                                 <span class="kw">let </span><span class="kw-2">mut </span>hash = Vec::new();
                                 value
                                     .serialize_compressed(<span class="kw-2">&amp;mut </span>hash)
-                                    .map_err(ParseError::Serialize)<span class="question-mark">?</span>;
+                                    .decode_error(<span class="string">"malformed merkle node hash"</span>)<span class="question-mark">?</span>;
 
                                 children_values.push(hash);
                                 <span class="comment">// Mark the entry as 1 in bitvec to indiciate a non-empty child
@@ -1556,14 +1364,10 @@
         <span class="comment">// insert all the hashes into database
         // It returns all the ids inserted in the order they were inserted
         // We use the hash ids to insert all the nodes
-        </span><span class="kw">let </span>(params, batch_hash_insert_stmt) = HashTableRow::build_batch_insert(<span class="kw-2">&amp;</span>hashes);
-
-        <span class="comment">// Batch insert all the hashes
-        </span><span class="kw">let </span>nodes_hash_ids: HashMap&lt;Vec&lt;u8&gt;, i32&gt; = <span class="self">self
-            </span>.inner
-            .query_raw(<span class="kw-2">&amp;</span>batch_hash_insert_stmt, params)
-            .<span class="kw">await</span><span class="question-mark">?
-            </span>.map_ok(|r| (r.get(<span class="number">1</span>), r.get(<span class="number">0</span>)))
+        </span><span class="kw">let </span>(query, sql) = build_hash_batch_insert(<span class="kw-2">&amp;</span>hashes)<span class="question-mark">?</span>;
+        <span class="kw">let </span>nodes_hash_ids: HashMap&lt;Vec&lt;u8&gt;, i32&gt; = query
+            .query_as(<span class="kw-2">&amp;</span>sql)
+            .fetch(<span class="self">self</span>.as_mut())
             .try_collect()
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -1586,34 +1390,22 @@
                 node.children = <span class="prelude-val">Some</span>(children_hashes);
             }
         }
-        <span class="kw">let </span>nodes = nodes.into_iter().map(|(n, <span class="kw">_</span>, <span class="kw">_</span>)| n).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-        <span class="kw">let </span>(params, batch_stmt) = Node::build_batch_insert(name, <span class="kw-2">&amp;</span>nodes);
-
-        <span class="comment">// Batch insert all the child hashes
-        </span><span class="kw">let </span>rows_inserted = <span class="self">self</span>.inner.query_raw(<span class="kw-2">&amp;</span>batch_stmt, params).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">if </span>rows_inserted.count().<span class="kw">await </span>!= path.len() {
-            <span class="macro">bail!</span>(<span class="string">"failed to insert all merkle nodes"</span>);
-        }
-
+        Node::upsert(name, nodes.into_iter().map(|(n, <span class="kw">_</span>, <span class="kw">_</span>)| n), <span class="self">self</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; PrunedHeightStorage <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">async fn </span>load_pruned_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
-        <span class="kw">let </span>row = <span class="self">self
-            </span>.query_opt_static(<span class="string">"SELECT last_height FROM pruned_height ORDER BY id DESC LIMIT 1"</span>)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>height = row.map(|row| row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="number">0</span>) <span class="kw">as </span>u64);
-        <span class="prelude-val">Ok</span>(height)
-    }
-}
-
-<span class="kw">fn </span>postgres_err(err: tokio_postgres::Error) -&gt; QueryError {
-    QueryError::Error {
-        message: <span class="macro">format!</span>(<span class="string">"postgres error: {err:#}"</span>),
+</span><span class="kw">impl</span>&lt;Mode: TransactionMode&gt; PrunedHeightStorage <span class="kw">for </span>Transaction&lt;Mode&gt; {
+    <span class="kw">async fn </span>load_pruned_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
+        <span class="kw">let </span><span class="prelude-val">Some</span>((height,)) =
+            query_as::&lt;(i64,)&gt;(<span class="string">"SELECT last_height FROM pruned_height ORDER BY id DESC LIMIT 1"</span>)
+                .fetch_optional(<span class="self">self</span>.as_mut())
+                .<span class="kw">await</span><span class="question-mark">?
+        </span><span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        };
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(height <span class="kw">as </span>u64))
     }
 }
 </code></pre></div></section></main></body></html>

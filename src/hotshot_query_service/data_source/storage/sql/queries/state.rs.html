@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/storage/sql/query/state.rs`."><title>state.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../../../../../" data-static-root-path="../../../../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../../../src-files.js"></script><script defer src="../../../../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/storage/sql/queries/state.rs`."><title>state.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../../../../../" data-static-root-path="../../../../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../../../src-files.js"></script><script defer src="../../../../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1286,115 +1286,6 @@
 <a href="#1286" id="1286">1286</a>
 <a href="#1287" id="1287">1287</a>
 <a href="#1288" id="1288">1288</a>
-<a href="#1289" id="1289">1289</a>
-<a href="#1290" id="1290">1290</a>
-<a href="#1291" id="1291">1291</a>
-<a href="#1292" id="1292">1292</a>
-<a href="#1293" id="1293">1293</a>
-<a href="#1294" id="1294">1294</a>
-<a href="#1295" id="1295">1295</a>
-<a href="#1296" id="1296">1296</a>
-<a href="#1297" id="1297">1297</a>
-<a href="#1298" id="1298">1298</a>
-<a href="#1299" id="1299">1299</a>
-<a href="#1300" id="1300">1300</a>
-<a href="#1301" id="1301">1301</a>
-<a href="#1302" id="1302">1302</a>
-<a href="#1303" id="1303">1303</a>
-<a href="#1304" id="1304">1304</a>
-<a href="#1305" id="1305">1305</a>
-<a href="#1306" id="1306">1306</a>
-<a href="#1307" id="1307">1307</a>
-<a href="#1308" id="1308">1308</a>
-<a href="#1309" id="1309">1309</a>
-<a href="#1310" id="1310">1310</a>
-<a href="#1311" id="1311">1311</a>
-<a href="#1312" id="1312">1312</a>
-<a href="#1313" id="1313">1313</a>
-<a href="#1314" id="1314">1314</a>
-<a href="#1315" id="1315">1315</a>
-<a href="#1316" id="1316">1316</a>
-<a href="#1317" id="1317">1317</a>
-<a href="#1318" id="1318">1318</a>
-<a href="#1319" id="1319">1319</a>
-<a href="#1320" id="1320">1320</a>
-<a href="#1321" id="1321">1321</a>
-<a href="#1322" id="1322">1322</a>
-<a href="#1323" id="1323">1323</a>
-<a href="#1324" id="1324">1324</a>
-<a href="#1325" id="1325">1325</a>
-<a href="#1326" id="1326">1326</a>
-<a href="#1327" id="1327">1327</a>
-<a href="#1328" id="1328">1328</a>
-<a href="#1329" id="1329">1329</a>
-<a href="#1330" id="1330">1330</a>
-<a href="#1331" id="1331">1331</a>
-<a href="#1332" id="1332">1332</a>
-<a href="#1333" id="1333">1333</a>
-<a href="#1334" id="1334">1334</a>
-<a href="#1335" id="1335">1335</a>
-<a href="#1336" id="1336">1336</a>
-<a href="#1337" id="1337">1337</a>
-<a href="#1338" id="1338">1338</a>
-<a href="#1339" id="1339">1339</a>
-<a href="#1340" id="1340">1340</a>
-<a href="#1341" id="1341">1341</a>
-<a href="#1342" id="1342">1342</a>
-<a href="#1343" id="1343">1343</a>
-<a href="#1344" id="1344">1344</a>
-<a href="#1345" id="1345">1345</a>
-<a href="#1346" id="1346">1346</a>
-<a href="#1347" id="1347">1347</a>
-<a href="#1348" id="1348">1348</a>
-<a href="#1349" id="1349">1349</a>
-<a href="#1350" id="1350">1350</a>
-<a href="#1351" id="1351">1351</a>
-<a href="#1352" id="1352">1352</a>
-<a href="#1353" id="1353">1353</a>
-<a href="#1354" id="1354">1354</a>
-<a href="#1355" id="1355">1355</a>
-<a href="#1356" id="1356">1356</a>
-<a href="#1357" id="1357">1357</a>
-<a href="#1358" id="1358">1358</a>
-<a href="#1359" id="1359">1359</a>
-<a href="#1360" id="1360">1360</a>
-<a href="#1361" id="1361">1361</a>
-<a href="#1362" id="1362">1362</a>
-<a href="#1363" id="1363">1363</a>
-<a href="#1364" id="1364">1364</a>
-<a href="#1365" id="1365">1365</a>
-<a href="#1366" id="1366">1366</a>
-<a href="#1367" id="1367">1367</a>
-<a href="#1368" id="1368">1368</a>
-<a href="#1369" id="1369">1369</a>
-<a href="#1370" id="1370">1370</a>
-<a href="#1371" id="1371">1371</a>
-<a href="#1372" id="1372">1372</a>
-<a href="#1373" id="1373">1373</a>
-<a href="#1374" id="1374">1374</a>
-<a href="#1375" id="1375">1375</a>
-<a href="#1376" id="1376">1376</a>
-<a href="#1377" id="1377">1377</a>
-<a href="#1378" id="1378">1378</a>
-<a href="#1379" id="1379">1379</a>
-<a href="#1380" id="1380">1380</a>
-<a href="#1381" id="1381">1381</a>
-<a href="#1382" id="1382">1382</a>
-<a href="#1383" id="1383">1383</a>
-<a href="#1384" id="1384">1384</a>
-<a href="#1385" id="1385">1385</a>
-<a href="#1386" id="1386">1386</a>
-<a href="#1387" id="1387">1387</a>
-<a href="#1388" id="1388">1388</a>
-<a href="#1389" id="1389">1389</a>
-<a href="#1390" id="1390">1390</a>
-<a href="#1391" id="1391">1391</a>
-<a href="#1392" id="1392">1392</a>
-<a href="#1393" id="1393">1393</a>
-<a href="#1394" id="1394">1394</a>
-<a href="#1395" id="1395">1395</a>
-<a href="#1396" id="1396">1396</a>
-<a href="#1397" id="1397">1397</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1410,41 +1301,37 @@
 </span><span class="doccomment">//! Merklized state storage implementation for a database query engine.
 
 </span><span class="kw">use super</span>::{
-    postgres::{types::ToSql, Row},
-    sql_param, Transaction,
+    <span class="kw">super</span>::transaction::{query_as, Transaction, TransactionMode, Write},
+    DecodeError, QueryBuilder,
 };
 <span class="kw">use crate</span>::{
-    merklized_state::{
-        MerklizedState, MerklizedStateDataSource, MerklizedStateHeightPersistence, Snapshot,
-    },
+    data_source::storage::{MerklizedStateHeightStorage, MerklizedStateStorage},
+    merklized_state::{MerklizedState, Snapshot},
     QueryError, QueryResult,
 };
-<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, SerializationError};
+<span class="kw">use </span>ark_serialize::CanonicalDeserialize;
 <span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>bit_vec::BitVec;
-<span class="kw">use </span>futures::stream::{StreamExt, TryStreamExt};
+<span class="kw">use </span>futures::stream::TryStreamExt;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
-<span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>jf_merkle_tree::{
     prelude::{MerkleNode, MerkleProof},
     DigestAlgorithm, MerkleCommitment, ToTraversalPath,
 };
-<span class="kw">use </span>std::{
-    collections::{HashMap, HashSet, VecDeque},
-    fmt::{<span class="self">self</span>, Display, Formatter},
-};
+<span class="kw">use </span>sqlx::{types::BitVec, FromRow};
+<span class="kw">use </span>std::collections::{HashMap, HashSet, VecDeque};
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types, State, <span class="kw">const </span>ARITY: usize&gt; MerklizedStateDataSource&lt;Types, State, ARITY&gt;
-    <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt;
+</span><span class="kw">impl</span>&lt;Mode, Types, State, <span class="kw">const </span>ARITY: usize&gt; MerklizedStateStorage&lt;Types, State, ARITY&gt;
+    <span class="kw">for </span>Transaction&lt;Mode&gt;
 <span class="kw">where
-    </span>Types: NodeType,
+    </span>Mode: TransactionMode,
+    Types: NodeType,
     State: MerklizedState&lt;Types, ARITY&gt; + <span class="lifetime">'static</span>,
 {
     <span class="doccomment">/// Retreives a Merkle path from the database
     </span><span class="kw">async fn </span>get_path(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         snapshot: Snapshot&lt;Types, State, ARITY&gt;,
         key: State::Key,
     ) -&gt; QueryResult&lt;MerkleProof&lt;State::Entry, State::Key, State::T, ARITY&gt;&gt; {
@@ -1458,11 +1345,11 @@
         <span class="comment">// Get all the nodes in the path to the index.
         // Order by pos DESC is to return nodes from the leaf to the root
 
-        </span><span class="kw">let </span>(params, stmt) = build_get_path_query(state_type, traversal_path.clone(), created);
-
-        <span class="kw">let </span>nodes = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>stmt, params).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>nodes: Vec&lt;<span class="kw">_</span>&gt; = nodes.map(|res| Node::try_from(res<span class="question-mark">?</span>)).try_collect().<span class="kw">await</span><span class="question-mark">?</span>;
+        </span><span class="kw">let </span>(query, sql) = build_get_path_query(state_type, traversal_path.clone(), created)<span class="question-mark">?</span>;
+        <span class="kw">let </span>nodes = query
+            .query_as::&lt;Node&gt;(<span class="kw-2">&amp;</span>sql)
+            .fetch_all(<span class="self">self</span>.as_mut())
+            .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// insert all the hash ids to a hashset which is used to query later
         // HashSet is used to avoid duplicates
@@ -1476,16 +1363,12 @@
 
         <span class="comment">// Find all the hash values and create a hashmap
         // Hashmap will be used to get the hash value of the nodes children and the node itself.
-        </span><span class="kw">let </span>hashes_query = <span class="self">self
-            </span>.query(
-                <span class="string">"SELECT * FROM hash WHERE id = ANY( $1)"</span>,
-                [sql_param(<span class="kw-2">&amp;</span>hash_ids.into_iter().collect::&lt;Vec&lt;i32&gt;&gt;())],
-            )
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>hashes: HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt; = hashes_query
-            .map(|row| HashTableRow::try_from(row<span class="question-mark">?</span>).map(|h| (h.id, h.value)))
-            .try_collect()
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+        </span><span class="kw">let </span>hashes: HashMap&lt;i32, Vec&lt;u8&gt;&gt; =
+            query_as(<span class="string">"SELECT id, value FROM hash WHERE id = ANY( $1)"</span>)
+                .bind(hash_ids.into_iter().collect::&lt;Vec&lt;i32&gt;&gt;())
+                .fetch(<span class="self">self</span>.as_mut())
+                .try_collect()
+                .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>proof_path = VecDeque::with_capacity(State::tree_height());
         <span class="kw">for </span>Node {
@@ -1522,7 +1405,7 @@
                                     })<span class="question-mark">?</span>;
                                     <span class="prelude-val">Ok</span>(Arc::new(MerkleNode::ForgettenSubtree {
                                         value: State::T::deserialize_compressed(value.as_slice())
-                                            .map_err(ParseError::Deserialize)<span class="question-mark">?</span>,
+                                            .decode_error(<span class="string">"malformed merkle node value"</span>)<span class="question-mark">?</span>,
                                     }))
                                 } <span class="kw">else </span>{
                                     <span class="prelude-val">Ok</span>(Arc::new(MerkleNode::Empty))
@@ -1532,7 +1415,7 @@
                         <span class="comment">// Use the Children merkle nodes to reconstruct the branch node
                         </span>proof_path.push_back(MerkleNode::Branch {
                             value: State::T::deserialize_compressed(value.as_slice())
-                                .map_err(ParseError::Deserialize)<span class="question-mark">?</span>,
+                                .decode_error(<span class="string">"malformed merkle node value"</span>)<span class="question-mark">?</span>,
                             children: child_nodes,
                         });
                     }
@@ -1540,11 +1423,11 @@
                     </span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(index), <span class="prelude-val">Some</span>(entry)) =&gt; {
                         proof_path.push_back(MerkleNode::Leaf {
                             value: State::T::deserialize_compressed(value.as_slice())
-                                .map_err(ParseError::Deserialize)<span class="question-mark">?</span>,
+                                .decode_error(<span class="string">"malformed merkle node value"</span>)<span class="question-mark">?</span>,
                             pos: serde_json::from_value(index.clone())
-                                .map_err(ParseError::Serde)<span class="question-mark">?</span>,
+                                .decode_error(<span class="string">"malformed merkle node index"</span>)<span class="question-mark">?</span>,
                             elem: serde_json::from_value(entry.clone())
-                                .map_err(ParseError::Serde)<span class="question-mark">?</span>,
+                                .decode_error(<span class="string">"malformed merkle element"</span>)<span class="question-mark">?</span>,
                         });
                     }
                     <span class="comment">// Otherwise, it's empty.
@@ -1633,26 +1516,26 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; MerklizedStateHeightPersistence <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">async fn </span>get_last_state_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">let </span>row = <span class="self">self
-            </span>.query_opt_static(<span class="string">"SELECT * from last_merklized_state_height"</span>)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>height = row.map(|r| r.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"height"</span>) <span class="kw">as </span>usize);
-
-        <span class="prelude-val">Ok</span>(height.unwrap_or(<span class="number">0</span>))
+</span><span class="kw">impl</span>&lt;Mode: TransactionMode&gt; MerklizedStateHeightStorage <span class="kw">for </span>Transaction&lt;Mode&gt; {
+    <span class="kw">async fn </span>get_last_state_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">let </span><span class="prelude-val">Some</span>((height,)) = query_as::&lt;(i64,)&gt;(<span class="string">"SELECT height from last_merklized_state_height"</span>)
+            .fetch_optional(<span class="self">self</span>.as_mut())
+            .<span class="kw">await</span><span class="question-mark">?
+        </span><span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="number">0</span>);
+        };
+        <span class="prelude-val">Ok</span>(height <span class="kw">as </span>usize)
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Transaction&lt;<span class="lifetime">'a</span>&gt; {
+<span class="kw">impl</span>&lt;Mode: TransactionMode&gt; Transaction&lt;Mode&gt; {
     <span class="doccomment">/// Get information identifying a [`Snapshot`].
     ///
     /// If the given snapshot is known to the database, this function returns
     /// * The block height at which the snapshot was created
     /// * A digest of the Merkle commitment to the snapshotted state
     </span><span class="kw">async fn </span>snapshot_info&lt;Types, State, <span class="kw">const </span>ARITY: usize&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         snapshot: Snapshot&lt;Types, State, ARITY&gt;,
     ) -&gt; QueryResult&lt;(i64, State::Commit)&gt;
     <span class="kw">where
@@ -1668,35 +1551,31 @@
                 // height we get, since any query against equivalent states will yield equivalent
                 // results, regardless of which block the state is from. Thus, we can make this
                 // query fast with `LIMIT 1` and no `ORDER BY`.
-                </span><span class="kw">let </span>query = <span class="self">self
-                    </span>.query_one(
-                        <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                            <span class="string">"SELECT height
-                           FROM header
-                          WHERE {header_state_commitment_field} = $1
-                          LIMIT 1"
-                        </span>),
-                        <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>commit.to_string()],
-                    )
-                    .<span class="kw">await</span><span class="question-mark">?</span>;
+                </span><span class="kw">let </span>(height,) = query_as(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    <span class="string">"SELECT height
+                       FROM header
+                      WHERE {header_state_commitment_field} = $1
+                      LIMIT 1"
+                </span>))
+                .bind(commit.to_string())
+                .fetch_one(<span class="self">self</span>.as_mut())
+                .<span class="kw">await</span><span class="question-mark">?</span>;
 
-                (query.get(<span class="number">0</span>), commit)
+                (height, commit)
             }
             Snapshot::Index(created) =&gt; {
                 <span class="kw">let </span>created = created <span class="kw">as </span>i64;
-                <span class="kw">let </span>row = <span class="self">self
-                    </span>.query_one(
-                        <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                            <span class="string">"SELECT {header_state_commitment_field} AS root_commmitment
-                         FROM header
-                         WHERE height = $1
-                         LIMIT 1"
-                        </span>),
-                        [sql_param(<span class="kw-2">&amp;</span>created)],
-                    )
-                    .<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="kw">let </span>commit: String = row.get(<span class="number">0</span>);
-                <span class="kw">let </span>commit = serde_json::from_value(commit.into()).map_err(ParseError::Serde)<span class="question-mark">?</span>;
+                <span class="kw">let </span>(commit,) = query_as::&lt;(String,)&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    <span class="string">"SELECT {header_state_commitment_field} AS root_commmitment
+                       FROM header
+                      WHERE height = $1
+                      LIMIT 1"
+                </span>))
+                .bind(created)
+                .fetch_one(<span class="self">self</span>.as_mut())
+                .<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let </span>commit = serde_json::from_value(commit.into())
+                    .decode_error(<span class="string">"malformed state commitment"</span>)<span class="question-mark">?</span>;
                 (created, commit)
             }
         };
@@ -1711,83 +1590,24 @@
     }
 }
 
-<span class="doccomment">/// Represents a Hash table row
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>HashTableRow {
-    <span class="doccomment">/// Hash id to be used by the state table to save space
-    </span>id: i32,
-    <span class="doccomment">/// hash value
-    </span>value: Vec&lt;u8&gt;,
-}
-
-<span class="kw">impl </span>HashTableRow {
-    <span class="comment">// TODO: create a generic upsert function with retries that returns the column
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>build_batch_insert(hashes: <span class="kw-2">&amp;</span>[Vec&lt;u8&gt;]) -&gt; (Vec&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>ToSql + Sync)&gt;, String) {
-        <span class="kw">let </span>len = hashes.len();
-        <span class="kw">let </span>params: Vec&lt;<span class="kw">_</span>&gt; = hashes
-            .iter()
-            .flat_map(|c| [c <span class="kw">as </span><span class="kw-2">&amp;</span>(<span class="kw">dyn </span>ToSql + Sync)])
-            .collect();
-        <span class="kw">let </span>stmt = <span class="macro">format!</span>(
-        <span class="string">"INSERT INTO hash(value) values {} ON CONFLICT (value) DO UPDATE SET value = EXCLUDED.value returning *"</span>,
-        (<span class="number">1</span>..len+<span class="number">1</span>)
-            .format_with(<span class="string">", "</span>, |v, f| { f(<span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">"(${v})"</span>)) }),
+<span class="comment">// TODO: create a generic upsert function with retries that returns the column
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>build_hash_batch_insert(
+    hashes: <span class="kw-2">&amp;</span>[Vec&lt;u8&gt;],
+) -&gt; QueryResult&lt;(QueryBuilder&lt;<span class="lifetime">'_</span>&gt;, String)&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>query = QueryBuilder::default();
+    <span class="kw">let </span>params = hashes
+        .iter()
+        .map(|hash| <span class="prelude-val">Ok</span>(<span class="macro">format!</span>(<span class="string">"({})"</span>, query.bind(hash)<span class="question-mark">?</span>)))
+        .collect::&lt;QueryResult&lt;Vec&lt;String&gt;&gt;&gt;()<span class="question-mark">?</span>;
+    <span class="kw">let </span>sql = <span class="macro">format!</span>(
+        <span class="string">"INSERT INTO hash(value) values {} ON CONFLICT (value) DO UPDATE SET value = EXCLUDED.value returning value, id"</span>,
+        params.join(<span class="string">","</span>)
     );
-
-        (params, stmt)
-    }
-}
-
-<span class="comment">// Parse a row to a HashTableRow
-</span><span class="kw">impl </span>TryFrom&lt;Row&gt; <span class="kw">for </span>HashTableRow {
-    <span class="kw">type </span>Error = QueryError;
-    <span class="kw">fn </span>try_from(row: Row) -&gt; QueryResult&lt;<span class="self">Self</span>&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            id: row.try_get(<span class="number">0</span>).map_err(|e| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to get column id {e}"</span>),
-            })<span class="question-mark">?</span>,
-            value: row.try_get(<span class="number">1</span>).map_err(|e| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to get column value {e}"</span>),
-            })<span class="question-mark">?</span>,
-        })
-    }
-}
-
-<span class="comment">// parsing errors
-</span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>ParseError {
-    Serde(serde_json::Error),
-    Deserialize(SerializationError),
-    Serialize(SerializationError),
-}
-
-<span class="kw">impl </span>Display <span class="kw">for </span>ParseError {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; fmt::Result {
-        <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Serde(err) =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"failed to parse value {err:?}"</span>)
-            }
-            <span class="self">Self</span>::Deserialize(err) =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"failed to deserialize {err:?}"</span>)
-            }
-            <span class="self">Self</span>::Serialize(err) =&gt; {
-                <span class="macro">write!</span>(f, <span class="string">"failed to serialize {err:?}"</span>)
-            }
-        }
-    }
-}
-
-<span class="kw">impl </span>std::error::Error <span class="kw">for </span>ParseError {}
-
-<span class="kw">impl </span>From&lt;ParseError&gt; <span class="kw">for </span>QueryError {
-    <span class="kw">fn </span>from(value: ParseError) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::Error {
-            message: value.to_string(),
-        }
-    }
+    <span class="prelude-val">Ok</span>((query, sql))
 }
 
 <span class="comment">// Represents a row in a state table
-</span><span class="attr">#[derive(Debug, Default, Clone)]
+</span><span class="attr">#[derive(Debug, Default, Clone, FromRow)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Node {
     <span class="kw">pub</span>(<span class="kw">crate</span>) path: Vec&lt;i32&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) created: i64,
@@ -1799,103 +1619,69 @@
 }
 
 <span class="kw">impl </span>Node {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>build_batch_insert&lt;<span class="lifetime">'a</span>&gt;(
-        name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
-        nodes: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[<span class="self">Self</span>],
-    ) -&gt; (Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>(<span class="kw">dyn </span>ToSql + Sync)&gt;, String) {
-        <span class="kw">let </span>params: Vec&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>ToSql + Sync)&gt; = nodes
-            .iter()
-            .flat_map(|n| {
-                [
-                    <span class="kw-2">&amp;</span>n.path <span class="kw">as </span><span class="kw-2">&amp;</span>(<span class="kw">dyn </span>ToSql + Sync),
-                    <span class="kw-2">&amp;</span>n.created,
-                    <span class="kw-2">&amp;</span>n.hash_id,
-                    <span class="kw-2">&amp;</span>n.children,
-                    <span class="kw-2">&amp;</span>n.children_bitvec,
-                    <span class="kw-2">&amp;</span>n.index,
-                    <span class="kw-2">&amp;</span>n.entry,
-                ]
-            })
-            .collect();
-
-        <span class="kw">let </span>stmt = <span class="macro">format!</span>(
-                <span class="string">"INSERT INTO {name} (path, created, hash_id, children, children_bitvec, index, entry) values {} ON CONFLICT (path, created)
-                DO UPDATE SET hash_id = EXCLUDED.hash_id, children = EXCLUDED.children, children_bitvec = EXCLUDED.children_bitvec,
-                index = EXCLUDED.index, entry = EXCLUDED.entry RETURNING path"</span>,
-                (<span class="number">1</span>..params.len()+<span class="number">1</span>)
-                .tuples()
-                    .format_with(<span class="string">", "</span>, |(path, created, id, children, bitmap, i, e), f|
-                    { f(<span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">"(${path}, ${created}, ${id}, ${children}, ${bitmap}, ${i}, ${e})"</span>)) }),
-            );
-
-        (params, stmt)
-    }
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>upsert(
+        name: <span class="kw-2">&amp;</span>str,
+        nodes: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="self">Self</span>&gt;,
+        tx: <span class="kw-2">&amp;mut </span>Transaction&lt;Write&gt;,
+    ) -&gt; anyhow::Result&lt;()&gt; {
+        tx.upsert(
+            name,
+            [
+                <span class="string">"path"</span>,
+                <span class="string">"created"</span>,
+                <span class="string">"hash_id"</span>,
+                <span class="string">"children"</span>,
+                <span class="string">"children_bitvec"</span>,
+                <span class="string">"index"</span>,
+                <span class="string">"entry"</span>,
+            ],
+            [<span class="string">"path"</span>, <span class="string">"created"</span>],
+            nodes.into_iter().map(|n| {
+                (
+                    n.path.clone(),
+                    n.created,
+                    n.hash_id,
+                    n.children.clone(),
+                    n.children_bitvec.clone(),
+                    n.index.clone(),
+                    n.entry.clone(),
+                )
+            }),
+        )
+        .<span class="kw">await
+    </span>}
 }
 
-<span class="comment">// Parse a Row to a Node
-</span><span class="kw">impl </span>TryFrom&lt;Row&gt; <span class="kw">for </span>Node {
-    <span class="kw">type </span>Error = QueryError;
-    <span class="kw">fn </span>try_from(row: Row) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            path: row.try_get(<span class="number">0</span>).map_err(|e| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to get column path: {e}"</span>),
-            })<span class="question-mark">?</span>,
-            created: row.try_get(<span class="number">1</span>).map_err(|e| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to get column created: {e}"</span>),
-            })<span class="question-mark">?</span>,
-            hash_id: row.try_get(<span class="number">2</span>).map_err(|e| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to get column hash_id: {e}"</span>),
-            })<span class="question-mark">?</span>,
-            children: row.try_get(<span class="number">3</span>).map_err(|e| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to get column children: {e}"</span>),
-            })<span class="question-mark">?</span>,
-            children_bitvec: row.try_get(<span class="number">4</span>).map_err(|e| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to get column children bitmap: {e}"</span>),
-            })<span class="question-mark">?</span>,
-            index: row.try_get(<span class="number">5</span>).map_err(|e| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to get column index: {e}"</span>),
-            })<span class="question-mark">?</span>,
-            entry: row.try_get(<span class="number">6</span>).map_err(|e| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"failed to get column entry: {e}"</span>),
-            })<span class="question-mark">?</span>,
-        })
-    }
-}
-
-<span class="kw">fn </span>build_get_path_query(
+<span class="kw">fn </span>build_get_path_query&lt;<span class="lifetime">'q</span>&gt;(
     table: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     traversal_path: Vec&lt;usize&gt;,
     created: i64,
-) -&gt; (Vec&lt;Box&lt;(<span class="kw">dyn </span>ToSql + Send + Sync)&gt;&gt;, String) {
+) -&gt; QueryResult&lt;(QueryBuilder&lt;<span class="lifetime">'q</span>&gt;, String)&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>query = QueryBuilder::default();
     <span class="kw">let </span><span class="kw-2">mut </span>traversal_path = traversal_path.into_iter().map(|x| x <span class="kw">as </span>i32);
+    <span class="kw">let </span>created = query.bind(created)<span class="question-mark">?</span>;
 
-    <span class="comment">// Since the 'created' parameter is common to all queries,
-    // we place it at the first position in the 'params' vector.
-    // We iterate through the path vector skipping the first element after each iteration
-    </span><span class="kw">let </span><span class="kw-2">mut </span>params: Vec&lt;Box&lt;(<span class="kw">dyn </span>ToSql + Send + Sync)&gt;&gt; = <span class="macro">vec!</span>[Box::new(created)];
-    <span class="kw">let </span>len = traversal_path.len();
-    <span class="kw">let </span><span class="kw-2">mut </span>queries = Vec::new();
+    <span class="comment">// We iterate through the path vector skipping the first element after each iteration
+    </span><span class="kw">let </span>len = traversal_path.len();
+    <span class="kw">let </span><span class="kw-2">mut </span>sub_queries = Vec::new();
+    <span class="kw">for _ in </span><span class="number">0</span>..=len {
+        <span class="kw">let </span>node_path = query.bind(traversal_path.clone().rev().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;())<span class="question-mark">?</span>;
+        <span class="kw">let </span>sub_query = <span class="macro">format!</span>(
+            <span class="string">"(SELECT * FROM {table} WHERE path = {node_path} AND created &lt;= {created} ORDER BY created DESC LIMIT 1)"</span>,
+        );
 
-    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..=len {
-        <span class="kw">let </span>node_path = traversal_path.clone().rev().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-
-        <span class="kw">let </span>query = <span class="macro">format!</span>(
-            <span class="string">"(SELECT * FROM {table} WHERE path = ${} AND created &lt;= $1 ORDER BY created DESC LIMIT 1)"</span>,
-            i + <span class="number">2
-        </span>);
-
-        queries.push(query);
-        params.push(Box::new(node_path));
+        sub_queries.push(sub_query);
         traversal_path.next();
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>final_query: String = queries.join(<span class="string">" UNION "</span>);
-    final_query.push_str(<span class="string">"ORDER BY path DESC"</span>);
-    (params, final_query)
+    <span class="kw">let </span><span class="kw-2">mut </span>sql: String = sub_queries.join(<span class="string">" UNION "</span>);
+    sql.push_str(<span class="string">"ORDER BY path DESC"</span>);
+    <span class="prelude-val">Ok</span>((query, sql))
 }
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
+    <span class="kw">use </span>futures::stream::StreamExt;
     <span class="kw">use </span>jf_merkle_tree::{
         universal_merkle_tree::UniversalMerkleTree, LookupResult, MerkleTreeScheme,
         UniversalMerkleTreeScheme,
@@ -1905,7 +1691,7 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
         data_source::{
-            storage::sql::{query::sql_param, testing::TmpDb, <span class="kw-2">*</span>},
+            storage::sql::{testing::TmpDb, <span class="kw-2">*</span>},
             VersionedDataSource,
         },
         merklized_state::UpdateStateData,
@@ -1937,17 +1723,20 @@
 
             <span class="comment">// data field of the header
             </span><span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()});
-            tx
-                .query_opt(
-                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
-                    [
-                        sql_param(<span class="kw-2">&amp;</span>(block_height <span class="kw">as </span>i64)),
-                        sql_param(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"randomHash{i}"</span>)),
-                        sql_param(<span class="kw-2">&amp;</span>test_data),
-                    ],
-                )
-                .<span class="kw">await
-                </span>.unwrap();
+            tx.upsert(
+                <span class="string">"header"</span>,
+                [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"timestamp"</span>, <span class="string">"data"</span>],
+                [<span class="string">"height"</span>],
+                [(
+                    block_height <span class="kw">as </span>i64,
+                    <span class="macro">format!</span>(<span class="string">"randomHash{i}"</span>),
+                    <span class="string">"t"</span>,
+                    <span class="number">0</span>,
+                    test_data,
+                )],
+            )
+            .<span class="kw">await
+            </span>.unwrap();
             <span class="comment">// proof for the index from the tree
             </span><span class="kw">let </span>(<span class="kw">_</span>, proof) = test_tree.lookup(i).expect_ok().unwrap();
             <span class="comment">// traversal path for the index.
@@ -1972,7 +1761,7 @@
         <span class="comment">//Get the path and check if it matches the lookup
         </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">27 </span>{
             <span class="comment">// Query the path for the index
-            </span><span class="kw">let </span>tx = storage.read().<span class="kw">await</span>.unwrap();
+            </span><span class="kw">let </span><span class="kw-2">mut </span>tx = storage.read().<span class="kw">await</span>.unwrap();
             <span class="kw">let </span>merkle_path = tx
                 .get_path(
                     Snapshot::&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;::Index(block_height <span class="kw">as </span>u64),
@@ -2000,17 +1789,14 @@
         // data field of the header
         </span><span class="kw">let </span><span class="kw-2">mut </span>tx = storage.write().<span class="kw">await</span>.unwrap();
         <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()});
-        tx
-            .query_opt(
-                <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
-                [
-                    sql_param(<span class="kw-2">&amp;</span>(<span class="number">2_i64</span>)),
-                    sql_param(<span class="kw-2">&amp;</span><span class="string">"randomstring"</span>),
-                    sql_param(<span class="kw-2">&amp;</span>test_data),
-                ],
-            )
-            .<span class="kw">await
-            </span>.unwrap();
+        tx.upsert(
+            <span class="string">"header"</span>,
+            [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"timestamp"</span>, <span class="string">"data"</span>],
+            [<span class="string">"height"</span>],
+            [(<span class="number">2i64</span>, <span class="string">"randomstring"</span>, <span class="string">"t"</span>, <span class="number">0</span>, test_data)],
+        )
+        .<span class="kw">await
+        </span>.unwrap();
         <span class="kw">let </span>(<span class="kw">_</span>, proof_bh_2) = test_tree.lookup(<span class="number">0</span>).expect_ok().unwrap();
         <span class="comment">// traversal path for the index.
         </span><span class="kw">let </span>traversal_path =
@@ -2038,19 +1824,13 @@
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
         <span class="comment">// Find all the nodes of Index 0 in table
-        </span><span class="kw">let </span>rows = storage
-            .read()
-            .<span class="kw">await
-            </span>.unwrap()
-            .query(
-                <span class="string">"SELECT * from test_tree where path = $1 ORDER BY created"</span>,
-                [sql_param(<span class="kw-2">&amp;</span>node_path)],
-            )
-            .<span class="kw">await
-            </span>.unwrap();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = storage.read().<span class="kw">await</span>.unwrap();
+        <span class="kw">let </span>rows = query(<span class="string">"SELECT * from test_tree where path = $1 ORDER BY created"</span>)
+            .bind(node_path)
+            .fetch(tx.as_mut());
 
         <span class="kw">let </span>nodes: Vec&lt;<span class="kw">_</span>&gt; = rows
-            .map(|res| Node::try_from(res.unwrap()))
+            .map(|res| Node::from_row(<span class="kw-2">&amp;</span>res.unwrap()))
             .try_collect()
             .<span class="kw">await
             </span>.unwrap();
@@ -2104,17 +1884,14 @@
         <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(commitment).unwrap()});
         <span class="comment">// insert the header with merkle commitment
         </span><span class="kw">let </span><span class="kw-2">mut </span>tx = storage.write().<span class="kw">await</span>.unwrap();
-        tx
-                .query_opt(
-                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
-                    [
-                        sql_param(<span class="kw-2">&amp;</span>(block_height <span class="kw">as </span>i64)),
-                        sql_param(<span class="kw-2">&amp;</span><span class="string">"randomString"</span>),
-                        sql_param(<span class="kw-2">&amp;</span>test_data),
-                    ],
-                )
-                .<span class="kw">await
-                </span>.unwrap();
+        tx.upsert(
+            <span class="string">"header"</span>,
+            [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"timestamp"</span>, <span class="string">"data"</span>],
+            [<span class="string">"height"</span>],
+            [(block_height <span class="kw">as </span>i64, <span class="string">"randomString"</span>, <span class="string">"t"</span>, <span class="number">0</span>, test_data)],
+        )
+        .<span class="kw">await
+        </span>.unwrap();
         <span class="comment">// proof for the index from the tree
         </span><span class="kw">let </span>(<span class="kw">_</span>, proof_before_remove) = test_tree.lookup(<span class="number">0</span>).expect_ok().unwrap();
         <span class="comment">// traversal path for the index.
@@ -2170,17 +1947,20 @@
         .<span class="kw">await
         </span>.expect(<span class="string">"failed to insert nodes"</span>);
         <span class="comment">// Insert the new header
-        </span>tx
-        .query_opt(
-            <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
-            [
-                sql_param(<span class="kw-2">&amp;</span><span class="number">2_i64</span>),
-                sql_param(<span class="kw-2">&amp;</span><span class="string">"randomString2"</span>),
-                sql_param(<span class="kw-2">&amp;</span><span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()})),
-            ],
-        )
-        .<span class="kw">await
-        </span>.unwrap();
+        </span>tx.upsert(
+                <span class="string">"header"</span>,
+                [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"timestamp"</span>, <span class="string">"data"</span>],
+                [<span class="string">"height"</span>],
+                [(
+                    <span class="number">2i64</span>,
+                    <span class="string">"randomString2"</span>,
+                    <span class="string">"t"</span>,
+                    <span class="number">0</span>,
+                    <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()}),
+                )],
+            )
+            .<span class="kw">await
+            </span>.unwrap();
         <span class="comment">// update saved state height
         </span>UpdateStateData::&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;::set_last_state_height(<span class="kw-2">&amp;mut </span>tx, <span class="number">2</span>)
             .<span class="kw">await
@@ -2231,17 +2011,20 @@
             <span class="kw">let </span><span class="kw-2">mut </span>tx = storage.write().<span class="kw">await</span>.unwrap();
 
             <span class="comment">// Insert a dummy header
-            </span>tx
-                .query_opt(
-                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3)"</span>,
-                    [
-                        sql_param(<span class="kw-2">&amp;</span>(i <span class="kw">as </span>i64)),
-                        sql_param(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"hash{i}"</span>)),
-                        sql_param(<span class="kw-2">&amp;</span><span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()})),
-                    ],
-                )
-                .<span class="kw">await
-                </span>.unwrap();
+            </span>tx.upsert(
+                <span class="string">"header"</span>,
+                [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"timestamp"</span>, <span class="string">"data"</span>],
+                [<span class="string">"height"</span>],
+                [(
+                    i <span class="kw">as </span>i64,
+                    <span class="macro">format!</span>(<span class="string">"hash{i}"</span>),
+                    <span class="string">"t"</span>,
+                    <span class="number">0</span>,
+                    <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()})
+                )],
+            )
+            .<span class="kw">await
+            </span>.unwrap();
             <span class="comment">// update saved state height
             </span>UpdateStateData::&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;::set_last_state_height(<span class="kw-2">&amp;mut </span>tx, i)
                 .<span class="kw">await
@@ -2297,17 +2080,14 @@
         <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(commitment).unwrap()});
         <span class="comment">// insert the header with merkle commitment
         </span><span class="kw">let </span><span class="kw-2">mut </span>tx = storage.write().<span class="kw">await</span>.unwrap();
-        tx
-                .query_opt(
-                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
-                    [
-                        sql_param(<span class="kw-2">&amp;</span>(block_height <span class="kw">as </span>i64)),
-                        sql_param(<span class="kw-2">&amp;</span><span class="string">"randomString"</span>),
-                        sql_param(<span class="kw-2">&amp;</span>test_data),
-                    ],
-                )
-                .<span class="kw">await
-                </span>.unwrap();
+        tx.upsert(
+            <span class="string">"header"</span>,
+            [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"timestamp"</span>, <span class="string">"data"</span>],
+            [<span class="string">"height"</span>],
+            [(block_height <span class="kw">as </span>i64, <span class="string">"randomString"</span>, <span class="string">"t"</span>, <span class="number">0</span>, test_data)],
+        )
+        .<span class="kw">await
+        </span>.unwrap();
         <span class="comment">// proof for the index from the tree
         </span><span class="kw">let </span>(<span class="kw">_</span>, proof) = test_tree.lookup(<span class="number">0</span>).expect_ok().unwrap();
         <span class="comment">// traversal path for the index.
@@ -2363,17 +2143,20 @@
             test_tree.update(i, i).unwrap();
             <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()});
             <span class="comment">// insert the header with merkle commitment
-            </span>tx
-                    .query_opt(
-                        <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
-                        [
-                            sql_param(<span class="kw-2">&amp;</span>(block_height <span class="kw">as </span>i64)),
-                            sql_param(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"randomString{i}"</span>)),
-                            sql_param(<span class="kw-2">&amp;</span>test_data),
-                        ],
-                    )
-                    .<span class="kw">await
-                    </span>.unwrap();
+            </span>tx.upsert(
+                <span class="string">"header"</span>,
+                [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"timestamp"</span>, <span class="string">"data"</span>],
+                [<span class="string">"height"</span>],
+                [(
+                    block_height <span class="kw">as </span>i64,
+                    <span class="macro">format!</span>(<span class="string">"rarndomString{i}"</span>),
+                    <span class="string">"t"</span>,
+                    <span class="number">0</span>,
+                    test_data,
+                )],
+            )
+            .<span class="kw">await
+            </span>.unwrap();
             <span class="comment">// proof for the index from the tree
             </span><span class="kw">let </span>(<span class="kw">_</span>, proof) = test_tree.lookup(i).expect_ok().unwrap();
             <span class="comment">// traversal path for the index.
@@ -2424,18 +2207,15 @@
 
         <span class="kw">let </span>test_data = <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()});
         <span class="comment">// insert the header with merkle commitment
-        </span><span class="kw">let </span>tx = storage.write().<span class="kw">await</span>.unwrap();
-        tx
-                .query_opt(
-                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
-                    [
-                        sql_param(<span class="kw-2">&amp;</span>(block_height <span class="kw">as </span>i64)),
-                        sql_param(<span class="kw-2">&amp;</span><span class="string">"randomStringgg"</span>),
-                        sql_param(<span class="kw-2">&amp;</span>test_data),
-                    ],
-                )
-                .<span class="kw">await
-                </span>.unwrap();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = storage.write().<span class="kw">await</span>.unwrap();
+        tx.upsert(
+            <span class="string">"header"</span>,
+            [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"timestamp"</span>, <span class="string">"data"</span>],
+            [<span class="string">"height"</span>],
+            [(block_height <span class="kw">as </span>i64, <span class="string">"randomStringgg"</span>, <span class="string">"t"</span>, <span class="number">0</span>, test_data)],
+        )
+        .<span class="kw">await
+        </span>.unwrap();
         tx.commit().<span class="kw">await</span>.unwrap();
         <span class="comment">// Querying the path again
         </span><span class="kw">let </span>merkle_proof = storage
@@ -2459,17 +2239,14 @@
 
         <span class="comment">// insert the header with merkle commitment
         </span><span class="kw">let </span><span class="kw-2">mut </span>tx = storage.write().<span class="kw">await</span>.unwrap();
-        tx
-                .query_opt(
-                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES ($1, $2, 't', 0, $3) ON CONFLICT(height) DO UPDATE set data = excluded.data"</span>,
-                    [
-                        sql_param(<span class="kw-2">&amp;</span>(<span class="number">2_i64</span>)),
-                        sql_param(<span class="kw-2">&amp;</span><span class="string">"randomHashString"</span>),
-                        sql_param(<span class="kw-2">&amp;</span>test_data),
-                    ],
-                )
-                .<span class="kw">await
-                </span>.unwrap();
+        tx.upsert(
+            <span class="string">"header"</span>,
+            [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"timestamp"</span>, <span class="string">"data"</span>],
+            [<span class="string">"height"</span>],
+            [(<span class="number">2i64</span>, <span class="string">"randomHashString"</span>, <span class="string">"t"</span>, <span class="number">0</span>, test_data)],
+        )
+        .<span class="kw">await
+        </span>.unwrap();
         UpdateStateData::&lt;<span class="kw">_</span>, MockMerkleTree, <span class="number">8</span>&gt;::insert_merkle_nodes(
             <span class="kw-2">&amp;mut </span>tx,
             proof.clone(),
@@ -2487,11 +2264,11 @@
             .map(|n| <span class="kw-2">*</span>n <span class="kw">as </span>i32)
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         tx.execute_one(
-            <span class="kw-2">&amp;</span><span class="macro">format!</span>(
+            query(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">"DELETE FROM {} WHERE created = 2 and path = $1"</span>,
                 MockMerkleTree::state_type()
-            ),
-            [sql_param(<span class="kw-2">&amp;</span>node_path)],
+            ))
+            .bind(node_path),
         )
         .<span class="kw">await
         </span>.expect(<span class="string">"failed to delete internal node"</span>);
@@ -2584,13 +2361,13 @@
             <span class="comment">// insert the header with merkle commitment
             </span>tx
             .upsert(<span class="string">"header"</span>, [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"timestamp"</span>, <span class="string">"data"</span>], [<span class="string">"height"</span>],
-                [[
-                    sql_param(<span class="kw-2">&amp;</span>(block_height <span class="kw">as </span>i64)),
-                    sql_param(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"hash{block_height}"</span>)),
-                    sql_param(<span class="kw-2">&amp;</span><span class="string">"hash"</span>),
-                    sql_param(<span class="kw-2">&amp;</span><span class="number">0i64</span>),
-                    sql_param(<span class="kw-2">&amp;</span><span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(tree.commitment()).unwrap()})),
-                ]],
+                [(
+                    block_height <span class="kw">as </span>i64,
+                    <span class="macro">format!</span>(<span class="string">"hash{block_height}"</span>),
+                    <span class="string">"hash"</span>,
+                    <span class="number">0i64</span>,
+                    <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(tree.commitment()).unwrap()}),
+                )],
             )
             .<span class="kw">await
             </span>.unwrap();
@@ -2704,15 +2481,20 @@
             <span class="kw">let </span><span class="kw-2">mut </span>tx = storage.write().<span class="kw">await</span>.unwrap();
 
             <span class="comment">// Insert a header with the tree commitment.
-            </span>tx
-                .query_opt(
-                    <span class="string">"INSERT INTO HEADER(height, hash, payload_hash, timestamp, data) VALUES (0, 'hash', 'hash', 0, $1)"</span>,
-                    [
-                        sql_param(<span class="kw-2">&amp;</span><span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()})),
-                    ],
-                )
-                .<span class="kw">await
-                </span>.unwrap();
+            </span>tx.upsert(
+                <span class="string">"header"</span>,
+                [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"timestamp"</span>, <span class="string">"data"</span>],
+                [<span class="string">"height"</span>],
+                [(
+                    <span class="number">0i64</span>,
+                    <span class="string">"hash"</span>,
+                    <span class="string">"hash"</span>,
+                    <span class="number">0</span>,
+                    <span class="macro">serde_json::json!</span>({ MockMerkleTree::header_state_commitment_field() : serde_json::to_value(test_tree.commitment()).unwrap()}),
+                )],
+            )
+            .<span class="kw">await
+            </span>.unwrap();
 
             <span class="comment">// Insert Merkle nodes.
             </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..tree_size {
@@ -2758,7 +2540,7 @@
                     <span class="string">"DELETE FROM {} WHERE index = $1"</span>,
                     MockMerkleTree::state_type()
                 ),
-                [index],
+                (index,),
             )
             .<span class="kw">await
             </span>.unwrap();

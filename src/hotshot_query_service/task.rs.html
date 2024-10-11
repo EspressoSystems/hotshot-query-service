@@ -131,7 +131,6 @@
 <a href="#131" id="131">131</a>
 <a href="#132" id="132">132</a>
 <a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -173,9 +172,8 @@
     /// The caller should ensure that `future` yields back to the executor fairly frequently, to
     /// ensure timely cancellation in case the task is dropped. If an operation in `future` may run
     /// for a long time without blocking or yielding, consider using
-    /// [`yield_now`](async_std::task::yield_now) periodically, or using
-    /// [`spawn`](async_std::task::spawn) or [`spawn_blocking`](async_std::task::spawn_blocking) to
-    /// run long operations in a sub-task.
+    /// [`yield_now`](async_std::task::yield_now) periodically, or using [`spawn`] or
+    /// [`spawn_blocking`](async_std::task::spawn_blocking) to run long operations in a sub-task.
     </span><span class="kw">pub fn </span>spawn&lt;F&gt;(name: <span class="kw">impl </span>Display, future: F) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>F: Future + Send + <span class="lifetime">'static</span>,
@@ -214,8 +212,8 @@
     /// ensure timely cancellation in case the task is dropped. If an operation in `future` may run
     /// for a long time without blocking or yielding, consider using
     /// [`yield_now`](async_std::task::yield_now) periodically, or using
-    /// [`spawn`](async_std::task::spawn) or [`spawn_blocking`](async_std::task::spawn_blocking) to
-    /// run long operations in a sub-task.
+    /// [`spawn`] or [`spawn_blocking`](async_std::task::spawn_blocking) to run long operations in a
+    /// sub-task.
     </span><span class="kw">pub fn </span>spawn&lt;F&gt;(name: <span class="kw">impl </span>Display, future: F) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>F: Future&lt;Output = T&gt; + Send + <span class="lifetime">'static</span>,

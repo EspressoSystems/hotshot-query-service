@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["default_migrations"],"macro":["include_dir","include_migrations"],"mod":["testing"],"struct":["Config","Error","Migration","Pruner","SqlStorage","Transaction"]};
+window.SIDEBAR_ITEMS = {"externcrate":["sqlx"],"fn":["default_migrations","query","query_as"],"macro":["include_dir","include_migrations"],"mod":["testing"],"struct":["Config","Error","Migration","Postgres","Pruner","QueryBuilder","SqlStorage","Sqlite","Transaction"],"trait":["Database","Executor"],"type":["Db","Query","QueryAs"]};

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/storage/sql/query/node.rs`."><title>node.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../../../../../" data-static-root-path="../../../../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../../../src-files.js"></script><script defer src="../../../../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/data_source/storage/sql/queries/node.rs`."><title>node.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../../../../../" data-static-root-path="../../../../../../static.files/" data-current-crate="hotshot_query_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../../../src-files.js"></script><script defer src="../../../../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -296,6 +296,11 @@
 <a href="#296" id="296">296</a>
 <a href="#297" id="297">297</a>
 <a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -310,80 +315,83 @@
 
 </span><span class="doccomment">//! Node storage implementation for a database query engine.
 
-</span><span class="kw">use super</span>::{header_where_clause, parse_header, Transaction, HEADER_COLUMNS};
+</span><span class="kw">use super</span>::{
+    <span class="kw">super</span>::transaction::{query, query_as, Transaction, TransactionMode},
+    parse_header, DecodeError, QueryBuilder, HEADER_COLUMNS,
+};
 <span class="kw">use crate</span>::{
-    node::{BlockId, NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
+    data_source::storage::NodeStorage,
+    node::{BlockId, SyncStatus, TimeWindowQueryData, WindowStart},
     Header, MissingSnafu, NotFoundSnafu, QueryError, QueryResult, VidShare,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>futures::stream::{StreamExt, TryStreamExt};
 <span class="kw">use </span>hotshot_types::traits::{block_contents::BlockHeader, node_implementation::NodeType};
 <span class="kw">use </span>snafu::OptionExt;
+<span class="kw">use </span>sqlx::Row;
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types&gt; NodeDataSource&lt;Types&gt; <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt;
+</span><span class="kw">impl</span>&lt;Mode, Types&gt; NodeStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;Mode&gt;
 <span class="kw">where
-    </span>Types: NodeType,
+    </span>Mode: TransactionMode,
+    Types: NodeType,
 {
-    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">let </span>query = <span class="string">"SELECT max(height) FROM header"</span>;
-        <span class="kw">let </span>row = <span class="self">self</span>.query_one_static(query).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>height: <span class="prelude-ty">Option</span>&lt;i64&gt; = row.get(<span class="number">0</span>);
-        <span class="kw">match </span>height {
-            <span class="prelude-val">Some</span>(height) =&gt; {
+    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">match </span>query_as::&lt;(<span class="prelude-ty">Option</span>&lt;i64&gt;,)&gt;(<span class="string">"SELECT max(height) FROM header"</span>)
+            .fetch_one(<span class="self">self</span>.as_mut())
+            .<span class="kw">await</span><span class="question-mark">?
+        </span>{
+            (<span class="prelude-val">Some</span>(height),) =&gt; {
                 <span class="comment">// The height of the block is the number of blocks below it, so the total number of
                 // blocks is one more than the height of the highest block.
                 </span><span class="prelude-val">Ok</span>(height <span class="kw">as </span>usize + <span class="number">1</span>)
             }
-            <span class="prelude-val">None </span>=&gt; {
+            (<span class="prelude-val">None</span>,) =&gt; {
                 <span class="comment">// If there are no blocks yet, the height is 0.
                 </span><span class="prelude-val">Ok</span>(<span class="number">0</span>)
             }
         }
     }
 
-    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">let </span>row = <span class="self">self
-            </span>.query_one_static(<span class="string">"SELECT count(*) FROM transaction"</span>)
+    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">let </span>(count,) = query_as::&lt;(i64,)&gt;(<span class="string">"SELECT count(*) FROM transaction"</span>)
+            .fetch_one(<span class="self">self</span>.as_mut())
             .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>count: i64 = row.get(<span class="number">0</span>);
         <span class="prelude-val">Ok</span>(count <span class="kw">as </span>usize)
     }
 
-    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">let </span>row = <span class="self">self
-            </span>.query_one_static(<span class="string">"SELECT sum(size) FROM payload"</span>)
+    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">let </span>(sum,) = query_as::&lt;(<span class="prelude-ty">Option</span>&lt;i64&gt;,)&gt;(<span class="string">"SELECT sum(size) FROM payload"</span>)
+            .fetch_one(<span class="self">self</span>.as_mut())
             .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>sum: <span class="prelude-ty">Option</span>&lt;i64&gt; = row.get(<span class="number">0</span>);
         <span class="prelude-val">Ok</span>(sum.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>usize)
     }
 
-    <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
+    <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
     {
-        <span class="kw">let </span>(where_clause, param) = header_where_clause(id.into());
+        <span class="kw">let </span><span class="kw-2">mut </span>query = QueryBuilder::default();
+        <span class="kw">let </span>where_clause = query.header_where_clause(id.into())<span class="question-mark">?</span>;
         <span class="comment">// ORDER BY h.height ASC ensures that if there are duplicate blocks (this can happen when
         // selecting by payload ID, as payloads are not unique), we return the first one.
-        </span><span class="kw">let </span>query = <span class="macro">format!</span>(
+        </span><span class="kw">let </span>sql = <span class="macro">format!</span>(
             <span class="string">"SELECT v.share AS share FROM vid AS v
                JOIN header AS h ON v.height = h.height
               WHERE {where_clause}
               ORDER BY h.height ASC
               LIMIT 1"
         </span>);
-        <span class="kw">let </span>row = <span class="self">self</span>.query_one(<span class="kw-2">&amp;</span>query, [param]).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>share_data: <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt; =
-            row.try_get(<span class="string">"share"</span>).map_err(|err| QueryError::Error {
-                message: <span class="macro">format!</span>(<span class="string">"error extracting share data from query results: {err}"</span>),
-            })<span class="question-mark">?</span>;
+        <span class="kw">let </span>(share_data,) = query
+            .query_as::&lt;(<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;,)&gt;(<span class="kw-2">&amp;</span>sql)
+            .fetch_one(<span class="self">self</span>.as_mut())
+            .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>share_data = share_data.context(MissingSnafu)<span class="question-mark">?</span>;
-        bincode::deserialize(<span class="kw-2">&amp;</span>share_data).map_err(|err| QueryError::Error {
-            message: <span class="macro">format!</span>(<span class="string">"malformed VID share: {err}"</span>),
-        })
+        <span class="kw">let </span>share = bincode::deserialize(<span class="kw-2">&amp;</span>share_data).decode_error(<span class="string">"malformed VID share"</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(share)
     }
 
-    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
         <span class="comment">// A leaf can only be missing if there is no row for it in the database (all its columns are
         // non-nullable). A block can be missing if its corresponding leaf is missing or if the
         // block's `data` field is `NULL`. We can find the number of missing leaves and blocks by
@@ -407,16 +415,19 @@
         // missing in that case _or_ if the row is present but share data is NULL. Thus, we also
         // need to select the total number of VID rows and the number of present VID rows with a
         // NULL share.
-        </span><span class="kw">let </span>query = <span class="string">"SELECT l.max_height, l.total_leaves, p.null_payloads, v.total_vid, vn.null_vid, pruned_height FROM
+        </span><span class="kw">let </span>sql = <span class="string">"SELECT l.max_height, l.total_leaves, p.null_payloads, v.total_vid, vn.null_vid, pruned_height FROM
                 (SELECT max(leaf.height) AS max_height, count(*) AS total_leaves FROM leaf) AS l,
                 (SELECT count(*) AS null_payloads FROM payload WHERE data IS NULL) AS p,
                 (SELECT count(*) AS total_vid FROM vid) AS v,
                 (SELECT count(*) AS null_vid FROM vid WHERE share IS NULL) AS vn,
                 coalesce((SELECT last_height FROM pruned_height ORDER BY id DESC LIMIT 1)) as pruned_height
             "</span>;
-        <span class="kw">let </span>row = <span class="self">self</span>.query_opt_static(query).<span class="kw">await</span><span class="question-mark">?</span>.context(NotFoundSnafu)<span class="question-mark">?</span>;
+        <span class="kw">let </span>row = query(sql)
+            .fetch_optional(<span class="self">self</span>.as_mut())
+            .<span class="kw">await</span><span class="question-mark">?
+            </span>.context(NotFoundSnafu)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>block_height = <span class="kw">match </span>row.get::&lt;<span class="kw">_</span>, <span class="prelude-ty">Option</span>&lt;i64&gt;&gt;(<span class="string">"max_height"</span>) {
+        <span class="kw">let </span>block_height = <span class="kw">match </span>row.get::&lt;<span class="prelude-ty">Option</span>&lt;i64&gt;, <span class="kw">_</span>&gt;(<span class="string">"max_height"</span>) {
             <span class="prelude-val">Some</span>(height) =&gt; {
                 <span class="comment">// The height of the block is the number of blocks below it, so the total number of
                 // blocks is one more than the height of the highest block.
@@ -427,12 +438,12 @@
                 </span><span class="number">0
             </span>}
         };
-        <span class="kw">let </span>total_leaves = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"total_leaves"</span>) <span class="kw">as </span>usize;
-        <span class="kw">let </span>null_payloads = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"null_payloads"</span>) <span class="kw">as </span>usize;
-        <span class="kw">let </span>total_vid = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"total_vid"</span>) <span class="kw">as </span>usize;
-        <span class="kw">let </span>null_vid = row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"null_vid"</span>) <span class="kw">as </span>usize;
+        <span class="kw">let </span>total_leaves = row.get::&lt;i64, <span class="kw">_</span>&gt;(<span class="string">"total_leaves"</span>) <span class="kw">as </span>usize;
+        <span class="kw">let </span>null_payloads = row.get::&lt;i64, <span class="kw">_</span>&gt;(<span class="string">"null_payloads"</span>) <span class="kw">as </span>usize;
+        <span class="kw">let </span>total_vid = row.get::&lt;i64, <span class="kw">_</span>&gt;(<span class="string">"total_vid"</span>) <span class="kw">as </span>usize;
+        <span class="kw">let </span>null_vid = row.get::&lt;i64, <span class="kw">_</span>&gt;(<span class="string">"null_vid"</span>) <span class="kw">as </span>usize;
         <span class="kw">let </span>pruned_height = row
-            .get::&lt;<span class="kw">_</span>, <span class="prelude-ty">Option</span>&lt;i64&gt;&gt;(<span class="string">"pruned_height"</span>)
+            .get::&lt;<span class="prelude-ty">Option</span>&lt;i64&gt;, <span class="kw">_</span>&gt;(<span class="string">"pruned_height"</span>)
             .map(|h| h <span class="kw">as </span>usize);
 
         <span class="kw">let </span>missing_leaves = block_height.saturating_sub(total_leaves);
@@ -450,7 +461,7 @@
     }
 
     <span class="kw">async fn </span>get_header_window(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
         end: u64,
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
@@ -470,21 +481,18 @@
         <span class="comment">// Find all blocks starting from `first_block` with timestamps less than `end`. Block
         // timestamps are monotonically increasing, so this query is guaranteed to return a
         // contiguous range of blocks ordered by increasing height.
-        </span><span class="kw">let </span>query = <span class="macro">format!</span>(
+        </span><span class="kw">let </span>sql = <span class="macro">format!</span>(
             <span class="string">"SELECT {HEADER_COLUMNS}
                FROM header AS h
               WHERE h.height &gt;= $1 AND h.timestamp &lt; $2
               ORDER BY h.height"
         </span>);
-        <span class="kw">let </span>rows = <span class="self">self
-            </span>.query(<span class="kw-2">&amp;</span>query, [<span class="kw-2">&amp;</span>(first_block <span class="kw">as </span>i64), <span class="kw-2">&amp;</span>(end <span class="kw">as </span>i64)])
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>rows = query(<span class="kw-2">&amp;</span>sql)
+            .bind(first_block <span class="kw">as </span>i64)
+            .bind(end <span class="kw">as </span>i64)
+            .fetch(<span class="self">self</span>.as_mut());
         <span class="kw">let </span>window = rows
-            .map(|row| {
-                parse_header::&lt;Types&gt;(row.map_err(|err| QueryError::Error {
-                    message: err.to_string(),
-                })<span class="question-mark">?</span>)
-            })
+            .map(|row| parse_header::&lt;Types&gt;(row<span class="question-mark">?</span>))
             .try_collect()
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -502,15 +510,16 @@
         // unique, deterministic result (the first block with a given timestamp). This sort may not
         // be able to use an index, but it shouldn't be too expensive, since there will never be
         // more than a handful of blocks with the same timestamp.
-        </span><span class="kw">let </span>query = <span class="macro">format!</span>(
+        </span><span class="kw">let </span>sql = <span class="macro">format!</span>(
             <span class="string">"SELECT {HEADER_COLUMNS}
                FROM header AS h
               WHERE h.timestamp &gt;= $1
               ORDER BY h.timestamp, h.height
               LIMIT 1"
         </span>);
-        <span class="kw">let </span>next = <span class="self">self
-            </span>.query_opt(<span class="kw-2">&amp;</span>query, [<span class="kw-2">&amp;</span>(end <span class="kw">as </span>i64)])
+        <span class="kw">let </span>next = query(<span class="kw-2">&amp;</span>sql)
+            .bind(end <span class="kw">as </span>i64)
+            .fetch_optional(<span class="self">self</span>.as_mut())
             .<span class="kw">await</span><span class="question-mark">?
             </span>.map(parse_header::&lt;Types&gt;)
             .transpose()<span class="question-mark">?</span>;
@@ -519,9 +528,9 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Transaction&lt;<span class="lifetime">'a</span>&gt; {
+<span class="kw">impl</span>&lt;Mode: TransactionMode&gt; Transaction&lt;Mode&gt; {
     <span class="kw">async fn </span>time_window&lt;Types: NodeType&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         start: u64,
         end: u64,
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
@@ -536,32 +545,32 @@
         // with a given timestamp). This sort may not be able to use an index, but it shouldn't be
         // too expensive, since there will never be more than a handful of blocks with the same
         // timestamp.
-        </span><span class="kw">let </span>query = <span class="macro">format!</span>(
+        </span><span class="kw">let </span>sql = <span class="macro">format!</span>(
             <span class="string">"SELECT {HEADER_COLUMNS}
                FROM header AS h
               WHERE h.timestamp &gt;= $1 AND h.timestamp &lt; $2
               ORDER BY h.timestamp, h.height"
         </span>);
-        <span class="kw">let </span>rows = <span class="self">self</span>.query(<span class="kw-2">&amp;</span>query, [<span class="kw-2">&amp;</span>(start <span class="kw">as </span>i64), <span class="kw-2">&amp;</span>(end <span class="kw">as </span>i64)]).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>rows = query(<span class="kw-2">&amp;</span>sql)
+            .bind(start <span class="kw">as </span>i64)
+            .bind(end <span class="kw">as </span>i64)
+            .fetch(<span class="self">self</span>.as_mut());
         <span class="kw">let </span>window: Vec&lt;<span class="kw">_</span>&gt; = rows
-            .map(|row| {
-                parse_header::&lt;Types&gt;(row.map_err(|err| QueryError::Error {
-                    message: err.to_string(),
-                })<span class="question-mark">?</span>)
-            })
+            .map(|row| parse_header::&lt;Types&gt;(row<span class="question-mark">?</span>))
             .try_collect()
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Find the block just after the window.
-        </span><span class="kw">let </span>query = <span class="macro">format!</span>(
+        </span><span class="kw">let </span>sql = <span class="macro">format!</span>(
             <span class="string">"SELECT {HEADER_COLUMNS}
                FROM header AS h
               WHERE h.timestamp &gt;= $1
               ORDER BY h.timestamp, h.height
               LIMIT 1"
         </span>);
-        <span class="kw">let </span>next = <span class="self">self
-            </span>.query_opt(<span class="kw-2">&amp;</span>query, [<span class="kw-2">&amp;</span>(end <span class="kw">as </span>i64)])
+        <span class="kw">let </span>next = query(<span class="kw-2">&amp;</span>sql)
+            .bind(end <span class="kw">as </span>i64)
+            .fetch_optional(<span class="self">self</span>.as_mut())
             .<span class="kw">await</span><span class="question-mark">?
             </span>.map(parse_header::&lt;Types&gt;)
             .transpose()<span class="question-mark">?</span>;
@@ -578,15 +587,16 @@
         }
 
         <span class="comment">// Find the block just before the window.
-        </span><span class="kw">let </span>query = <span class="macro">format!</span>(
+        </span><span class="kw">let </span>sql = <span class="macro">format!</span>(
             <span class="string">"SELECT {HEADER_COLUMNS}
                FROM header AS h
               WHERE h.timestamp &lt; $1
               ORDER BY h.timestamp DESC, h.height DESC
               LIMIT 1"
         </span>);
-        <span class="kw">let </span>prev = <span class="self">self
-            </span>.query_opt(<span class="kw-2">&amp;</span>query, [<span class="kw-2">&amp;</span>(start <span class="kw">as </span>i64)])
+        <span class="kw">let </span>prev = query(<span class="kw-2">&amp;</span>sql)
+            .bind(start <span class="kw">as </span>i64)
+            .fetch_optional(<span class="self">self</span>.as_mut())
             .<span class="kw">await</span><span class="question-mark">?
             </span>.map(parse_header::&lt;Types&gt;)
             .transpose()<span class="question-mark">?</span>;

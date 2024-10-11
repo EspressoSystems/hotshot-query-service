@@ -1353,17 +1353,6 @@
 <a href="#1353" id="1353">1353</a>
 <a href="#1354" id="1354">1354</a>
 <a href="#1355" id="1355">1355</a>
-<a href="#1356" id="1356">1356</a>
-<a href="#1357" id="1357">1357</a>
-<a href="#1358" id="1358">1358</a>
-<a href="#1359" id="1359">1359</a>
-<a href="#1360" id="1360">1360</a>
-<a href="#1361" id="1361">1361</a>
-<a href="#1362" id="1362">1362</a>
-<a href="#1363" id="1363">1363</a>
-<a href="#1364" id="1364">1364</a>
-<a href="#1365" id="1365">1365</a>
-<a href="#1366" id="1366">1366</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1442,7 +1431,8 @@
 </span><span class="kw">use super</span>::{
     storage::{
         pruning::{PruneStorage, PrunedHeightStorage},
-        AvailabilityStorage, ExplorerStorage,
+        AvailabilityStorage, ExplorerStorage, MerklizedStateHeightStorage, MerklizedStateStorage,
+        NodeStorage,
     },
     VersionedDataSource,
 };
@@ -1452,7 +1442,7 @@
         PayloadQueryData, QueryableHeader, QueryablePayload, TransactionHash, TransactionQueryData,
         UpdateAvailabilityData, VidCommonQueryData,
     },
-    explorer,
+    explorer::{<span class="self">self</span>, ExplorerDataSource},
     fetching::{<span class="self">self</span>, request, Provider},
     merklized_state::{
         MerklizedState, MerklizedStateDataSource, MerklizedStateHeightPersistence, Snapshot,
@@ -1470,7 +1460,7 @@
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>futures::{
-    future::{<span class="self">self</span>, join_all, BoxFuture, FutureExt},
+    future::{join_all, BoxFuture, FutureExt},
     stream::{<span class="self">self</span>, BoxStream, Stream, StreamExt},
 };
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
@@ -1658,8 +1648,7 @@
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
     S: PruneStorage + VersionedDataSource + <span class="lifetime">'static</span>,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;:
-        PrunedHeightStorage + NodeDataSource&lt;Types&gt; + AvailabilityStorage&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: AvailabilityStorage&lt;Types&gt; + PrunedHeightStorage + NodeStorage&lt;Types&gt;,
     <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
@@ -1753,8 +1742,7 @@
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
     S: VersionedDataSource + PruneStorage + <span class="lifetime">'static</span>,
     <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;:
-        PrunedHeightStorage + NodeDataSource&lt;Types&gt; + AvailabilityStorage&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: AvailabilityStorage&lt;Types&gt; + NodeStorage&lt;Types&gt; + PrunedHeightStorage,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="doccomment">/// Build a [`FetchingDataSource`] with the given `storage` and `provider`.
@@ -1812,11 +1800,11 @@
 <span class="kw">where
     </span>Types: NodeType,
     S: VersionedDataSource + Send + Sync + <span class="lifetime">'static</span>,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: NodeDataSource&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: NodeStorage&lt;Types&gt;,
     P: Send + Sync,
 {
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.block_height().<span class="kw">await
@@ -1834,8 +1822,7 @@
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: VersionedDataSource + <span class="lifetime">'static</span>,
     <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;:
-        PrunedHeightStorage + AvailabilityStorage&lt;Types&gt; + NodeDataSource&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: AvailabilityStorage&lt;Types&gt; + NodeStorage&lt;Types&gt; + PrunedHeightStorage,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="kw">type </span>LeafRange&lt;R&gt; = BoxStream&lt;<span class="lifetime">'static</span>, Fetch&lt;LeafQueryData&lt;Types&gt;&gt;&gt;
@@ -1981,7 +1968,7 @@
 <span class="kw">where
     </span>Types: NodeType,
     S: VersionedDataSource + Sync,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: NodeDataSource&lt;Types&gt; + PrunedHeightStorage,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: PrunedHeightStorage + NodeStorage&lt;Types&gt;,
 {
     <span class="kw">async fn </span>new(builder: Builder&lt;Types, S, P&gt;) -&gt; anyhow::Result&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>payload_fetcher = fetching::Fetcher::default();
@@ -2020,8 +2007,7 @@
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: VersionedDataSource + <span class="lifetime">'static</span>,
     <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;:
-        AvailabilityStorage&lt;Types&gt; + PrunedHeightStorage + NodeDataSource&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: AvailabilityStorage&lt;Types&gt; + NodeStorage&lt;Types&gt; + PrunedHeightStorage,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="kw">async fn </span>get&lt;T, R&gt;(<span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;, req: R) -&gt; Fetch&lt;T&gt;
@@ -2034,7 +2020,7 @@
         // notifications sent in between checking local storage and triggering a fetch if necessary.
         </span><span class="kw">let </span>passive = T::passive_fetch(<span class="self">self</span>.storage.notifiers(), req).<span class="kw">await</span>;
 
-        <span class="kw">let </span>tx = <span class="kw">match </span><span class="self">self</span>.read().<span class="kw">await </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="kw">match </span><span class="self">self</span>.read().<span class="kw">await </span>{
             <span class="prelude-val">Ok</span>(tx) =&gt; tx,
             <span class="prelude-val">Err</span>(err) =&gt; {
                 <span class="macro">tracing::warn!</span>(
@@ -2045,8 +2031,8 @@
             }
         };
 
-        <span class="self">self</span>.ok_or_fetch(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>tx), passive, req, T::load(<span class="kw-2">&amp;</span>tx, req).<span class="kw">await</span>)
-            .<span class="kw">await
+        <span class="kw">let </span>res = T::load(<span class="kw-2">&amp;mut </span>tx, req).<span class="kw">await</span>;
+        <span class="self">self</span>.ok_or_fetch(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>tx), passive, req, res).<span class="kw">await
     </span>}
 
     <span class="doccomment">/// Get a range of objects from local storage or a provider.
@@ -2129,9 +2115,9 @@
         )
         .<span class="kw">await</span>;
 
-        <span class="kw">let </span>(tx, ts) = <span class="kw">match </span><span class="self">self</span>.read().<span class="kw">await </span>{
-            <span class="prelude-val">Ok</span>(tx) =&gt; {
-                <span class="kw">let </span>ts = T::load_range(<span class="kw-2">&amp;</span>tx, chunk.clone())
+        <span class="kw">let </span>(<span class="kw-2">mut </span>tx, ts) = <span class="kw">match </span><span class="self">self</span>.read().<span class="kw">await </span>{
+            <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>tx) =&gt; {
+                <span class="kw">let </span>ts = T::load_range(<span class="kw-2">&amp;mut </span>tx, chunk.clone())
                     .<span class="kw">await
                     </span>.context(<span class="macro">format!</span>(<span class="string">"when fetching items in range {chunk:?}"</span>))
                     .ok_or_trace()
@@ -2164,37 +2150,29 @@
                     fetches.len()
                 );
                 fetches.push(
-                    <span class="self">self</span>.fetch(tx.as_ref(), passive.remove(<span class="number">0</span>), chunk.start + fetches.len())
-                        .boxed(),
+                    <span class="self">self</span>.fetch(tx.as_mut(), passive.remove(<span class="number">0</span>), chunk.start + fetches.len())
+                        .<span class="kw">await</span>,
                 );
             }
             <span class="comment">// `t` itself is already available, we don't have to trigger a fetch for it. Remove (and
             // drop without awaiting) the passive fetch we preemptively started.
             </span>drop(passive.remove(<span class="number">0</span>));
-            fetches.push(future::ready(Fetch::Ready(t)).boxed());
+            fetches.push(Fetch::Ready(t));
         }
         <span class="comment">// Fetch missing objects from the end of the range.
         </span><span class="kw">while </span>fetches.len() &lt; chunk.len() {
             fetches.push(
-                <span class="self">self</span>.fetch(tx.as_ref(), passive.remove(<span class="number">0</span>), chunk.start + fetches.len())
-                    .boxed(),
+                <span class="self">self</span>.fetch(tx.as_mut(), passive.remove(<span class="number">0</span>), chunk.start + fetches.len())
+                    .<span class="kw">await</span>,
             );
         }
 
-        <span class="comment">// We `join_all` here because we want this iterator to be evaluated eagerly for two reasons:
-        // 1. It borrows from `self`, which is local to this future. This avoids having to clone
-        //    `self` for every entry, instead we clone it for every chunk.
-        // 2. We evaluate all the `some_or_fetch` calls eagerly, so the fetches are triggered as
-        //    soon as we evaluate the chunk. This ensures we don't miss any notifications, since we
-        //    load from storage and subscribe to notifications for missing objects all while we have
-        //    a read lock on `self.storage`. No notifications can be sent during this time since
-        //    sending a notification requires a write lock.
-        </span>stream::iter(join_all(fetches).<span class="kw">await</span>)
+        stream::iter(fetches)
     }
 
     <span class="kw">async fn </span>ok_or_fetch&lt;R, T&gt;(
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
-        tx: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VersionedDataSource&gt;::ReadOnly&lt;<span class="lifetime">'_</span>&gt;&gt;,
+        tx: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>&lt;<span class="self">Self </span><span class="kw">as </span>VersionedDataSource&gt;::ReadOnly&lt;<span class="lifetime">'_</span>&gt;&gt;,
         passive: PassiveFetch&lt;T&gt;,
         req: R,
         res: QueryResult&lt;T&gt;,
@@ -2215,7 +2193,7 @@
 
     <span class="kw">async fn </span>some_or_fetch&lt;R, T&gt;(
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
-        tx: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VersionedDataSource&gt;::ReadOnly&lt;<span class="lifetime">'_</span>&gt;&gt;,
+        tx: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>&lt;<span class="self">Self </span><span class="kw">as </span>VersionedDataSource&gt;::ReadOnly&lt;<span class="lifetime">'_</span>&gt;&gt;,
         passive: PassiveFetch&lt;T&gt;,
         req: R,
         res: <span class="prelude-ty">Option</span>&lt;T&gt;,
@@ -2232,7 +2210,7 @@
 
     <span class="kw">async fn </span>fetch&lt;R, T&gt;(
         <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
-        tx: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VersionedDataSource&gt;::ReadOnly&lt;<span class="lifetime">'_</span>&gt;&gt;,
+        tx: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>&lt;<span class="self">Self </span><span class="kw">as </span>VersionedDataSource&gt;::ReadOnly&lt;<span class="lifetime">'_</span>&gt;&gt;,
         passive: PassiveFetch&lt;T&gt;,
         req: R,
     ) -&gt; Fetch&lt;T&gt;
@@ -2310,7 +2288,7 @@
                 <span class="comment">// We can't start the scan until we know the current block height and pruned height,
                 // so we know which blocks to scan. Thus we retry until this succeeds.
                 </span><span class="kw">let </span>heights = <span class="kw">loop </span>{
-                    <span class="kw">let </span>tx = <span class="kw">match </span><span class="self">self</span>.read().<span class="kw">await </span>{
+                    <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="kw">match </span><span class="self">self</span>.read().<span class="kw">await </span>{
                         <span class="prelude-val">Ok</span>(tx) =&gt; tx,
                         <span class="prelude-val">Err</span>(err) =&gt; {
                             <span class="macro">tracing::error!</span>(
@@ -2394,8 +2372,8 @@
     <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    S: VersionedDataSource,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: MerklizedStateDataSource&lt;Types, State, ARITY&gt; + Send + Sync,
+    S: VersionedDataSource + <span class="lifetime">'static</span>,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: MerklizedStateStorage&lt;Types, State, ARITY&gt;,
     P: Send + Sync,
     State: MerklizedState&lt;Types, ARITY&gt; + <span class="lifetime">'static</span>,
     &lt;State <span class="kw">as </span>MerkleTreeScheme&gt;::Commitment: Send,
@@ -2405,7 +2383,7 @@
         snapshot: Snapshot&lt;Types, State, ARITY&gt;,
         key: State::Key,
     ) -&gt; QueryResult&lt;MerkleProof&lt;State::Entry, State::Key, State::T, ARITY&gt;&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.get_path(snapshot, key).<span class="kw">await
@@ -2417,12 +2395,12 @@
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
-    S: VersionedDataSource,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: MerklizedStateHeightPersistence + Send + Sync,
+    S: VersionedDataSource + <span class="lifetime">'static</span>,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: MerklizedStateHeightStorage,
     P: Send + Sync,
 {
     <span class="kw">async fn </span>get_last_state_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.get_last_state_height().<span class="kw">await
@@ -2434,25 +2412,25 @@
 <span class="kw">where
     </span>Types: NodeType,
     S: VersionedDataSource + <span class="lifetime">'static</span>,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: NodeDataSource&lt;Types&gt; + Sync,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: NodeStorage&lt;Types&gt;,
     P: Send + Sync,
 {
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.block_height().<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.count_transactions().<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.payload_size().<span class="kw">await
@@ -2462,14 +2440,14 @@
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
     {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.vid_share(id).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.sync_status().<span class="kw">await
@@ -2480,7 +2458,7 @@
         start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
         end: u64,
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.get_header_window(start, end).<span class="kw">await
@@ -2488,14 +2466,14 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types, S, P&gt; ExplorerStorage&lt;Types&gt; <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
+</span><span class="kw">impl</span>&lt;Types, S, P&gt; ExplorerDataSource&lt;Types&gt; <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt; + explorer::traits::ExplorerHeader&lt;Types&gt;,
     <span class="kw">crate</span>::Transaction&lt;Types&gt;: explorer::traits::ExplorerTransaction,
-    S: VersionedDataSource,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: ExplorerStorage&lt;Types&gt; + Send + Sync,
+    S: VersionedDataSource + <span class="lifetime">'static</span>,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: ExplorerStorage&lt;Types&gt;,
     P: Send + Sync,
 {
     <span class="kw">async fn </span>get_block_summaries(
@@ -2505,7 +2483,7 @@
         Vec&lt;explorer::query_data::BlockSummary&lt;Types&gt;&gt;,
         explorer::query_data::GetBlockSummariesError,
     &gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.get_block_summaries(request).<span class="kw">await
@@ -2516,7 +2494,7 @@
         request: explorer::query_data::BlockIdentifier&lt;Types&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;explorer::query_data::BlockDetail&lt;Types&gt;, explorer::query_data::GetBlockDetailError&gt;
     {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.get_block_detail(request).<span class="kw">await
@@ -2529,7 +2507,7 @@
         Vec&lt;explorer::query_data::TransactionSummary&lt;Types&gt;&gt;,
         explorer::query_data::GetTransactionSummariesError,
     &gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.get_transaction_summaries(request).<span class="kw">await
@@ -2542,7 +2520,7 @@
         explorer::query_data::TransactionDetailResponse&lt;Types&gt;,
         explorer::query_data::GetTransactionDetailError,
     &gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.get_transaction_detail(request).<span class="kw">await
@@ -2554,7 +2532,7 @@
         explorer::query_data::ExplorerSummary&lt;Types&gt;,
         explorer::query_data::GetExplorerSummaryError,
     &gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.get_explorer_summary().<span class="kw">await
@@ -2567,7 +2545,7 @@
         explorer::query_data::SearchResult&lt;Types&gt;,
         explorer::query_data::GetSearchResultsError,
     &gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
         tx.get_search_results(query).<span class="kw">await
@@ -2643,7 +2621,7 @@
     /// receive it passively, since we will eventually receive all blocks and leaves that are ever
     /// produced. Active fetching merely helps us receive certain objects sooner.
     </span><span class="kw">async fn </span>active_fetch&lt;S, P&gt;(
-        tx: <span class="kw-2">&amp;</span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
+        tx: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
         fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
@@ -2658,7 +2636,7 @@
     ///
     /// This function assumes `req.might_exist()` has already been checked before calling it, and so
     /// may do unnecessary work if the caller does not ensure this.
-    </span><span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;</span>S, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;
+    </span><span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;mut </span>S, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;;
 }
@@ -2674,7 +2652,7 @@
     <span class="kw">type </span>RangedRequest: FetchRequest + From&lt;usize&gt; + Send;
 
     <span class="doccomment">/// Load a range of these objects from local storage.
-    </span><span class="kw">async fn </span>load_range&lt;S, R&gt;(storage: <span class="kw-2">&amp;</span>S, range: R) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;<span class="self">Self</span>&gt;&gt;&gt;
+    </span><span class="kw">async fn </span>load_range&lt;S, R&gt;(storage: <span class="kw-2">&amp;mut </span>S, range: R) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;<span class="self">Self</span>&gt;&gt;&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
         R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;

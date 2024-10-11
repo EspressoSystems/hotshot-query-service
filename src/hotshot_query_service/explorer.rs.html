@@ -940,6 +940,7 @@
 <a href="#940" id="940">940</a>
 <a href="#941" id="941">941</a>
 <a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -953,6 +954,7 @@
 // see &lt;https://www.gnu.org/licenses/&gt;.
 
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>currency;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>data_source;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>errors;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>monetary_value;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>query_data;
@@ -960,10 +962,10 @@
 
 <span class="kw">use </span><span class="self">self</span>::errors::InvalidLimit;
 <span class="kw">use </span><span class="kw">crate</span>::availability::{QueryableHeader, QueryablePayload};
-<span class="kw">use </span><span class="kw">crate</span>::data_source::storage::ExplorerStorage;
 <span class="kw">use crate</span>::{api::load_api, Header, Payload, Transaction};
 
 <span class="kw">pub use </span>currency::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>data_source::<span class="kw-2">*</span>;
 <span class="kw">use </span>futures::FutureExt;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">pub use </span>monetary_value::<span class="kw-2">*</span>;
@@ -1184,7 +1186,7 @@
     Header&lt;Types&gt;: ExplorerHeader&lt;Types&gt; + QueryableHeader&lt;Types&gt;,
     Transaction&lt;Types&gt;: ExplorerTransaction,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
-    &lt;State <span class="kw">as </span>ReadState&gt;::State: Send + Sync + ExplorerStorage&lt;Types&gt;,
+    &lt;State <span class="kw">as </span>ReadState&gt;::State: ExplorerDataSource&lt;Types&gt; + Send + Sync,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error, Ver&gt;(
         <span class="prelude-ty">Option</span>::&lt;Box&lt;Path&gt;&gt;::None,

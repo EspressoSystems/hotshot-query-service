@@ -11,7 +11,7 @@ management. By default, the schema is named <code>hotshot</code>, and is created
 <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> is constructed. The name of the schema can be configured by setting
 <a href="../storage/sql/struct.Config.html#method.schema" title="method hotshot_query_service::data_source::storage::sql::Config::schema"><code>Config::schema</code></a>.</p>
 <h3 id="initialization"><a class="doc-anchor" href="#initialization">§</a>Initialization</h3>
-<p>When creating a <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a>, the caller can use <a href="../storage/sql/struct.Config.html" title="struct hotshot_query_service::data_source::storage::sql::Config"><code>Config</code></a> to specify the host, user, and
+<p>When creating a <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a>, the caller can use <a href="type.Config.html" title="type hotshot_query_service::data_source::sql::Config"><code>Config</code></a> to specify the host, user, and
 database to connect to. As such, <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> is not very opinionated about how the
 Postgres instance is set up. The administrator must simply ensure that there is a database
 dedicated to the <a href="type.SqlDataSource.html" title="type hotshot_query_service::data_source::sql::SqlDataSource"><code>SqlDataSource</code></a> and a user with appropriate permissions (all on <code>SCHEMA</code> and
@@ -25,7 +25,7 @@ CREATE USER hotshot_user WITH PASSWORD &#39;password&#39;;
 GRANT ALL ON SCHEMA public TO hotshot_user;
 GRANT ALL ON DATABASE hotshot_query_service TO hotshot_user WITH GRANT OPTION;
 </code></pre></div>
-<p>One could then connect to this database with the following <a href="../storage/sql/struct.Config.html" title="struct hotshot_query_service::data_source::storage::sql::Config"><code>Config</code></a>:</p>
+<p>One could then connect to this database with the following <a href="type.Config.html" title="type hotshot_query_service::data_source::sql::Config"><code>Config</code></a>:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code>Config::default()
     .host(<span class="string">"postgres.database.hostname"</span>)
@@ -170,7 +170,7 @@ specific modules, synchronizing updates using SQL transactions via
     Types: NodeType,
     <a class="type" href="../../type.Header.html" title="type hotshot_query_service::Header">Header</a>&lt;Types&gt;: <a class="trait" href="../../availability/trait.QueryableHeader.html" title="trait hotshot_query_service::availability::QueryableHeader">QueryableHeader</a>&lt;Types&gt;,
     <a class="type" href="../../type.Payload.html" title="type hotshot_query_service::Payload">Payload</a>&lt;Types&gt;: <a class="trait" href="../../availability/trait.QueryablePayload.html" title="trait hotshot_query_service::availability::QueryablePayload">QueryablePayload</a>&lt;Types&gt;,</div></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.connect" class="method"><a class="src rightside" href="../../../src/hotshot_query_service/data_source/sql.rs.html#308-310">source</a><h4 class="code-header">pub async fn <a href="#method.connect" class="fn">connect</a>(
-    config: <a class="struct" href="../storage/sql/struct.Config.html" title="struct hotshot_query_service::data_source::storage::sql::Config">Config</a>,
+    config: <a class="type" href="type.Config.html" title="type hotshot_query_service::data_source::sql::Config">Config</a>,
     provider: P,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.81.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="type" href="type.Builder.html" title="type hotshot_query_service::data_source::sql::Builder">Builder</a>&lt;Types, P&gt;, <a class="struct" href="../storage/sql/struct.Error.html" title="struct hotshot_query_service::data_source::storage::sql::Error">Error</a>&gt;</h4></section></summary><div class="docblock"><p>Connect to a remote database.</p>
 <p>This function returns a <a href="../fetching/struct.Builder.html" title="struct hotshot_query_service::data_source::fetching::Builder"><code>fetching::Builder</code></a> which can be used to set options on the

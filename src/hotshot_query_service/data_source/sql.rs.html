@@ -426,7 +426,6 @@
 <a href="#426" id="426">426</a>
 <a href="#427" id="427">427</a>
 <a href="#428" id="428">428</a>
-<a href="#429" id="429">429</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -454,11 +453,11 @@
 <span class="kw">pub use </span>anyhow::Error;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">pub use </span>refinery::Migration;
-<span class="kw">pub use </span>tokio_postgres <span class="kw">as </span>postgres;
 
-<span class="kw">pub use </span>sql::{Config, Transaction};
+<span class="kw">pub use </span>sql::{Postgres, Transaction};
 
 <span class="kw">pub type </span>Builder&lt;Types, Provider&gt; = fetching::Builder&lt;Types, SqlStorage, Provider&gt;;
+<span class="kw">pub type </span>Config = sql::Config&lt;Postgres&gt;;
 
 <span class="kw">impl </span>Config {
     <span class="doccomment">/// Connect to the database with this config.
@@ -803,9 +802,8 @@
         availability::{
             AvailabilityDataSource, LeafQueryData, UpdateAvailabilityData, VidCommonQueryData,
         },
-        data_source::{Transaction, VersionedDataSource},
+        data_source::{storage::NodeStorage, Transaction, VersionedDataSource},
         fetching::provider::NoFetching,
-        node::NodeDataSource,
         testing::{consensus::DataSourceLifeCycle, mocks::MockTypes, setup_test},
     };
     <span class="kw">use </span>hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};

@@ -197,7 +197,7 @@
 <span class="kw">where
     </span>State: <span class="lifetime">'static </span>+ Send + Sync + ReadState,
     &lt;State <span class="kw">as </span>ReadState&gt;::State:
-        Send + Sync + MerklizedStateDataSource&lt;Types, M, ARITY&gt; + MerklizedStateHeightPersistence,
+        MerklizedStateDataSource&lt;Types, M, ARITY&gt; + MerklizedStateHeightPersistence + Send + Sync,
     <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; &lt;M::Commit <span class="kw">as </span>TryFrom&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>TaggedBase64&gt;&gt;::Error: Display,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>api = load_api::&lt;State, Error, Ver&gt;(

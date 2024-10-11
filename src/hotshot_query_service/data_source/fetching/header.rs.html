@@ -261,7 +261,7 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>fetch_header_and_then&lt;Types, S, P&gt;(
-    tx: <span class="kw-2">&amp;</span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
+    tx: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
     req: BlockId&lt;Types&gt;,
     callback: HeaderCallback&lt;Types, S, P&gt;,
 ) <span class="kw">where

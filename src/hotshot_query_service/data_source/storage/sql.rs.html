@@ -1186,71 +1186,6 @@
 <a href="#1186" id="1186">1186</a>
 <a href="#1187" id="1187">1187</a>
 <a href="#1188" id="1188">1188</a>
-<a href="#1189" id="1189">1189</a>
-<a href="#1190" id="1190">1190</a>
-<a href="#1191" id="1191">1191</a>
-<a href="#1192" id="1192">1192</a>
-<a href="#1193" id="1193">1193</a>
-<a href="#1194" id="1194">1194</a>
-<a href="#1195" id="1195">1195</a>
-<a href="#1196" id="1196">1196</a>
-<a href="#1197" id="1197">1197</a>
-<a href="#1198" id="1198">1198</a>
-<a href="#1199" id="1199">1199</a>
-<a href="#1200" id="1200">1200</a>
-<a href="#1201" id="1201">1201</a>
-<a href="#1202" id="1202">1202</a>
-<a href="#1203" id="1203">1203</a>
-<a href="#1204" id="1204">1204</a>
-<a href="#1205" id="1205">1205</a>
-<a href="#1206" id="1206">1206</a>
-<a href="#1207" id="1207">1207</a>
-<a href="#1208" id="1208">1208</a>
-<a href="#1209" id="1209">1209</a>
-<a href="#1210" id="1210">1210</a>
-<a href="#1211" id="1211">1211</a>
-<a href="#1212" id="1212">1212</a>
-<a href="#1213" id="1213">1213</a>
-<a href="#1214" id="1214">1214</a>
-<a href="#1215" id="1215">1215</a>
-<a href="#1216" id="1216">1216</a>
-<a href="#1217" id="1217">1217</a>
-<a href="#1218" id="1218">1218</a>
-<a href="#1219" id="1219">1219</a>
-<a href="#1220" id="1220">1220</a>
-<a href="#1221" id="1221">1221</a>
-<a href="#1222" id="1222">1222</a>
-<a href="#1223" id="1223">1223</a>
-<a href="#1224" id="1224">1224</a>
-<a href="#1225" id="1225">1225</a>
-<a href="#1226" id="1226">1226</a>
-<a href="#1227" id="1227">1227</a>
-<a href="#1228" id="1228">1228</a>
-<a href="#1229" id="1229">1229</a>
-<a href="#1230" id="1230">1230</a>
-<a href="#1231" id="1231">1231</a>
-<a href="#1232" id="1232">1232</a>
-<a href="#1233" id="1233">1233</a>
-<a href="#1234" id="1234">1234</a>
-<a href="#1235" id="1235">1235</a>
-<a href="#1236" id="1236">1236</a>
-<a href="#1237" id="1237">1237</a>
-<a href="#1238" id="1238">1238</a>
-<a href="#1239" id="1239">1239</a>
-<a href="#1240" id="1240">1240</a>
-<a href="#1241" id="1241">1241</a>
-<a href="#1242" id="1242">1242</a>
-<a href="#1243" id="1243">1243</a>
-<a href="#1244" id="1244">1244</a>
-<a href="#1245" id="1245">1245</a>
-<a href="#1246" id="1246">1246</a>
-<a href="#1247" id="1247">1247</a>
-<a href="#1248" id="1248">1248</a>
-<a href="#1249" id="1249">1249</a>
-<a href="#1250" id="1250">1250</a>
-<a href="#1251" id="1251">1251</a>
-<a href="#1252" id="1252">1252</a>
-<a href="#1253" id="1253">1253</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1268,38 +1203,45 @@
 </span><span class="kw">use crate</span>::{
     data_source::{
         storage::pruning::{PruneStorage, PrunerCfg, PrunerConfig},
-        update::{ReadOnly, Transaction <span class="kw">as _</span>},
+        update::Transaction <span class="kw">as _</span>,
         VersionedDataSource,
     },
-    BackgroundTask, QueryError, QueryResult,
-};
-<span class="kw">use </span>async_std::{
-    net::ToSocketAddrs,
-    sync::Mutex,
-    task::{Context, Poll},
+    QueryError, QueryResult,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>chrono::Utc;
-<span class="kw">use </span>futures::{AsyncRead, AsyncWrite};
+<span class="kw">use </span>futures::future::FutureExt;
 <span class="kw">use </span>itertools::Itertools;
-<span class="kw">use </span>postgres_native_tls::TlsConnector;
-<span class="kw">use </span>std::{cmp::min, fmt::Debug, pin::Pin, str::FromStr};
-<span class="kw">use </span>tokio_postgres::{config::Host, tls::TlsConnect, Client, NoTls};
+<span class="kw">use </span>sqlx::{
+    pool::{Pool, PoolOptions},
+    postgres::{PgConnectOptions, PgSslMode},
+    ConnectOptions, Connection, Row,
+};
+<span class="kw">use </span>std::{cmp::min, fmt::Debug, str::FromStr, time::Duration};
 
-<span class="kw">mod </span>query;
+<span class="kw">pub extern crate </span>sqlx;
+<span class="kw">pub use </span>sqlx::{Database, Postgres, Sqlite};
+
+<span class="kw">mod </span>db;
+<span class="kw">mod </span>migrate;
+<span class="kw">mod </span>queries;
 <span class="kw">mod </span>transaction;
-
-<span class="kw">use </span><span class="self">self</span>::transaction::Connection;
 
 <span class="kw">pub use </span>anyhow::Error;
 <span class="comment">// This needs to be reexported so that we can reference it by absolute path relative to this crate
 // in the expansion of `include_migrations`, even when `include_migrations` is invoked from another
 // crate which doesn't have `include_dir` as a dependency.
 </span><span class="kw">pub use </span><span class="kw">crate</span>::include_migrations;
+<span class="kw">pub use </span>db::Db;
 <span class="kw">pub use </span>include_dir::include_dir;
+<span class="kw">pub use </span>queries::QueryBuilder;
 <span class="kw">pub use </span>refinery::Migration;
-<span class="kw">pub use </span>tokio_postgres <span class="kw">as </span>postgres;
-<span class="kw">pub use </span>transaction::Transaction;
+<span class="kw">pub use </span>transaction::{query, query_as, Executor, Query, QueryAs, Transaction};
+
+<span class="kw">use </span><span class="self">self</span>::{
+    migrate::Migrator,
+    transaction::{Read, Write},
+};
 
 <span class="doccomment">/// Embed migrations from the given directory into the current binary.
 ///
@@ -1420,68 +1362,58 @@
 
 <span class="doccomment">/// Postgres client config.
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>Config {
-    pgcfg: postgres::Config,
-    host: String,
-    port: u16,
+</span><span class="kw">pub struct </span>Config&lt;DB&gt;
+<span class="kw">where
+    </span>DB: Database,
+{
+    db_opt: &lt;DB::Connection <span class="kw">as </span>Connection&gt;::Options,
+    pool_opt: PoolOptions&lt;Db&gt;,
     schema: String,
     reset: bool,
     migrations: Vec&lt;Migration&gt;,
     no_migrations: bool,
-    tls: bool,
     pruner_cfg: <span class="prelude-ty">Option</span>&lt;PrunerCfg&gt;,
     archive: bool,
 }
 
-<span class="kw">impl </span>Default <span class="kw">for </span>Config {
+<span class="kw">impl </span>Default <span class="kw">for </span>Config&lt;Postgres&gt; {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        PgConnectOptions::default()
+            .host(<span class="string">"localhost"</span>)
+            .port(<span class="number">5432</span>)
+            .into()
+    }
+}
+
+<span class="kw">impl </span>From&lt;PgConnectOptions&gt; <span class="kw">for </span>Config&lt;Postgres&gt; {
+    <span class="kw">fn </span>from(db_opt: PgConnectOptions) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            pgcfg: Default::default(),
-            host: <span class="string">"localhost"</span>.into(),
-            port: <span class="number">5432</span>,
+            db_opt,
+            pool_opt: PoolOptions::default(),
             schema: <span class="string">"hotshot"</span>.into(),
             reset: <span class="bool-val">false</span>,
             migrations: <span class="macro">vec!</span>[],
             no_migrations: <span class="bool-val">false</span>,
-            tls: <span class="bool-val">false</span>,
             pruner_cfg: <span class="prelude-val">None</span>,
             archive: <span class="bool-val">false</span>,
         }
     }
 }
 
-<span class="kw">impl </span>From&lt;postgres::Config&gt; <span class="kw">for </span>Config {
-    <span class="kw">fn </span>from(pgcfg: postgres::Config) -&gt; <span class="self">Self </span>{
-        <span class="comment">// We connect via TCP manually, without using the host and port from pgcfg. So we need to
-        // pull those out of pgcfg if they have been specified, to override the defaults.
-        </span><span class="kw">let </span>host = <span class="kw">match </span>pgcfg.get_hosts().first() {
-            <span class="prelude-val">Some</span>(Host::Tcp(host)) =&gt; host.to_string(),
-            <span class="kw">_ </span>=&gt; <span class="string">"localhost"</span>.into(),
-        };
-        <span class="kw">let </span>port = <span class="kw-2">*</span>pgcfg.get_ports().first().unwrap_or(<span class="kw-2">&amp;</span><span class="number">5432</span>);
-        <span class="self">Self </span>{
-            pgcfg,
-            host,
-            port,
-            ..Default::default()
-        }
-    }
-}
-
-<span class="kw">impl </span>FromStr <span class="kw">for </span>Config {
-    <span class="kw">type </span><span class="prelude-val">Err </span>= &lt;postgres::Config <span class="kw">as </span>FromStr&gt;::Err;
+<span class="kw">impl </span>FromStr <span class="kw">for </span>Config&lt;Postgres&gt; {
+    <span class="kw">type </span><span class="prelude-val">Err </span>= &lt;PgConnectOptions <span class="kw">as </span>FromStr&gt;::Err;
 
     <span class="kw">fn </span>from_str(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Err&gt; {
-        <span class="prelude-val">Ok</span>(postgres::Config::from_str(s)<span class="question-mark">?</span>.into())
+        <span class="prelude-val">Ok</span>(PgConnectOptions::from_str(s)<span class="question-mark">?</span>.into())
     }
 }
 
-<span class="kw">impl </span>Config {
+<span class="kw">impl </span>Config&lt;Postgres&gt; {
     <span class="doccomment">/// Set the hostname of the database server.
     ///
     /// The default is `localhost`.
     </span><span class="kw">pub fn </span>host(<span class="kw-2">mut </span><span class="self">self</span>, host: <span class="kw">impl </span>Into&lt;String&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">self</span>.host = host.into();
+        <span class="self">self</span>.db_opt = <span class="self">self</span>.db_opt.host(<span class="kw-2">&amp;</span>host.into());
         <span class="self">self
     </span>}
 
@@ -1489,28 +1421,40 @@
     ///
     /// The default is 5432, the default Postgres port.
     </span><span class="kw">pub fn </span>port(<span class="kw-2">mut </span><span class="self">self</span>, port: u16) -&gt; <span class="self">Self </span>{
-        <span class="self">self</span>.port = port;
+        <span class="self">self</span>.db_opt = <span class="self">self</span>.db_opt.port(port);
         <span class="self">self
     </span>}
 
     <span class="doccomment">/// Set the DB user to connect as.
     </span><span class="kw">pub fn </span>user(<span class="kw-2">mut </span><span class="self">self</span>, user: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
-        <span class="self">self</span>.pgcfg.user(user);
+        <span class="self">self</span>.db_opt = <span class="self">self</span>.db_opt.username(user);
         <span class="self">self
     </span>}
 
     <span class="doccomment">/// Set a password for connecting to the database.
     </span><span class="kw">pub fn </span>password(<span class="kw-2">mut </span><span class="self">self</span>, password: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
-        <span class="self">self</span>.pgcfg.password(password);
+        <span class="self">self</span>.db_opt = <span class="self">self</span>.db_opt.password(password);
         <span class="self">self
     </span>}
 
     <span class="doccomment">/// Set the name of the database to connect to.
     </span><span class="kw">pub fn </span>database(<span class="kw-2">mut </span><span class="self">self</span>, database: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
-        <span class="self">self</span>.pgcfg.dbname(database);
+        <span class="self">self</span>.db_opt = <span class="self">self</span>.db_opt.database(database);
         <span class="self">self
     </span>}
 
+    <span class="doccomment">/// Use TLS for an encrypted connection to the database.
+    ///
+    /// Note that an encrypted connection may be established even if this option is not set, as long
+    /// as both the client and server support it. This option merely causes connection to fail if an
+    /// encrypted stream cannot be established.
+    </span><span class="kw">pub fn </span>tls(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.db_opt = <span class="self">self</span>.db_opt.ssl_mode(PgSslMode::Require);
+        <span class="self">self
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;DB: Database&gt; Config&lt;DB&gt; {
     <span class="doccomment">/// Set the name of the schema to use for queries.
     ///
     /// The default schema is named `hotshot` and is created via the default migrations.
@@ -1546,12 +1490,6 @@
         <span class="self">self
     </span>}
 
-    <span class="doccomment">/// Use TLS for an encrypted connection to the database.
-    </span><span class="kw">pub fn </span>tls(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">self</span>.tls = <span class="bool-val">true</span>;
-        <span class="self">self
-    </span>}
-
     <span class="doccomment">/// Enable pruning with a given configuration.
     ///
     /// If [`archive`](Self::archive) was previously specified, this will override it.
@@ -1575,19 +1513,51 @@
         <span class="self">self</span>.archive = <span class="bool-val">true</span>;
         <span class="self">self
     </span>}
+
+    <span class="doccomment">/// Set the maximum idle time of a connection.
+    ///
+    /// Any connection which has been open and unused longer than this duration will be
+    /// automatically closed to reduce load on the server.
+    </span><span class="kw">pub fn </span>idle_connection_timeout(<span class="kw-2">mut </span><span class="self">self</span>, timeout: Duration) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.pool_opt = <span class="self">self</span>.pool_opt.idle_timeout(<span class="prelude-val">Some</span>(timeout));
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Set the maximum lifetime of a connection.
+    ///
+    /// Any connection which has been open longer than this duration will be automatically closed
+    /// (and, if needed, replaced), even if it is otherwise healthy. It is good practice to refresh
+    /// even healthy connections once in a while (e.g. daily) in case of resource leaks in the
+    /// server implementation.
+    </span><span class="kw">pub fn </span>connection_timeout(<span class="kw-2">mut </span><span class="self">self</span>, timeout: Duration) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.pool_opt = <span class="self">self</span>.pool_opt.max_lifetime(<span class="prelude-val">Some</span>(timeout));
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Set the minimum number of connections to maintain at any time.
+    ///
+    /// The data source will, to the best of its ability, maintain at least `min` open connections
+    /// at all times. This can be used to reduce the latency hit of opening new connections when at
+    /// least this many simultaneous connections are frequently needed.
+    </span><span class="kw">pub fn </span>min_connections(<span class="kw-2">mut </span><span class="self">self</span>, min: u32) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.pool_opt = <span class="self">self</span>.pool_opt.min_connections(min);
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Set the maximum number of connections to maintain at any time.
+    ///
+    /// Once `max` connections are in use simultaneously, further attempts to acquire a connection
+    /// (or begin a transaction) will block until one of the existing connections is released.
+    </span><span class="kw">pub fn </span>max_connections(<span class="kw-2">mut </span><span class="self">self</span>, max: u32) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.pool_opt = <span class="self">self</span>.pool_opt.max_connections(max);
+        <span class="self">self
+    </span>}
 }
 
 <span class="doccomment">/// Storage for the APIs provided in this crate, backed by a remote PostgreSQL database.
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>SqlStorage {
-    client: Mutex&lt;Connection&gt;,
-    _client_task: BackgroundTask,
-    <span class="comment">// We use a separate client for mutable access (database transactions). This allows runtime
-    // serialization of mutable operations while immutable operations can proceed in parallel, which
-    // mimics the lose concurrency semantics provided by Postgres. Eventually we will have a
-    // transaction pool which allows even multiple transactions to happen in parallel.
-    </span>tx_client: Mutex&lt;Connection&gt;,
-    _tx_client_task: BackgroundTask,
+    pool: Pool&lt;Db&gt;,
     pruner_cfg: <span class="prelude-ty">Option</span>&lt;PrunerCfg&gt;,
 }
 
@@ -1600,29 +1570,32 @@
 
 <span class="kw">impl </span>SqlStorage {
     <span class="doccomment">/// Connect to a remote database.
-    </span><span class="kw">pub async fn </span>connect(<span class="kw-2">mut </span>config: Config) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
-        <span class="comment">// Establish a TCP connection to the server.
-        </span><span class="kw">let </span>tcp = TcpStream::connect((config.host.as_str(), config.port)).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="comment">// Convert the TCP connection into a postgres connection.
-        </span><span class="kw">let </span>(<span class="kw-2">mut </span>client, client_task) = <span class="kw">if </span>config.tls {
-            <span class="kw">let </span>tls = TlsConnector::new(native_tls::TlsConnector::new()<span class="question-mark">?</span>, config.host.as_str());
-            connect(config.pgcfg.clone(), tcp, tls).<span class="kw">await</span><span class="question-mark">?
-        </span>} <span class="kw">else </span>{
-            connect(config.pgcfg.clone(), tcp, NoTls).<span class="kw">await</span><span class="question-mark">?
-        </span>};
+    </span><span class="kw">pub async fn </span>connect&lt;DB: Database&gt;(<span class="kw-2">mut </span>config: Config&lt;DB&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
+        <span class="kw">let </span>schema = config.schema.clone();
+        <span class="kw">let </span>pool = config
+            .pool_opt
+            .after_connect(<span class="kw">move </span>|conn, <span class="kw">_</span>| {
+                <span class="kw">let </span>schema = schema.clone();
+                <span class="kw">async move </span>{
+                    query(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"SET search_path TO {schema}"</span>))
+                        .execute(conn)
+                        .<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(())
+                }
+                .boxed()
+            })
+            .connect(config.db_opt.to_url_lossy().as_ref())
+            .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Create or connect to the schema for this query service.
-        </span><span class="kw">if </span>config.reset {
-            client
-                .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"DROP SCHEMA IF EXISTS {} CASCADE"</span>, config.schema))
+        </span><span class="kw">let </span><span class="kw-2">mut </span>conn = pool.acquire().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">if </span>config.reset {
+            query(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"DROP SCHEMA IF EXISTS {} CASCADE"</span>, config.schema))
+                .execute(conn.as_mut())
                 .<span class="kw">await</span><span class="question-mark">?</span>;
         }
-        client
-            .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"CREATE SCHEMA IF NOT EXISTS {}"</span>, config.schema))
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-        client
-            .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"SET search_path TO {}"</span>, config.schema))
+        query(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"CREATE SCHEMA IF NOT EXISTS {}"</span>, config.schema))
+            .execute(conn.as_mut())
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Get migrations and interleave with custom migrations, sorting by version number.
@@ -1637,7 +1610,9 @@
         <span class="kw">if </span>config.no_migrations {
             <span class="comment">// We've been asked not to run any migrations. Abort if the DB is not already up to
             // date.
-            </span><span class="kw">let </span>last_applied = runner.get_last_applied_migration_async(<span class="kw-2">&amp;mut </span>client).<span class="kw">await</span><span class="question-mark">?</span>;
+            </span><span class="kw">let </span>last_applied = runner
+                .get_last_applied_migration_async(<span class="kw-2">&amp;mut </span>Migrator::from(<span class="kw-2">&amp;mut </span>conn))
+                .<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">let </span>last_expected = migrations.last();
             <span class="kw">if </span>last_applied.as_ref() != last_expected {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::msg(<span class="macro">format!</span>(
@@ -1646,7 +1621,7 @@
             }
         } <span class="kw">else </span>{
             <span class="comment">// Run migrations using `refinery`.
-            </span><span class="kw">match </span>runner.run_async(<span class="kw-2">&amp;mut </span>client).<span class="kw">await </span>{
+            </span><span class="kw">match </span>runner.run_async(<span class="kw-2">&amp;mut </span>Migrator::from(<span class="kw-2">&amp;mut </span>conn)).<span class="kw">await </span>{
                 <span class="prelude-val">Ok</span>(report) =&gt; {
                     <span class="macro">tracing::info!</span>(<span class="string">"ran DB migrations: {report:?}"</span>);
                 }
@@ -1660,28 +1635,13 @@
         <span class="kw">if </span>config.archive {
             <span class="comment">// If running in archive mode, ensure the pruned height is set to 0, so the fetcher will
             // reconstruct previously pruned data.
-            </span>client
-                .batch_execute(<span class="string">"DELETE FROM pruned_height WHERE id = 1"</span>)
+            </span>query(<span class="string">"DELETE FROM pruned_height WHERE id = 1"</span>)
+                .execute(conn.as_mut())
                 .<span class="kw">await</span><span class="question-mark">?</span>;
         }
 
-        <span class="comment">// Open a second connection for mutable transactions.
-        </span><span class="kw">let </span>tcp = TcpStream::connect((config.host.as_str(), config.port)).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>(tx_client, tx_client_task) = <span class="kw">if </span>config.tls {
-            <span class="kw">let </span>tls = TlsConnector::new(native_tls::TlsConnector::new()<span class="question-mark">?</span>, config.host.as_str());
-            connect(config.pgcfg, tcp, tls).<span class="kw">await</span><span class="question-mark">?
-        </span>} <span class="kw">else </span>{
-            connect(config.pgcfg, tcp, NoTls).<span class="kw">await</span><span class="question-mark">?
-        </span>};
-        tx_client
-            .batch_execute(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"SET search_path TO {}"</span>, config.schema))
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            client: Mutex::new(client.into()),
-            _client_task: client_task,
-            tx_client: Mutex::new(tx_client.into()),
-            _tx_client_task: tx_client_task,
+            pool,
             pruner_cfg: config.pruner_cfg,
         })
     }
@@ -1699,20 +1659,21 @@
 
 <span class="kw">impl </span>SqlStorage {
     <span class="kw">async fn </span>get_minimum_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
-        <span class="kw">let </span>row = tx
-            .query_one_static(<span class="string">"SELECT MIN(height) as height FROM header"</span>)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>height = row.get::&lt;<span class="kw">_</span>, <span class="prelude-ty">Option</span>&lt;i64&gt;&gt;(<span class="number">0</span>).map(|h| h <span class="kw">as </span>u64);
-
-        <span class="prelude-val">Ok</span>(height)
+        <span class="kw">let </span>(<span class="prelude-val">Some</span>(height),) =
+            query_as::&lt;(<span class="prelude-ty">Option</span>&lt;i64&gt;,)&gt;(<span class="string">"SELECT MIN(height) as height FROM header"</span>)
+                .fetch_one(tx.as_mut())
+                .<span class="kw">await</span><span class="question-mark">?
+        </span><span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        };
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(height <span class="kw">as </span>u64))
     }
 
     <span class="kw">async fn </span>get_height_by_timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>, timestamp: i64) -&gt; QueryResult&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
 
@@ -1722,19 +1683,19 @@
         // based on the timestamp index. The remaining sort on height, which guarantees a unique
         // block if multiple blocks have the same timestamp, is very efficient, because there are
         // never more than a handful of blocks with the same timestamp.
-        </span><span class="kw">let </span>row = tx
-            .query_opt(
-                <span class="string">"SELECT height FROM header
-                  WHERE timestamp &lt;= $1
-                  ORDER BY timestamp DESC, height DESC
-                  LIMIT 1"</span>,
-                [<span class="kw-2">&amp;</span>timestamp],
-            )
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let </span>height = row.map(|row| row.get::&lt;<span class="kw">_</span>, i64&gt;(<span class="number">0</span>) <span class="kw">as </span>u64);
-
-        <span class="prelude-val">Ok</span>(height)
+        </span><span class="kw">let </span><span class="prelude-val">Some</span>((height,)) = query_as::&lt;(i64,)&gt;(
+            <span class="string">"SELECT height FROM header
+              WHERE timestamp &lt;= $1
+              ORDER BY timestamp DESC, height DESC
+              LIMIT 1"</span>,
+        )
+        .bind(timestamp)
+        .fetch_optional(tx.as_mut())
+        .<span class="kw">await</span><span class="question-mark">?
+        </span><span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+        };
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(height <span class="kw">as </span>u64))
     }
 }
 
@@ -1743,9 +1704,9 @@
     <span class="kw">type </span>Pruner = Pruner;
 
     <span class="kw">async fn </span>get_disk_usage(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;u64&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.read().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>row = tx
-            .query_one_static(<span class="string">"SELECT pg_database_size(current_database())"</span>)
+            .fetch_one(<span class="string">"SELECT pg_database_size(current_database())"</span>)
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>size: i64 = row.get(<span class="number">0</span>);
         <span class="prelude-val">Ok</span>(size <span class="kw">as </span>u64)
@@ -1852,109 +1813,20 @@
 }
 
 <span class="kw">impl </span>VersionedDataSource <span class="kw">for </span>SqlStorage {
-    <span class="kw">type </span>Transaction&lt;<span class="lifetime">'a</span>&gt; = Transaction&lt;<span class="lifetime">'a</span>&gt;
+    <span class="kw">type </span>Transaction&lt;<span class="lifetime">'a</span>&gt; = Transaction&lt;Write&gt;
     <span class="kw">where
         </span><span class="self">Self</span>: <span class="lifetime">'a</span>;
-    <span class="kw">type </span>ReadOnly&lt;<span class="lifetime">'a</span>&gt; = ReadOnly&lt;Transaction&lt;<span class="lifetime">'a</span>&gt;&gt;
+    <span class="kw">type </span>ReadOnly&lt;<span class="lifetime">'a</span>&gt; = Transaction&lt;Read&gt;
     <span class="kw">where
         </span><span class="self">Self</span>: <span class="lifetime">'a</span>;
 
-    <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;Transaction&lt;<span class="lifetime">'_</span>&gt;&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.tx_client.lock().<span class="kw">await</span>;
-        Transaction::write(tx).<span class="kw">await
+    <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;Transaction&lt;Write&gt;&gt; {
+        Transaction::new(<span class="kw-2">&amp;</span><span class="self">self</span>.pool).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;ReadOnly&lt;Transaction&lt;<span class="lifetime">'_</span>&gt;&gt;&gt; {
-        <span class="kw">let </span>tx = <span class="self">self</span>.client.lock().<span class="kw">await</span>;
-        Transaction::read(tx).<span class="kw">await
+    <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;Transaction&lt;Read&gt;&gt; {
+        Transaction::new(<span class="kw-2">&amp;</span><span class="self">self</span>.pool).<span class="kw">await
     </span>}
-}
-
-<span class="doccomment">/// Connect to a Postgres database with a TLS implementation.
-///
-/// Spawns a background task to run the connection. Returns a client and a handle to the spawned
-/// task.
-</span><span class="kw">async fn </span>connect&lt;T&gt;(
-    pgcfg: postgres::Config,
-    tcp: TcpStream,
-    tls: T,
-) -&gt; anyhow::Result&lt;(Client, BackgroundTask)&gt;
-<span class="kw">where
-    </span>T: TlsConnect&lt;TcpStream&gt;,
-    T::Stream: Send + <span class="lifetime">'static</span>,
-{
-    <span class="kw">let </span>(client, connection) = pgcfg.connect_raw(tcp, tls).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>((
-        client,
-        BackgroundTask::spawn(<span class="string">"postgres connection"</span>, connection),
-    ))
-}
-
-<span class="comment">// tokio-postgres is written in terms of the tokio AsyncRead/AsyncWrite traits. However, these
-// traits do not require any specifics of the tokio runtime. Thus we can implement them using the
-// async_std TcpStream type, and have a stream which is compatible with tokio-postgres but will run
-// on the async_std executor.
-//
-// To avoid orphan impls, we wrap this tream in a new type.
-</span><span class="kw">struct </span>TcpStream(async_std::net::TcpStream);
-
-<span class="kw">impl </span>TcpStream {
-    <span class="kw">async fn </span>connect&lt;A: ToSocketAddrs&gt;(addrs: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span>(async_std::net::TcpStream::connect(addrs).<span class="kw">await</span><span class="question-mark">?</span>))
-    }
-}
-
-<span class="kw">impl </span>tokio::io::AsyncRead <span class="kw">for </span>TcpStream {
-    <span class="kw">fn </span>poll_read(
-        <span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;,
-        cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;,
-        buf: <span class="kw-2">&amp;mut </span>tokio::io::ReadBuf&lt;<span class="lifetime">'_</span>&gt;,
-    ) -&gt; Poll&lt;std::io::Result&lt;()&gt;&gt; {
-        <span class="comment">// tokio uses this hyper-optimized `ReadBuf` construct, where there is a filled portion, an
-        // unfilled portion where we append new data, and the unfilled portion of the buffer need
-        // not even be initialized. However the async_std implementation we're delegating to just
-        // expects a normal `&amp;mut [u8]` buffer which is entirely unfilled. To simplify the
-        // conversion, we will abandon the uninitialized buffer optimization and force
-        // initialization of the entire buffer, resulting in a plain old `&amp;mut [u8]` representing
-        // the unfilled portion. But first, we need to grab the length of the filled region so we
-        // can increment it after we read new data from async_std.
-        </span><span class="kw">let </span>filled = buf.filled().len();
-
-        <span class="comment">// Initialize the buffer and get a slice of the unfilled region. This operation is free
-        // after the first time it is called, so we don't need to worry about maintaining state
-        // between subsequent calls to `poll_read`.
-        </span><span class="kw">let </span>unfilled = buf.initialize_unfilled();
-
-        <span class="comment">// Read data into the unfilled portion of the buffer.
-        </span><span class="kw">match </span>Pin::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>).poll_read(cx, unfilled) {
-            Poll::Ready(<span class="prelude-val">Ok</span>(bytes_read)) =&gt; {
-                <span class="comment">// After the read completes, the first `bytes_read` of `unfilled` have now been
-                // filled. Increment the `filled` cursor within the `ReadBuf` to account for this.
-                </span>buf.set_filled(filled + bytes_read);
-                Poll::Ready(<span class="prelude-val">Ok</span>(()))
-            }
-            Poll::Ready(<span class="prelude-val">Err</span>(err)) =&gt; Poll::Ready(<span class="prelude-val">Err</span>(err)),
-            Poll::Pending =&gt; Poll::Pending,
-        }
-    }
-}
-
-<span class="kw">impl </span>tokio::io::AsyncWrite <span class="kw">for </span>TcpStream {
-    <span class="kw">fn </span>poll_write(
-        <span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;,
-        cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;,
-        buf: <span class="kw-2">&amp;</span>[u8],
-    ) -&gt; Poll&lt;std::io::Result&lt;usize&gt;&gt; {
-        Pin::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>).poll_write(cx, buf)
-    }
-
-    <span class="kw">fn </span>poll_flush(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;std::io::Result&lt;()&gt;&gt; {
-        Pin::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>).poll_flush(cx)
-    }
-
-    <span class="kw">fn </span>poll_shutdown(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;std::io::Result&lt;()&gt;&gt; {
-        Pin::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>).poll_close(cx)
-    }
 }
 
 <span class="comment">// These tests run the `postgres` Docker image, which doesn't work on Windows.
@@ -1972,7 +1844,7 @@
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>refinery::Migration;
 
-    <span class="kw">use </span><span class="kw">super</span>::Config;
+    <span class="kw">use super</span>::{Config, Postgres};
     <span class="kw">use </span><span class="kw">crate</span>::testing::sleep;
 
     <span class="attr">#[derive(Debug)]
@@ -2039,13 +1911,12 @@
             <span class="self">self</span>.port
         }
 
-        <span class="kw">pub fn </span>config(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Config {
+        <span class="kw">pub fn </span>config(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Config&lt;Postgres&gt; {
             Config::default()
                 .user(<span class="string">"postgres"</span>)
                 .password(<span class="string">"password"</span>)
                 .host(<span class="self">self</span>.host())
                 .port(<span class="self">self</span>.port())
-                .tls()
                 .migrations(<span class="macro">vec!</span>[Migration::unapplied(
                     <span class="string">"V11__create_test_merkle_tree_table.sql"</span>,
                     <span class="kw-2">&amp;</span>TestMerkleTreeMigration::create(<span class="string">"test_tree"</span>),
@@ -2272,21 +2143,20 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_config_from_str() {
         <span class="kw">let </span>cfg = Config::from_str(<span class="string">"postgresql://user:password@host:8080"</span>).unwrap();
-        <span class="macro">assert_eq!</span>(cfg.pgcfg.get_user(), <span class="prelude-val">Some</span>(<span class="string">"user"</span>));
-        <span class="macro">assert_eq!</span>(cfg.pgcfg.get_password(), <span class="prelude-val">Some</span>(<span class="string">"password"</span>.as_bytes()));
-        <span class="macro">assert_eq!</span>(cfg.host, <span class="string">"host"</span>);
-        <span class="macro">assert_eq!</span>(cfg.port, <span class="number">8080</span>);
+        <span class="macro">assert_eq!</span>(cfg.db_opt.get_username(), <span class="string">"user"</span>);
+        <span class="macro">assert_eq!</span>(cfg.db_opt.get_host(), <span class="string">"host"</span>);
+        <span class="macro">assert_eq!</span>(cfg.db_opt.get_port(), <span class="number">8080</span>);
     }
 
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_config_from_pgcfg() {
-        <span class="kw">let </span><span class="kw-2">mut </span>pgcfg = postgres::Config::default();
-        pgcfg.dbname(<span class="string">"db"</span>);
-        <span class="kw">let </span>cfg = Config::from(pgcfg.clone());
-        <span class="macro">assert_eq!</span>(cfg.pgcfg, pgcfg);
-        <span class="comment">// Default values.
-        </span><span class="macro">assert_eq!</span>(cfg.host, <span class="string">"localhost"</span>);
-        <span class="macro">assert_eq!</span>(cfg.port, <span class="number">5432</span>);
+    <span class="kw">async fn </span>vacuum(storage: <span class="kw-2">&amp;</span>SqlStorage) {
+        storage
+            .pool
+            .acquire()
+            .<span class="kw">await
+            </span>.unwrap()
+            .execute(<span class="string">"VACUUM"</span>)
+            .<span class="kw">await
+            </span>.unwrap();
     }
 
     <span class="attr">#[async_std::test]
@@ -2328,7 +2198,7 @@
         <span class="comment">// Vacuum the database to reclaim space.
         // This is necessary to ensure the test passes.
         // Note: We don't perform a vacuum after each pruner run in production because the auto vacuum job handles it automatically.
-        </span>storage.client.lock().<span class="kw">await</span>.vacuum().<span class="kw">await</span>.unwrap();
+        </span>vacuum(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
         <span class="comment">// Pruned height should be none
         </span><span class="macro">assert!</span>(pruned_height.is_none());
 
@@ -2349,7 +2219,7 @@
         <span class="comment">// Vacuum the database to reclaim space.
         // This is necessary to ensure the test passes.
         // Note: We don't perform a vacuum after each pruner run in production because the auto vacuum job handles it automatically.
-        </span>storage.client.lock().<span class="kw">await</span>.vacuum().<span class="kw">await</span>.unwrap();
+        </span>vacuum(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Pruned height should be some
         </span><span class="macro">assert!</span>(pruned_height.is_some());
@@ -2360,10 +2230,10 @@
             .read()
             .<span class="kw">await
             </span>.unwrap()
-            .query_one_static(<span class="string">"select count(*) as count from header"</span>)
+            .fetch_one(<span class="string">"select count(*) as count from header"</span>)
             .<span class="kw">await
             </span>.unwrap()
-            .get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"count"</span>);
+            .get::&lt;i64, <span class="kw">_</span>&gt;(<span class="string">"count"</span>);
         <span class="comment">// the table should be empty
         </span><span class="macro">assert_eq!</span>(header_rows, <span class="number">0</span>);
 
@@ -2374,10 +2244,10 @@
             .read()
             .<span class="kw">await
             </span>.unwrap()
-            .query_one_static(<span class="string">"select count(*) as count from leaf"</span>)
+            .fetch_one(<span class="string">"select count(*) as count from leaf"</span>)
             .<span class="kw">await
             </span>.unwrap()
-            .get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"count"</span>);
+            .get::&lt;i64, <span class="kw">_</span>&gt;(<span class="string">"count"</span>);
         <span class="comment">// the table should be empty
         </span><span class="macro">assert_eq!</span>(leaf_rows, <span class="number">0</span>);
 
@@ -2422,7 +2292,7 @@
         <span class="comment">// Vacuum the database to reclaim space.
         // This is necessary to ensure the test passes.
         // Note: We don't perform a vacuum after each pruner run in production because the auto vacuum job handles it automatically.
-        </span>storage.client.lock().<span class="kw">await</span>.vacuum().<span class="kw">await</span>.unwrap();
+        </span>vacuum(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Pruned height should be none
         </span><span class="macro">assert!</span>(pruned_height.is_none());
@@ -2446,7 +2316,7 @@
         <span class="comment">// Vacuum the database to reclaim space.
         // This is necessary to ensure the test passes.
         // Note: We don't perform a vacuum after each pruner run in production because the auto vacuum job handles it automatically.
-        </span>storage.client.lock().<span class="kw">await</span>.vacuum().<span class="kw">await</span>.unwrap();
+        </span>vacuum(<span class="kw-2">&amp;</span>storage).<span class="kw">await</span>;
 
         <span class="comment">// Pruned height should be some
         </span><span class="macro">assert!</span>(pruned_height.is_some());
@@ -2456,10 +2326,10 @@
             .read()
             .<span class="kw">await
             </span>.unwrap()
-            .query_one_static(<span class="string">"select count(*) as count from header"</span>)
+            .fetch_one(<span class="string">"select count(*) as count from header"</span>)
             .<span class="kw">await
             </span>.unwrap()
-            .get::&lt;<span class="kw">_</span>, i64&gt;(<span class="string">"count"</span>);
+            .get::&lt;i64, <span class="kw">_</span>&gt;(<span class="string">"count"</span>);
         <span class="comment">// the table should be empty
         </span><span class="macro">assert_eq!</span>(header_rows, <span class="number">0</span>);
     }

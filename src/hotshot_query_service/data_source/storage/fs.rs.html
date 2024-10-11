@@ -710,6 +710,9 @@
 <a href="#710" id="710">710</a>
 <a href="#711" id="711">711</a>
 <a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -727,7 +730,7 @@
 </span><span class="kw">use super</span>::{
     ledger_log::{Iter, LedgerLog},
     pruning::{PruneStorage, PrunedHeightStorage, PrunerConfig},
-    AvailabilityStorage,
+    AvailabilityStorage, NodeStorage,
 };
 
 <span class="kw">use crate</span>::{
@@ -739,7 +742,7 @@
         },
     },
     data_source::{update, VersionedDataSource},
-    node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
+    node::{SyncStatus, TimeWindowQueryData, WindowStart},
     types::HeightIndexed,
     ErrorSnafu, Header, MissingSnafu, NotFoundSnafu, Payload, QueryResult, VidCommitment, VidShare,
 };
@@ -1131,7 +1134,7 @@
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
     T: Revert + Deref&lt;Target = FileSystemStorageInner&lt;Types&gt;&gt; + Send + Sync,
 {
-    <span class="kw">async fn </span>get_leaf(<span class="kw-2">&amp;</span><span class="self">self</span>, id: LeafId&lt;Types&gt;) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt; {
+    <span class="kw">async fn </span>get_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: LeafId&lt;Types&gt;) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt; {
         <span class="kw">let </span>n = <span class="kw">match </span>id {
             LeafId::Number(n) =&gt; n,
             LeafId::Hash(h) =&gt; <span class="kw-2">*</span><span class="self">self
@@ -1148,19 +1151,22 @@
             </span>.context(MissingSnafu)
     }
 
-    <span class="kw">async fn </span>get_block(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt; {
+    <span class="kw">async fn </span>get_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt; {
         <span class="self">self</span>.inner.get_block(id)
     }
 
-    <span class="kw">async fn </span>get_header(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;Header&lt;Types&gt;&gt; {
+    <span class="kw">async fn </span>get_header(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;Header&lt;Types&gt;&gt; {
         <span class="self">self</span>.inner.get_header(id)
     }
 
-    <span class="kw">async fn </span>get_payload(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt; {
+    <span class="kw">async fn </span>get_payload(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt; {
         <span class="self">self</span>.get_block(id).<span class="kw">await</span>.map(PayloadQueryData::from)
     }
 
-    <span class="kw">async fn </span>get_vid_common(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;VidCommonQueryData&lt;Types&gt;&gt; {
+    <span class="kw">async fn </span>get_vid_common(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        id: BlockId&lt;Types&gt;,
+    ) -&gt; QueryResult&lt;VidCommonQueryData&lt;Types&gt;&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">self
             </span>.inner
             .vid_storage
@@ -1172,7 +1178,7 @@
     }
 
     <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         range: R,
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;LeafQueryData&lt;Types&gt;&gt;&gt;&gt;
     <span class="kw">where
@@ -1182,7 +1188,7 @@
     }
 
     <span class="kw">async fn </span>get_block_range&lt;R&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         range: R,
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;&gt;&gt;
     <span class="kw">where
@@ -1192,7 +1198,7 @@
     }
 
     <span class="kw">async fn </span>get_payload_range&lt;R&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         range: R,
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt;&gt;&gt;
     <span class="kw">where
@@ -1204,7 +1210,7 @@
     }
 
     <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         range: R,
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;VidCommonQueryData&lt;Types&gt;&gt;&gt;&gt;
     <span class="kw">where
@@ -1216,7 +1222,7 @@
     }
 
     <span class="kw">async fn </span>get_transaction(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         hash: TransactionHash&lt;Types&gt;,
     ) -&gt; QueryResult&lt;TransactionQueryData&lt;Types&gt;&gt; {
         <span class="kw">let </span>height = <span class="self">self
@@ -1317,26 +1323,26 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types, T&gt; NodeDataSource&lt;Types&gt; <span class="kw">for </span>Transaction&lt;T&gt;
+</span><span class="kw">impl</span>&lt;Types, T&gt; NodeStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;T&gt;
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
-    T: Revert + Deref&lt;Target = FileSystemStorageInner&lt;Types&gt;&gt; + Sync,
+    T: Revert + Deref&lt;Target = FileSystemStorageInner&lt;Types&gt;&gt; + Send,
 {
-    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.inner.leaf_storage.iter().len())
     }
 
-    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.inner.num_transactions)
     }
 
-    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.inner.payload_size)
     }
 
-    <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
+    <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
     {
@@ -1350,7 +1356,7 @@
             </span>.context(MissingSnafu)
     }
 
-    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
         <span class="kw">let </span>height = <span class="self">self</span>.inner.leaf_storage.iter().len();
 
         <span class="comment">// The number of missing VID common is just the number of completely missing VID
@@ -1374,7 +1380,7 @@
     }
 
     <span class="kw">async fn </span>get_header_window(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
         end: u64,
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {

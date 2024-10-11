@@ -147,7 +147,7 @@
     }
 
     <span class="kw">async fn </span>active_fetch&lt;S, P&gt;(
-        _tx: <span class="kw-2">&amp;</span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
+        _tx: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
         _fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
@@ -161,7 +161,7 @@
         </span><span class="macro">tracing::debug!</span>(<span class="string">"not fetching unknown transaction {req:?}"</span>);
     }
 
-    <span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;</span>S, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;
+    <span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;mut </span>S, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;
     <span class="kw">where
         </span>S: AvailabilityStorage&lt;Types&gt;,
     {

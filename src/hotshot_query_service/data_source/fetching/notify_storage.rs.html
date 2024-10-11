@@ -578,16 +578,14 @@
         notifier::Notifier,
         storage::{
             pruning::{PruneStorage, PrunedHeightStorage, PrunerCfg},
-            AvailabilityStorage, ExplorerStorage,
+            AvailabilityStorage, ExplorerStorage, MerklizedStateHeightStorage,
+            MerklizedStateStorage, NodeStorage,
         },
         update::{<span class="self">self</span>, VersionedDataSource},
     },
     explorer,
-    merklized_state::{
-        MerklizedState, MerklizedStateDataSource, MerklizedStateHeightPersistence, Snapshot,
-        UpdateStateData,
-    },
-    node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
+    merklized_state::{MerklizedState, Snapshot, UpdateStateData},
+    node::{SyncStatus, TimeWindowQueryData, WindowStart},
     Header, Payload, QueryResult, VidShare,
 };
 <span class="kw">use </span>anyhow::Context;
@@ -776,9 +774,9 @@
 </span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types, T&gt; PrunedHeightStorage <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>, Types, T&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    T: PrunedHeightStorage + Sync,
+    T: PrunedHeightStorage + Send,
 {
-    <span class="kw">async fn </span>load_pruned_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
+    <span class="kw">async fn </span>load_pruned_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt; {
         <span class="self">self</span>.inner.load_pruned_height().<span class="kw">await
     </span>}
 }
@@ -786,9 +784,9 @@
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types, T&gt; Transaction&lt;<span class="lifetime">'a</span>, Types, T&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    T: PrunedHeightStorage + NodeDataSource&lt;Types&gt; + Sync,
+    T: PrunedHeightStorage + NodeStorage&lt;Types&gt; + Send + Sync,
 {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>heights(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;Heights&gt; {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>heights(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;Heights&gt; {
         <span class="kw">let </span>height = <span class="self">self</span>.block_height().<span class="kw">await</span>.context(<span class="string">"loading block height"</span>)<span class="question-mark">? </span><span class="kw">as </span>u64;
         <span class="kw">let </span>pruned_height = <span class="self">self
             </span>.load_pruned_height()
@@ -802,32 +800,31 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types, T, State, <span class="kw">const </span>ARITY: usize&gt; MerklizedStateDataSource&lt;Types, State, ARITY&gt;
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types, T, State, <span class="kw">const </span>ARITY: usize&gt; MerklizedStateStorage&lt;Types, State, ARITY&gt;
     <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>, Types, T&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    T: MerklizedStateDataSource&lt;Types, State, ARITY&gt; + Send + Sync,
+    T: MerklizedStateStorage&lt;Types, State, ARITY&gt; + Send,
     State: MerklizedState&lt;Types, ARITY&gt; + <span class="lifetime">'static</span>,
     &lt;State <span class="kw">as </span>MerkleTreeScheme&gt;::Commitment: Send,
 {
     <span class="kw">async fn </span>get_path(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         snapshot: Snapshot&lt;Types, State, ARITY&gt;,
         key: State::Key,
     ) -&gt; QueryResult&lt;MerkleProof&lt;State::Entry, State::Key, State::T, ARITY&gt;&gt; {
-        <span class="self">self</span>.as_ref().get_path(snapshot, key).<span class="kw">await
+        <span class="self">self</span>.as_mut().get_path(snapshot, key).<span class="kw">await
     </span>}
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types, T&gt; MerklizedStateHeightPersistence <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>, Types, T&gt;
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types, T&gt; MerklizedStateHeightStorage <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>, Types, T&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
-    T: MerklizedStateHeightPersistence + Send + Sync,
+    T: MerklizedStateHeightStorage + Send,
 {
-    <span class="kw">async fn </span>get_last_state_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-        <span class="self">self</span>.as_ref().get_last_state_height().<span class="kw">await
+    <span class="kw">async fn </span>get_last_state_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="self">self</span>.as_mut().get_last_state_height().<span class="kw">await
     </span>}
 }
 
@@ -907,28 +904,31 @@
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     T: AvailabilityStorage&lt;Types&gt;,
 {
-    <span class="kw">async fn </span>get_leaf(<span class="kw-2">&amp;</span><span class="self">self</span>, id: LeafId&lt;Types&gt;) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt; {
+    <span class="kw">async fn </span>get_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: LeafId&lt;Types&gt;) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt; {
         <span class="self">self</span>.inner.get_leaf(id).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>get_block(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt; {
+    <span class="kw">async fn </span>get_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt; {
         <span class="self">self</span>.inner.get_block(id).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>get_header(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;Header&lt;Types&gt;&gt; {
+    <span class="kw">async fn </span>get_header(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;Header&lt;Types&gt;&gt; {
         <span class="self">self</span>.inner.get_header(id).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>get_payload(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt; {
+    <span class="kw">async fn </span>get_payload(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt; {
         <span class="self">self</span>.inner.get_payload(id).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>get_vid_common(<span class="kw-2">&amp;</span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;VidCommonQueryData&lt;Types&gt;&gt; {
+    <span class="kw">async fn </span>get_vid_common(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        id: BlockId&lt;Types&gt;,
+    ) -&gt; QueryResult&lt;VidCommonQueryData&lt;Types&gt;&gt; {
         <span class="self">self</span>.inner.get_vid_common(id).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         range: R,
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;LeafQueryData&lt;Types&gt;&gt;&gt;&gt;
     <span class="kw">where
@@ -938,7 +938,7 @@
     </span>}
 
     <span class="kw">async fn </span>get_block_range&lt;R&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         range: R,
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;&gt;&gt;
     <span class="kw">where
@@ -948,7 +948,7 @@
     </span>}
 
     <span class="kw">async fn </span>get_payload_range&lt;R&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         range: R,
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt;&gt;&gt;
     <span class="kw">where
@@ -958,7 +958,7 @@
     </span>}
 
     <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         range: R,
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;VidCommonQueryData&lt;Types&gt;&gt;&gt;&gt;
     <span class="kw">where
@@ -968,7 +968,7 @@
     </span>}
 
     <span class="kw">async fn </span>get_transaction(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         hash: TransactionHash&lt;Types&gt;,
     ) -&gt; QueryResult&lt;TransactionQueryData&lt;Types&gt;&gt; {
         <span class="self">self</span>.inner.get_transaction(hash).<span class="kw">await
@@ -976,36 +976,36 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types, T&gt; NodeDataSource&lt;Types&gt; <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>, Types, T&gt;
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types, T&gt; NodeStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>, Types, T&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    T: NodeDataSource&lt;Types&gt; + Sync,
+    T: NodeStorage&lt;Types&gt; + Send,
 {
-    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="self">self</span>.inner.block_height().<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="self">self</span>.inner.count_transactions().<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="self">self</span>.inner.payload_size().<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
+    <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
     {
         <span class="self">self</span>.inner.vid_share(id).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
+    <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
         <span class="self">self</span>.inner.sync_status().<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>get_header_window(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
         end: u64,
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
@@ -1020,63 +1020,63 @@
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt; + explorer::traits::ExplorerHeader&lt;Types&gt;,
     <span class="kw">crate</span>::Transaction&lt;Types&gt;: explorer::traits::ExplorerTransaction,
-    T: ExplorerStorage&lt;Types&gt; + Send + Sync,
+    T: ExplorerStorage&lt;Types&gt; + Send,
 {
     <span class="kw">async fn </span>get_block_summaries(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         request: explorer::query_data::GetBlockSummariesRequest&lt;Types&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;
         Vec&lt;explorer::query_data::BlockSummary&lt;Types&gt;&gt;,
         explorer::query_data::GetBlockSummariesError,
     &gt; {
-        <span class="self">self</span>.as_ref().get_block_summaries(request).<span class="kw">await
+        <span class="self">self</span>.as_mut().get_block_summaries(request).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>get_block_detail(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         request: explorer::query_data::BlockIdentifier&lt;Types&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;explorer::query_data::BlockDetail&lt;Types&gt;, explorer::query_data::GetBlockDetailError&gt;
     {
-        <span class="self">self</span>.as_ref().get_block_detail(request).<span class="kw">await
+        <span class="self">self</span>.as_mut().get_block_detail(request).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>get_transaction_summaries(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         request: explorer::query_data::GetTransactionSummariesRequest&lt;Types&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;
         Vec&lt;explorer::query_data::TransactionSummary&lt;Types&gt;&gt;,
         explorer::query_data::GetTransactionSummariesError,
     &gt; {
-        <span class="self">self</span>.as_ref().get_transaction_summaries(request).<span class="kw">await
+        <span class="self">self</span>.as_mut().get_transaction_summaries(request).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>get_transaction_detail(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         request: explorer::query_data::TransactionIdentifier&lt;Types&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;
         explorer::query_data::TransactionDetailResponse&lt;Types&gt;,
         explorer::query_data::GetTransactionDetailError,
     &gt; {
-        <span class="self">self</span>.as_ref().get_transaction_detail(request).<span class="kw">await
+        <span class="self">self</span>.as_mut().get_transaction_detail(request).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>get_explorer_summary(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;
         explorer::query_data::ExplorerSummary&lt;Types&gt;,
         explorer::query_data::GetExplorerSummaryError,
     &gt; {
-        <span class="self">self</span>.as_ref().get_explorer_summary().<span class="kw">await
+        <span class="self">self</span>.as_mut().get_explorer_summary().<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>get_search_results(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         query: String,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;
         explorer::query_data::SearchResult&lt;Types&gt;,
         explorer::query_data::GetSearchResultsError,
     &gt; {
-        <span class="self">self</span>.as_ref().get_search_results(query).<span class="kw">await
+        <span class="self">self</span>.as_mut().get_search_results(query).<span class="kw">await
     </span>}
 }
 
