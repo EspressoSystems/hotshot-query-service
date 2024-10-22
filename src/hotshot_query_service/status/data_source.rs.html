@@ -73,6 +73,8 @@
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
 <a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -94,11 +96,13 @@
 <span class="kw">use </span>chrono::Utc;
 <span class="kw">use </span>hotshot_types::traits::metrics::Metrics;
 
-<span class="attr">#[async_trait]
-</span><span class="kw">pub trait </span>StatusDataSource {
-    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt;;
-
+<span class="kw">pub trait </span>HasMetrics {
     <span class="kw">fn </span>metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PrometheusMetrics;
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">pub trait </span>StatusDataSource: HasMetrics {
+    <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt;;
 
     <span class="kw">fn </span>consensus_metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;PrometheusMetrics&gt; {
         <span class="self">self</span>.metrics()

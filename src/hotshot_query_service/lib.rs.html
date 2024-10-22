@@ -855,6 +855,9 @@
 <a href="#855" id="855">855</a>
 <a href="#856" id="856">856</a>
 <a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1126,7 +1129,7 @@
 //! # use hotshot_query_service::node::{
 //! #   NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart,
 //! # };
-//! # use hotshot_query_service::status::StatusDataSource;
+//! # use hotshot_query_service::status::{HasMetrics, StatusDataSource};
 //! # use hotshot_query_service::testing::mocks::MockTypes as AppTypes;
 //! # use std::ops::RangeBounds;
 //! # type AppQueryData = ();
@@ -1223,14 +1226,15 @@
 //! }
 //!
 //! // Implement data source trait for status API by delegating to the underlying data source.
+//! impl&lt;D: HasMetrics&gt; HasMetrics for AppState&lt;D&gt; {
+//!     fn metrics(&amp;self) -&gt; &amp;PrometheusMetrics {
+//!         self.hotshot_qs.metrics()
+//!     }
+//! }
 //! #[async_trait]
 //! impl&lt;D: StatusDataSource + Send + Sync&gt; StatusDataSource for AppState&lt;D&gt; {
 //!     async fn block_height(&amp;self) -&gt; QueryResult&lt;usize&gt; {
 //!         self.hotshot_qs.block_height().await
-//!     }
-//!
-//!     fn metrics(&amp;self) -&gt; &amp;PrometheusMetrics {
-//!         self.hotshot_qs.metrics()
 //!     }
 //! }
 //!
@@ -1434,7 +1438,7 @@
         data_source::VersionedDataSource,
         metrics::PrometheusMetrics,
         node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
-        status::StatusDataSource,
+        status::{HasMetrics, StatusDataSource},
         testing::{
             consensus::MockDataSource,
             mocks::{MockHeader, MockPayload, MockTypes},
@@ -1574,14 +1578,16 @@
     }
 
     <span class="comment">// Implement data source trait for status API.
-    </span><span class="attr">#[async_trait]
+    </span><span class="kw">impl </span>HasMetrics <span class="kw">for </span>CompositeState {
+        <span class="kw">fn </span>metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PrometheusMetrics {
+            <span class="self">self</span>.hotshot_qs.metrics()
+        }
+    }
+    <span class="attr">#[async_trait]
     </span><span class="kw">impl </span>StatusDataSource <span class="kw">for </span>CompositeState {
         <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
             StatusDataSource::block_height(<span class="kw-2">&amp;</span><span class="self">self</span>.hotshot_qs).<span class="kw">await
         </span>}
-        <span class="kw">fn </span>metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PrometheusMetrics {
-            <span class="self">self</span>.hotshot_qs.metrics()
-        }
     }
 
     <span class="attr">#[async_std::test]

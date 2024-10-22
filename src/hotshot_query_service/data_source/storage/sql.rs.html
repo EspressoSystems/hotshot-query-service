@@ -1183,6 +1183,20 @@
 <a href="#1183" id="1183">1183</a>
 <a href="#1184" id="1184">1184</a>
 <a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1203,11 +1217,14 @@
         update::Transaction <span class="kw">as _</span>,
         VersionedDataSource,
     },
+    metrics::PrometheusMetrics,
+    status::HasMetrics,
     QueryError, QueryResult,
 };
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>chrono::Utc;
 <span class="kw">use </span>futures::future::FutureExt;
+<span class="kw">use </span>hotshot_types::traits::metrics::Metrics;
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>sqlx::{
     pool::{Pool, PoolOptions},
@@ -1235,7 +1252,7 @@
 <span class="kw">pub use </span>refinery::Migration;
 <span class="kw">pub use </span>transaction::<span class="kw-2">*</span>;
 
-<span class="kw">use </span><span class="self">self</span>::migrate::Migrator;
+<span class="kw">use </span><span class="self">self</span>::{migrate::Migrator, transaction::PoolMetrics};
 
 <span class="doccomment">/// Embed migrations from the given directory into the current binary.
 ///
@@ -1552,6 +1569,8 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>SqlStorage {
     pool: Pool&lt;Db&gt;,
+    metrics: PrometheusMetrics,
+    pool_metrics: PoolMetrics,
     pruner_cfg: <span class="prelude-ty">Option</span>&lt;PrunerCfg&gt;,
 }
 
@@ -1634,8 +1653,11 @@
                 .<span class="kw">await</span><span class="question-mark">?</span>;
         }
 
+        <span class="kw">let </span>metrics = PrometheusMetrics::default();
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             pool,
+            pool_metrics: PoolMetrics::new(<span class="kw-2">&amp;*</span>metrics.subgroup(<span class="string">"sql"</span>.into())),
+            metrics,
             pruner_cfg: config.pruner_cfg,
         })
     }
@@ -1648,6 +1670,12 @@
 
     <span class="kw">fn </span>get_pruning_config(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;PrunerCfg&gt; {
         <span class="self">self</span>.pruner_cfg.clone()
+    }
+}
+
+<span class="kw">impl </span>HasMetrics <span class="kw">for </span>SqlStorage {
+    <span class="kw">fn </span>metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PrometheusMetrics {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.metrics
     }
 }
 
@@ -1815,11 +1843,11 @@
         </span><span class="self">Self</span>: <span class="lifetime">'a</span>;
 
     <span class="kw">async fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;Transaction&lt;Write&gt;&gt; {
-        Transaction::new(<span class="kw-2">&amp;</span><span class="self">self</span>.pool).<span class="kw">await
+        Transaction::new(<span class="kw-2">&amp;</span><span class="self">self</span>.pool, <span class="self">self</span>.pool_metrics.clone()).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; anyhow::Result&lt;Transaction&lt;Read&gt;&gt; {
-        Transaction::new(<span class="kw-2">&amp;</span><span class="self">self</span>.pool).<span class="kw">await
+        Transaction::new(<span class="kw-2">&amp;</span><span class="self">self</span>.pool, <span class="self">self</span>.pool_metrics.clone()).<span class="kw">await
     </span>}
 }
 

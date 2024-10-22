@@ -1353,6 +1353,9 @@
 <a href="#1353" id="1353">1353</a>
 <a href="#1354" id="1354">1354</a>
 <a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1449,7 +1452,7 @@
     },
     metrics::PrometheusMetrics,
     node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
-    status::StatusDataSource,
+    status::{HasMetrics, StatusDataSource},
     task::BackgroundTask,
     types::HeightIndexed,
     Header, Payload, QueryError, QueryResult, VidShare,
@@ -1685,8 +1688,6 @@
     // implements the asynchronous fetching of a particular object. This is why it gets its own
     // type, wrapped in an [`Arc`] for easy, efficient cloning.
     </span>fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
-    <span class="comment">// The rest of the data we need for implementing data source traits but not for fetching.
-    </span>metrics: PrometheusMetrics,
     <span class="comment">// The proactive scanner task. This is only saved here so that we can cancel it on drop.
     </span>scanner: <span class="prelude-ty">Option</span>&lt;BackgroundTask&gt;,
     pruner: Pruner&lt;Types, S, P&gt;,
@@ -1779,7 +1780,6 @@
             fetcher,
             scanner,
             pruner,
-            metrics: Default::default(),
         };
 
         <span class="prelude-val">Ok</span>(ds)
@@ -1795,11 +1795,21 @@
     }
 }
 
+<span class="kw">impl</span>&lt;Types, S, P&gt; HasMetrics <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+    S: HasMetrics,
+{
+    <span class="kw">fn </span>metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PrometheusMetrics {
+        <span class="self">self</span>.as_ref().metrics()
+    }
+}
+
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;Types, S, P&gt; StatusDataSource <span class="kw">for </span>FetchingDataSource&lt;Types, S, P&gt;
 <span class="kw">where
     </span>Types: NodeType,
-    S: VersionedDataSource + Send + Sync + <span class="lifetime">'static</span>,
+    S: VersionedDataSource + HasMetrics + Send + Sync + <span class="lifetime">'static</span>,
     <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: NodeStorage&lt;Types&gt;,
     P: Send + Sync,
 {
@@ -1809,10 +1819,6 @@
         })<span class="question-mark">?</span>;
         tx.block_height().<span class="kw">await
     </span>}
-
-    <span class="kw">fn </span>metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PrometheusMetrics {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.metrics
-    }
 }
 
 <span class="attr">#[async_trait]

@@ -459,6 +459,11 @@
 <a href="#459" id="459">459</a>
 <a href="#460" id="460">460</a>
 <a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -485,7 +490,7 @@
     },
     metrics::PrometheusMetrics,
     node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
-    status::StatusDataSource,
+    status::{HasMetrics, StatusDataSource},
     Header, Payload, QueryResult, Transaction, VidShare,
 };
 <span class="kw">use </span>async_trait::async_trait;
@@ -731,6 +736,15 @@
     </span>}
 }
 
+<span class="kw">impl</span>&lt;D, U&gt; HasMetrics <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
+<span class="kw">where
+    </span>D: HasMetrics,
+{
+    <span class="kw">fn </span>metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PrometheusMetrics {
+        <span class="self">self</span>.data_source.metrics()
+    }
+}
+
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;D, U&gt; StatusDataSource <span class="kw">for </span>ExtensibleDataSource&lt;D, U&gt;
 <span class="kw">where
@@ -740,10 +754,6 @@
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
         <span class="self">self</span>.data_source.block_height().<span class="kw">await
     </span>}
-
-    <span class="kw">fn </span>metrics(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PrometheusMetrics {
-        <span class="self">self</span>.data_source.metrics()
-    }
 }
 
 <span class="attr">#[async_trait]

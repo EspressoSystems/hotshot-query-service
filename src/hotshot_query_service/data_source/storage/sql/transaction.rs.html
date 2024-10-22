@@ -703,6 +703,90 @@
 <a href="#703" id="703">703</a>
 <a href="#704" id="704">704</a>
 <a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -748,7 +832,10 @@
 <span class="kw">use </span>derive_more::{Deref, DerefMut};
 <span class="kw">use </span>futures::{future::Future, stream::TryStreamExt};
 <span class="kw">use </span>hotshot_types::traits::{
-    block_contents::BlockHeader, node_implementation::NodeType, EncodeBytes,
+    block_contents::BlockHeader,
+    metrics::{Counter, Gauge, Histogram, Metrics},
+    node_implementation::NodeType,
+    EncodeBytes,
 };
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>jf_merkle_tree::prelude::{MerkleNode, MerkleProof};
@@ -756,7 +843,7 @@
 <span class="kw">use </span>std::{
     collections::{HashMap, HashSet},
     marker::PhantomData,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 <span class="kw">pub use </span>sqlx::Executor;
@@ -788,6 +875,8 @@
     <span class="kw">fn </span>begin(
         conn: <span class="kw-2">&amp;mut </span>&lt;Db <span class="kw">as </span>Database&gt;::Connection,
     ) -&gt; <span class="kw">impl </span>Future&lt;Output = anyhow::Result&lt;()&gt;&gt; + Send;
+
+    <span class="kw">fn </span>display() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str;
 }
 
 <span class="kw">impl </span>TransactionMode <span class="kw">for </span>Write {
@@ -796,6 +885,10 @@
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
+
+    <span class="kw">fn </span>display() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+        <span class="string">"write"
+    </span>}
 }
 
 <span class="kw">impl </span>TransactionMode <span class="kw">for </span>Read {
@@ -803,6 +896,59 @@
         conn.execute(<span class="string">"SET TRANSACTION ISOLATION LEVEL SERIALIZABLE, READ ONLY, DEFERRABLE"</span>)
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>display() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+        <span class="string">"read-only"
+    </span>}
+}
+
+<span class="attr">#[derive(Clone, Copy, Debug)]
+</span><span class="kw">enum </span>CloseType {
+    Commit,
+    Revert,
+    Drop,
+}
+
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">struct </span>TransactionMetricsGuard&lt;Mode&gt; {
+    started_at: Instant,
+    metrics: PoolMetrics,
+    close_type: CloseType,
+    _mode: PhantomData&lt;Mode&gt;,
+}
+
+<span class="kw">impl</span>&lt;Mode: TransactionMode&gt; TransactionMetricsGuard&lt;Mode&gt; {
+    <span class="kw">fn </span>begin(metrics: PoolMetrics) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>started_at = Instant::now();
+        <span class="macro">tracing::trace!</span>(mode = Mode::display(), <span class="question-mark">?</span>started_at, <span class="string">"begin"</span>);
+        metrics.open_transactions.update(<span class="number">1</span>);
+
+        <span class="self">Self </span>{
+            started_at,
+            metrics,
+            close_type: CloseType::Drop,
+            _mode: Default::default(),
+        }
+    }
+
+    <span class="kw">fn </span>set_closed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, t: CloseType) {
+        <span class="self">self</span>.close_type = t;
+    }
+}
+
+<span class="kw">impl</span>&lt;Mode&gt; Drop <span class="kw">for </span>TransactionMetricsGuard&lt;Mode&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.metrics
+            .transaction_durations
+            .add_point((<span class="self">self</span>.started_at.elapsed().as_millis() <span class="kw">as </span>f64) / <span class="number">1000.</span>);
+        <span class="self">self</span>.metrics.open_transactions.update(-<span class="number">1</span>);
+        <span class="kw">match </span><span class="self">self</span>.close_type {
+            CloseType::Commit =&gt; <span class="self">self</span>.metrics.commits.add(<span class="number">1</span>),
+            CloseType::Revert =&gt; <span class="self">self</span>.metrics.reverts.add(<span class="number">1</span>),
+            CloseType::Drop =&gt; <span class="self">self</span>.metrics.drops.add(<span class="number">1</span>),
+        }
+        <span class="macro">tracing::trace!</span>(started_at = <span class="question-mark">?</span><span class="self">self</span>.started_at, reason = <span class="question-mark">?</span><span class="self">self</span>.close_type, <span class="string">"close"</span>);
     }
 }
 
@@ -812,28 +958,28 @@
     <span class="attr">#[deref]
     #[deref_mut]
     </span>inner: sqlx::Transaction&lt;<span class="lifetime">'static</span>, Db&gt;,
-    _mode: PhantomData&lt;Mode&gt;,
+    metrics: TransactionMetricsGuard&lt;Mode&gt;,
 }
 
 <span class="kw">impl</span>&lt;Mode: TransactionMode&gt; Transaction&lt;Mode&gt; {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>new(pool: <span class="kw-2">&amp;</span>Pool&lt;Db&gt;) -&gt; anyhow::Result&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>tx = pool.begin().<span class="kw">await</span><span class="question-mark">?</span>;
-        Mode::begin(tx.as_mut()).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            inner: tx,
-            _mode: Default::default(),
-        })
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async fn </span>new(pool: <span class="kw-2">&amp;</span>Pool&lt;Db&gt;, metrics: PoolMetrics) -&gt; anyhow::Result&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = pool.begin().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>metrics = TransactionMetricsGuard::begin(metrics);
+        Mode::begin(inner.as_mut()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ inner, metrics })
     }
 }
 
 <span class="kw">impl</span>&lt;Mode: TransactionMode&gt; update::Transaction <span class="kw">for </span>Transaction&lt;Mode&gt; {
-    <span class="kw">async fn </span>commit(<span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
+    <span class="kw">async fn </span>commit(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;()&gt; {
         <span class="self">self</span>.inner.commit().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.metrics.set_closed(CloseType::Commit);
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="kw">fn </span>revert(<span class="self">self</span>) -&gt; <span class="kw">impl </span>Future + Send {
+    <span class="kw">fn </span>revert(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Future + Send {
         <span class="kw">async move </span>{
             <span class="self">self</span>.inner.rollback().<span class="kw">await</span>.unwrap();
+            <span class="self">self</span>.metrics.set_closed(CloseType::Revert);
         }
     }
 }
@@ -1406,6 +1552,28 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
         };
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(height <span class="kw">as </span>u64))
+    }
+}
+
+<span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>PoolMetrics {
+    open_transactions: Box&lt;<span class="kw">dyn </span>Gauge&gt;,
+    transaction_durations: Box&lt;<span class="kw">dyn </span>Histogram&gt;,
+    commits: Box&lt;<span class="kw">dyn </span>Counter&gt;,
+    reverts: Box&lt;<span class="kw">dyn </span>Counter&gt;,
+    drops: Box&lt;<span class="kw">dyn </span>Counter&gt;,
+}
+
+<span class="kw">impl </span>PoolMetrics {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new(metrics: <span class="kw-2">&amp;</span>(<span class="kw">impl </span>Metrics + <span class="question-mark">?</span>Sized)) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            open_transactions: metrics.create_gauge(<span class="string">"open_transactions"</span>.into(), <span class="prelude-val">None</span>),
+            transaction_durations: metrics
+                .create_histogram(<span class="string">"transaction_duration"</span>.into(), <span class="prelude-val">Some</span>(<span class="string">"s"</span>.into())),
+            commits: metrics.create_counter(<span class="string">"committed_transactions"</span>.into(), <span class="prelude-val">None</span>),
+            reverts: metrics.create_counter(<span class="string">"reverted_transactions"</span>.into(), <span class="prelude-val">None</span>),
+            drops: metrics.create_counter(<span class="string">"dropped_transactions"</span>.into(), <span class="prelude-val">None</span>),
+        }
     }
 }
 </code></pre></div></section></main></body></html>

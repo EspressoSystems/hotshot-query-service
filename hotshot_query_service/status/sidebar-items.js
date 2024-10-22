@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Error"],"fn":["define_api"],"struct":["Options"],"trait":["StatusDataSource","UpdateStatusData"]};
+window.SIDEBAR_ITEMS = {"enum":["Error"],"fn":["define_api"],"struct":["Options"],"trait":["HasMetrics","StatusDataSource","UpdateStatusData"]};
