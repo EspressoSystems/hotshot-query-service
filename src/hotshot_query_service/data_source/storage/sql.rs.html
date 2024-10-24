@@ -1197,6 +1197,17 @@
 <a href="#1197" id="1197">1197</a>
 <a href="#1198" id="1198">1198</a>
 <a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a>
+<a href="#1210" id="1210">1210</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1273,8 +1284,9 @@
 ///
 /// ```
 /// # use hotshot_query_service::data_source::sql::{include_migrations, Migration};
-/// let migrations: Vec&lt;Migration&gt; =
+/// let mut migrations: Vec&lt;Migration&gt; =
 ///     include_migrations!("$CARGO_MANIFEST_DIR/migrations").collect();
+/// migrations.sort();
 /// assert_eq!(migrations[0].version(), 10);
 /// assert_eq!(migrations[0].name(), "init_schema");
 /// ```
@@ -1319,12 +1331,22 @@
     <span class="comment">// Check version uniqueness and sort by version.
     </span>validate_migrations(<span class="kw-2">&amp;mut </span>migrations).expect(<span class="string">"default migrations are invalid"</span>);
 
-    <span class="comment">// Check that all migration versions are multiples of 10, so that custom migrations can be
+    <span class="comment">// Check that all migration versions are multiples of 100, so that custom migrations can be
     // inserted in between.
     </span><span class="kw">for </span>m <span class="kw">in </span><span class="kw-2">&amp;</span>migrations {
-        <span class="kw">if </span>m.version() == <span class="number">0 </span>|| m.version() % <span class="number">10 </span>!= <span class="number">0 </span>{
-            <span class="macro">panic!</span>(
-                <span class="string">"default migration version {} is not a positive multiple of 10"</span>,
+        <span class="kw">if </span>m.version() &lt;= <span class="number">30 </span>{
+            <span class="comment">// An older version of this software used intervals of 10 instead of 100. This was
+            // changed to allow more custom migrations between each default migration, but we must
+            // still accept older migrations that followed the older rule.
+            </span><span class="macro">assert!</span>(
+                m.version() &gt; <span class="number">0 </span>&amp;&amp; m.version() % <span class="number">10 </span>== <span class="number">0</span>,
+                <span class="string">"legacy default migration version {} is not a positive multiple of 10"</span>,
+                m.version()
+            );
+        } <span class="kw">else </span>{
+            <span class="macro">assert!</span>(
+                m.version() % <span class="number">100 </span>== <span class="number">0</span>,
+                <span class="string">"default migration version {} is not a multiple of 100"</span>,
                 m.version()
             );
         }
@@ -2145,11 +2167,11 @@
         // The SQL commands used here will fail if not run in order.
         </span><span class="kw">let </span>migrations = <span class="macro">vec!</span>[
             Migration::unapplied(
-                <span class="string">"V33__create_test_table.sql"</span>,
+                <span class="string">"V103__create_test_table.sql"</span>,
                 <span class="string">"ALTER TABLE test ADD COLUMN data INTEGER;"</span>,
             )
             .unwrap(),
-            Migration::unapplied(<span class="string">"V32__create_test_table.sql"</span>, <span class="string">"CREATE TABLE test ();"</span>).unwrap(),
+            Migration::unapplied(<span class="string">"V102__create_test_table.sql"</span>, <span class="string">"CREATE TABLE test ();"</span>).unwrap(),
         ];
         connect(<span class="bool-val">true</span>, migrations.clone()).<span class="kw">await</span>.unwrap();
 

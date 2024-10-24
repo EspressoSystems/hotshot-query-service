@@ -1059,6 +1059,13 @@
 <a href="#1059" id="1059">1059</a>
 <a href="#1060" id="1060">1060</a>
 <a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
+<a href="#1067" id="1067">1067</a>
+<a href="#1068" id="1068">1068</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1161,17 +1168,24 @@
     <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, req: LeafRequest) -&gt; <span class="prelude-ty">Option</span>&lt;LeafQueryData&lt;Types&gt;&gt; {
         <span class="kw">match </span><span class="self">self
             </span>.client
-            .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"availability/leaf/{}"</span>, usize::from(req)))
+            .get::&lt;LeafQueryData&lt;Types&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"availability/leaf/{}"</span>, usize::from(req)))
             .send()
             .<span class="kw">await
         </span>{
-            <span class="prelude-val">Ok</span>(leaf) =&gt; {
+            <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>leaf) =&gt; {
                 <span class="comment">// TODO we should also download a chain of QCs justifying the inclusion of `leaf` in
                 // the chain at the requested height. However, HotShot currently lacks a good light
                 // client API to verify this chain, so for now we just trust the other server.
                 // https://github.com/EspressoSystems/HotShot/issues/2137
                 // https://github.com/EspressoSystems/hotshot-query-service/issues/354
-                </span><span class="prelude-val">Some</span>(leaf)
+
+                // There is a potential DOS attack where the peer sends us a leaf with the full
+                // payload in it, which uses redundant resources in the database, since we fetch and
+                // store payloads separately. We can defend ourselves by simply dropping the payload
+                // if present.
+                </span>leaf.leaf.unfill_block_payload();
+
+                <span class="prelude-val">Some</span>(leaf)
             }
             <span class="prelude-val">Err</span>(err) =&gt; {
                 <span class="macro">tracing::error!</span>(<span class="string">"failed to fetch leaf {req:?}: {err}"</span>);

@@ -630,6 +630,11 @@
 <a href="#630" id="630">630</a>
 <a href="#631" id="631">631</a>
 <a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -842,7 +847,7 @@
     ///
     /// Fails with an [`InconsistentLeafError`] if `qc` does not reference `leaf`.
     </span><span class="kw">pub fn </span>new(
-        leaf: Leaf&lt;Types&gt;,
+        <span class="kw-2">mut </span>leaf: Leaf&lt;Types&gt;,
         qc: QuorumCertificate&lt;Types&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, InconsistentLeafError&lt;Types&gt;&gt; {
         <span class="comment">// TODO: Replace with the new `commit` function in HotShot. Add an `upgrade_lock` parameter
@@ -856,6 +861,11 @@
                 qc_leaf: qc.data.leaf_commit
             }
         );
+
+        <span class="comment">// We only want the leaf for the block header and consensus metadata. The payload will be
+        // stored separately.
+        </span>leaf.unfill_block_payload();
+
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ leaf, qc })
     }
 
