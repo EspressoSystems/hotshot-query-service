@@ -992,6 +992,12 @@ where
                         block_height,
                         "starting major scan"
                     );
+
+                    // If we're starting a major scan, reset the major scan counts of missing data
+                    // as we're about to recompute them.
+                    metrics.major_missing_blocks.set(0);
+                    metrics.major_missing_vid.set(0);
+
                     minimum_block_height
                 } else {
                     tracing::info!(start = prev_height, block_height, "starting minor scan");
@@ -1014,9 +1020,15 @@ where
                         chunk_size,
                         start..block_height,
                     );
-                while blocks.next().await.is_some() {
+                let mut missing_blocks = 0;
+                while let Some(fetch) = blocks.next().await {
                     metrics.scanned_blocks.update(1);
+                    if fetch.is_pending() {
+                        missing_blocks += 1;
+                    }
                 }
+                metrics.add_missing_blocks(major, missing_blocks);
+
                 // We have to trigger a separate fetch of the VID data, since this is fetched
                 // independently of the block payload.
                 let mut vid = self
@@ -1025,12 +1037,27 @@ where
                         chunk_size,
                         start..block_height,
                     );
-                while vid.next().await.is_some() {
+                let mut missing_vid = 0;
+                while let Some(fetch) = vid.next().await {
                     metrics.scanned_vid.update(1);
+                    if fetch.is_pending() {
+                        missing_vid += 1;
+                    }
                 }
+                metrics.add_missing_vid(major, missing_vid);
 
                 tracing::info!("completed proactive scan, will scan again in {minor_interval:?}");
+
+                // Reset metrics.
                 metrics.running.set(0);
+                if major {
+                    // If we just completed a major scan, reset the incremental counts of missing
+                    // data from minor scans, so the next round of minor scans can recompute/update
+                    // them.
+                    metrics.minor_missing_blocks.set(0);
+                    metrics.minor_missing_vid.set(0);
+                }
+
                 sleep(minor_interval).await;
             }
             .instrument(span)
@@ -1401,6 +1428,16 @@ struct ScannerMetrics {
     scanned_blocks: Box<dyn Gauge>,
     /// Number of VID entries processed in the current scan.
     scanned_vid: Box<dyn Gauge>,
+    /// The number of missing blocks encountered in the last major scan.
+    major_missing_blocks: Box<dyn Gauge>,
+    /// The number of missing VID entries encountered in the last major scan.
+    major_missing_vid: Box<dyn Gauge>,
+    /// The number of missing blocks encountered _cumulatively_ in minor scans since the last major
+    /// scan.
+    minor_missing_blocks: Box<dyn Gauge>,
+    /// The number of missing VID entries encountered _cumulatively_ in minor scans since the last
+    /// major scan.
+    minor_missing_vid: Box<dyn Gauge>,
 }
 
 impl ScannerMetrics {
@@ -1416,6 +1453,26 @@ impl ScannerMetrics {
             current_end: group.create_gauge("end".into(), None),
             scanned_blocks: group.create_gauge("scanned_blocks".into(), None),
             scanned_vid: group.create_gauge("scanned_vid".into(), None),
+            major_missing_blocks: group.create_gauge("major_missing_blocks".into(), None),
+            major_missing_vid: group.create_gauge("major_missing_vid".into(), None),
+            minor_missing_blocks: group.create_gauge("minor_missing_blocks".into(), None),
+            minor_missing_vid: group.create_gauge("minor_missing_vid".into(), None),
+        }
+    }
+
+    fn add_missing_blocks(&self, major: bool, missing: usize) {
+        if major {
+            self.major_missing_blocks.set(missing);
+        } else {
+            self.minor_missing_blocks.update(missing as i64);
+        }
+    }
+
+    fn add_missing_vid(&self, major: bool, missing: usize) {
+        if major {
+            self.major_missing_vid.set(missing);
+        } else {
+            self.minor_missing_vid.update(missing as i64);
         }
     }
 }
