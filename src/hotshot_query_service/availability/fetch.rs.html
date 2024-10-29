@@ -120,6 +120,11 @@
 <a href="#120" id="120">120</a>
 <a href="#121" id="121">121</a>
 <a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -192,6 +197,11 @@
         E: Error + ErrorCompat,
     {
         <span class="self">self</span>.try_resolve().ok().with_context(context)
+    }
+
+    <span class="doccomment">/// Does this fetch represent an unresolved query?
+    </span><span class="kw">pub fn </span>is_pending(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::Pending(<span class="kw">_</span>))
     }
 }
 

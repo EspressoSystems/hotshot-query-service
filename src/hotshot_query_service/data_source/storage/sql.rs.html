@@ -1208,6 +1208,12 @@
 <a href="#1208" id="1208">1208</a>
 <a href="#1209" id="1209">1209</a>
 <a href="#1210" id="1210">1210</a>
+<a href="#1211" id="1211">1211</a>
+<a href="#1212" id="1212">1212</a>
+<a href="#1213" id="1213">1213</a>
+<a href="#1214" id="1214">1214</a>
+<a href="#1215" id="1215">1215</a>
+<a href="#1216" id="1216">1216</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1237,15 +1243,16 @@
 <span class="kw">use </span>futures::future::FutureExt;
 <span class="kw">use </span>hotshot_types::traits::metrics::Metrics;
 <span class="kw">use </span>itertools::Itertools;
+<span class="kw">use </span>log::LevelFilter;
 <span class="kw">use </span>sqlx::{
     pool::{Pool, PoolOptions},
     postgres::{PgConnectOptions, PgSslMode},
-    ConnectOptions, Connection, Row,
+    ConnectOptions, Row,
 };
 <span class="kw">use </span>std::{cmp::min, fmt::Debug, str::FromStr, time::Duration};
 
 <span class="kw">pub extern crate </span>sqlx;
-<span class="kw">pub use </span>sqlx::{Database, Postgres, Sqlite};
+<span class="kw">pub use </span>sqlx::{Database, Sqlite};
 
 <span class="kw">mod </span>db;
 <span class="kw">mod </span>migrate;
@@ -1395,11 +1402,8 @@
 
 <span class="doccomment">/// Postgres client config.
 </span><span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>Config&lt;DB&gt;
-<span class="kw">where
-    </span>DB: Database,
-{
-    db_opt: &lt;DB::Connection <span class="kw">as </span>Connection&gt;::Options,
+</span><span class="kw">pub struct </span>Config {
+    db_opt: PgConnectOptions,
     pool_opt: PoolOptions&lt;Db&gt;,
     schema: String,
     reset: bool,
@@ -1409,7 +1413,7 @@
     archive: bool,
 }
 
-<span class="kw">impl </span>Default <span class="kw">for </span>Config&lt;Postgres&gt; {
+<span class="kw">impl </span>Default <span class="kw">for </span>Config {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         PgConnectOptions::default()
             .host(<span class="string">"localhost"</span>)
@@ -1418,7 +1422,7 @@
     }
 }
 
-<span class="kw">impl </span>From&lt;PgConnectOptions&gt; <span class="kw">for </span>Config&lt;Postgres&gt; {
+<span class="kw">impl </span>From&lt;PgConnectOptions&gt; <span class="kw">for </span>Config {
     <span class="kw">fn </span>from(db_opt: PgConnectOptions) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             db_opt,
@@ -1433,7 +1437,7 @@
     }
 }
 
-<span class="kw">impl </span>FromStr <span class="kw">for </span>Config&lt;Postgres&gt; {
+<span class="kw">impl </span>FromStr <span class="kw">for </span>Config {
     <span class="kw">type </span><span class="prelude-val">Err </span>= &lt;PgConnectOptions <span class="kw">as </span>FromStr&gt;::Err;
 
     <span class="kw">fn </span>from_str(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Err&gt; {
@@ -1441,7 +1445,7 @@
     }
 }
 
-<span class="kw">impl </span>Config&lt;Postgres&gt; {
+<span class="kw">impl </span>Config {
     <span class="doccomment">/// Set the hostname of the database server.
     ///
     /// The default is `localhost`.
@@ -1485,9 +1489,7 @@
         <span class="self">self</span>.db_opt = <span class="self">self</span>.db_opt.ssl_mode(PgSslMode::Require);
         <span class="self">self
     </span>}
-}
 
-<span class="kw">impl</span>&lt;DB: Database&gt; Config&lt;DB&gt; {
     <span class="doccomment">/// Set the name of the schema to use for queries.
     ///
     /// The default schema is named `hotshot` and is created via the default migrations.
@@ -1585,6 +1587,16 @@
         <span class="self">self</span>.pool_opt = <span class="self">self</span>.pool_opt.max_connections(max);
         <span class="self">self
     </span>}
+
+    <span class="doccomment">/// Log at WARN level any time a SQL statement takes longer than `threshold`.
+    ///
+    /// The default threshold is 1s.
+    </span><span class="kw">pub fn </span>slow_statement_threshold(<span class="kw-2">mut </span><span class="self">self</span>, threshold: Duration) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.db_opt = <span class="self">self
+            </span>.db_opt
+            .log_slow_statements(LevelFilter::Warn, threshold);
+        <span class="self">self
+    </span>}
 }
 
 <span class="doccomment">/// Storage for the APIs provided in this crate, backed by a remote PostgreSQL database.
@@ -1605,7 +1617,7 @@
 
 <span class="kw">impl </span>SqlStorage {
     <span class="doccomment">/// Connect to a remote database.
-    </span><span class="kw">pub async fn </span>connect&lt;DB: Database&gt;(<span class="kw-2">mut </span>config: Config&lt;DB&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
+    </span><span class="kw">pub async fn </span>connect(<span class="kw-2">mut </span>config: Config) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
         <span class="kw">let </span>schema = config.schema.clone();
         <span class="kw">let </span>pool = config
             .pool_opt
@@ -1619,7 +1631,7 @@
                 }
                 .boxed()
             })
-            .connect(config.db_opt.to_url_lossy().as_ref())
+            .connect_with(config.db_opt)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Create or connect to the schema for this query service.
@@ -1888,7 +1900,7 @@
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>refinery::Migration;
 
-    <span class="kw">use super</span>::{Config, Postgres};
+    <span class="kw">use </span><span class="kw">super</span>::Config;
     <span class="kw">use </span><span class="kw">crate</span>::testing::sleep;
 
     <span class="attr">#[derive(Debug)]
@@ -1955,7 +1967,7 @@
             <span class="self">self</span>.port
         }
 
-        <span class="kw">pub fn </span>config(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Config&lt;Postgres&gt; {
+        <span class="kw">pub fn </span>config(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Config {
             Config::default()
                 .user(<span class="string">"postgres"</span>)
                 .password(<span class="string">"password"</span>)
