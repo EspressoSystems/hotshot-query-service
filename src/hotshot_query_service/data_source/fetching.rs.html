@@ -1485,6 +1485,7 @@
 <a href="#1485" id="1485">1485</a>
 <a href="#1486" id="1486">1486</a>
 <a href="#1487" id="1487">1487</a>
+<a href="#1488" id="1488">1488</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1607,6 +1608,7 @@
     ops::{Bound, Range, RangeBounds},
     time::Duration,
 };
+<span class="kw">use </span>tagged_base64::TaggedBase64;
 <span class="kw">use </span>tracing::Instrument;
 
 <span class="kw">mod </span>block;
@@ -2735,7 +2737,7 @@
 
     <span class="kw">async fn </span>get_search_results(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        query: String,
+        query: TaggedBase64,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;
         explorer::query_data::SearchResult&lt;Types&gt;,
         explorer::query_data::GetSearchResultsError,

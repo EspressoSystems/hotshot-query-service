@@ -940,7 +940,6 @@
 <a href="#940" id="940">940</a>
 <a href="#941" id="941">941</a>
 <a href="#942" id="942">942</a>
-<a href="#943" id="943">943</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1316,16 +1315,15 @@
         </span>.get(<span class="string">"get_search_result"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>query = req
-                    .string_param(<span class="string">"query"</span>)
+                    .tagged_base64_param(<span class="string">"query"</span>)
                     .map_err(|err| {
                         <span class="macro">tracing::error!</span>(<span class="string">"query param error: {}"</span>, err);
                         GetSearchResultsError::InvalidQuery(errors::BadQuery {})
                     })
-                    .map_err(Error::GetSearchResults)<span class="question-mark">?
-                    </span>.to_string();
+                    .map_err(Error::GetSearchResults)<span class="question-mark">?</span>;
 
                 state
-                    .get_search_results(query)
+                    .get_search_results(query.clone())
                     .<span class="kw">await
                     </span>.map(SearchResultResponse::from)
                     .map_err(Error::GetSearchResults)

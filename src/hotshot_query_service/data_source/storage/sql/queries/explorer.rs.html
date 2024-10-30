@@ -567,6 +567,24 @@
 <a href="#567" id="567">567</a>
 <a href="#568" id="568">568</a>
 <a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -589,7 +607,10 @@
     availability::{BlockQueryData, QueryableHeader, QueryablePayload, TransactionIndex},
     data_source::storage::ExplorerStorage,
     explorer::{
-        <span class="self">self</span>, errors::NotFound, query_data::TransactionDetailResponse, traits::ExplorerHeader,
+        <span class="self">self</span>,
+        errors::{<span class="self">self</span>, NotFound},
+        query_data::TransactionDetailResponse,
+        traits::ExplorerHeader,
         BalanceAmount, BlockDetail, BlockIdentifier, BlockRange, BlockSummary, ExplorerHistograms,
         ExplorerSummary, GenesisOverview, GetBlockDetailError, GetBlockSummariesError,
         GetBlockSummariesRequest, GetExplorerSummaryError, GetSearchResultsError,
@@ -597,15 +618,16 @@
         MonetaryValue, SearchResult, TransactionIdentifier, TransactionRange, TransactionSummary,
         TransactionSummaryFilter,
     },
-    Header, Payload, QueryError, QueryResult,
+    Header, Payload, QueryError, QueryResult, Transaction <span class="kw">as </span>HotshotTransaction,
 };
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>committable::Committable;
+<span class="kw">use </span>committable::{Commitment, Committable};
 <span class="kw">use </span>futures::stream::{<span class="self">self</span>, StreamExt, TryStreamExt};
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>sqlx::{types::Json, FromRow, Row};
 <span class="kw">use </span>std::num::NonZeroUsize;
+<span class="kw">use </span>tagged_base64::{Tagged, TaggedBase64};
 
 <span class="kw">impl </span>From&lt;sqlx::Error&gt; <span class="kw">for </span>GetExplorerSummaryError {
     <span class="kw">fn </span>from(err: sqlx::Error) -&gt; <span class="self">Self </span>{
@@ -1078,62 +1100,76 @@
 
     <span class="kw">async fn </span>get_search_results(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        search_query: String,
+        search_query: TaggedBase64,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SearchResult&lt;Types&gt;, GetSearchResultsError&gt; {
-        <span class="kw">let </span>block_query = <span class="macro">format!</span>(
-            <span class="string">"SELECT {BLOCK_COLUMNS}
-                FROM header AS h
-                JOIN payload AS p ON h.height = p.height
-                WHERE h.hash LIKE $1 || '%'
-                ORDER BY h.height DESC
-                LIMIT 5"
-        </span>);
-        <span class="kw">let </span>block_query_rows = query(block_query.as_str())
-            .bind(<span class="kw-2">&amp;</span>search_query)
-            .fetch(<span class="self">self</span>.as_mut());
-        <span class="kw">let </span>block_query_result: Vec&lt;BlockSummary&lt;Types&gt;&gt; = block_query_rows
-            .map(|row| BlockSummary::from_row(<span class="kw-2">&amp;</span>row<span class="question-mark">?</span>))
-            .try_collect()
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>search_tag = search_query.tag();
+        <span class="kw">let </span>header_tag = Commitment::&lt;Header&lt;Types&gt;&gt;::tag();
+        <span class="kw">let </span>tx_tag = Commitment::&lt;HotshotTransaction&lt;Types&gt;&gt;::tag();
 
-        <span class="kw">let </span>transactions_query = <span class="macro">format!</span>(
-            <span class="string">"SELECT {BLOCK_COLUMNS}
-                FROM header AS h
-                JOIN payload AS p ON h.height = p.height
-                JOIN transaction AS t ON h.height = t.block_height
-                WHERE t.hash LIKE $1 || '%'
-                ORDER BY h.height DESC
-                LIMIT 5"
-        </span>);
-        <span class="kw">let </span>transactions_query_rows = query(transactions_query.as_str())
-            .bind(<span class="kw-2">&amp;</span>search_query)
-            .fetch(<span class="self">self</span>.as_mut());
-        <span class="kw">let </span>transactions_query_result: Vec&lt;TransactionSummary&lt;Types&gt;&gt; = transactions_query_rows
-            .map(|row| -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;TransactionSummary&lt;Types&gt;&gt;, QueryError&gt;{
-                <span class="kw">let </span>block = BlockQueryData::&lt;Types&gt;::from_row(<span class="kw-2">&amp;</span>row<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-                <span class="kw">let </span>transactions = block
-                    .enumerate()
-                    .enumerate()
-                    .filter(|(<span class="kw">_</span>, (<span class="kw">_</span>, txn))| txn.commit().to_string().starts_with(<span class="kw-2">&amp;</span>search_query))
-                    .map(|(offset, (<span class="kw">_</span>, txn))| {
-                        <span class="prelude-val">Ok</span>(TransactionSummary::try_from((
-                            <span class="kw-2">&amp;</span>block, offset, txn,
-                        ))<span class="question-mark">?</span>)
-                    })
-                    .try_collect::&lt;TransactionSummary&lt;Types&gt;, Vec&lt;TransactionSummary&lt;Types&gt;&gt;, QueryError&gt;()<span class="question-mark">?</span>;
+        <span class="kw">if </span>search_tag != header_tag &amp;&amp; search_tag != tx_tag {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(GetSearchResultsError::InvalidQuery(errors::BadQuery {}));
+        }
 
-                <span class="prelude-val">Ok</span>(transactions)
+        <span class="kw">let </span>search_query_string = search_query.to_string();
+        <span class="kw">if </span>search_tag == header_tag {
+            <span class="kw">let </span>block_query = <span class="macro">format!</span>(
+                <span class="string">"SELECT {BLOCK_COLUMNS}
+                    FROM header AS h
+                    JOIN payload AS p ON h.height = p.height
+                    WHERE h.hash = $1
+                    ORDER BY h.height DESC
+                    LIMIT 1"
+            </span>);
+            <span class="kw">let </span>row = query(block_query.as_str())
+                .bind(<span class="kw-2">&amp;</span>search_query_string)
+                .fetch_one(<span class="self">self</span>.as_mut())
+                .<span class="kw">await</span><span class="question-mark">?</span>;
+
+            <span class="kw">let </span>block = BlockSummary::from_row(<span class="kw-2">&amp;</span>row)<span class="question-mark">?</span>;
+
+            <span class="prelude-val">Ok</span>(SearchResult {
+                blocks: <span class="macro">vec!</span>[block],
+                transactions: Vec::new(),
             })
-            .try_collect::&lt;Vec&lt;Vec&lt;TransactionSummary&lt;Types&gt;&gt;&gt;&gt;()
-            .<span class="kw">await</span><span class="question-mark">?
-            </span>.into_iter()
-            .flatten()
-            .collect();
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>transactions_query = <span class="macro">format!</span>(
+                <span class="string">"SELECT {BLOCK_COLUMNS}
+                    FROM header AS h
+                    JOIN payload AS p ON h.height = p.height
+                    JOIN transaction AS t ON h.height = t.block_height
+                    WHERE t.hash = $1
+                    ORDER BY h.height DESC
+                    LIMIT 5"
+            </span>);
+            <span class="kw">let </span>transactions_query_rows = query(transactions_query.as_str())
+                .bind(<span class="kw-2">&amp;</span>search_query_string)
+                .fetch(<span class="self">self</span>.as_mut());
+            <span class="kw">let </span>transactions_query_result: Vec&lt;TransactionSummary&lt;Types&gt;&gt; = transactions_query_rows
+                .map(|row| -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;TransactionSummary&lt;Types&gt;&gt;, QueryError&gt;{
+                    <span class="kw">let </span>block = BlockQueryData::&lt;Types&gt;::from_row(<span class="kw-2">&amp;</span>row<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>transactions = block
+                        .enumerate()
+                        .enumerate()
+                        .filter(|(<span class="kw">_</span>, (<span class="kw">_</span>, txn))| txn.commit().to_string() == search_query_string)
+                        .map(|(offset, (<span class="kw">_</span>, txn))| {
+                            <span class="prelude-val">Ok</span>(TransactionSummary::try_from((
+                                <span class="kw-2">&amp;</span>block, offset, txn,
+                            ))<span class="question-mark">?</span>)
+                        })
+                        .try_collect::&lt;TransactionSummary&lt;Types&gt;, Vec&lt;TransactionSummary&lt;Types&gt;&gt;, QueryError&gt;()<span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(transactions)
+                })
+                .try_collect::&lt;Vec&lt;Vec&lt;TransactionSummary&lt;Types&gt;&gt;&gt;&gt;()
+                .<span class="kw">await</span><span class="question-mark">?
+                </span>.into_iter()
+                .flatten()
+                .collect();
 
-        <span class="prelude-val">Ok</span>(SearchResult {
-            blocks: block_query_result,
-            transactions: transactions_query_result,
-        })
+            <span class="prelude-val">Ok</span>(SearchResult {
+                blocks: Vec::new(),
+                transactions: transactions_query_result,
+            })
+        }
     }
 }
 </code></pre></div></section></main></body></html>

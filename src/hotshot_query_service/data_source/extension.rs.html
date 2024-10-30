@@ -464,6 +464,7 @@
 <a href="#464" id="464">464</a>
 <a href="#465" id="465">465</a>
 <a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -497,6 +498,7 @@
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>jf_merkle_tree::prelude::MerkleProof;
 <span class="kw">use </span>std::ops::RangeBounds;
+<span class="kw">use </span>tagged_base64::TaggedBase64;
 
 <span class="doccomment">/// Wrapper to add extensibility to an existing data source.
 ///
@@ -869,7 +871,7 @@
 
     <span class="kw">async fn </span>get_search_results(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        query: String,
+        query: TaggedBase64,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;
         explorer::query_data::SearchResult&lt;Types&gt;,
         explorer::query_data::GetSearchResultsError,
