@@ -348,11 +348,6 @@
 <a href="#348" id="348">348</a>
 <a href="#349" id="349">349</a>
 <a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
-<a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -396,7 +391,7 @@
     light_client::StateKeyPair,
     signature_key::BLSPubKey,
     traits::{election::Membership, network::Topic, signature_key::SignatureKey <span class="kw">as _</span>},
-    ExecutionType, HotShotConfig, PeerConfig, ValidatorConfig,
+    HotShotConfig, PeerConfig, ValidatorConfig,
 };
 <span class="kw">use </span>std::num::NonZeroUsize;
 <span class="kw">use </span>std::time::Duration;
@@ -484,14 +479,9 @@
             fixed_leader_for_gpuvid: <span class="number">0</span>,
             num_nodes_with_stake: num_staked_nodes,
             known_nodes_with_stake: known_nodes_with_stake.clone(),
-            known_nodes_without_stake: <span class="macro">vec!</span>[],
             my_own_validator_config: Default::default(),
-            start_delay: <span class="number">0</span>,
-            round_start_delay: <span class="number">0</span>,
             next_view_timeout: <span class="number">10000</span>,
-            timeout_ratio: (<span class="number">11</span>, <span class="number">10</span>),
             num_bootstrap: <span class="number">0</span>,
-            execution_type: ExecutionType::Continuous,
             da_staked_committee_size: pub_keys.len(),
             known_da_nodes: known_nodes_with_stake.clone(),
             data_request_delay: Duration::from_millis(<span class="number">200</span>),
