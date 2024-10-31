@@ -732,6 +732,13 @@
 <a href="#732" id="732">732</a>
 <a href="#733" id="733">733</a>
 <a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -753,9 +760,9 @@
 <span class="kw">use crate</span>::{
     availability::{
         BlockId, BlockQueryData, LeafId, LeafQueryData, PayloadQueryData, QueryablePayload,
-        TransactionHash, TransactionQueryData, UpdateAvailabilityData, VidCommonQueryData,
+        TransactionHash, TransactionQueryData, VidCommonQueryData,
     },
-    data_source::{update, VersionedDataSource},
+    data_source::{storage::UpdateAvailabilityStorage, update, VersionedDataSource},
     metrics::PrometheusMetrics,
     node::{SyncStatus, TimeWindowQueryData, WindowStart},
     status::HasMetrics,
@@ -912,8 +919,7 @@
     }
 }
 
-<span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types: NodeType&gt; UpdateAvailabilityData&lt;Types&gt; <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types: NodeType&gt; UpdateAvailabilityStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt;
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
@@ -979,11 +985,11 @@
 </span><span class="kw">pub mod </span>testing {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
-        availability::{define_api, AvailabilityDataSource, Fetch},
+        availability::{
+            define_api, AvailabilityDataSource, BlockInfo, Fetch, UpdateAvailabilityData,
+        },
         data_source::{
-            fetching,
             storage::sql::{testing::TmpDb, SqlStorage},
-            update::Transaction <span class="kw">as _</span>,
             FetchingDataSource, SqlDataSource, UpdateDataSource,
         },
         fetching::provider::{NoFetching, QueryServiceProvider},
@@ -1118,15 +1124,13 @@
         }
 
         <span class="kw">async fn </span>handle_event(<span class="kw-2">&amp;</span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;MockTypes&gt;) {
-            <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.write().<span class="kw">await</span>.unwrap();
-            tx.update(event).<span class="kw">await</span>.unwrap();
-            tx.commit().<span class="kw">await</span>.unwrap();
+            <span class="self">self</span>.update(event).<span class="kw">await</span>.unwrap();
         }
     }
 
     <span class="kw">pub enum </span>Transaction&lt;<span class="lifetime">'a</span>, T&gt; {
-        Sql(fetching::Transaction&lt;<span class="lifetime">'a</span>, MockTypes, T&gt;),
-        NoStorage(fetching::Transaction&lt;<span class="lifetime">'a</span>, MockTypes, <span class="kw">super</span>::Transaction&lt;<span class="lifetime">'a</span>&gt;&gt;),
+        Sql(T),
+        NoStorage(<span class="kw">super</span>::Transaction&lt;<span class="lifetime">'a</span>&gt;),
     }
 
     <span class="comment">// Now a lot of boilerplate to implement all teh traits for [`DataSource`], by dispatching each
@@ -1158,6 +1162,15 @@
         }
     }
 
+    <span class="kw">impl </span>UpdateAvailabilityData&lt;MockTypes&gt; <span class="kw">for </span>DataSource {
+        <span class="kw">async fn </span>append(<span class="kw-2">&amp;</span><span class="self">self</span>, info: BlockInfo&lt;MockTypes&gt;) -&gt; anyhow::Result&lt;()&gt; {
+            <span class="kw">match </span><span class="self">self </span>{
+                <span class="self">Self</span>::Sql(ds) =&gt; ds.append(info).<span class="kw">await</span>,
+                <span class="self">Self</span>::NoStorage(ds) =&gt; ds.append(info).<span class="kw">await</span>,
+            }
+        }
+    }
+
     <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; update::Transaction <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>, T&gt;
     <span class="kw">where
         </span>T: update::Transaction,
@@ -1183,10 +1196,9 @@
         }
     }
 
-    <span class="attr">#[async_trait]
-    </span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; UpdateAvailabilityData&lt;MockTypes&gt; <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>, T&gt;
+    <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; UpdateAvailabilityStorage&lt;MockTypes&gt; <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>, T&gt;
     <span class="kw">where
-        </span>T: UpdateAvailabilityData&lt;MockTypes&gt; + Send + Sync,
+        </span>T: UpdateAvailabilityStorage&lt;MockTypes&gt; + Send + Sync,
     {
         <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;MockTypes&gt;) -&gt; anyhow::Result&lt;()&gt; {
             <span class="kw">match </span><span class="self">self </span>{
@@ -1330,21 +1342,23 @@
         <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
             <span class="kw">match </span><span class="self">self </span>{
                 Transaction::Sql(tx) =&gt; tx.block_height().<span class="kw">await</span>,
-                Transaction::NoStorage(tx) =&gt; tx.block_height().<span class="kw">await</span>,
+                Transaction::NoStorage(tx) =&gt; NodeStorage::&lt;MockTypes&gt;::block_height(tx).<span class="kw">await</span>,
             }
         }
 
         <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
             <span class="kw">match </span><span class="self">self </span>{
                 Transaction::Sql(tx) =&gt; tx.count_transactions().<span class="kw">await</span>,
-                Transaction::NoStorage(tx) =&gt; tx.count_transactions().<span class="kw">await</span>,
+                Transaction::NoStorage(tx) =&gt; {
+                    NodeStorage::&lt;MockTypes&gt;::count_transactions(tx).<span class="kw">await
+                </span>}
             }
         }
 
         <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
             <span class="kw">match </span><span class="self">self </span>{
                 Transaction::Sql(tx) =&gt; tx.payload_size().<span class="kw">await</span>,
-                Transaction::NoStorage(tx) =&gt; tx.payload_size().<span class="kw">await</span>,
+                Transaction::NoStorage(tx) =&gt; NodeStorage::&lt;MockTypes&gt;::payload_size(tx).<span class="kw">await</span>,
             }
         }
 
@@ -1354,14 +1368,14 @@
         {
             <span class="kw">match </span><span class="self">self </span>{
                 Transaction::Sql(tx) =&gt; tx.vid_share(id).<span class="kw">await</span>,
-                Transaction::NoStorage(tx) =&gt; tx.vid_share(id).<span class="kw">await</span>,
+                Transaction::NoStorage(tx) =&gt; NodeStorage::&lt;MockTypes&gt;::vid_share(tx, id).<span class="kw">await</span>,
             }
         }
 
         <span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt; {
             <span class="kw">match </span><span class="self">self </span>{
                 Transaction::Sql(tx) =&gt; tx.sync_status().<span class="kw">await</span>,
-                Transaction::NoStorage(tx) =&gt; tx.sync_status().<span class="kw">await</span>,
+                Transaction::NoStorage(tx) =&gt; NodeStorage::&lt;MockTypes&gt;::sync_status(tx).<span class="kw">await</span>,
             }
         }
 

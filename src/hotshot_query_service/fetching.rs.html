@@ -196,25 +196,6 @@
 <a href="#196" id="196">196</a>
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -243,9 +224,9 @@
     sync::{Arc, Mutex},
     task::{sleep, spawn},
 };
+<span class="kw">use </span>backoff::{backoff::Backoff, ExponentialBackoff};
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>std::{
-    cmp::min,
     collections::{hash_map::Entry, BTreeSet, HashMap},
     fmt::Debug,
     time::Duration,
@@ -257,25 +238,6 @@
 <span class="kw">pub use </span>provider::Provider;
 <span class="kw">pub use </span>request::Request;
 
-<span class="comment">// The fastest we will retry failed requests.
-</span><span class="kw">const </span>MIN_RETRY_DELAY: Duration = Duration::from_secs(<span class="number">2</span>);
-<span class="comment">// Factor by which to increase the retry delay each failed request.
-//
-// Our backoff strategy is to start with a relatively quick retry delay, but back off very quickly
-// until reaching a maximum delay. This lets us succeed quickly when there is a transient failure in
-// the provider, while limiting spam/failed requests when the provider is down for a long time.
-//
-// Backoff also lets us set a longer maximum delay without affecting optimistic performance, further
-// reducing spam.
-</span><span class="kw">const </span>BACKOFF_FACTOR: u32 = <span class="number">4</span>;
-
-<span class="comment">// The longest we will wait to retry failed requests.
-//
-// Since many of the issues we might encounter when fetching from a peer are of the kind that won't
-// recover immediately, and since we may have many parallel requests for resources and don't want to
-// spam our peers, and since backoff allows us to first try a few times with a faster delay, we can
-// safely wait a long while before retrying failed requests.
-</span><span class="kw">const </span>DEFAULT_RETRY_DELAY: Duration = Duration::from_secs(<span class="number">5 </span>* <span class="number">60</span>);
 <span class="kw">const </span>DEFAULT_RATE_LIMIT: usize = <span class="number">32</span>;
 
 <span class="doccomment">/// A callback to process the result of a request.
@@ -301,7 +263,7 @@
 </span><span class="kw">pub struct </span>Fetcher&lt;T, C&gt; {
     <span class="attr">#[derivative(Debug = <span class="string">"ignore"</span>)]
     </span>in_progress: Arc&lt;Mutex&lt;HashMap&lt;T, BTreeSet&lt;C&gt;&gt;&gt;&gt;,
-    retry_delay: Duration,
+    backoff: ExponentialBackoff,
     permit: Arc&lt;Semaphore&gt;,
 }
 
@@ -309,15 +271,15 @@
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             in_progress: Default::default(),
-            retry_delay: DEFAULT_RETRY_DELAY,
+            backoff: Default::default(),
             permit: Arc::new(Semaphore::new(DEFAULT_RATE_LIMIT)),
         }
     }
 }
 
 <span class="kw">impl</span>&lt;T, C&gt; Fetcher&lt;T, C&gt; {
-    <span class="kw">pub fn </span>with_retry_delay(<span class="kw-2">mut </span><span class="self">self</span>, retry_delay: Duration) -&gt; <span class="self">Self </span>{
-        <span class="self">self</span>.retry_delay = retry_delay;
+    <span class="kw">pub fn </span>with_backoff(<span class="kw-2">mut </span><span class="self">self</span>, backoff: ExponentialBackoff) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.backoff = backoff;
         <span class="self">self
     </span>}
 
@@ -357,7 +319,7 @@
     {
         <span class="kw">let </span>in_progress = <span class="self">self</span>.in_progress.clone();
         <span class="kw">let </span>permit = <span class="self">self</span>.permit.clone();
-        <span class="kw">let </span>max_retry_delay = <span class="self">self</span>.retry_delay;
+        <span class="kw">let </span><span class="kw-2">mut </span>backoff = <span class="self">self</span>.backoff.clone();
 
         spawn(<span class="kw">async move </span>{
             <span class="macro">tracing::info!</span>(<span class="string">"spawned active fetch for {req:?}"</span>);
@@ -383,7 +345,8 @@
             }
 
             <span class="comment">// Now we are responsible for fetching the object, reach out to the provider.
-            </span><span class="kw">let </span><span class="kw-2">mut </span>delay = min(MIN_RETRY_DELAY, max_retry_delay);
+            </span>backoff.reset();
+            <span class="kw">let </span><span class="kw-2">mut </span>delay = backoff.next_backoff().unwrap_or(Duration::from_secs(<span class="number">1</span>));
             <span class="kw">let </span>res = <span class="kw">loop </span>{
                 <span class="comment">// Acquire a permit from the semaphore to rate limit the number of concurrent fetch requests
                 </span><span class="kw">let </span>permit = permit.acquire().<span class="kw">await</span>;
@@ -406,10 +369,9 @@
                 drop(permit);
                 sleep(delay).<span class="kw">await</span>;
 
-                <span class="comment">// Try a few times with a short delay, on the off chance that the problem resolves
-                // quickly. Back off until we eventually reach the maximum delay, which should be
-                // pretty long.
-                </span>delay = min(delay * BACKOFF_FACTOR, max_retry_delay);
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(next_delay) = backoff.next_backoff() {
+                    delay = next_delay;
+                }
             };
 
             <span class="comment">// Done fetching, remove our lock on the object and execute all callbacks.

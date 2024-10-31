@@ -420,11 +420,6 @@
 <a href="#420" id="420">420</a>
 <a href="#421" id="421">421</a>
 <a href="#422" id="422">422</a>
-<a href="#423" id="423">423</a>
-<a href="#424" id="424">424</a>
-<a href="#425" id="425">425</a>
-<a href="#426" id="426">426</a>
-<a href="#427" id="427">427</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -652,15 +647,7 @@
 /// create an aggregate struct containing both [`SqlDataSource`] and your additional module
 /// states, as described in the [composition guide](crate#composition). If the additional modules
 /// have data that should live in the same database as the [`SqlDataSource`] data, you can follow
-/// the steps in [custom migrations](#custom-migrations) to accomodate this. When modifying that
-/// data, you can use a [`Transaction`] to atomically synchronize updates to the other modules' data
-/// with updates to the [`SqlDataSource`]. If the additional data is completely independent of
-/// HotShot query service data and does not need to be synchronized, you can also connect to the
-/// database directly to make updates.
-///
-/// In the following example, we compose HotShot query service modules with other application-
-/// specific modules, synchronizing updates using SQL transactions via
-/// [`write`](super::VersionedDataSource::write).
+/// the steps in [custom migrations](#custom-migrations) to accomodate this.
 ///
 /// ```
 /// # use async_std::{sync::Arc, task::spawn};
@@ -702,14 +689,12 @@
 ///     spawn(async move {
 ///         let mut events = hotshot.event_stream();
 ///         while let Some(event) = events.next().await {
-///             let mut tx = state.hotshot_qs.write().await.unwrap();
-///             UpdateDataSource::&lt;AppTypes&gt;::update(&amp;mut tx, &amp;event)
-///                 .await
-///                 .unwrap();
-///             // Update other modules' states based on `event`. Use `tx` to include database
-///             // updates in the same atomic transaction as `update`.
+///             if state.hotshot_qs.update(&amp;event).await.is_err() {
+///                 continue;
+///             }
 ///
-///             // Commit all outstanding changes to the entire state at the same time.
+///             let mut tx = state.hotshot_qs.write().await.unwrap();
+///             // Update other modules' states based on `event`, using `tx` to access the database.
 ///             tx.commit().await.unwrap();
 ///         }
 ///     });
@@ -741,7 +726,7 @@
 </span><span class="kw">pub mod </span>testing {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
-        data_source::{Transaction, UpdateDataSource, VersionedDataSource},
+        data_source::UpdateDataSource,
         testing::{consensus::DataSourceLifeCycle, mocks::MockTypes},
     };
     <span class="kw">use </span>async_trait::async_trait;
@@ -773,9 +758,7 @@
         }
 
         <span class="kw">async fn </span>handle_event(<span class="kw-2">&amp;</span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;MockTypes&gt;) {
-            <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.write().<span class="kw">await</span>.unwrap();
-            tx.update(event).<span class="kw">await</span>.unwrap();
-            tx.commit().<span class="kw">await</span>.unwrap();
+            <span class="self">self</span>.update(event).<span class="kw">await</span>.unwrap();
         }
     }
 }
@@ -798,9 +781,13 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
         availability::{
-            AvailabilityDataSource, LeafQueryData, UpdateAvailabilityData, VidCommonQueryData,
+            AvailabilityDataSource, BlockInfo, LeafQueryData, UpdateAvailabilityData,
+            VidCommonQueryData,
         },
-        data_source::{storage::NodeStorage, Transaction, VersionedDataSource},
+        data_source::{
+            storage::{NodeStorage, UpdateAvailabilityStorage},
+            Transaction, VersionedDataSource,
+        },
         fetching::provider::NoFetching,
         testing::{consensus::DataSourceLifeCycle, mocks::MockTypes, setup_test},
     };
@@ -831,13 +818,14 @@
         )
         .<span class="kw">await</span>;
         <span class="kw">let </span>common = VidCommonQueryData::new(leaf.header().clone(), disperse.common);
-        <span class="kw">let </span><span class="kw-2">mut </span>tx = ds.write().<span class="kw">await</span>.unwrap();
-        tx.insert_leaf(leaf).<span class="kw">await</span>.unwrap();
-        tx.insert_vid(common.clone(), <span class="prelude-val">None</span>).<span class="kw">await</span>.unwrap();
-        tx.commit().<span class="kw">await</span>.unwrap();
+        ds.append(BlockInfo::new(leaf, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(common.clone()), <span class="prelude-val">None</span>))
+            .<span class="kw">await
+            </span>.unwrap();
 
         <span class="macro">assert_eq!</span>(ds.get_vid_common(<span class="number">0</span>).<span class="kw">await</span>.<span class="kw">await</span>, common);
-        ds.read().<span class="kw">await</span>.unwrap().vid_share(<span class="number">0</span>).<span class="kw">await</span>.unwrap_err();
+        NodeStorage::&lt;MockTypes&gt;::vid_share(<span class="kw-2">&amp;mut </span>ds.read().<span class="kw">await</span>.unwrap(), <span class="number">0</span>)
+            .<span class="kw">await
+            </span>.unwrap_err();
 
         <span class="comment">// Re-insert the common data with the share.
         </span><span class="kw">let </span><span class="kw-2">mut </span>tx = ds.write().<span class="kw">await</span>.unwrap();
@@ -847,7 +835,9 @@
         tx.commit().<span class="kw">await</span>.unwrap();
         <span class="macro">assert_eq!</span>(ds.get_vid_common(<span class="number">0</span>).<span class="kw">await</span>.<span class="kw">await</span>, common);
         <span class="macro">assert_eq!</span>(
-            ds.read().<span class="kw">await</span>.unwrap().vid_share(<span class="number">0</span>).<span class="kw">await</span>.unwrap(),
+            NodeStorage::&lt;MockTypes&gt;::vid_share(<span class="kw-2">&amp;mut </span>ds.read().<span class="kw">await</span>.unwrap(), <span class="number">0</span>)
+                .<span class="kw">await
+                </span>.unwrap(),
             disperse.shares[<span class="number">0</span>]
         );
     }

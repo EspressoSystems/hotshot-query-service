@@ -207,6 +207,23 @@
 <a href="#207" id="207">207</a>
 <a href="#208" id="208">208</a>
 <a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -222,11 +239,12 @@
 </span><span class="doccomment">//! A generic algorithm for updating a HotShot Query Service data source with new data.
 </span><span class="kw">use crate</span>::{
     availability::{
-        BlockQueryData, LeafQueryData, QueryablePayload, UpdateAvailabilityData, VidCommonQueryData,
+        BlockInfo, BlockQueryData, LeafQueryData, QueryablePayload, UpdateAvailabilityData,
+        VidCommonQueryData,
     },
-    Leaf, Payload,
+    Leaf, Payload, VidShare,
 };
-<span class="kw">use </span>anyhow::Context;
+<span class="kw">use </span>anyhow::{ensure, Context};
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>futures::future::Future;
 <span class="kw">use </span>hotshot::types::{Event, EventType};
@@ -264,17 +282,23 @@
     ///
     /// If you want to update the data source with an untrusted event, for example one received from
     /// a peer over the network, you must authenticate it first.
-    </span><span class="kw">async fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;Types&gt;) -&gt; anyhow::Result&lt;()&gt;;
+    ///
+    /// # Returns
+    ///
+    /// If all provided data is successfully inserted into the database, returns `Ok(())`. If any
+    /// error occurred, the error is logged, and the return value is the height of the first leaf
+    /// which failed to be inserted.
+    </span><span class="kw">async fn </span>update(<span class="kw-2">&amp;</span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), u64&gt;;
 }
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;Types: NodeType, T&gt; UpdateDataSource&lt;Types&gt; <span class="kw">for </span>T
 <span class="kw">where
-    </span>T: UpdateAvailabilityData&lt;Types&gt; + Send,
+    </span>T: UpdateAvailabilityData&lt;Types&gt; + Send + Sync,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     &lt;Types <span class="kw">as </span>NodeType&gt;::InstanceState: Default,
 {
-    <span class="kw">async fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;Types&gt;) -&gt; anyhow::Result&lt;()&gt; {
+    <span class="kw">async fn </span>update(<span class="kw-2">&amp;</span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>Event&lt;Types&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), u64&gt; {
         <span class="kw">if let </span>EventType::Decide { leaf_chain, qc, .. } = <span class="kw-2">&amp;</span>event.event {
             <span class="comment">// `qc` justifies the first (most recent) leaf...
             </span><span class="kw">let </span>qcs = once((<span class="kw-2">**</span>qc).clone())
@@ -293,40 +317,60 @@
                 },
             ) <span class="kw">in </span>qcs.zip(leaf_chain.iter().rev())
             {
-                <span class="kw">let </span>leaf_data =
-                    LeafQueryData::new(leaf.clone(), qc.clone()).context(<span class="string">"inconsistent leaf"</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.insert_leaf(leaf_data.clone()).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let </span>height = leaf.block_header().block_number();
+                <span class="kw">let </span>leaf_data = <span class="kw">match </span>LeafQueryData::new(leaf.clone(), qc.clone()) {
+                    <span class="prelude-val">Ok</span>(leaf) =&gt; leaf,
+                    <span class="prelude-val">Err</span>(err) =&gt; {
+                        <span class="macro">tracing::error!</span>(
+                            height,
+                            <span class="question-mark">?</span>leaf,
+                            <span class="question-mark">?</span>qc,
+                            <span class="string">"inconsistent leaf; cannot append leaf information: {err:#}"
+                        </span>);
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(leaf.block_header().block_number());
+                    }
+                };
 
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(vid_share) = vid_share {
-                    <span class="self">self</span>.insert_vid(
-                        VidCommonQueryData::new(
+                <span class="kw">let </span>block_data = leaf
+                    .block_payload()
+                    .map(|payload| BlockQueryData::new(leaf.block_header().clone(), payload));
+                <span class="kw">if </span>block_data.is_none() {
+                    <span class="macro">tracing::info!</span>(height, <span class="string">"block not available at decide"</span>);
+                }
+
+                <span class="kw">let </span>(vid_common, vid_share) = <span class="kw">if let </span><span class="prelude-val">Some</span>(vid_share) = vid_share {
+                    (
+                        <span class="prelude-val">Some</span>(VidCommonQueryData::new(
                             leaf.block_header().clone(),
                             vid_share.common.clone(),
-                        ),
+                        )),
                         <span class="prelude-val">Some</span>(vid_share.share.clone()),
                     )
-                    .<span class="kw">await</span><span class="question-mark">?</span>;
                 } <span class="kw">else if </span>leaf.view_number().u64() == <span class="number">0 </span>{
                     <span class="comment">// HotShot does not run VID in consensus for the genesis block. In this case,
                     // the block payload is guaranteed to always be empty, so VID isn't really
                     // necessary. But for consistency, we will still store the VID dispersal data,
                     // computing it ourselves based on the well-known genesis VID commitment.
-                    </span>store_genesis_vid(<span class="self">self</span>, leaf).<span class="kw">await</span>;
+                    </span><span class="kw">match </span>genesis_vid(leaf) {
+                        <span class="prelude-val">Ok</span>((common, share)) =&gt; (<span class="prelude-val">Some</span>(common), <span class="prelude-val">Some</span>(share)),
+                        <span class="prelude-val">Err</span>(err) =&gt; {
+                            <span class="macro">tracing::warn!</span>(<span class="string">"failed to compute genesis VID: {err:#}"</span>);
+                            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>)
+                        }
+                    }
                 } <span class="kw">else </span>{
-                    <span class="macro">tracing::error!</span>(
-                        <span class="string">"VID info for block {} not available at decide"</span>,
-                        leaf.block_header().block_number()
-                    );
+                    (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>)
+                };
+                <span class="kw">if </span>vid_common.is_none() {
+                    <span class="macro">tracing::info!</span>(height, <span class="string">"VID not available at decide"</span>);
                 }
 
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(block) = leaf.block_payload() {
-                    <span class="self">self</span>.insert_block(BlockQueryData::new(leaf.block_header().clone(), block))
-                        .<span class="kw">await</span><span class="question-mark">?</span>;
-                } <span class="kw">else </span>{
-                    <span class="macro">tracing::error!</span>(
-                        <span class="string">"block {} not available at decide"</span>,
-                        leaf.block_header().block_number()
-                    );
+                <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self
+                    </span>.append(BlockInfo::new(leaf_data, block_data, vid_common, vid_share))
+                    .<span class="kw">await
+                </span>{
+                    <span class="macro">tracing::error!</span>(height, <span class="string">"failed to append leaf information: {err:#}"</span>);
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(leaf.block_header().block_number());
                 }
             }
         }
@@ -334,37 +378,27 @@
     }
 }
 
-<span class="kw">async fn </span>store_genesis_vid&lt;Types: NodeType&gt;(
-    storage: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>UpdateAvailabilityData&lt;Types&gt;,
+<span class="kw">fn </span>genesis_vid&lt;Types: NodeType&gt;(
     leaf: <span class="kw-2">&amp;</span>Leaf&lt;Types&gt;,
-) <span class="kw">where
+) -&gt; anyhow::Result&lt;(VidCommonQueryData&lt;Types&gt;, VidShare)&gt;
+<span class="kw">where
     </span>&lt;Types <span class="kw">as </span>NodeType&gt;::InstanceState: Default,
 {
     <span class="kw">let </span>payload = Payload::&lt;Types&gt;::empty().<span class="number">0</span>;
     <span class="kw">let </span>bytes = payload.encode();
-    <span class="kw">match </span>vid_scheme(GENESIS_VID_NUM_STORAGE_NODES).disperse(bytes) {
-        <span class="prelude-val">Ok</span>(disperse) <span class="kw">if </span>disperse.commit != leaf.block_header().payload_commitment() =&gt; {
-            <span class="macro">tracing::error!</span>(
-                computed = %disperse.commit,
-                header = %leaf.block_header().payload_commitment(),
-                <span class="string">"computed VID commit for genesis block does not match header"</span>,
-            );
-        }
-        <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>disperse) =&gt; {
-            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = storage
-                .insert_vid(
-                    VidCommonQueryData::new(leaf.block_header().clone(), disperse.common),
-                    <span class="prelude-val">Some</span>(disperse.shares.remove(<span class="number">0</span>)),
-                )
-                .<span class="kw">await
-            </span>{
-                <span class="macro">tracing::error!</span>(%err, <span class="string">"unable to store genesis VID"</span>);
-            }
-        }
-        <span class="prelude-val">Err</span>(err) =&gt; {
-            <span class="macro">tracing::error!</span>(%err, <span class="string">"unable to compute VID dispersal for genesis block"</span>);
-        }
-    }
+    <span class="kw">let </span><span class="kw-2">mut </span>disperse = vid_scheme(GENESIS_VID_NUM_STORAGE_NODES)
+        .disperse(bytes)
+        .context(<span class="string">"unable to compute VID dispersal for genesis block"</span>)<span class="question-mark">?</span>;
+    <span class="macro">ensure!</span>(
+        disperse.commit == leaf.block_header().payload_commitment(),
+        <span class="string">"computed VID commit {} for genesis block does not match header commit {}"</span>,
+        disperse.commit,
+        leaf.block_header().payload_commitment()
+    );
+    <span class="prelude-val">Ok</span>((
+        VidCommonQueryData::new(leaf.block_header().clone(), disperse.common),
+        disperse.shares.remove(<span class="number">0</span>),
+    ))
 }
 
 <span class="doccomment">/// A data source with an atomic transaction-based synchronization interface.

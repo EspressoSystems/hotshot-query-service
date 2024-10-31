@@ -83,6 +83,7 @@
 <a href="#83" id="83">83</a>
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -99,10 +100,11 @@
 
 </span><span class="kw">use super</span>::{AvailabilityProvider, FetchRequest, Fetchable, Fetcher, Notifiers};
 <span class="kw">use crate</span>::{
-    availability::{
-        QueryablePayload, TransactionHash, TransactionQueryData, UpdateAvailabilityData,
+    availability::{QueryablePayload, TransactionHash, TransactionQueryData},
+    data_source::{
+        storage::{AvailabilityStorage, UpdateAvailabilityStorage},
+        update::VersionedDataSource,
     },
-    data_source::{storage::AvailabilityStorage, update::VersionedDataSource},
     Payload, QueryResult,
 };
 <span class="kw">use </span>async_std::sync::Arc;
@@ -152,7 +154,7 @@
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
         </span>S: VersionedDataSource + <span class="lifetime">'static</span>,
-        <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+        <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
         P: AvailabilityProvider&lt;Types&gt;,
     {
         <span class="comment">// We don't actively fetch transactions, because without a satisfying block payload, we have

@@ -153,6 +153,9 @@
 <a href="#153" id="153">153</a>
 <a href="#154" id="154">154</a>
 <a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -172,8 +175,11 @@
     vid::fetch_vid_common_with_header, AvailabilityProvider, Fetcher, ResultExt,
 };
 <span class="kw">use crate</span>::{
-    availability::{BlockId, QueryablePayload, UpdateAvailabilityData},
-    data_source::{storage::AvailabilityStorage, update::VersionedDataSource},
+    availability::{BlockId, QueryablePayload},
+    data_source::{
+        storage::{AvailabilityStorage, UpdateAvailabilityStorage},
+        update::VersionedDataSource,
+    },
     Header, Payload,
 };
 <span class="kw">use </span>anyhow::Context;
@@ -230,7 +236,7 @@
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: VersionedDataSource + <span class="lifetime">'static</span>,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="kw">fn </span>fetcher(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;Fetcher&lt;Types, S, P&gt;&gt; {
@@ -268,7 +274,7 @@
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: VersionedDataSource + <span class="lifetime">'static</span>,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="comment">// Check if at least the header is available in local storage. If it is, we benefit two ways:

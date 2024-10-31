@@ -2137,8 +2137,8 @@
 
     <span class="kw">use super</span>::{testing::TmpDb, <span class="kw-2">*</span>};
     <span class="kw">use crate</span>::{
-        availability::{LeafQueryData, UpdateAvailabilityData},
-        data_source::storage::pruning::PrunedHeightStorage,
+        availability::LeafQueryData,
+        data_source::storage::{pruning::PrunedHeightStorage, UpdateAvailabilityStorage},
         testing::{mocks::MockTypes, setup_test},
     };
 

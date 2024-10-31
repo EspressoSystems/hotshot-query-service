@@ -853,11 +853,6 @@
 <a href="#853" id="853">853</a>
 <a href="#854" id="854">854</a>
 <a href="#855" id="855">855</a>
-<a href="#856" id="856">856</a>
-<a href="#857" id="857">857</a>
-<a href="#858" id="858">858</a>
-<a href="#859" id="859">859</a>
-<a href="#860" id="860">860</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -936,11 +931,8 @@
 //! // Update query data using HotShot events.
 //! let mut events = hotshot.event_stream();
 //! while let Some(event) = events.next().await {
-//!     let mut tx = data_source.write().await?;
-//!
 //!     // Update the query data based on this event.
-//!     tx.update(&amp;event).await?;
-//!     tx.commit().await?;
+//!     data_source.update(&amp;event).await.ok();
 //! }
 //! # Ok(())
 //! # }
@@ -1283,7 +1275,6 @@
 
 <span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>data_source::{Transaction <span class="kw">as _</span>, UpdateDataSource};
 <span class="kw">use </span>derive_more::{Deref, From, Into};
 <span class="kw">use </span>futures::{future::BoxFuture, stream::StreamExt};
 <span class="kw">use </span>hotshot::types::SystemContextHandle;
@@ -1381,13 +1372,13 @@
     </span>Payload&lt;Types&gt;: availability::QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: availability::QueryableHeader&lt;Types&gt;,
     D: availability::AvailabilityDataSource&lt;Types&gt;
+        + data_source::UpdateDataSource&lt;Types&gt;
         + node::NodeDataSource&lt;Types&gt;
         + status::StatusDataSource
         + data_source::VersionedDataSource
         + Send
         + Sync
         + <span class="lifetime">'static</span>,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: data_source::UpdateDataSource&lt;Types&gt;,
     ApiVer: StaticVersionType + <span class="lifetime">'static</span>,
 {
     <span class="comment">// Create API modules.
@@ -1417,10 +1408,10 @@
 
     <span class="comment">// Update query data using HotShot events.
     </span><span class="kw">while let </span><span class="prelude-val">Some</span>(event) = events.next().<span class="kw">await </span>{
-        <span class="comment">// Update the query data based on this event.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
-        tx.update(<span class="kw-2">&amp;</span>event).<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
-        tx.commit().<span class="kw">await</span>.map_err(Error::internal)<span class="question-mark">?</span>;
+        <span class="comment">// Update the query data based on this event. It is safe to ignore errors here; the error
+        // just returns the failed block height for use in garbage collection, but this simple
+        // implementation isn't doing any kind of garbage collection.
+        </span>data_source.update(<span class="kw-2">&amp;</span>event).<span class="kw">await</span>.ok();
     }
 
     <span class="prelude-val">Ok</span>(())
@@ -1431,11 +1422,10 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
         availability::{
-            AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
-            PayloadQueryData, TransactionHash, TransactionQueryData, UpdateAvailabilityData,
-            VidCommonQueryData,
+            AvailabilityDataSource, BlockId, BlockInfo, BlockQueryData, Fetch, LeafId,
+            LeafQueryData, PayloadQueryData, TransactionHash, TransactionQueryData,
+            UpdateAvailabilityData, VidCommonQueryData,
         },
-        data_source::VersionedDataSource,
         metrics::PrometheusMetrics,
         node::{NodeDataSource, SyncStatus, TimeWindowQueryData, WindowStart},
         status::{HasMetrics, StatusDataSource},
@@ -1607,10 +1597,10 @@
                 .<span class="kw">await</span>;
         <span class="kw">let </span>leaf = LeafQueryData::new(leaf, qc).unwrap();
         <span class="kw">let </span>block = BlockQueryData::new(leaf.header().clone(), MockPayload::genesis());
-        <span class="kw">let </span><span class="kw-2">mut </span>tx = hotshot_qs.write().<span class="kw">await</span>.unwrap();
-        tx.insert_leaf(leaf).<span class="kw">await</span>.unwrap();
-        tx.insert_block(block).<span class="kw">await</span>.unwrap();
-        tx.commit().<span class="kw">await</span>.unwrap();
+        hotshot_qs
+            .append(BlockInfo::new(leaf, <span class="prelude-val">Some</span>(block), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>))
+            .<span class="kw">await
+            </span>.unwrap();
 
         <span class="kw">let </span>module_state =
             RollingLog::create(<span class="kw-2">&amp;mut </span>loader, Default::default(), <span class="string">"module_state"</span>, <span class="number">1024</span>).unwrap();

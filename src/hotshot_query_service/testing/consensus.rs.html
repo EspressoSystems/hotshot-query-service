@@ -348,6 +348,8 @@
 <a href="#348" id="348">348</a>
 <a href="#349" id="349">349</a>
 <a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -362,7 +364,7 @@
 
 </span><span class="kw">use </span><span class="kw">super</span>::mocks::{MockMembership, MockNodeImpl, MockTransaction, MockTypes, MockVersions};
 <span class="kw">use crate</span>::{
-    availability::AvailabilityDataSource,
+    availability::{AvailabilityDataSource, UpdateAvailabilityData},
     data_source::{FileSystemDataSource, SqlDataSource, VersionedDataSource},
     fetching::provider::NoFetching,
     node::NodeDataSource,
@@ -684,6 +686,7 @@
 <span class="kw">pub trait </span>TestableDataSource:
     DataSourceLifeCycle
     + AvailabilityDataSource&lt;MockTypes&gt;
+    + UpdateAvailabilityData&lt;MockTypes&gt;
     + NodeDataSource&lt;MockTypes&gt;
     + StatusDataSource
     + VersionedDataSource
@@ -693,6 +696,7 @@
 <span class="kw">impl</span>&lt;T&gt; TestableDataSource <span class="kw">for </span>T <span class="kw">where
     </span>T: DataSourceLifeCycle
         + AvailabilityDataSource&lt;MockTypes&gt;
+        + UpdateAvailabilityData&lt;MockTypes&gt;
         + NodeDataSource&lt;MockTypes&gt;
         + StatusDataSource
         + VersionedDataSource

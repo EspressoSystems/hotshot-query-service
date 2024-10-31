@@ -948,9 +948,6 @@
 <a href="#948" id="948">948</a>
 <a href="#949" id="949">949</a>
 <a href="#950" id="950">950</a>
-<a href="#951" id="951">951</a>
-<a href="#952" id="952">952</a>
-<a href="#953" id="953">953</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1401,9 +1398,7 @@
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
-        data_source::{
-            storage::no_storage, ExtensibleDataSource, Transaction, VersionedDataSource,
-        },
+        data_source::{storage::no_storage, ExtensibleDataSource},
         status::StatusDataSource,
         task::BackgroundTask,
         testing::{
@@ -1823,11 +1818,10 @@
                 .<span class="kw">await</span>;
         <span class="kw">let </span>leaf = LeafQueryData::new(leaf, qc).unwrap();
         <span class="kw">let </span>block = BlockQueryData::new(leaf.header().clone(), MockPayload::genesis());
-
-        <span class="kw">let </span><span class="kw-2">mut </span>tx = data_source.write().<span class="kw">await</span>.unwrap();
-        tx.insert_leaf(leaf).<span class="kw">await</span>.unwrap();
-        tx.insert_block(block.clone()).<span class="kw">await</span>.unwrap();
-        tx.commit().<span class="kw">await</span>.unwrap();
+        data_source
+            .append(BlockInfo::new(leaf, <span class="prelude-val">Some</span>(block.clone()), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>))
+            .<span class="kw">await
+            </span>.unwrap();
 
         <span class="comment">// assert that the store has data before we move on to API requests
         </span><span class="macro">assert_eq!</span>(

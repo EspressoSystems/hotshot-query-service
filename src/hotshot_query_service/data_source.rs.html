@@ -1316,16 +1316,6 @@
 <a href="#1316" id="1316">1316</a>
 <a href="#1317" id="1317">1317</a>
 <a href="#1318" id="1318">1318</a>
-<a href="#1319" id="1319">1319</a>
-<a href="#1320" id="1320">1320</a>
-<a href="#1321" id="1321">1321</a>
-<a href="#1322" id="1322">1322</a>
-<a href="#1323" id="1323">1323</a>
-<a href="#1324" id="1324">1324</a>
-<a href="#1325" id="1325">1325</a>
-<a href="#1326" id="1326">1326</a>
-<a href="#1327" id="1327">1327</a>
-<a href="#1328" id="1328">1328</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1782,10 +1772,10 @@
 #[espresso_macros::generic_tests]
 </span><span class="kw">pub mod </span>persistence_tests {
     <span class="kw">use crate</span>::{
-        availability::{BlockQueryData, LeafQueryData, UpdateAvailabilityData},
+        availability::{BlockQueryData, LeafQueryData},
         data_source::{
-            storage::{AvailabilityStorage, NodeStorage},
-            Transaction, UpdateDataSource,
+            storage::{AvailabilityStorage, NodeStorage, UpdateAvailabilityStorage},
+            Transaction,
         },
         node::NodeDataSource,
         testing::{
@@ -1803,8 +1793,9 @@
     <span class="attr">#[async_std::test]
     </span><span class="kw">pub async fn </span>test_revert&lt;D: TestableDataSource&gt;()
     <span class="kw">where
-        for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;:
-            UpdateDataSource&lt;MockTypes&gt; + AvailabilityStorage&lt;MockTypes&gt; + NodeStorage&lt;MockTypes&gt;,
+        for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;MockTypes&gt;
+            + AvailabilityStorage&lt;MockTypes&gt;
+            + NodeStorage&lt;MockTypes&gt;,
     {
         <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
 
@@ -1856,7 +1847,7 @@
     <span class="attr">#[async_std::test]
     </span><span class="kw">pub async fn </span>test_reset&lt;D: TestableDataSource&gt;()
     <span class="kw">where
-        for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateDataSource&lt;MockTypes&gt;,
+        for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;MockTypes&gt;,
     {
         <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
 
@@ -1916,8 +1907,9 @@
     <span class="attr">#[async_std::test]
     </span><span class="kw">pub async fn </span>test_drop_tx&lt;D: TestableDataSource&gt;()
     <span class="kw">where
-        for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;:
-            UpdateDataSource&lt;MockTypes&gt; + AvailabilityStorage&lt;MockTypes&gt; + NodeStorage&lt;MockTypes&gt;,
+        for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;MockTypes&gt;
+            + AvailabilityStorage&lt;MockTypes&gt;
+            + NodeStorage&lt;MockTypes&gt;,
         <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; D::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: NodeStorage&lt;MockTypes&gt;,
     {
         <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
@@ -2000,10 +1992,12 @@
 </span><span class="kw">pub mod </span>node_tests {
     <span class="kw">use crate</span>::{
         availability::{
-            BlockQueryData, LeafQueryData, QueryableHeader, UpdateAvailabilityData,
-            VidCommonQueryData,
+            BlockInfo, BlockQueryData, LeafQueryData, QueryableHeader, VidCommonQueryData,
         },
-        data_source::{storage::NodeStorage, update::Transaction, UpdateDataSource},
+        data_source::{
+            storage::{NodeStorage, UpdateAvailabilityStorage},
+            update::Transaction,
+        },
         node::{BlockId, SyncStatus, TimeWindowQueryData, WindowStart},
         testing::{
             consensus::{MockNetwork, TestableDataSource},
@@ -2032,7 +2026,7 @@
     <span class="attr">#[async_std::test]
     </span><span class="kw">pub async fn </span>test_sync_status&lt;D: TestableDataSource&gt;()
     <span class="kw">where
-        for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateDataSource&lt;MockTypes&gt;,
+        for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;MockTypes&gt;,
     {
         <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
 
@@ -2086,11 +2080,7 @@
 
         <span class="comment">// Insert a leaf without the corresponding block or VID info, make sure we detect that the
         // block and VID info are missing.
-        </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>tx = ds.write().<span class="kw">await</span>.unwrap();
-            tx.insert_leaf(leaves[<span class="number">0</span>].clone()).<span class="kw">await</span>.unwrap();
-            tx.commit().<span class="kw">await</span>.unwrap();
-        }
+        </span>ds.append(leaves[<span class="number">0</span>].clone().into()).<span class="kw">await</span>.unwrap();
         <span class="macro">assert_eq!</span>(
             ds.sync_status().<span class="kw">await</span>.unwrap(),
             SyncStatus {
@@ -2104,11 +2094,7 @@
 
         <span class="comment">// Insert a leaf whose height is not the successor of the previous leaf. We should now
         // detect that the leaf in between is missing (along with all _three_ corresponding blocks).
-        </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>tx = ds.write().<span class="kw">await</span>.unwrap();
-            tx.insert_leaf(leaves[<span class="number">2</span>].clone()).<span class="kw">await</span>.unwrap();
-            tx.commit().<span class="kw">await</span>.unwrap();
-        }
+        </span>ds.append(leaves[<span class="number">2</span>].clone().into()).<span class="kw">await</span>.unwrap();
         <span class="macro">assert_eq!</span>(
             ds.sync_status().<span class="kw">await</span>.unwrap(),
             SyncStatus {
@@ -2188,10 +2174,7 @@
     }
 
     <span class="attr">#[async_std::test]
-    </span><span class="kw">pub async fn </span>test_counters&lt;D: TestableDataSource&gt;()
-    <span class="kw">where
-        for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateDataSource&lt;MockTypes&gt;,
-    {
+    </span><span class="kw">pub async fn </span>test_counters&lt;D: TestableDataSource&gt;() {
         <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
 
         setup_test();
@@ -2242,12 +2225,9 @@
             .<span class="kw">await</span>;
             <span class="kw-2">*</span>leaf.leaf.block_header_mut() = header.clone();
             <span class="kw">let </span>block = BlockQueryData::new(header, payload);
-            {
-                <span class="kw">let </span><span class="kw-2">mut </span>tx = ds.write().<span class="kw">await</span>.unwrap();
-                tx.insert_leaf(leaf).<span class="kw">await</span>.unwrap();
-                tx.insert_block(block).<span class="kw">await</span>.unwrap();
-                tx.commit().<span class="kw">await</span>.unwrap();
-            }
+            ds.append(BlockInfo::new(leaf, <span class="prelude-val">Some</span>(block), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>))
+                .<span class="kw">await
+                </span>.unwrap();
 
             total_transactions += <span class="number">1</span>;
             total_size += encoded.len();
@@ -2288,7 +2268,7 @@
     <span class="attr">#[async_std::test]
     </span><span class="kw">pub async fn </span>test_vid_monotonicity&lt;D: TestableDataSource&gt;()
     <span class="kw">where
-        for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateDataSource&lt;MockTypes&gt;,
+        for</span>&lt;<span class="lifetime">'a</span>&gt; D::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;MockTypes&gt;,
         <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; D::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: NodeStorage&lt;MockTypes&gt;,
     {
         <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
@@ -2309,14 +2289,14 @@
         )
         .<span class="kw">await</span>;
         <span class="kw">let </span>common = VidCommonQueryData::new(leaf.header().clone(), disperse.common);
-        {
-            <span class="kw">let </span><span class="kw-2">mut </span>tx = ds.write().<span class="kw">await</span>.unwrap();
-            tx.insert_leaf(leaf).<span class="kw">await</span>.unwrap();
-            tx.insert_vid(common.clone(), <span class="prelude-val">Some</span>(disperse.shares[<span class="number">0</span>].clone()))
-                .<span class="kw">await
-                </span>.unwrap();
-            tx.commit().<span class="kw">await</span>.unwrap();
-        }
+        ds.append(BlockInfo::new(
+            leaf,
+            <span class="prelude-val">None</span>,
+            <span class="prelude-val">Some</span>(common.clone()),
+            <span class="prelude-val">Some</span>(disperse.shares[<span class="number">0</span>].clone()),
+        ))
+        .<span class="kw">await
+        </span>.unwrap();
 
         {
             <span class="macro">assert_eq!</span>(ds.get_vid_common(<span class="number">0</span>).<span class="kw">await</span>.<span class="kw">await</span>, common);

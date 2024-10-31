@@ -225,6 +225,7 @@
 <a href="#225" id="225">225</a>
 <a href="#226" id="226">226</a>
 <a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -241,11 +242,14 @@
 
 </span><span class="kw">use super</span>::{
     header::HeaderCallback, AvailabilityProvider, FetchRequest, Fetchable, Fetcher, Heights,
-    Notifiers, NotifyStorage, RangedFetchable,
+    Notifiers, RangedFetchable, Storable,
 };
 <span class="kw">use crate</span>::{
-    availability::{LeafId, LeafQueryData, QueryablePayload, UpdateAvailabilityData},
-    data_source::{storage::AvailabilityStorage, update::Transaction, VersionedDataSource},
+    availability::{LeafId, LeafQueryData, QueryablePayload},
+    data_source::{
+        storage::{AvailabilityStorage, UpdateAvailabilityStorage},
+        VersionedDataSource,
+    },
     fetching::{<span class="self">self</span>, request, Callback},
     types::HeightIndexed,
     Payload, QueryResult,
@@ -307,7 +311,7 @@
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
         </span>S: VersionedDataSource + <span class="lifetime">'static</span>,
-        <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+        <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
         P: AvailabilityProvider&lt;Types&gt;,
     {
         fetch_leaf_with_callbacks(fetcher, req, <span class="prelude-val">None</span>)
@@ -329,7 +333,7 @@
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: VersionedDataSource + <span class="lifetime">'static</span>,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
     I: IntoIterator&lt;Item = LeafCallback&lt;Types, S, P&gt;&gt; + Send + <span class="lifetime">'static</span>,
     I::IntoIter: Send,
@@ -352,22 +356,6 @@
     }
 }
 
-<span class="kw">async fn </span>store_leaf&lt;Types, S&gt;(
-    storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;,
-    leaf: LeafQueryData&lt;Types&gt;,
-) -&gt; anyhow::Result&lt;()&gt;
-<span class="kw">where
-    </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
-    S: VersionedDataSource,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
-{
-    <span class="kw">let </span><span class="kw-2">mut </span>tx = storage.write().<span class="kw">await</span><span class="question-mark">?</span>;
-    tx.insert_leaf(leaf).<span class="kw">await</span><span class="question-mark">?</span>;
-    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(())
-}
-
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;Types&gt; RangedFetchable&lt;Types&gt; <span class="kw">for </span>LeafQueryData&lt;Types&gt;
 <span class="kw">where
@@ -382,6 +370,26 @@
         R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
     {
         storage.get_leaf_range(range).<span class="kw">await
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;Types&gt; Storable&lt;Types&gt; <span class="kw">for </span>LeafQueryData&lt;Types&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+{
+    <span class="kw">fn </span>name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+        <span class="string">"leaf"
+    </span>}
+
+    <span class="kw">async fn </span>notify(<span class="kw-2">&amp;</span><span class="self">self</span>, notifiers: <span class="kw-2">&amp;</span>Notifiers&lt;Types&gt;) {
+        notifiers.leaf.notify(<span class="self">self</span>).<span class="kw">await</span>;
+    }
+
+    <span class="kw">async fn </span>store(
+        <span class="self">self</span>,
+        storage: <span class="kw-2">&amp;mut </span>(<span class="kw">impl </span>UpdateAvailabilityStorage&lt;Types&gt; + Send),
+    ) -&gt; anyhow::Result&lt;()&gt; {
+        storage.insert_leaf(<span class="self">self</span>).<span class="kw">await
     </span>}
 }
 
@@ -433,20 +441,14 @@
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: VersionedDataSource + <span class="lifetime">'static</span>,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="kw">async fn </span>run(<span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Leaf { fetcher } =&gt; {
-                <span class="kw">let </span>height = leaf.height();
-                <span class="macro">tracing::info!</span>(<span class="string">"fetched leaf {height}"</span>);
-                <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = store_leaf(<span class="kw-2">&amp;</span>fetcher.storage, leaf).<span class="kw">await </span>{
-                    <span class="comment">// It is unfortunate if this fails, but we can still proceed by
-                    // returning the leaf that we fetched, keeping it in memory.
-                    // Simply log the error and move on.
-                    </span><span class="macro">tracing::warn!</span>(<span class="string">"failed to store fetched leaf {height}: {err}"</span>);
-                }
+                <span class="macro">tracing::info!</span>(<span class="string">"fetched leaf {}"</span>, leaf.height());
+                fetcher.store_and_notify(leaf).<span class="kw">await</span>;
             }
             <span class="self">Self</span>::Continuation { callback } =&gt; callback.run(leaf.leaf.block_header().clone()),
         }

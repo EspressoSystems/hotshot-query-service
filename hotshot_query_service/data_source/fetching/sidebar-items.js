@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Builder","FetchingDataSource","Pruner","Transaction"],"trait":["AvailabilityProvider"]};
+window.SIDEBAR_ITEMS = {"struct":["Builder","FetchingDataSource","Pruner"],"trait":["AvailabilityProvider"]};

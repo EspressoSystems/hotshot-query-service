@@ -787,6 +787,7 @@
 <a href="#787" id="787">787</a>
 <a href="#788" id="788">788</a>
 <a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -816,10 +817,12 @@
 };
 <span class="kw">use crate</span>::{
     availability::{
-        BlockQueryData, LeafQueryData, QueryableHeader, QueryablePayload, UpdateAvailabilityData,
-        VidCommonQueryData,
+        BlockQueryData, LeafQueryData, QueryableHeader, QueryablePayload, VidCommonQueryData,
     },
-    data_source::{storage::pruning::PrunedHeightStorage, update},
+    data_source::{
+        storage::{pruning::PrunedHeightStorage, UpdateAvailabilityStorage},
+        update,
+    },
     merklized_state::{MerklizedState, UpdateStateData},
     types::HeightIndexed,
     Header, Payload, QueryError, VidShare,
@@ -1250,8 +1253,7 @@
     </span>}
 }
 
-<span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types&gt; UpdateAvailabilityData&lt;Types&gt; <span class="kw">for </span>Transaction&lt;Write&gt;
+<span class="kw">impl</span>&lt;Types&gt; UpdateAvailabilityStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;Write&gt;
 <span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,

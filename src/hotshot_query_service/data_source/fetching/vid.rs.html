@@ -218,6 +218,23 @@
 <a href="#218" id="218">218</a>
 <a href="#219" id="219">219</a>
 <a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -234,15 +251,18 @@
 
 </span><span class="kw">use super</span>::{
     header::{fetch_header_and_then, HeaderCallback},
-    AvailabilityProvider, FetchRequest, Fetchable, Fetcher, Heights, Notifiers, NotifyStorage,
-    RangedFetchable,
+    AvailabilityProvider, FetchRequest, Fetchable, Fetcher, Heights, Notifiers, RangedFetchable,
+    Storable,
 };
 <span class="kw">use crate</span>::{
-    availability::{BlockId, QueryablePayload, UpdateAvailabilityData, VidCommonQueryData},
-    data_source::{storage::AvailabilityStorage, update::Transaction, VersionedDataSource},
+    availability::{BlockId, QueryablePayload, VidCommonQueryData},
+    data_source::{
+        storage::{AvailabilityStorage, UpdateAvailabilityStorage},
+        VersionedDataSource,
+    },
     fetching::{<span class="self">self</span>, request, Callback},
     types::HeightIndexed,
-    Header, Payload, QueryResult, VidCommon,
+    Header, Payload, QueryResult, VidCommon, VidShare,
 };
 <span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>async_trait::async_trait;
@@ -307,7 +327,7 @@
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
         </span>S: VersionedDataSource + <span class="lifetime">'static</span>,
-        <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+        <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
         P: AvailabilityProvider&lt;Types&gt;,
     {
         fetch_header_and_then(
@@ -345,6 +365,46 @@
     </span>}
 }
 
+<span class="kw">impl</span>&lt;Types&gt; Storable&lt;Types&gt; <span class="kw">for </span>VidCommonQueryData&lt;Types&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+{
+    <span class="kw">fn </span>name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+        <span class="string">"VID common"
+    </span>}
+
+    <span class="kw">async fn </span>notify(<span class="kw-2">&amp;</span><span class="self">self</span>, notifiers: <span class="kw-2">&amp;</span>Notifiers&lt;Types&gt;) {
+        notifiers.vid_common.notify(<span class="self">self</span>).<span class="kw">await</span>;
+    }
+
+    <span class="kw">async fn </span>store(
+        <span class="self">self</span>,
+        storage: <span class="kw-2">&amp;mut </span>(<span class="kw">impl </span>UpdateAvailabilityStorage&lt;Types&gt; + Send),
+    ) -&gt; anyhow::Result&lt;()&gt; {
+        storage.insert_vid(<span class="self">self</span>, <span class="prelude-val">None</span>).<span class="kw">await
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;Types&gt; Storable&lt;Types&gt; <span class="kw">for </span>(VidCommonQueryData&lt;Types&gt;, <span class="prelude-ty">Option</span>&lt;VidShare&gt;)
+<span class="kw">where
+    </span>Types: NodeType,
+{
+    <span class="kw">fn </span>name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+        <span class="string">"VID data"
+    </span>}
+
+    <span class="kw">async fn </span>notify(<span class="kw-2">&amp;</span><span class="self">self</span>, notifiers: <span class="kw-2">&amp;</span>Notifiers&lt;Types&gt;) {
+        notifiers.vid_common.notify(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>).<span class="kw">await</span>;
+    }
+
+    <span class="kw">async fn </span>store(
+        <span class="self">self</span>,
+        storage: <span class="kw-2">&amp;mut </span>(<span class="kw">impl </span>UpdateAvailabilityStorage&lt;Types&gt; + Send),
+    ) -&gt; anyhow::Result&lt;()&gt; {
+        storage.insert_vid(<span class="self">self</span>.<span class="number">0</span>, <span class="self">self</span>.<span class="number">1</span>).<span class="kw">await
+    </span>}
+}
+
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>fetch_vid_common_with_header&lt;Types, S, P&gt;(
     fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
     header: Header&lt;Types&gt;,
@@ -352,7 +412,7 @@
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: VersionedDataSource + <span class="lifetime">'static</span>,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="comment">// Now that we have the header, we only need to retrieve the VID common data.
@@ -369,22 +429,6 @@
             fetcher: fetcher.clone(),
         }),
     );
-}
-
-<span class="kw">async fn </span>store_vid_common&lt;Types, S&gt;(
-    storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;,
-    common: VidCommonQueryData&lt;Types&gt;,
-) -&gt; anyhow::Result&lt;()&gt;
-<span class="kw">where
-    </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
-    S: VersionedDataSource,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
-{
-    <span class="kw">let </span><span class="kw-2">mut </span>tx = storage.write().<span class="kw">await</span><span class="question-mark">?</span>;
-    tx.insert_vid(common, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    tx.commit().<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="attr">#[derive(Derivative)]
@@ -419,23 +463,13 @@
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: VersionedDataSource + <span class="lifetime">'static</span>,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="kw">async fn </span>run(<span class="self">self</span>, common: VidCommon) {
         <span class="macro">tracing::info!</span>(<span class="string">"fetched VID common {:?}"</span>, <span class="self">self</span>.header.payload_commitment());
         <span class="kw">let </span>common = VidCommonQueryData::new(<span class="self">self</span>.header, common);
-        <span class="kw">let </span>height = common.height();
-
-        <span class="comment">// Store the data in local storage, so we can avoid fetching it in the future.
-        </span>{
-            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = store_vid_common(<span class="kw-2">&amp;</span><span class="self">self</span>.fetcher.storage, common).<span class="kw">await </span>{
-                <span class="comment">// It is unfortunate if this fails, but we can still proceed by returning
-                // the block that we fetched, keeping it in memory. Simply log the error and
-                // move on.
-                </span><span class="macro">tracing::warn!</span>(<span class="string">"failed to store fetched VID common {height}: {err}"</span>);
-            }
-        }
+        <span class="self">self</span>.fetcher.store_and_notify(common).<span class="kw">await</span>;
     }
 }
 </code></pre></div></section></main></body></html>

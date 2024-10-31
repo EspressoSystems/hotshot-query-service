@@ -257,6 +257,29 @@
 <a href="#257" id="257">257</a>
 <a href="#258" id="258">258</a>
 <a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -336,17 +359,21 @@
     Header, Payload, QueryResult, Transaction, VidShare,
 };
 <span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>futures::future::Future;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>jf_merkle_tree::prelude::MerkleProof;
 <span class="kw">use </span>std::ops::RangeBounds;
 <span class="kw">use </span>tagged_base64::TaggedBase64;
 
+<span class="kw">pub mod </span>fail_storage;
 <span class="kw">pub mod </span>fs;
 <span class="kw">mod </span>ledger_log;
 <span class="kw">pub mod </span>no_storage;
 <span class="kw">pub mod </span>pruning;
 <span class="kw">pub mod </span>sql;
 
+<span class="attr">#[cfg(any(test, feature = <span class="string">"testing"</span>))]
+</span><span class="kw">pub use </span>fail_storage::FailStorage;
 <span class="attr">#[cfg(feature = <span class="string">"file-system-data-source"</span>)]
 </span><span class="kw">pub use </span>fs::FileSystemStorage;
 <span class="attr">#[cfg(feature = <span class="string">"no-storage"</span>)]
@@ -412,6 +439,25 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         hash: TransactionHash&lt;Types&gt;,
     ) -&gt; QueryResult&lt;TransactionQueryData&lt;Types&gt;&gt;;
+}
+
+<span class="kw">pub trait </span>UpdateAvailabilityStorage&lt;Types&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+{
+    <span class="kw">fn </span>insert_leaf(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        leaf: LeafQueryData&lt;Types&gt;,
+    ) -&gt; <span class="kw">impl </span>Send + Future&lt;Output = anyhow::Result&lt;()&gt;&gt;;
+    <span class="kw">fn </span>insert_block(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        block: BlockQueryData&lt;Types&gt;,
+    ) -&gt; <span class="kw">impl </span>Send + Future&lt;Output = anyhow::Result&lt;()&gt;&gt;;
+    <span class="kw">fn </span>insert_vid(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        common: VidCommonQueryData&lt;Types&gt;,
+        share: <span class="prelude-ty">Option</span>&lt;VidShare&gt;,
+    ) -&gt; <span class="kw">impl </span>Send + Future&lt;Output = anyhow::Result&lt;()&gt;&gt;;
 }
 
 <span class="attr">#[async_trait]

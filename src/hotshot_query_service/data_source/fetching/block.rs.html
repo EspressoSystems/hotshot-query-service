@@ -282,7 +282,6 @@
 <a href="#282" id="282">282</a>
 <a href="#283" id="283">283</a>
 <a href="#284" id="284">284</a>
-<a href="#285" id="285">285</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -299,14 +298,15 @@
 
 </span><span class="kw">use super</span>::{
     header::{fetch_header_and_then, HeaderCallback},
-    AvailabilityProvider, FetchRequest, Fetchable, Fetcher, Heights, Notifiers, NotifyStorage,
-    RangedFetchable,
+    AvailabilityProvider, FetchRequest, Fetchable, Fetcher, Heights, Notifiers, RangedFetchable,
+    Storable,
 };
 <span class="kw">use crate</span>::{
-    availability::{
-        BlockId, BlockQueryData, PayloadQueryData, QueryablePayload, UpdateAvailabilityData,
+    availability::{BlockId, BlockQueryData, PayloadQueryData, QueryablePayload},
+    data_source::{
+        storage::{AvailabilityStorage, UpdateAvailabilityStorage},
+        VersionedDataSource,
     },
-    data_source::{storage::AvailabilityStorage, update::Transaction, VersionedDataSource},
     fetching::{
         <span class="self">self</span>,
         request::{<span class="self">self</span>, PayloadRequest},
@@ -372,7 +372,7 @@
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
         </span>S: VersionedDataSource + <span class="lifetime">'static</span>,
-        <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+        <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
         P: AvailabilityProvider&lt;Types&gt;,
     {
         fetch_header_and_then(
@@ -410,6 +410,26 @@
     </span>}
 }
 
+<span class="kw">impl</span>&lt;Types&gt; Storable&lt;Types&gt; <span class="kw">for </span>BlockQueryData&lt;Types&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+{
+    <span class="kw">fn </span>name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+        <span class="string">"block"
+    </span>}
+
+    <span class="kw">async fn </span>notify(<span class="kw-2">&amp;</span><span class="self">self</span>, notifiers: <span class="kw-2">&amp;</span>Notifiers&lt;Types&gt;) {
+        notifiers.block.notify(<span class="self">self</span>).<span class="kw">await</span>;
+    }
+
+    <span class="kw">async fn </span>store(
+        <span class="self">self</span>,
+        storage: <span class="kw-2">&amp;mut </span>(<span class="kw">impl </span>UpdateAvailabilityStorage&lt;Types&gt; + Send),
+    ) -&gt; anyhow::Result&lt;()&gt; {
+        storage.insert_block(<span class="self">self</span>).<span class="kw">await
+    </span>}
+}
+
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>fetch_block_with_header&lt;Types, S, P&gt;(
     fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
     header: Header&lt;Types&gt;,
@@ -417,7 +437,7 @@
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: VersionedDataSource + <span class="lifetime">'static</span>,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="comment">// Now that we have the header, we only need to retrieve the payload.
@@ -435,21 +455,6 @@
         }),
     );
 }
-
-<span class="kw">async fn </span>store_block&lt;Types, S&gt;(
-    storage: <span class="kw-2">&amp;</span>NotifyStorage&lt;Types, S&gt;,
-    block: BlockQueryData&lt;Types&gt;,
-) -&gt; anyhow::Result&lt;()&gt;
-<span class="kw">where
-    </span>Types: NodeType,
-    Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
-    S: VersionedDataSource,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
-{
-    <span class="kw">let </span><span class="kw-2">mut </span>tx = storage.write().<span class="kw">await</span><span class="question-mark">?</span>;
-    tx.insert_block(block).<span class="kw">await</span><span class="question-mark">?</span>;
-    tx.commit().<span class="kw">await
-</span>}
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;Types&gt; Fetchable&lt;Types&gt; <span class="kw">for </span>PayloadQueryData&lt;Types&gt;
@@ -486,7 +491,7 @@
         req: <span class="self">Self</span>::Request,
     ) <span class="kw">where
         </span>S: VersionedDataSource + <span class="lifetime">'static</span>,
-        <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+        <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
         P: AvailabilityProvider&lt;Types&gt;,
     {
         <span class="comment">// We don't have storage for the payload alone, only the whole block. So if we need to fetch
@@ -552,20 +557,13 @@
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: <span class="lifetime">'static </span>+ VersionedDataSource,
-    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityData&lt;Types&gt;,
+    <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="kw">async fn </span>run(<span class="self">self</span>, payload: Payload&lt;Types&gt;) {
         <span class="macro">tracing::info!</span>(<span class="string">"fetched payload {:?}"</span>, <span class="self">self</span>.header.payload_commitment());
         <span class="kw">let </span>block = BlockQueryData::new(<span class="self">self</span>.header, payload);
-        <span class="kw">let </span>height = block.height();
-
-        <span class="comment">// Store the block in local storage, so we can avoid fetching it in the future.
-        </span><span class="kw">if let </span><span class="prelude-val">Err</span>(err) = store_block(<span class="kw-2">&amp;</span><span class="self">self</span>.fetcher.storage, block).<span class="kw">await </span>{
-            <span class="comment">// It is unfortunate if this fails, but we can still proceed by returning the block that
-            // we fetched, keeping it in memory. Simply log the error and move on.
-            </span><span class="macro">tracing::warn!</span>(<span class="string">"failed to store fetched block {height}: {err}"</span>);
-        }
+        <span class="self">self</span>.fetcher.store_and_notify(block).<span class="kw">await</span>;
     }
 }
 </code></pre></div></section></main></body></html>
