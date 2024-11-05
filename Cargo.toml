@@ -18,7 +18,8 @@ edition = "2021"
 license = "GPL-3.0-or-later"
 
 [features]
-default = ["file-system-data-source", "metrics-data-source", "sql-data-source"]
+default = ["file-system-data-source", "metrics-data-source", "sql-data-source", "embedded-db"]
+embedded-db = []
 
 # Enable the availability data source backed by the local file system.
 file-system-data-source = ["atomic_store"]
