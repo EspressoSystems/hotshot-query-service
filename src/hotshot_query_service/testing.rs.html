@@ -32,6 +32,7 @@
 <a href="#32" id="32">32</a>
 <a href="#33" id="33">33</a>
 <a href="#34" id="34">34</a>
+<a href="#35" id="35">35</a>
 </pre></div><pre class="rust"><code><span class="attr">#![cfg(any(test, feature = <span class="string">"testing"</span>))]
 
 </span><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
@@ -45,21 +46,22 @@
 // General Public License for more details.
 // You should have received a copy of the GNU General Public License along with this program. If not,
 // see &lt;https://www.gnu.org/licenses/&gt;.
-</span><span class="kw">use </span>async_compatibility_layer::logging::{setup_backtrace, setup_logging};
-<span class="kw">use </span>std::time::Duration;
+</span><span class="kw">use </span>std::time::Duration;
+
+<span class="kw">use </span>tracing_subscriber::EnvFilter;
 
 <span class="kw">pub mod </span>consensus;
 <span class="kw">pub mod </span>mocks;
 
 <span class="kw">pub async fn </span>sleep(dur: Duration) {
-    <span class="comment">// For some reason, `async_std::task::sleep` doesn't work on the GitHub Windows runners (it
-    // hangs forever). `spin_sleep::sleep` works fine.
-    </span>async_std::task::spawn_blocking(<span class="kw">move </span>|| spin_sleep::sleep(dur)).<span class="kw">await</span>;
+    tokio::time::sleep(dur).<span class="kw">await</span>;
 }
 
 <span class="kw">pub fn </span>setup_test() {
-    setup_logging();
-    setup_backtrace();
+    <span class="comment">// Initialize logging
+    </span><span class="kw">let _ </span>= tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .try_init();
 
     <span class="attr">#[cfg(all(feature = <span class="string">"backtrace-on-stack-overflow"</span>, not(windows)))]
     </span><span class="kw">unsafe </span>{

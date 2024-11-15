@@ -739,6 +739,50 @@
 <a href="#739" id="739">739</a>
 <a href="#740" id="740">740</a>
 <a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -755,24 +799,27 @@
 
 </span><span class="kw">use super</span>::{
     pruning::{PruneStorage, PrunedHeightStorage, PrunerConfig},
-    AvailabilityStorage, NodeStorage,
+    AggregatesStorage, AvailabilityStorage, NodeStorage, UpdateAggregatesStorage,
+    UpdateAvailabilityStorage,
 };
 <span class="kw">use crate</span>::{
     availability::{
         BlockId, BlockQueryData, LeafId, LeafQueryData, PayloadQueryData, QueryablePayload,
         TransactionHash, TransactionQueryData, VidCommonQueryData,
     },
-    data_source::{storage::UpdateAvailabilityStorage, update, VersionedDataSource},
+    data_source::{update, VersionedDataSource},
     metrics::PrometheusMetrics,
     node::{SyncStatus, TimeWindowQueryData, WindowStart},
     status::HasMetrics,
     types::HeightIndexed,
     Header, Payload, QueryError, QueryResult, VidShare,
 };
-<span class="kw">use </span>async_std::sync::{Arc, RwLock};
+<span class="kw">use </span>anyhow::bail;
+<span class="kw">use </span>async_lock::RwLock;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>futures::future::Future;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
+<span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::{cmp::max, ops::RangeBounds};
 
 <span class="doccomment">/// Mock storage implementation which doesn't actually store anything.
@@ -952,11 +999,17 @@
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.height <span class="kw">as </span>usize)
     }
 
-    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>count_transactions_in_range(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+    ) -&gt; QueryResult&lt;usize&gt; {
         <span class="prelude-val">Err</span>(QueryError::Missing)
     }
 
-    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>payload_size_in_range(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+    ) -&gt; QueryResult&lt;usize&gt; {
         <span class="prelude-val">Err</span>(QueryError::Missing)
     }
 
@@ -977,6 +1030,21 @@
         _end: u64,
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
         <span class="prelude-val">Err</span>(QueryError::Missing)
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; AggregatesStorage <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">async fn </span>aggregates_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;usize&gt; {
+        <span class="macro">bail!</span>(<span class="string">"no_storage mock read error"</span>)
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types&gt; UpdateAggregatesStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;<span class="lifetime">'a</span>&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+{
+    <span class="kw">async fn </span>update_aggregates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _block: <span class="kw-2">&amp;</span>BlockQueryData&lt;Types&gt;) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
@@ -1346,19 +1414,27 @@
             }
         }
 
-        <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">async fn </span>count_transactions_in_range(
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+            range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+        ) -&gt; QueryResult&lt;usize&gt; {
             <span class="kw">match </span><span class="self">self </span>{
-                Transaction::Sql(tx) =&gt; tx.count_transactions().<span class="kw">await</span>,
+                Transaction::Sql(tx) =&gt; tx.count_transactions_in_range(range).<span class="kw">await</span>,
                 Transaction::NoStorage(tx) =&gt; {
-                    NodeStorage::&lt;MockTypes&gt;::count_transactions(tx).<span class="kw">await
+                    NodeStorage::&lt;MockTypes&gt;::count_transactions_in_range(tx, range).<span class="kw">await
                 </span>}
             }
         }
 
-        <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">async fn </span>payload_size_in_range(
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+            range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+        ) -&gt; QueryResult&lt;usize&gt; {
             <span class="kw">match </span><span class="self">self </span>{
-                Transaction::Sql(tx) =&gt; tx.payload_size().<span class="kw">await</span>,
-                Transaction::NoStorage(tx) =&gt; NodeStorage::&lt;MockTypes&gt;::payload_size(tx).<span class="kw">await</span>,
+                Transaction::Sql(tx) =&gt; tx.payload_size_in_range(range).<span class="kw">await</span>,
+                Transaction::NoStorage(tx) =&gt; {
+                    NodeStorage::&lt;MockTypes&gt;::payload_size_in_range(tx, range).<span class="kw">await
+                </span>}
             }
         }
 
@@ -1421,17 +1497,29 @@
             }
         }
 
-        <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">async fn </span>count_transactions_in_range(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+        ) -&gt; QueryResult&lt;usize&gt; {
             <span class="kw">match </span><span class="self">self </span>{
-                DataSource::Sql(data_source) =&gt; data_source.count_transactions().<span class="kw">await</span>,
-                DataSource::NoStorage(data_source) =&gt; data_source.count_transactions().<span class="kw">await</span>,
+                DataSource::Sql(data_source) =&gt; {
+                    data_source.count_transactions_in_range(range).<span class="kw">await
+                </span>}
+                DataSource::NoStorage(data_source) =&gt; {
+                    data_source.count_transactions_in_range(range).<span class="kw">await
+                </span>}
             }
         }
 
-        <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="kw">async fn </span>payload_size_in_range(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+        ) -&gt; QueryResult&lt;usize&gt; {
             <span class="kw">match </span><span class="self">self </span>{
-                DataSource::Sql(data_source) =&gt; data_source.payload_size().<span class="kw">await</span>,
-                DataSource::NoStorage(data_source) =&gt; data_source.payload_size().<span class="kw">await</span>,
+                DataSource::Sql(data_source) =&gt; data_source.payload_size_in_range(range).<span class="kw">await</span>,
+                DataSource::NoStorage(data_source) =&gt; {
+                    data_source.payload_size_in_range(range).<span class="kw">await
+                </span>}
             }
         }
 

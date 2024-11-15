@@ -1310,7 +1310,6 @@
     QueryError, QueryResult,
 };
 <span class="kw">use </span>ark_serialize::CanonicalDeserialize;
-<span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>futures::stream::TryStreamExt;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
@@ -1320,6 +1319,7 @@
 };
 <span class="kw">use </span>sqlx::{types::BitVec, FromRow};
 <span class="kw">use </span>std::collections::{HashMap, HashSet, VecDeque};
+<span class="kw">use </span>std::sync::Arc;
 
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;Mode, Types, State, <span class="kw">const </span>ARITY: usize&gt; MerklizedStateStorage&lt;Types, State, ARITY&gt;
@@ -1701,7 +1701,7 @@
         },
     };
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_merklized_state_storage() {
         <span class="comment">// In this test we insert some entries into the tree and update the database
         // Each entry's merkle path is compared with the path from the tree
@@ -1862,7 +1862,7 @@
         <span class="macro">assert_eq!</span>(path_with_bh_1, proof_bh_1);
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_merklized_state_non_membership_proof() {
         <span class="comment">// This test updates the Merkle tree with a new entry and inserts the corresponding Merkle nodes into the database with created = 1.
         // A Merkle node is then deleted from the tree.
@@ -1994,7 +1994,7 @@
         <span class="macro">assert_eq!</span>(proof_bh_1, proof_before_remove, <span class="string">"merkle paths dont match"</span>);
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_merklized_state_non_membership_proof_unseen_entry() {
         setup_test();
 
@@ -2062,7 +2062,7 @@
         }
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_merklized_storage_with_commit() {
         <span class="comment">// This test insert a merkle path into the database and queries the path using the merkle commitment
         </span>setup_test();
@@ -2120,7 +2120,7 @@
 
         <span class="macro">assert_eq!</span>(merkle_proof, proof.clone(), <span class="string">"merkle paths mismatch"</span>);
     }
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_merklized_state_missing_state() {
         <span class="comment">// This test checks that header commitment matches the root hash.
         // For this, the header merkle root commitment field is not updated, which should result in an error
@@ -2284,7 +2284,7 @@
         <span class="macro">assert!</span>(merkle_path.is_err());
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_merklized_state_snapshot() {
         setup_test();
 
@@ -2459,7 +2459,7 @@
         </span>validate(<span class="kw-2">&amp;</span>storage, <span class="kw-2">&amp;</span>test_tree, <span class="kw-2">&amp;</span>expected, <span class="number">1</span>).<span class="kw">await</span>;
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_merklized_state_missing_leaf() {
         <span class="comment">// Check that if a leaf is missing but its ancestors are present/key is in the tree, we
         // catch it rather than interpreting the entry as an empty node by default. Note that this

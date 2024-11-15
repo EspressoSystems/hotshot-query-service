@@ -376,6 +376,15 @@
 <a href="#376" id="376">376</a>
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -448,16 +457,17 @@
 //! spawned to fetch missing resources and send them through the [`Notifier`], but these should be
 //! relatively few and rare.
 
-</span><span class="kw">use </span>async_compatibility_layer::channel::{
-    oneshot, unbounded, OneShotReceiver, OneShotSender, UnboundedReceiver, UnboundedSender,
-};
-<span class="kw">use </span>async_std::sync::{Arc, Mutex};
+</span><span class="kw">use </span>async_lock::Mutex;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>futures::future::{BoxFuture, FutureExt};
+<span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::{
     future::IntoFuture,
     sync::atomic::{AtomicBool, Ordering},
 };
+<span class="kw">use </span>tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
+<span class="kw">use </span>tokio::sync::oneshot;
+<span class="kw">use </span>tracing::warn;
 
 <span class="doccomment">/// A predicate on a type `&lt;T&gt;`.
 ///
@@ -473,7 +483,7 @@
     <span class="attr">#[derivative(Debug = <span class="string">"ignore"</span>)]
     </span>predicate: Box&lt;<span class="kw">dyn </span>Predicate&lt;T&gt;&gt;,
     <span class="attr">#[derivative(Debug = <span class="string">"ignore"</span>)]
-    </span>sender: <span class="prelude-ty">Option</span>&lt;OneShotSender&lt;T&gt;&gt;,
+    </span>sender: <span class="prelude-ty">Option</span>&lt;oneshot::Sender&lt;T&gt;&gt;,
     closed: Arc&lt;AtomicBool&gt;,
 }
 
@@ -504,7 +514,10 @@
         // the sender. We need to check for closed again in case the subscriber was closed since the
         // previous check.
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(sender) = <span class="self">self</span>.sender.take() {
-            sender.send(msg.clone());
+            <span class="kw">if </span>sender.send(msg.clone()).is_err() {
+                <span class="comment">// This is equivalent to the previous behavior in `async-compatibility-layer`
+                </span><span class="macro">warn!</span>(<span class="string">"Failed to send notification: channel closed"</span>);
+            }
         }
     }
 }
@@ -538,17 +551,17 @@
     // concurrent subscriptions go through the high-throughput multi-producer stream implementation,
     // and do not contend for the lock on `FilterSender::subscribers`.
     </span><span class="attr">#[derivative(Debug = <span class="string">"ignore"</span>)]
-    </span>pending: UnboundedReceiver&lt;Subscriber&lt;T&gt;&gt;,
+    </span>pending: Mutex&lt;UnboundedReceiver&lt;Subscriber&lt;T&gt;&gt;&gt;,
     <span class="attr">#[derivative(Debug = <span class="string">"ignore"</span>)]
     </span>subscribe: UnboundedSender&lt;Subscriber&lt;T&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;T&gt; Notifier&lt;T&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>(subscribe, pending) = unbounded();
+        <span class="kw">let </span>(subscribe, pending) = unbounded_channel();
         <span class="self">Self </span>{
             active: Default::default(),
-            pending,
+            pending: Mutex::new(pending),
             subscribe,
         }
     }
@@ -569,7 +582,10 @@
         </span>active.retain(|subscriber| !subscriber.is_closed());
 
         <span class="comment">// Promote pending subscribers to active and send them the message.
-        </span><span class="kw">for </span><span class="kw-2">mut </span>subscriber <span class="kw">in </span><span class="self">self</span>.pending.drain().unwrap_or_default() {
+        // There is no contention here since we only have one receiver. This is what
+        // `async-compatibility-layer` did internally.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>pending_guard = <span class="self">self</span>.pending.lock().<span class="kw">await</span>;
+        <span class="kw">while let </span><span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>subscriber) = pending_guard.try_recv() {
             subscriber.notify(msg);
             <span class="kw">if </span>!subscriber.is_closed() {
                 <span class="comment">// If that message didn't satisfy the subscriber, or it was dropped, at it to the
@@ -577,6 +593,7 @@
                 </span>active.push(subscriber);
             }
         }
+        drop(pending_guard);
     }
 }
 
@@ -584,7 +601,7 @@
     <span class="doccomment">/// Wait for a message satisfying `predicate`.
     </span><span class="kw">pub async fn </span>wait_for(<span class="kw-2">&amp;</span><span class="self">self</span>, predicate: <span class="kw">impl </span>Predicate&lt;T&gt;) -&gt; WaitFor&lt;T&gt; {
         <span class="comment">// Create a oneshot channel for receiving the notification.
-        </span><span class="kw">let </span>(sender, receiver) = oneshot();
+        </span><span class="kw">let </span>(sender, receiver) = oneshot::channel();
         <span class="kw">let </span>sender = <span class="prelude-val">Some</span>(sender);
         <span class="kw">let </span>closed = Arc::new(AtomicBool::new(<span class="bool-val">false</span>));
 
@@ -604,7 +621,7 @@
         // fails when the receive end of the channel has been dropped, which means the notifier has
         // been dropped, and thus the send end of the oneshot handle has been dropped. The caller
         // will discover this when they try to await a notification and get [`None`].
-        </span><span class="self">self</span>.subscribe.send(subscriber).<span class="kw">await</span>.ok();
+        </span><span class="kw">let _ </span>= <span class="self">self</span>.subscribe.send(subscriber);
         WaitFor { handle, receiver }
     }
 }
@@ -630,7 +647,7 @@
 /// resources in the [`Notifier`].
 </span><span class="kw">pub struct </span>WaitFor&lt;T&gt; {
     handle: ReceiveHandle,
-    receiver: OneShotReceiver&lt;T&gt;,
+    receiver: oneshot::Receiver&lt;T&gt;,
 }
 
 <span class="kw">impl</span>&lt;T&gt; IntoFuture <span class="kw">for </span>WaitFor&lt;T&gt;
@@ -642,7 +659,7 @@
 
     <span class="kw">fn </span>into_future(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoFuture {
         <span class="kw">async move </span>{
-            <span class="kw">let </span>res = <span class="self">self</span>.receiver.recv().<span class="kw">await</span>.ok();
+            <span class="kw">let </span>res = <span class="self">self</span>.receiver.<span class="kw">await</span>.ok();
 
             <span class="comment">// Explicitly drop `handle` _after_ we're done with `receiver`. If the compiler decides
             // that it can drop `handle` earlier, we might never get a notification.
@@ -656,12 +673,13 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
+    <span class="kw">use </span>tokio::time::timeout;
+
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::testing::setup_test;
-    <span class="kw">use </span>async_std::future::timeout;
     <span class="kw">use </span>std::time::Duration;
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_notify_drop() {
         setup_test();
         <span class="kw">let </span>n = Notifier::new();
@@ -687,7 +705,7 @@
         <span class="macro">assert!</span>(active[<span class="number">0</span>].is_closed());
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_notify_active() {
         setup_test();
         <span class="kw">let </span>n = Notifier::new();
@@ -722,7 +740,7 @@
         <span class="macro">assert_eq!</span>(s1.<span class="kw">await</span>.unwrap(), <span class="number">1</span>);
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_pending_dropped() {
         setup_test();
         <span class="kw">let </span>n = Notifier::new();
@@ -735,7 +753,7 @@
         <span class="macro">assert_eq!</span>(n.active.lock().<span class="kw">await</span>.len(), <span class="number">0</span>);
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_notifier_dropped() {
         setup_test();
 

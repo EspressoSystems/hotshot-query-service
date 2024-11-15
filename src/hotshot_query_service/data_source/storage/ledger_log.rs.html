@@ -650,7 +650,7 @@
     <span class="kw">use </span>atomic_store::AtomicStore;
     <span class="kw">use </span>tempfile::TempDir;
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_ledger_log_creation() {
         setup_test();
 
@@ -680,7 +680,7 @@
         }
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_ledger_log_insert() {
         setup_test();
 
@@ -724,7 +724,7 @@
         // See https://github.com/EspressoSystems/hotshot-query-service/issues/16
     </span>}
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_ledger_log_iter() {
         setup_test();
 

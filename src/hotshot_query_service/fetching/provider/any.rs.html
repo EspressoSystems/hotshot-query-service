@@ -306,11 +306,11 @@
     fetching::request::{LeafRequest, PayloadRequest, VidCommonRequest},
     Payload, VidCommon,
 };
-<span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::sync::Arc;
 
 <span class="doccomment">/// Blanket trait combining [`Debug`] and [`Provider`].
 ///
@@ -511,7 +511,7 @@
 
     <span class="kw">type </span>Provider = AnyProvider&lt;MockTypes&gt;;
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_first_provider_fails() {
         setup_test();
 

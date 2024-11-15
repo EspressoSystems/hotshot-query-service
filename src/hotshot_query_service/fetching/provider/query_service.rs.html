@@ -1284,6 +1284,8 @@
 <a href="#1284" id="1284">1284</a>
 <a href="#1285" id="1285">1285</a>
 <a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1511,7 +1513,7 @@
         builder(db, provider).<span class="kw">await</span>.build().<span class="kw">await</span>.unwrap()
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_on_request() {
         setup_test();
 
@@ -1736,7 +1738,7 @@
         }
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_block_and_leaf_concurrently() {
         setup_test();
 
@@ -1794,7 +1796,7 @@
         <span class="macro">assert_eq!</span>(leaf.header(), block.header());
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_different_blocks_same_payload() {
         setup_test();
 
@@ -1856,7 +1858,7 @@
         <span class="macro">assert_eq!</span>(block2.header(), leaves[<span class="number">1</span>].header());
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_stream() {
         setup_test();
 
@@ -1915,7 +1917,7 @@
         }
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_range_start() {
         setup_test();
 
@@ -1971,7 +1973,7 @@
         }
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>fetch_transaction() {
         setup_test();
 
@@ -2042,7 +2044,7 @@
         </span>);
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_retry() {
         setup_test();
 
@@ -2161,7 +2163,7 @@
             </span>.ok();
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_from_malicious_server() {
         setup_test();
 
@@ -2189,7 +2191,7 @@
         <span class="macro">assert_eq!</span>(res, <span class="prelude-val">None</span>);
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_archive_recovery() {
         setup_test();
 
@@ -2374,6 +2376,7 @@
         <span class="kw">let </span>storage = FailStorage::from(SqlStorage::connect(db.config()).<span class="kw">await</span>.unwrap());
         <span class="kw">let </span>data_source = FetchingDataSource::builder(storage, provider)
             .disable_proactive_fetching()
+            .disable_aggregator()
             .with_max_retry_interval(Duration::from_millis(<span class="number">100</span>))
             .with_retry_timeout(Duration::from_secs(<span class="number">1</span>))
             .build()
@@ -2416,17 +2419,17 @@
         <span class="macro">assert_eq!</span>(leaves[<span class="number">0</span>], fetch.try_resolve().ok().unwrap());
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_storage_failure_on_begin() {
         test_fetch_storage_failure_helper(FailureType::Begin).<span class="kw">await</span>;
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_storage_failure_on_write() {
         test_fetch_storage_failure_helper(FailureType::Write).<span class="kw">await</span>;
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_storage_failure_on_commit() {
         test_fetch_storage_failure_helper(FailureType::Commit).<span class="kw">await</span>;
     }
@@ -2459,6 +2462,7 @@
         <span class="kw">let </span>storage = FailStorage::from(SqlStorage::connect(db.config()).<span class="kw">await</span>.unwrap());
         <span class="kw">let </span>data_source = FetchingDataSource::builder(storage, provider)
             .disable_proactive_fetching()
+            .disable_aggregator()
             .with_min_retry_interval(Duration::from_millis(<span class="number">100</span>))
             .build()
             .<span class="kw">await
@@ -2491,22 +2495,22 @@
         <span class="macro">assert_eq!</span>(leaves[<span class="number">0</span>], tx.get_leaf(<span class="number">1</span>.into()).<span class="kw">await</span>.unwrap());
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_storage_failure_retry_on_begin() {
         test_fetch_storage_failure_retry_helper(FailureType::Begin).<span class="kw">await</span>;
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_storage_failure_retry_on_write() {
         test_fetch_storage_failure_retry_helper(FailureType::Write).<span class="kw">await</span>;
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_storage_failure_retry_on_commit() {
         test_fetch_storage_failure_retry_helper(FailureType::Commit).<span class="kw">await</span>;
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_fetch_on_decide() {
         setup_test();
 

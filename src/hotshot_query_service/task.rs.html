@@ -125,12 +125,6 @@
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
 <a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -145,13 +139,14 @@
 
 </span><span class="doccomment">//! Async task utilites.
 
-</span><span class="kw">use </span>async_std::{
-    sync::Arc,
-    task::{spawn, JoinHandle},
-};
-<span class="kw">use </span>derivative::Derivative;
+</span><span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>futures::future::Future;
 <span class="kw">use </span>std::fmt::Display;
+<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>tokio::{
+    spawn,
+    task::{JoinError, JoinHandle},
+};
 <span class="kw">use </span>tracing::{info_span, Instrument};
 
 <span class="doccomment">/// A background task which is cancelled on [`Drop`]
@@ -238,7 +233,7 @@
     }
 
     <span class="doccomment">/// Wait for the task to complete and get its output.
-    </span><span class="kw">pub async fn </span>join(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; T {
+    </span><span class="kw">pub async fn </span>join(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, JoinError&gt; {
         <span class="comment">// We take here so that we will not attempt to cancel the joined task when this handle is
         // dropped at the end of the function. We can unwrap here because `inner` is only `None`
         // during `join` or `drop`. Since `join` consumes `self`, it is not possible that `join`
@@ -251,16 +246,9 @@
 <span class="kw">impl</span>&lt;T: Send + <span class="lifetime">'static</span>&gt; Drop <span class="kw">for </span>Task&lt;T&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(inner) = <span class="self">self</span>.inner.take() {
-            <span class="comment">// Spawn the cancellation in a background task. It may sound strange to spawn a new task
-            // when our whole goal is to cancel one. Unfortunately, the cancellation is async and
-            // `drop` runs in a synchronous context, so this is the best we can do. In effect we are
-            // replacing a long-lived background task with a short-lived detached task which will
-            // exit quickly: as soon as the background task has been successfully cancelled.
-            </span>spawn(<span class="kw">async move </span>{
-                <span class="macro">tracing::info!</span>(name = inner.name, <span class="string">"cancelling task"</span>);
-                inner.handle.cancel().<span class="kw">await</span>;
-                <span class="macro">tracing::info!</span>(name = inner.name, <span class="string">"cancelled task"</span>);
-            });
+            <span class="macro">tracing::info!</span>(name = inner.name, <span class="string">"cancelling task"</span>);
+            inner.handle.abort();
+            <span class="macro">tracing::info!</span>(name = inner.name, <span class="string">"cancelled task"</span>);
         }
     }
 }

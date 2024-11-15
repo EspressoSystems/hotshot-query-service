@@ -183,10 +183,10 @@
     Header, Payload,
 };
 <span class="kw">use </span>anyhow::Context;
-<span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>hotshot_types::traits::{block_contents::BlockHeader, node_implementation::NodeType};
 <span class="kw">use </span>std::cmp::Ordering;
+<span class="kw">use </span>std::sync::Arc;
 
 <span class="attr">#[derive(Derivative)]
 #[derivative(Debug(bound = <span class="string">""</span>))]

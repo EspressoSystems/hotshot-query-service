@@ -113,6 +113,7 @@
 <a href="#113" id="113">113</a>
 <a href="#114" id="114">114</a>
 <a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -129,15 +130,16 @@
 
 </span><span class="kw">use </span><span class="kw">super</span>::Provider;
 <span class="kw">use </span><span class="kw">crate</span>::fetching::Request;
-<span class="kw">use </span>async_compatibility_layer::async_primitives::broadcast::{channel, BroadcastSender};
-<span class="kw">use </span>async_std::sync::{Arc, RwLock};
+<span class="kw">use </span>async_lock::RwLock;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
+<span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::{
     fmt::Debug,
     sync::atomic::{AtomicBool, Ordering},
 };
+<span class="kw">use </span>tokio::sync::broadcast;
 
 <span class="doccomment">/// Adaptor to add test-only functionality to an existing [`Provider`].
 ///
@@ -147,7 +149,7 @@
 #[derivative(Clone(bound = <span class="string">""</span>), Debug(bound = <span class="string">"P: Debug"</span>))]
 </span><span class="kw">pub struct </span>TestProvider&lt;P&gt; {
     inner: Arc&lt;P&gt;,
-    unblock: Arc&lt;RwLock&lt;<span class="prelude-ty">Option</span>&lt;BroadcastSender&lt;()&gt;&gt;&gt;&gt;,
+    unblock: Arc&lt;RwLock&lt;<span class="prelude-ty">Option</span>&lt;broadcast::Sender&lt;()&gt;&gt;&gt;&gt;,
     fail: Arc&lt;AtomicBool&gt;,
 }
 
@@ -169,7 +171,7 @@
     </span><span class="kw">pub async fn </span>block(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>unblock = <span class="self">self</span>.unblock.write().<span class="kw">await</span>;
         <span class="kw">if </span>unblock.is_none() {
-            <span class="kw-2">*</span>unblock = <span class="prelude-val">Some</span>(channel().<span class="number">0</span>);
+            <span class="kw-2">*</span>unblock = <span class="prelude-val">Some</span>(broadcast::channel(<span class="number">1000</span>).<span class="number">0</span>);
         }
     }
 
@@ -180,7 +182,7 @@
     </span><span class="kw">pub async fn </span>unblock(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>unblock = <span class="self">self</span>.unblock.write().<span class="kw">await</span>;
         <span class="kw">if let </span><span class="prelude-val">Some</span>(unblock) = unblock.take() {
-            unblock.send_async(()).<span class="kw">await</span>.ok();
+            unblock.send(()).ok();
         }
     }
 
@@ -212,15 +214,15 @@
         }
 
         <span class="comment">// Block the request if the user has called `block`.
-        </span><span class="kw">let </span>handle = {
-            <span class="kw">match </span><span class="self">self</span>.unblock.read().<span class="kw">await</span>.as_ref() {
-                <span class="prelude-val">Some</span>(unblock) =&gt; <span class="prelude-val">Some</span>(unblock.handle_async().<span class="kw">await</span>),
-                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
-            }
-        };
+        </span><span class="kw">let </span>handle = <span class="self">self
+            </span>.unblock
+            .read()
+            .<span class="kw">await
+            </span>.as_ref()
+            .map(|unblock| unblock.subscribe());
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>handle) = handle {
             <span class="macro">tracing::info!</span>(<span class="string">"request for {req:?} will block until manually unblocked"</span>);
-            handle.recv_async().<span class="kw">await</span>.ok();
+            handle.recv().<span class="kw">await</span>.ok();
             <span class="macro">tracing::info!</span>(<span class="string">"request for {req:?} unblocked"</span>);
         }
 

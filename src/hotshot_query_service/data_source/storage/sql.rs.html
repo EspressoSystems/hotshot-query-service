@@ -1888,14 +1888,14 @@
 <span class="comment">// These tests run the `postgres` Docker image, which doesn't work on Windows.
 </span><span class="attr">#[cfg(all(any(test, feature = <span class="string">"testing"</span>), not(target_os = <span class="string">"windows"</span>)))]
 </span><span class="kw">pub mod </span>testing {
-    <span class="kw">use </span>async_compatibility_layer::art::async_timeout;
-    <span class="kw">use </span>async_std::net::TcpStream;
     <span class="kw">use </span>std::{
         env,
         process::{Command, Stdio},
         str,
         time::Duration,
     };
+    <span class="kw">use </span>tokio::net::TcpStream;
+    <span class="kw">use </span>tokio::time::timeout;
 
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>refinery::Migration;
@@ -2011,14 +2011,14 @@
         }
 
         <span class="kw">async fn </span>wait_for_ready(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-            <span class="kw">let </span>timeout = Duration::from_secs(
+            <span class="kw">let </span>timeout_duration = Duration::from_secs(
                 env::var(<span class="string">"SQL_TMP_DB_CONNECT_TIMEOUT"</span>)
                     .unwrap_or(<span class="string">"60"</span>.to_string())
                     .parse()
                     .expect(<span class="string">"SQL_TMP_DB_CONNECT_TIMEOUT must be an integer number of seconds"</span>),
             );
 
-            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = async_timeout(timeout, <span class="kw">async </span>{
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = timeout(timeout_duration, <span class="kw">async </span>{
                 <span class="kw">while </span>Command::new(<span class="string">"docker"</span>)
                     .args([
                         <span class="string">"exec"</span>,
@@ -2067,7 +2067,7 @@
             .<span class="kw">await
             </span>{
                 <span class="macro">panic!</span>(
-                    <span class="string">"failed to connect to TmpDb within configured timeout {timeout:?}: {err:#}\n{}"</span>,
+                    <span class="string">"failed to connect to TmpDb within configured timeout {timeout_duration:?}: {err:#}\n{}"</span>,
                     <span class="string">"Consider increasing the timeout by setting SQL_TMP_DB_CONNECT_TIMEOUT"
                 </span>);
             }
@@ -2128,12 +2128,12 @@
 <span class="comment">// These tests run the `postgres` Docker image, which doesn't work on Windows.
 </span><span class="attr">#[cfg(all(test, not(target_os = <span class="string">"windows"</span>)))]
 </span><span class="kw">mod </span>test {
-    <span class="kw">use </span>async_std::task::sleep;
     <span class="kw">use </span>hotshot_example_types::{
         node_types::TestVersions,
         state_types::{TestInstanceState, TestValidatedState},
     };
     <span class="kw">use </span>std::time::Duration;
+    <span class="kw">use </span>tokio::time::sleep;
 
     <span class="kw">use super</span>::{testing::TmpDb, <span class="kw-2">*</span>};
     <span class="kw">use crate</span>::{
@@ -2142,7 +2142,7 @@
         testing::{mocks::MockTypes, setup_test},
     };
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_migrations() {
         setup_test();
 
@@ -2179,11 +2179,11 @@
         // The SQL commands used here will fail if not run in order.
         </span><span class="kw">let </span>migrations = <span class="macro">vec!</span>[
             Migration::unapplied(
-                <span class="string">"V103__create_test_table.sql"</span>,
+                <span class="string">"V999__create_test_table.sql"</span>,
                 <span class="string">"ALTER TABLE test ADD COLUMN data INTEGER;"</span>,
             )
             .unwrap(),
-            Migration::unapplied(<span class="string">"V102__create_test_table.sql"</span>, <span class="string">"CREATE TABLE test ();"</span>).unwrap(),
+            Migration::unapplied(<span class="string">"V998__create_test_table.sql"</span>, <span class="string">"CREATE TABLE test ();"</span>).unwrap(),
         ];
         connect(<span class="bool-val">true</span>, migrations.clone()).<span class="kw">await</span>.unwrap();
 
@@ -2215,7 +2215,7 @@
             </span>.unwrap();
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_target_period_pruning() {
         setup_test();
 
@@ -2313,7 +2313,7 @@
         </span>)
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_minimum_retention_pruning() {
         setup_test();
 
@@ -2390,7 +2390,7 @@
         </span><span class="macro">assert_eq!</span>(header_rows, <span class="number">0</span>);
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_pruned_height_storage() {
         setup_test();
 

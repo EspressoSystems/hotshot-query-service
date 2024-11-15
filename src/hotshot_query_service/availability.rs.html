@@ -1409,7 +1409,7 @@
         types::HeightIndexed,
         ApiState, Error, Header,
     };
-    <span class="kw">use </span>async_std::sync::RwLock;
+    <span class="kw">use </span>async_lock::RwLock;
     <span class="kw">use </span>committable::Committable;
     <span class="kw">use </span>futures::future::FutureExt;
     <span class="kw">use </span>hotshot_types::{data::Leaf, simple_certificate::QuorumCertificate};
@@ -1673,14 +1673,14 @@
         }
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_api() {
         test_api_helper::&lt;MockDataSource&gt;(Duration::from_millis(<span class="number">500</span>)).<span class="kw">await</span>;
     }
 
     <span class="comment">// This test runs the `postgres` Docker image, which doesn't work on Windows.
     </span><span class="attr">#[cfg(not(target_os = <span class="string">"windows"</span>))]
-    #[async_std::test]
+    #[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_api_no_storage() {
         <span class="comment">// With a long enough fetch timeout, we can run the API without any local storage and it
         // still works: missing data is fetched on demand or proactively from a peer.
@@ -1797,7 +1797,7 @@
         network.shut_down().<span class="kw">await</span>;
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_extensions() {
         <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
 

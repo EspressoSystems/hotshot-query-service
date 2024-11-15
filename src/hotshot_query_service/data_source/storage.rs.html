@@ -280,6 +280,28 @@
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
 <a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -463,8 +485,14 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">pub trait </span>NodeStorage&lt;Types: NodeType&gt; {
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt;;
-    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt;;
-    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt;;
+    <span class="kw">async fn </span>count_transactions_in_range(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+    ) -&gt; QueryResult&lt;usize&gt;;
+    <span class="kw">async fn </span>payload_size_in_range(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+    ) -&gt; QueryResult&lt;usize&gt;;
     <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync;
@@ -476,6 +504,22 @@
 
     <span class="doccomment">/// Search the database for missing objects and generate a report.
     </span><span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt;;
+}
+
+<span class="kw">pub trait </span>AggregatesStorage {
+    <span class="doccomment">/// The block height for which aggregate statistics are currently available.
+    </span><span class="kw">fn </span>aggregates_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Future&lt;Output = anyhow::Result&lt;usize&gt;&gt; + Send;
+}
+
+<span class="kw">pub trait </span>UpdateAggregatesStorage&lt;Types&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+{
+    <span class="doccomment">/// Update aggregate statistics based on a new block.
+    </span><span class="kw">fn </span>update_aggregates(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        block: <span class="kw-2">&amp;</span>BlockQueryData&lt;Types&gt;,
+    ) -&gt; <span class="kw">impl </span>Future&lt;Output = anyhow::Result&lt;()&gt;&gt; + Send;
 }
 
 <span class="doccomment">/// An interface for querying Data and Statistics from the HotShot Blockchain.

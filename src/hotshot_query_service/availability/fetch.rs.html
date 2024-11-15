@@ -124,7 +124,6 @@
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -140,6 +139,7 @@
 </span><span class="kw">use </span>futures::future::{BoxFuture, FutureExt};
 <span class="kw">use </span>snafu::{Error, ErrorCompat, IntoError, NoneError, OptionExt};
 <span class="kw">use </span>std::{future::IntoFuture, time::Duration};
+<span class="kw">use </span>tokio::time::timeout;
 
 <span class="doccomment">/// An in-progress request to fetch some data.
 ///
@@ -215,10 +215,8 @@
     ///
     /// This function is similar to [`resolve`](Self::resolve), but if the future does not resolve
     /// within `timeout`, then [`with_timeout`](Self::with_timeout) will resolve with [`None`].
-    </span><span class="kw">pub async fn </span>with_timeout(<span class="self">self</span>, timeout: Duration) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
-        async_std::future::timeout(timeout, <span class="self">self</span>.into_future())
-            .<span class="kw">await
-            </span>.ok()
+    </span><span class="kw">pub async fn </span>with_timeout(<span class="self">self</span>, timeout_duration: Duration) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
+        timeout(timeout_duration, <span class="self">self</span>.into_future()).<span class="kw">await</span>.ok()
     }
 }
 

@@ -420,6 +420,7 @@
 <a href="#420" id="420">420</a>
 <a href="#421" id="421">421</a>
 <a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -650,7 +651,6 @@
 /// the steps in [custom migrations](#custom-migrations) to accomodate this.
 ///
 /// ```
-/// # use async_std::{sync::Arc, task::spawn};
 /// # use futures::StreamExt;
 /// # use hotshot::types::SystemContextHandle;
 /// # use hotshot_query_service::Error;
@@ -662,7 +662,9 @@
 /// #   MockNodeImpl as AppNodeImpl, MockTypes as AppTypes, MockVersions as AppVersions
 /// # };
 /// # use hotshot_example_types::node_types::TestVersions;
+/// # use std::sync::Arc;
 /// # use tide_disco::App;
+/// # use tokio::spawn;
 /// # use vbs::version::StaticVersionType;
 /// struct AppState {
 ///     hotshot_qs: SqlDataSource&lt;AppTypes, NoFetching&gt;,
@@ -799,7 +801,7 @@
 
     <span class="comment">// This function should be generic, but the file system data source does not currently support
     // storing VID common and later the corresponding share.
-    </span><span class="attr">#[async_std::test]
+    </span><span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_vid_monotonicity() {
         <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
 

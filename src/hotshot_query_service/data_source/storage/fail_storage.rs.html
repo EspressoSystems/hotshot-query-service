@@ -430,6 +430,35 @@
 <a href="#430" id="430">430</a>
 <a href="#431" id="431">431</a>
 <a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
+<a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
+<a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -446,24 +475,26 @@
 
 </span><span class="kw">use super</span>::{
     pruning::{PruneStorage, PrunedHeightStorage, PrunerCfg, PrunerConfig},
-    AvailabilityStorage, NodeStorage,
+    AggregatesStorage, AvailabilityStorage, NodeStorage, UpdateAggregatesStorage,
+    UpdateAvailabilityStorage,
 };
 <span class="kw">use crate</span>::{
     availability::{
         BlockId, BlockQueryData, LeafId, LeafQueryData, PayloadQueryData, QueryablePayload,
         TransactionHash, TransactionQueryData, VidCommonQueryData,
     },
-    data_source::{storage::UpdateAvailabilityStorage, update, VersionedDataSource},
+    data_source::{update, VersionedDataSource},
     metrics::PrometheusMetrics,
     node::{SyncStatus, TimeWindowQueryData, WindowStart},
     status::HasMetrics,
     Header, Payload, QueryError, QueryResult, VidShare,
 };
-<span class="kw">use </span>async_std::sync::{Arc, Mutex};
+<span class="kw">use </span>async_lock::Mutex;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>futures::future::Future;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>std::ops::RangeBounds;
+<span class="kw">use </span>std::sync::Arc;
 
 <span class="attr">#[derive(Clone, Copy, Debug, Default)]
 </span><span class="kw">enum </span>FailureMode {
@@ -830,14 +861,20 @@
         <span class="self">self</span>.inner.block_height().<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>count_transactions_in_range(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+    ) -&gt; QueryResult&lt;usize&gt; {
         <span class="self">self</span>.maybe_fail_read().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.inner.count_transactions().<span class="kw">await
+        <span class="self">self</span>.inner.count_transactions_in_range(range).<span class="kw">await
     </span>}
 
-    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+    <span class="kw">async fn </span>payload_size_in_range(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+    ) -&gt; QueryResult&lt;usize&gt; {
         <span class="self">self</span>.maybe_fail_read().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.inner.payload_size().<span class="kw">await
+        <span class="self">self</span>.inner.payload_size_in_range(range).<span class="kw">await
     </span>}
 
     <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
@@ -860,6 +897,27 @@
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
         <span class="self">self</span>.maybe_fail_read().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="self">self</span>.inner.get_header_window(start, end).<span class="kw">await
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;T&gt; AggregatesStorage <span class="kw">for </span>Transaction&lt;T&gt;
+<span class="kw">where
+    </span>T: AggregatesStorage + Send + Sync,
+{
+    <span class="kw">async fn </span>aggregates_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;usize&gt; {
+        <span class="self">self</span>.maybe_fail_read().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.inner.aggregates_height().<span class="kw">await
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;T, Types&gt; UpdateAggregatesStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;T&gt;
+<span class="kw">where
+    </span>Types: NodeType,
+    T: UpdateAggregatesStorage&lt;Types&gt; + Send + Sync,
+{
+    <span class="kw">async fn </span>update_aggregates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: <span class="kw-2">&amp;</span>BlockQueryData&lt;Types&gt;) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="self">self</span>.maybe_fail_write().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.inner.update_aggregates(block).<span class="kw">await
     </span>}
 }
 </code></pre></div></section></main></body></html>

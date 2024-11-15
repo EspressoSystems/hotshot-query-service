@@ -387,7 +387,7 @@
         },
         ApiState, Error,
     };
-    <span class="kw">use </span>async_std::sync::RwLock;
+    <span class="kw">use </span>async_lock::RwLock;
     <span class="kw">use </span>futures::FutureExt;
     <span class="kw">use </span>portpicker::pick_unused_port;
     <span class="kw">use </span>reqwest::redirect::Policy;
@@ -398,7 +398,7 @@
     <span class="kw">use </span>tide_disco::{App, Url};
     <span class="kw">use </span>toml::toml;
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_api() {
         setup_test();
 
@@ -470,7 +470,7 @@
         network.shut_down().<span class="kw">await</span>;
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_extensions() {
         setup_test();
 

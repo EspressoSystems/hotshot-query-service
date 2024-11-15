@@ -853,6 +853,18 @@
 <a href="#853" id="853">853</a>
 <a href="#854" id="854">854</a>
 <a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -894,11 +906,12 @@
 //!     ApiState, Error,
 //! };
 //!
-//! use async_std::{sync::Arc, task::spawn};
 //! use futures::StreamExt;
 //! use vbs::version::StaticVersionType;
 //! use hotshot::SystemContext;
+//! use std::sync::Arc;
 //! use tide_disco::App;
+//! use tokio::spawn;
 //!
 //! // Create or open a data source.
 //! let data_source = FileSystemDataSource::&lt;AppTypes, NoFetching&gt;::create(storage_path, NoFetching)
@@ -942,13 +955,13 @@
 //! nothing more):
 //!
 //! ```
-//! # use async_std::task::spawn;
 //! # use hotshot::types::SystemContextHandle;
 //! # use vbs::version::StaticVersionType;
 //! # use hotshot_query_service::{data_source::FileSystemDataSource, Error, Options};
 //! # use hotshot_query_service::fetching::provider::NoFetching;
 //! # use hotshot_query_service::testing::mocks::{MockBase, MockNodeImpl, MockTypes, MockVersions};
 //! # use std::path::Path;
+//! # use tokio::spawn;
 //! # async fn doc(storage_path: &amp;Path, options: Options, hotshot: SystemContextHandle&lt;MockTypes, MockNodeImpl, MockVersions&gt;) -&gt; Result&lt;(), Error&gt; {
 //! use hotshot_query_service::run_standalone_service;
 //!
@@ -1022,7 +1035,6 @@
 //! the availability API like so:
 //!
 //! ```
-//! # use async_std::sync::RwLock;
 //! # use async_trait::async_trait;
 //! # use futures::FutureExt;
 //! # use hotshot_query_service::availability::{
@@ -1030,7 +1042,7 @@
 //! # };
 //! # use hotshot_query_service::testing::mocks::MockTypes as AppTypes;
 //! # use hotshot_query_service::testing::mocks::MockBase;
-//! # use hotshot_query_service::Error;
+//! # use hotshot_query_service::{ApiState, Error};
 //! # use snafu::ResultExt;
 //! # use tide_disco::{api::ApiError, method::ReadState, Api, App, StatusCode};
 //! # use vbs::version::StaticVersionType;
@@ -1073,10 +1085,10 @@
 //!     options: &amp;availability::Options,
 //!     data_source: D,
 //!     bind_version: Ver,
-//! ) -&gt; Result&lt;App&lt;RwLock&lt;D&gt;, Error&gt;, availability::Error&gt; {
+//! ) -&gt; Result&lt;App&lt;ApiState&lt;D&gt;, Error&gt;, availability::Error&gt; {
 //!     let api = define_app_specific_availability_api(options, bind_version)
 //!         .map_err(availability::Error::internal)?;
-//!     let mut app = App::&lt;_, _&gt;::with_state(RwLock::new(data_source));
+//!     let mut app = App::&lt;_, _&gt;::with_state(ApiState::from(data_source));
 //!     app.register_module("availability", api).map_err(availability::Error::internal)?;
 //!     Ok(app)
 //! }
@@ -1189,12 +1201,18 @@
 //!         self.hotshot_qs.block_height().await
 //!     }
 //!
-//!     async fn count_transactions(&amp;self) -&gt; QueryResult&lt;usize&gt; {
-//!         self.hotshot_qs.count_transactions().await
+//!     async fn count_transactions_in_range(
+//!         &amp;self,
+//!         range: impl RangeBounds&lt;usize&gt; + Send,
+//!     ) -&gt; QueryResult&lt;usize&gt; {
+//!         self.hotshot_qs.count_transactions_in_range(range).await
 //!     }
 //!
-//!     async fn payload_size(&amp;self) -&gt; QueryResult&lt;usize&gt; {
-//!         self.hotshot_qs.payload_size().await
+//!     async fn payload_size_in_range(
+//!         &amp;self,
+//!         range: impl RangeBounds&lt;usize&gt; + Send,
+//!     ) -&gt; QueryResult&lt;usize&gt; {
+//!         self.hotshot_qs.payload_size_in_range(range).await
 //!     }
 //!
 //!     async fn vid_share&lt;ID&gt;(&amp;self, id: ID) -&gt; QueryResult&lt;VidShare&gt;
@@ -1273,7 +1291,6 @@
 <span class="kw">pub use </span>error::Error;
 <span class="kw">pub use </span>resolvable::Resolvable;
 
-<span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>derive_more::{Deref, From, Into};
 <span class="kw">use </span>futures::{future::BoxFuture, stream::StreamExt};
@@ -1284,6 +1301,7 @@
 };
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>snafu::Snafu;
+<span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>task::BackgroundTask;
 <span class="kw">use </span>tide_disco::{method::ReadState, App, StatusCode};
 <span class="kw">use </span>vbs::version::StaticVersionType;
@@ -1434,7 +1452,7 @@
             mocks::{MockHeader, MockPayload, MockTypes},
         },
     };
-    <span class="kw">use </span>async_std::sync::RwLock;
+    <span class="kw">use </span>async_lock::RwLock;
     <span class="kw">use </span>async_trait::async_trait;
     <span class="kw">use </span>atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
     <span class="kw">use </span>futures::future::FutureExt;
@@ -1543,11 +1561,17 @@
         <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
             StatusDataSource::block_height(<span class="self">self</span>).<span class="kw">await
         </span>}
-        <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-            <span class="self">self</span>.hotshot_qs.count_transactions().<span class="kw">await
+        <span class="kw">async fn </span>count_transactions_in_range(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+        ) -&gt; QueryResult&lt;usize&gt; {
+            <span class="self">self</span>.hotshot_qs.count_transactions_in_range(range).<span class="kw">await
         </span>}
-        <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
-            <span class="self">self</span>.hotshot_qs.payload_size().<span class="kw">await
+        <span class="kw">async fn </span>payload_size_in_range(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+        ) -&gt; QueryResult&lt;usize&gt; {
+            <span class="self">self</span>.hotshot_qs.payload_size_in_range(range).<span class="kw">await
         </span>}
         <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
         <span class="kw">where
@@ -1580,7 +1604,7 @@
         </span>}
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_composition() {
         <span class="kw">use </span>hotshot_example_types::node_types::TestVersions;
 

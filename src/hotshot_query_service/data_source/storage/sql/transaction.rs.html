@@ -829,7 +829,6 @@
 };
 <span class="kw">use </span>anyhow::{bail, ensure, Context};
 <span class="kw">use </span>ark_serialize::CanonicalSerialize;
-<span class="kw">use </span>async_std::task::sleep;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>committable::Committable;
 <span class="kw">use </span>derive_more::{Deref, DerefMut};
@@ -848,6 +847,7 @@
     marker::PhantomData,
     time::{Duration, Instant},
 };
+<span class="kw">use </span>tokio::time::sleep;
 
 <span class="kw">pub use </span>sqlx::Executor;
 

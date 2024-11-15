@@ -1787,7 +1787,7 @@
         }
     }
 
-    <span class="attr">#[async_std::test]
+    <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
     </span><span class="kw">async fn </span>test_api() {
         test_api_helper().<span class="kw">await</span>;
     }

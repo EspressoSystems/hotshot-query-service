@@ -107,11 +107,11 @@
     },
     Payload, QueryResult,
 };
-<span class="kw">use </span>async_std::sync::Arc;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>futures::future::{BoxFuture, FutureExt};
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
+<span class="kw">use </span>std::sync::Arc;
 
 <span class="attr">#[derive(Clone, Copy, Debug, From)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>TransactionRequest&lt;Types: NodeType&gt;(TransactionHash&lt;Types&gt;);

@@ -64,6 +64,21 @@
 <a href="#64" id="64">64</a>
 <a href="#65" id="65">65</a>
 <a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -96,6 +111,7 @@
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>derive_more::From;
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
+<span class="kw">use </span>std::ops::RangeBounds;
 
 <span class="attr">#[derive(Derivative, From)]
 #[derivative(Copy(bound = <span class="string">""</span>), Debug(bound = <span class="string">""</span>))]
@@ -116,8 +132,14 @@
 <span class="attr">#[async_trait]
 </span><span class="kw">pub trait </span>NodeDataSource&lt;Types: NodeType&gt; {
     <span class="kw">async fn </span>block_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt;;
-    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt;;
-    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt;;
+    <span class="kw">async fn </span>count_transactions_in_range(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+    ) -&gt; QueryResult&lt;usize&gt;;
+    <span class="kw">async fn </span>payload_size_in_range(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        range: <span class="kw">impl </span>RangeBounds&lt;usize&gt; + Send,
+    ) -&gt; QueryResult&lt;usize&gt;;
     <span class="kw">async fn </span>vid_share&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; QueryResult&lt;VidShare&gt;
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync;
@@ -129,5 +151,13 @@
 
     <span class="doccomment">/// Search the database for missing objects and generate a report.
     </span><span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt;;
+
+    <span class="kw">async fn </span>count_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="self">self</span>.count_transactions_in_range(<span class="number">0</span>..).<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>payload_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QueryResult&lt;usize&gt; {
+        <span class="self">self</span>.payload_size_in_range(<span class="number">0</span>..).<span class="kw">await
+    </span>}
 }
 </code></pre></div></section></main></body></html>

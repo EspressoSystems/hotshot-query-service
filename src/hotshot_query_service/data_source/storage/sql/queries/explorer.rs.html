@@ -570,21 +570,6 @@
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
-<a href="#573" id="573">573</a>
-<a href="#574" id="574">574</a>
-<a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a>
-<a href="#577" id="577">577</a>
-<a href="#578" id="578">578</a>
-<a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a>
-<a href="#581" id="581">581</a>
-<a href="#582" id="582">582</a>
-<a href="#583" id="583">583</a>
-<a href="#584" id="584">584</a>
-<a href="#585" id="585">585</a>
-<a href="#586" id="586">586</a>
-<a href="#587" id="587">587</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -605,7 +590,7 @@
 };
 <span class="kw">use crate</span>::{
     availability::{BlockQueryData, QueryableHeader, QueryablePayload, TransactionIndex},
-    data_source::storage::ExplorerStorage,
+    data_source::storage::{ExplorerStorage, NodeStorage},
     explorer::{
         <span class="self">self</span>,
         errors::{<span class="self">self</span>, NotFound},
@@ -804,14 +789,14 @@
         // returned results based on.
         </span><span class="kw">let </span>transaction_target_query = <span class="kw">match </span>target {
             TransactionIdentifier::Latest =&gt; query(
-                <span class="string">"SELECT t.block_height AS height, t.index AS index FROM transaction AS t ORDER BY (t.block_height, t.index) DESC LIMIT 1"</span>,
+                <span class="string">"SELECT t.block_height AS height, t.index AS index FROM transaction AS t ORDER BY t.block_height DESC, t.index DESC LIMIT 1"</span>,
             ),
             TransactionIdentifier::HeightAndOffset(height, <span class="kw">_</span>) =&gt; query(
-                <span class="string">"SELECT t.block_height AS height, t.index AS index FROM transaction AS t WHERE t.block_height = $1 ORDER BY (t.block_height, t.index) DESC LIMIT 1"</span>,
+                <span class="string">"SELECT t.block_height AS height, t.index AS index FROM transaction AS t WHERE t.block_height = $1 ORDER BY t.block_height DESC, t.index DESC LIMIT 1"</span>,
             )
             .bind(<span class="kw-2">*</span>height <span class="kw">as </span>i64),
             TransactionIdentifier::Hash(hash) =&gt; query(
-                <span class="string">"SELECT t.block_height AS height, t.index AS index FROM transaction AS t WHERE t.hash = $1 ORDER BY (t.block_height, t.index) DESC LIMIT 1"</span>,
+                <span class="string">"SELECT t.block_height AS height, t.index AS index FROM transaction AS t WHERE t.hash = $1 ORDER BY t.block_height DESC, t.index DESC LIMIT 1"</span>,
             )
             .bind(hash.to_string()),
         };
@@ -851,7 +836,7 @@
                             SELECT t.block_height
                                 FROM transaction AS t
                                 WHERE (t.block_height, t.index) &lt;= ({}, {})
-                                ORDER BY (t.block_height, t.index) DESC
+                                ORDER BY t.block_height DESC, t.index DESC
                                 LIMIT {}
                         )
                         ORDER BY h.height DESC"</span>,
@@ -937,7 +922,7 @@
                         SELECT t1.block_height
                             FROM transaction AS t1
                             WHERE t1.block_height = {}
-                            ORDER BY (t1.block_height, t1.index)
+                            ORDER BY t1.block_height, t1.index
                             OFFSET {}
                             LIMIT 1
                     )
@@ -953,7 +938,7 @@
                         SELECT t1.block_height
                             FROM transaction AS t1
                             WHERE t1.hash = {}
-                            ORDER BY (t1.block_height, t1.index) DESC
+                            ORDER BY t1.block_height DESC, t1.index DESC
                             LIMIT 1
                     )
                     ORDER BY h.height DESC"</span>,
@@ -1046,24 +1031,9 @@
         </span>};
 
         <span class="kw">let </span>genesis_overview = {
-            <span class="kw">let </span>row = query(
-                <span class="string">"SELECT
-                    (SELECT MAX(height) + 1 FROM header) AS blocks,
-                    (SELECT COUNT(*) FROM transaction) AS transactions"</span>,
-            )
-            .fetch_one(<span class="self">self</span>.as_mut())
-            .<span class="kw">await</span><span class="question-mark">?</span>;
-
-            <span class="kw">let </span>blocks: i64 = row.try_get(<span class="string">"blocks"</span>)<span class="question-mark">?</span>;
-            <span class="kw">let </span>transactions: i64 = row.try_get(<span class="string">"transactions"</span>)<span class="question-mark">?</span>;
-
-            <span class="kw">let </span>blocks: u64 = blocks
-                .try_into()
-                .decode_error(<span class="string">"failed to convert blocks to u64 {e}"</span>)<span class="question-mark">?</span>;
-            <span class="kw">let </span>transactions: u64 = transactions
-                .try_into()
-                .decode_error(<span class="string">"failed to convert transactions to u64 {e}"</span>)<span class="question-mark">?</span>;
-
+            <span class="kw">let </span>blocks = NodeStorage::&lt;Types&gt;::block_height(<span class="self">self</span>).<span class="kw">await</span><span class="question-mark">? </span><span class="kw">as </span>u64;
+            <span class="kw">let </span>transactions =
+                NodeStorage::&lt;Types&gt;::count_transactions_in_range(<span class="self">self</span>, ..).<span class="kw">await</span><span class="question-mark">? </span><span class="kw">as </span>u64;
             GenesisOverview {
                 rollups: <span class="number">0</span>,
                 transactions,

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["fail_storage","fs","no_storage","pruning","sql"],"trait":["AvailabilityStorage","ExplorerStorage","MerklizedStateHeightStorage","MerklizedStateStorage","NodeStorage","UpdateAvailabilityStorage"]};
+window.SIDEBAR_ITEMS = {"mod":["fail_storage","fs","no_storage","pruning","sql"],"trait":["AggregatesStorage","AvailabilityStorage","ExplorerStorage","MerklizedStateHeightStorage","MerklizedStateStorage","NodeStorage","UpdateAggregatesStorage","UpdateAvailabilityStorage"]};
