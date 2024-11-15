@@ -76,10 +76,10 @@
 use super::{
     storage::{
         pruning::{PruneStorage, PrunedHeightStorage},
-        AvailabilityStorage, ExplorerStorage, MerklizedStateHeightStorage, MerklizedStateStorage,
-        NodeStorage,
+        AggregatesStorage, AvailabilityStorage, ExplorerStorage, MerklizedStateHeightStorage,
+        MerklizedStateStorage, NodeStorage, UpdateAggregatesStorage,
     },
-    VersionedDataSource,
+    Transaction as _, VersionedDataSource,
 };
 use crate::{
     availability::{
@@ -153,6 +153,7 @@ pub struct Builder<Types, S, P> {
     active_fetch_delay: Duration,
     chunk_fetch_delay: Duration,
     proactive_fetching: bool,
+    aggregator: bool,
     _types: PhantomData<Types>,
 }
 
@@ -180,6 +181,7 @@ impl<Types, S, P> Builder<Types, S, P> {
             active_fetch_delay: Duration::from_millis(50),
             chunk_fetch_delay: Duration::from_millis(100),
             proactive_fetching: true,
+            aggregator: true,
             _types: Default::default(),
         }
     }
@@ -289,6 +291,15 @@ impl<Types, S, P> Builder<Types, S, P> {
         self.proactive_fetching = false;
         self
     }
+
+    /// Run without an aggregator.
+    ///
+    /// This can reduce load on the CPU and the database, but it will cause aggregate statistics
+    /// (such as transaction counts) not to update.
+    pub fn disable_aggregator(mut self) -> Self {
+        self.aggregator = false;
+        self
+    }
 }
 
 impl<Types, S, P> Builder<Types, S, P>
@@ -297,8 +308,9 @@ where
     Payload<Types>: QueryablePayload<Types>,
     Header<Types>: QueryableHeader<Types>,
     S: PruneStorage + VersionedDataSource + HasMetrics + 'static,
-    for<'a> S::ReadOnly<'a>: AvailabilityStorage<Types> + PrunedHeightStorage + NodeStorage<Types>,
-    for<'a> S::Transaction<'a>: UpdateAvailabilityData<Types>,
+    for<'a> S::ReadOnly<'a>:
+        AvailabilityStorage<Types> + PrunedHeightStorage + NodeStorage<Types> + AggregatesStorage,
+    for<'a> S::Transaction<'a>: UpdateAvailabilityData<Types> + UpdateAggregatesStorage<Types>,
     P: AvailabilityProvider<Types>,
 {
     /// Build a [`FetchingDataSource`] with these options.
@@ -336,6 +348,8 @@ where
     fetcher: Arc<Fetcher<Types, S, P>>,
     // The proactive scanner task. This is only saved here so that we can cancel it on drop.
     scanner: Option<BackgroundTask>,
+    // The aggregator task, which derives aggregate statistics from a block stream.
+    aggregator: Option<BackgroundTask>,
     pruner: Pruner<Types, S, P>,
 }
 
@@ -388,8 +402,9 @@ where
     Payload<Types>: QueryablePayload<Types>,
     Header<Types>: QueryableHeader<Types>,
     S: VersionedDataSource + PruneStorage + HasMetrics + 'static,
-    for<'a> S::Transaction<'a>: UpdateAvailabilityData<Types>,
-    for<'a> S::ReadOnly<'a>: AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage,
+    for<'a> S::Transaction<'a>: UpdateAvailabilityData<Types> + UpdateAggregatesStorage<Types>,
+    for<'a> S::ReadOnly<'a>:
+        AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage + AggregatesStorage,
     P: AvailabilityProvider<Types>,
 {
     /// Build a [`FetchingDataSource`] with the given `storage` and `provider`.
@@ -398,6 +413,7 @@ where
     }
 
     async fn new(builder: Builder<Types, S, P>) -> anyhow::Result<Self> {
+        let aggregator = builder.aggregator;
         let proactive_fetching = builder.proactive_fetching;
         let minor_interval = builder.minor_scan_interval;
         let major_interval = builder.major_scan_interval;
@@ -406,6 +422,7 @@ where
             .proactive_range_chunk_size
             .unwrap_or(builder.range_chunk_size);
         let scanner_metrics = ScannerMetrics::new(builder.storage.metrics());
+        let aggregator_metrics = AggregatorMetrics::new(builder.storage.metrics());
 
         let fetcher = Arc::new(Fetcher::new(builder).await?);
         let scanner = if proactive_fetching {
@@ -423,11 +440,21 @@ where
             None
         };
 
+        let aggregator = if aggregator {
+            Some(BackgroundTask::spawn(
+                "aggregator",
+                fetcher.clone().aggregate(aggregator_metrics),
+            ))
+        } else {
+            None
+        };
+
         let pruner = Pruner::new(fetcher.clone()).await;
         let ds = Self {
             fetcher,
             scanner,
             pruner,
+            aggregator,
         };
 
         Ok(ds)
@@ -1076,6 +1103,70 @@ where
     }
 }
 
+impl<Types, S, P> Fetcher<Types, S, P>
+where
+    Types: NodeType,
+    Payload<Types>: QueryablePayload<Types>,
+    S: VersionedDataSource + 'static,
+    for<'a> S::Transaction<'a>: UpdateAvailabilityData<Types> + UpdateAggregatesStorage<Types>,
+    for<'a> S::ReadOnly<'a>:
+        AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage + AggregatesStorage,
+    P: AvailabilityProvider<Types>,
+{
+    #[tracing::instrument(skip_all)]
+    async fn aggregate(self: Arc<Self>, metrics: AggregatorMetrics) {
+        loop {
+            let start = loop {
+                let mut tx = match self.read().await {
+                    Ok(tx) => tx,
+                    Err(err) => {
+                        tracing::error!("unable to start aggregator: {err:#}");
+                        sleep(Duration::from_secs(5)).await;
+                        continue;
+                    }
+                };
+                match tx.aggregates_height().await {
+                    Ok(height) => break height,
+                    Err(err) => {
+                        tracing::error!("unable to load aggregator height: {err:#}");
+                        sleep(Duration::from_secs(5)).await;
+                        continue;
+                    }
+                };
+            };
+            tracing::info!(start, "starting aggregator");
+            metrics.height.set(start);
+
+            let mut blocks = self.clone().get_range::<_, BlockQueryData<Types>>(start..);
+            while let Some(block) = blocks.next().await {
+                let block = block.await;
+                let height = block.height();
+                tracing::debug!(height, "updating aggregate statistics for block");
+                loop {
+                    let res = async {
+                        let mut tx = self.write().await.context("opening transaction")?;
+                        tx.update_aggregates(&block).await?;
+                        tx.commit().await.context("committing transaction")
+                    }
+                    .await;
+                    match res {
+                        Ok(()) => break,
+                        Err(err) => {
+                            tracing::warn!(
+                                height,
+                                "failed to update aggregates for block: {err:#}"
+                            );
+                            sleep(Duration::from_secs(1)).await;
+                        }
+                    }
+                }
+                metrics.height.set(height as usize);
+            }
+            tracing::warn!("aggregator block stream ended unexpectedly; will restart");
+        }
+    }
+}
+
 #[async_trait]
 impl<Types, S, P, State, const ARITY: usize> MerklizedStateDataSource<Types, State, ARITY>
     for FetchingDataSource<Types, S, P>
@@ -1131,18 +1222,24 @@ where
         tx.block_height().await
     }
 
-    async fn count_transactions(&self) -> QueryResult<usize> {
+    async fn count_transactions_in_range(
+        &self,
+        range: impl RangeBounds<usize> + Send,
+    ) -> QueryResult<usize> {
         let mut tx = self.read().await.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })?;
-        tx.count_transactions().await
+        tx.count_transactions_in_range(range).await
     }
 
-    async fn payload_size(&self) -> QueryResult<usize> {
+    async fn payload_size_in_range(
+        &self,
+        range: impl RangeBounds<usize> + Send,
+    ) -> QueryResult<usize> {
         let mut tx = self.read().await.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })?;
-        tx.payload_size().await
+        tx.payload_size_in_range(range).await
     }
 
     async fn vid_share<ID>(&self, id: ID) -> QueryResult<VidShare>
@@ -1483,6 +1580,21 @@ impl ScannerMetrics {
             self.major_missing_vid.set(missing);
         } else {
             self.minor_missing_vid.update(missing as i64);
+        }
+    }
+}
+
+#[derive(Debug)]
+struct AggregatorMetrics {
+    /// The block height for which aggregate statistics are currently available.
+    height: Box<dyn Gauge>,
+}
+
+impl AggregatorMetrics {
+    fn new(metrics: &PrometheusMetrics) -> Self {
+        let group = metrics.subgroup("aggregator".into());
+        Self {
+            height: group.create_gauge("height".into(), None),
         }
     }
 }

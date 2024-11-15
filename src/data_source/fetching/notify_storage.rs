@@ -20,8 +20,8 @@ use crate::{
         notifier::Notifier,
         storage::{
             pruning::{PruneStorage, PrunedHeightStorage, PrunerCfg},
-            AvailabilityStorage, ExplorerStorage, MerklizedStateHeightStorage,
-            MerklizedStateStorage, NodeStorage,
+            AggregatesStorage, AvailabilityStorage, ExplorerStorage, MerklizedStateHeightStorage,
+            MerklizedStateStorage, NodeStorage, UpdateAggregatesStorage,
         },
         update::{self, VersionedDataSource},
     },
@@ -428,12 +428,18 @@ where
         self.inner.block_height().await
     }
 
-    async fn count_transactions(&mut self) -> QueryResult<usize> {
-        self.inner.count_transactions().await
+    async fn count_transactions_in_range(
+        &mut self,
+        range: impl RangeBounds<usize> + Send,
+    ) -> QueryResult<usize> {
+        self.inner.count_transactions_in_range(range).await
     }
 
-    async fn payload_size(&mut self) -> QueryResult<usize> {
-        self.inner.payload_size().await
+    async fn payload_size_in_range(
+        &mut self,
+        range: impl RangeBounds<usize> + Send,
+    ) -> QueryResult<usize> {
+        self.inner.payload_size_in_range(range).await
     }
 
     async fn vid_share<ID>(&mut self, id: ID) -> QueryResult<VidShare>
@@ -453,6 +459,26 @@ where
         end: u64,
     ) -> QueryResult<TimeWindowQueryData<Header<Types>>> {
         self.inner.get_header_window(start, end).await
+    }
+}
+
+impl<'a, Types, T> AggregatesStorage for Transaction<'a, Types, T>
+where
+    Types: NodeType,
+    T: AggregatesStorage + Send,
+{
+    async fn aggregates_height(&mut self) -> anyhow::Result<usize> {
+        self.inner.aggregates_height().await
+    }
+}
+
+impl<'a, Types, T> UpdateAggregatesStorage<Types> for Transaction<'a, Types, T>
+where
+    Types: NodeType,
+    T: UpdateAggregatesStorage<Types> + Send,
+{
+    async fn update_aggregates(&mut self, block: &BlockQueryData<Types>) -> anyhow::Result<()> {
+        self.inner.update_aggregates(block).await
     }
 }
 
