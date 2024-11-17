@@ -1021,148 +1021,148 @@ where
         chunk_size: usize,
         metrics: ScannerMetrics,
     ) {
-        let mut prev_height = 0;
+        // let mut prev_height = 0;
 
-        for i in 0.. {
-            let major = i % major_interval == major_offset % major_interval;
-            let span = tracing::warn_span!("proactive scan", i, major, prev_height);
-            metrics.running.set(1);
-            metrics.current_scan.set(i);
-            metrics.current_is_major.set(major as usize);
-            async {
-                let mut backoff = minor_interval;
-                let max_backoff = Duration::from_secs(60);
-                metrics.backoff.set(backoff.as_secs() as usize);
+        // for i in 0.. {
+        //     let major = i % major_interval == major_offset % major_interval;
+        //     let span = tracing::warn_span!("proactive scan", i, major, prev_height);
+        //     metrics.running.set(1);
+        //     metrics.current_scan.set(i);
+        //     metrics.current_is_major.set(major as usize);
+        //     async {
+        //         let mut backoff = minor_interval;
+        //         let max_backoff = Duration::from_secs(60);
+        //         metrics.backoff.set(backoff.as_secs() as usize);
 
-                // We can't start the scan until we know the current block height and pruned height,
-                // so we know which blocks to scan. Thus we retry until this succeeds.
-                let heights = loop {
-                    let mut tx = match self.read().await {
-                        Ok(tx) => tx,
-                        Err(err) => {
-                            tracing::error!(
-                                ?backoff,
-                                "unable to start transaction for scan: {err:#}"
-                            );
-                            metrics.retries.update(1);
-                            sleep(backoff).await;
-                            backoff = min(2 * backoff, max_backoff);
-                            metrics.backoff.set(backoff.as_secs() as usize);
-                            continue;
-                        }
-                    };
-                    let heights = match Heights::load(&mut tx).await {
-                        Ok(heights) => heights,
-                        Err(err) => {
-                            tracing::error!(?backoff, "unable to load heights: {err:#}");
-                            metrics.retries.update(1);
-                            sleep(backoff).await;
-                            backoff = min(2 * backoff, max_backoff);
-                            metrics.backoff.set(backoff.as_secs() as usize);
-                            continue;
-                        }
-                    };
-                    metrics.retries.set(0);
-                    break heights;
-                };
+        //         // We can't start the scan until we know the current block height and pruned height,
+        //         // so we know which blocks to scan. Thus we retry until this succeeds.
+        //         let heights = loop {
+        //             let mut tx = match self.read().await {
+        //                 Ok(tx) => tx,
+        //                 Err(err) => {
+        //                     tracing::error!(
+        //                         ?backoff,
+        //                         "unable to start transaction for scan: {err:#}"
+        //                     );
+        //                     metrics.retries.update(1);
+        //                     sleep(backoff).await;
+        //                     backoff = min(2 * backoff, max_backoff);
+        //                     metrics.backoff.set(backoff.as_secs() as usize);
+        //                     continue;
+        //                 }
+        //             };
+        //             let heights = match Heights::load(&mut tx).await {
+        //                 Ok(heights) => heights,
+        //                 Err(err) => {
+        //                     tracing::error!(?backoff, "unable to load heights: {err:#}");
+        //                     metrics.retries.update(1);
+        //                     sleep(backoff).await;
+        //                     backoff = min(2 * backoff, max_backoff);
+        //                     metrics.backoff.set(backoff.as_secs() as usize);
+        //                     continue;
+        //                 }
+        //             };
+        //             metrics.retries.set(0);
+        //             break heights;
+        //         };
 
-                // Get the pruned height or default to 0 if it is not set. We will start looking for
-                // missing blocks from the pruned height.
-                let minimum_block_height = heights.pruned_height.unwrap_or(0) as usize;
-                // Get the block height; we will look for any missing blocks up to `block_height`.
-                let block_height = heights.height as usize;
+        //         // Get the pruned height or default to 0 if it is not set. We will start looking for
+        //         // missing blocks from the pruned height.
+        //         let minimum_block_height = heights.pruned_height.unwrap_or(0) as usize;
+        //         // Get the block height; we will look for any missing blocks up to `block_height`.
+        //         let block_height = heights.height as usize;
 
-                // In a major scan, we fetch all blocks between 0 and `block_height`. In minor scans
-                // (much more frequent) we fetch blocks that are missing since the last scan.
-                let start = if major {
-                    // We log major scans at WARN level, since they happen infrequently and can have
-                    // a measurable impact on performance while running. This also serves as a
-                    // useful progress heartbeat.
-                    tracing::warn!(
-                        start = minimum_block_height,
-                        block_height,
-                        "starting major scan"
-                    );
+        //         // In a major scan, we fetch all blocks between 0 and `block_height`. In minor scans
+        //         // (much more frequent) we fetch blocks that are missing since the last scan.
+        //         let start = if major {
+        //             // We log major scans at WARN level, since they happen infrequently and can have
+        //             // a measurable impact on performance while running. This also serves as a
+        //             // useful progress heartbeat.
+        //             tracing::warn!(
+        //                 start = minimum_block_height,
+        //                 block_height,
+        //                 "starting major scan"
+        //             );
 
-                    // If we're starting a major scan, reset the major scan counts of missing data
-                    // as we're about to recompute them.
-                    metrics.major_missing_blocks.set(0);
-                    metrics.major_missing_vid.set(0);
+        //             // If we're starting a major scan, reset the major scan counts of missing data
+        //             // as we're about to recompute them.
+        //             metrics.major_missing_blocks.set(0);
+        //             metrics.major_missing_vid.set(0);
 
-                    minimum_block_height
-                } else {
-                    tracing::info!(start = prev_height, block_height, "starting minor scan");
-                    prev_height
-                };
-                prev_height = block_height;
-                metrics.current_start.set(start);
-                metrics.current_end.set(block_height);
-                metrics.scanned_blocks.set(0);
-                metrics.scanned_vid.set(0);
+        //             minimum_block_height
+        //         } else {
+        //             tracing::info!(start = prev_height, block_height, "starting minor scan");
+        //             prev_height
+        //         };
+        //         prev_height = block_height;
+        //         metrics.current_start.set(start);
+        //         metrics.current_end.set(block_height);
+        //         metrics.scanned_blocks.set(0);
+        //         metrics.scanned_vid.set(0);
 
-                // Iterate over all blocks that we should have. Fetching the block is enough to
-                // trigger an active fetch of the corresponding leaf if it too is missing. The
-                // chunking behavior of `get_range` automatically ensures that, no matter how big
-                // the range is, we will release the read lock on storage every `chunk_size` items,
-                // so we don't starve out would-be writers.
-                let mut blocks = self
-                    .clone()
-                    .get_range_with_chunk_size::<_, BlockQueryData<Types>>(
-                        chunk_size,
-                        start..block_height,
-                    );
-                let mut missing_blocks = 0;
-                while let Some(fetch) = blocks.next().await {
-                    if fetch.is_pending() {
-                        missing_blocks += 1;
-                        // Wait for the block to be fetched. This slows down the scanner so that we
-                        // don't waste memory generating more active fetch tasks then we can handle
-                        // at a given time. Note that even with this await, all blocks within a
-                        // chunk are fetched in parallel, so this does not block the next block in
-                        // the chunk, only the next chunk until the current chunk completes.
-                        fetch.await;
-                    }
-                    metrics.scanned_blocks.update(1);
-                }
-                metrics.add_missing_blocks(major, missing_blocks);
+        //         // Iterate over all blocks that we should have. Fetching the block is enough to
+        //         // trigger an active fetch of the corresponding leaf if it too is missing. The
+        //         // chunking behavior of `get_range` automatically ensures that, no matter how big
+        //         // the range is, we will release the read lock on storage every `chunk_size` items,
+        //         // so we don't starve out would-be writers.
+        //         let mut blocks = self
+        //             .clone()
+        //             .get_range_with_chunk_size::<_, BlockQueryData<Types>>(
+        //                 chunk_size,
+        //                 start..block_height,
+        //             );
+        //         let mut missing_blocks = 0;
+        //         while let Some(fetch) = blocks.next().await {
+        //             if fetch.is_pending() {
+        //                 missing_blocks += 1;
+        //                 // Wait for the block to be fetched. This slows down the scanner so that we
+        //                 // don't waste memory generating more active fetch tasks then we can handle
+        //                 // at a given time. Note that even with this await, all blocks within a
+        //                 // chunk are fetched in parallel, so this does not block the next block in
+        //                 // the chunk, only the next chunk until the current chunk completes.
+        //                 fetch.await;
+        //             }
+        //             metrics.scanned_blocks.update(1);
+        //         }
+        //         metrics.add_missing_blocks(major, missing_blocks);
 
-                // We have to trigger a separate fetch of the VID data, since this is fetched
-                // independently of the block payload.
-                let mut vid = self
-                    .clone()
-                    .get_range_with_chunk_size::<_, VidCommonQueryData<Types>>(
-                        chunk_size,
-                        start..block_height,
-                    );
-                let mut missing_vid = 0;
-                while let Some(fetch) = vid.next().await {
-                    if fetch.is_pending() {
-                        missing_vid += 1;
-                        // As above, limit the speed at which we spawn new fetches to the speed at
-                        // which we can process them.
-                        fetch.await;
-                    }
-                    metrics.scanned_vid.update(1);
-                }
-                metrics.add_missing_vid(major, missing_vid);
+        //         // We have to trigger a separate fetch of the VID data, since this is fetched
+        //         // independently of the block payload.
+        //         let mut vid = self
+        //             .clone()
+        //             .get_range_with_chunk_size::<_, VidCommonQueryData<Types>>(
+        //                 chunk_size,
+        //                 start..block_height,
+        //             );
+        //         let mut missing_vid = 0;
+        //         while let Some(fetch) = vid.next().await {
+        //             if fetch.is_pending() {
+        //                 missing_vid += 1;
+        //                 // As above, limit the speed at which we spawn new fetches to the speed at
+        //                 // which we can process them.
+        //                 fetch.await;
+        //             }
+        //             metrics.scanned_vid.update(1);
+        //         }
+        //         metrics.add_missing_vid(major, missing_vid);
 
-                tracing::info!("completed proactive scan, will scan again in {minor_interval:?}");
+        //         tracing::info!("completed proactive scan, will scan again in {minor_interval:?}");
 
-                // Reset metrics.
-                metrics.running.set(0);
-                if major {
-                    // If we just completed a major scan, reset the incremental counts of missing
-                    // data from minor scans, so the next round of minor scans can recompute/update
-                    // them.
-                    metrics.minor_missing_blocks.set(0);
-                    metrics.minor_missing_vid.set(0);
-                }
+        //         // Reset metrics.
+        //         metrics.running.set(0);
+        //         if major {
+        //             // If we just completed a major scan, reset the incremental counts of missing
+        //             // data from minor scans, so the next round of minor scans can recompute/update
+        //             // them.
+        //             metrics.minor_missing_blocks.set(0);
+        //             metrics.minor_missing_vid.set(0);
+        //         }
 
-                sleep(minor_interval).await;
-            }
-            .instrument(span)
-            .await;
-        }
+        //         sleep(minor_interval).await;
+        //     }
+        //     .instrument(span)
+        //     .await;
+        // }
     }
 }
 
