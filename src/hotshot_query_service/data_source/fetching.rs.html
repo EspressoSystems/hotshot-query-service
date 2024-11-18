@@ -2036,6 +2036,74 @@
 <a href="#2036" id="2036">2036</a>
 <a href="#2037" id="2037">2037</a>
 <a href="#2038" id="2038">2038</a>
+<a href="#2039" id="2039">2039</a>
+<a href="#2040" id="2040">2040</a>
+<a href="#2041" id="2041">2041</a>
+<a href="#2042" id="2042">2042</a>
+<a href="#2043" id="2043">2043</a>
+<a href="#2044" id="2044">2044</a>
+<a href="#2045" id="2045">2045</a>
+<a href="#2046" id="2046">2046</a>
+<a href="#2047" id="2047">2047</a>
+<a href="#2048" id="2048">2048</a>
+<a href="#2049" id="2049">2049</a>
+<a href="#2050" id="2050">2050</a>
+<a href="#2051" id="2051">2051</a>
+<a href="#2052" id="2052">2052</a>
+<a href="#2053" id="2053">2053</a>
+<a href="#2054" id="2054">2054</a>
+<a href="#2055" id="2055">2055</a>
+<a href="#2056" id="2056">2056</a>
+<a href="#2057" id="2057">2057</a>
+<a href="#2058" id="2058">2058</a>
+<a href="#2059" id="2059">2059</a>
+<a href="#2060" id="2060">2060</a>
+<a href="#2061" id="2061">2061</a>
+<a href="#2062" id="2062">2062</a>
+<a href="#2063" id="2063">2063</a>
+<a href="#2064" id="2064">2064</a>
+<a href="#2065" id="2065">2065</a>
+<a href="#2066" id="2066">2066</a>
+<a href="#2067" id="2067">2067</a>
+<a href="#2068" id="2068">2068</a>
+<a href="#2069" id="2069">2069</a>
+<a href="#2070" id="2070">2070</a>
+<a href="#2071" id="2071">2071</a>
+<a href="#2072" id="2072">2072</a>
+<a href="#2073" id="2073">2073</a>
+<a href="#2074" id="2074">2074</a>
+<a href="#2075" id="2075">2075</a>
+<a href="#2076" id="2076">2076</a>
+<a href="#2077" id="2077">2077</a>
+<a href="#2078" id="2078">2078</a>
+<a href="#2079" id="2079">2079</a>
+<a href="#2080" id="2080">2080</a>
+<a href="#2081" id="2081">2081</a>
+<a href="#2082" id="2082">2082</a>
+<a href="#2083" id="2083">2083</a>
+<a href="#2084" id="2084">2084</a>
+<a href="#2085" id="2085">2085</a>
+<a href="#2086" id="2086">2086</a>
+<a href="#2087" id="2087">2087</a>
+<a href="#2088" id="2088">2088</a>
+<a href="#2089" id="2089">2089</a>
+<a href="#2090" id="2090">2090</a>
+<a href="#2091" id="2091">2091</a>
+<a href="#2092" id="2092">2092</a>
+<a href="#2093" id="2093">2093</a>
+<a href="#2094" id="2094">2094</a>
+<a href="#2095" id="2095">2095</a>
+<a href="#2096" id="2096">2096</a>
+<a href="#2097" id="2097">2097</a>
+<a href="#2098" id="2098">2098</a>
+<a href="#2099" id="2099">2099</a>
+<a href="#2100" id="2100">2100</a>
+<a href="#2101" id="2101">2101</a>
+<a href="#2102" id="2102">2102</a>
+<a href="#2103" id="2103">2103</a>
+<a href="#2104" id="2104">2104</a>
+<a href="#2105" id="2105">2105</a>
+<a href="#2106" id="2106">2106</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -2123,8 +2191,8 @@
 <span class="kw">use crate</span>::{
     availability::{
         AvailabilityDataSource, BlockId, BlockInfo, BlockQueryData, Fetch, LeafId, LeafQueryData,
-        PayloadQueryData, QueryableHeader, QueryablePayload, TransactionHash, TransactionQueryData,
-        UpdateAvailabilityData, VidCommonQueryData,
+        PayloadMetadata, PayloadQueryData, QueryableHeader, QueryablePayload, TransactionHash,
+        TransactionQueryData, UpdateAvailabilityData, VidCommonMetadata, VidCommonQueryData,
     },
     explorer::{<span class="self">self</span>, ExplorerDataSource},
     fetching::{<span class="self">self</span>, request, Provider},
@@ -2194,6 +2262,7 @@
     chunk_fetch_delay: Duration,
     proactive_fetching: bool,
     aggregator: bool,
+    aggregator_chunk_size: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     _types: PhantomData&lt;Types&gt;,
 }
 
@@ -2229,6 +2298,7 @@
             chunk_fetch_delay: Duration::from_millis(<span class="number">100</span>),
             proactive_fetching: <span class="bool-val">true</span>,
             aggregator: <span class="bool-val">true</span>,
+            aggregator_chunk_size: <span class="prelude-val">None</span>,
             _types: Default::default(),
         }
     }
@@ -2315,7 +2385,7 @@
     ///
     /// This is similar to [`Self::with_range_chunk_size`], but only affects the chunk size for
     /// proactive fetching scans, not for normal subscription streams. This can be useful to tune
-    /// the proactive scanner to be more or less greedy with the lock on persistent storage.
+    /// the proactive scanner to be more or less greedy with persistent storage resources.
     ///
     /// By default (i.e. if this method is not called) the proactive range chunk size will be set to
     /// whatever the normal range chunk size is.
@@ -2369,6 +2439,19 @@
     /// (such as transaction counts) not to update.
     </span><span class="kw">pub fn </span>disable_aggregator(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.aggregator = <span class="bool-val">false</span>;
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Set the number of items to process at a time when computing aggregate statistics.
+    ///
+    /// This is similar to [`Self::with_range_chunk_size`], but only affects the chunk size for
+    /// the aggregator task, not for normal subscription streams. This can be useful to tune
+    /// the aggregator to be more or less greedy with persistent storage resources.
+    ///
+    /// By default (i.e. if this method is not called) the proactive range chunk size will be set to
+    /// whatever the normal range chunk size is.
+    </span><span class="kw">pub fn </span>with_aggregator_chunk_size(<span class="kw-2">mut </span><span class="self">self</span>, chunk_size: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.aggregator_chunk_size = <span class="prelude-val">Some</span>(chunk_size);
         <span class="self">self
     </span>}
 }
@@ -2485,6 +2568,9 @@
 
     <span class="kw">async fn </span>new(builder: Builder&lt;Types, S, P&gt;) -&gt; anyhow::Result&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>aggregator = builder.aggregator;
+        <span class="kw">let </span>aggregator_chunk_size = builder
+            .aggregator_chunk_size
+            .unwrap_or(builder.range_chunk_size);
         <span class="kw">let </span>proactive_fetching = builder.proactive_fetching;
         <span class="kw">let </span>minor_interval = builder.minor_scan_interval;
         <span class="kw">let </span>major_interval = builder.major_scan_interval;
@@ -2514,7 +2600,9 @@
         <span class="kw">let </span>aggregator = <span class="kw">if </span>aggregator {
             <span class="prelude-val">Some</span>(BackgroundTask::spawn(
                 <span class="string">"aggregator"</span>,
-                fetcher.clone().aggregate(aggregator_metrics),
+                fetcher
+                    .clone()
+                    .aggregate(aggregator_chunk_size, aggregator_metrics),
             ))
         } <span class="kw">else </span>{
             <span class="prelude-val">None
@@ -2586,7 +2674,13 @@
     <span class="kw">type </span>PayloadRange&lt;R&gt; = BoxStream&lt;<span class="lifetime">'static</span>, Fetch&lt;PayloadQueryData&lt;Types&gt;&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>PayloadMetadataRange&lt;R&gt; = BoxStream&lt;<span class="lifetime">'static</span>, Fetch&lt;PayloadMetadata&lt;Types&gt;&gt;&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send;
     <span class="kw">type </span>VidCommonRange&lt;R&gt; = BoxStream&lt;<span class="lifetime">'static</span>, Fetch&lt;VidCommonQueryData&lt;Types&gt;&gt;&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>VidCommonMetadataRange&lt;R&gt; = BoxStream&lt;<span class="lifetime">'static</span>, Fetch&lt;VidCommonMetadata&lt;Types&gt;&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send;
 
@@ -2611,7 +2705,21 @@
         <span class="self">self</span>.fetcher.get(id.into()).<span class="kw">await
     </span>}
 
+    <span class="kw">async fn </span>get_payload_metadata&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;PayloadMetadata&lt;Types&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
+    {
+        <span class="self">self</span>.fetcher.get(id.into()).<span class="kw">await
+    </span>}
+
     <span class="kw">async fn </span>get_vid_common&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;VidCommonQueryData&lt;Types&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
+    {
+        <span class="self">self</span>.fetcher.get(VidCommonRequest::from(id.into())).<span class="kw">await
+    </span>}
+
+    <span class="kw">async fn </span>get_vid_common_metadata&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;VidCommonMetadata&lt;Types&gt;&gt;
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
     {
@@ -2639,7 +2747,21 @@
         <span class="self">self</span>.fetcher.clone().get_range(range)
     }
 
+    <span class="kw">async fn </span>get_payload_metadata_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::PayloadMetadataRange&lt;R&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
+    {
+        <span class="self">self</span>.fetcher.clone().get_range(range)
+    }
+
     <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::VidCommonRange&lt;R&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
+    {
+        <span class="self">self</span>.fetcher.clone().get_range(range)
+    }
+
+    <span class="kw">async fn </span>get_vid_common_metadata_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::VidCommonMetadataRange&lt;R&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
     {
@@ -2679,10 +2801,10 @@
                 <span class="kw">async move </span>{
                     <span class="macro">tracing::info!</span>(fetch_block, fetch_vid, <span class="string">"fetching missing data"</span>);
                     <span class="kw">if </span>fetch_block {
-                        fetcher.get::&lt;BlockQueryData&lt;Types&gt;&gt;(height).<span class="kw">await</span>;
+                        fetcher.get::&lt;PayloadMetadata&lt;Types&gt;&gt;(height).<span class="kw">await</span>;
                     }
                     <span class="kw">if </span>fetch_vid {
-                        fetcher.get::&lt;VidCommonQueryData&lt;Types&gt;&gt;(height).<span class="kw">await</span>;
+                        fetcher.get::&lt;VidCommonMetadata&lt;Types&gt;&gt;(height).<span class="kw">await</span>;
                     }
                 }
                 .instrument(span),
@@ -3265,14 +3387,13 @@
                 metrics.scanned_blocks.set(<span class="number">0</span>);
                 metrics.scanned_vid.set(<span class="number">0</span>);
 
-                <span class="comment">// Iterate over all blocks that we should have. Fetching the block is enough to
-                // trigger an active fetch of the corresponding leaf if it too is missing. The
-                // chunking behavior of `get_range` automatically ensures that, no matter how big
-                // the range is, we will release the read lock on storage every `chunk_size` items,
-                // so we don't starve out would-be writers.
+                <span class="comment">// Iterate over all blocks that we should have. Fetching the payload metadata is
+                // enough to trigger an active fetch of the corresponding leaf and the full block if
+                // they are missing, without loading the full payload from storage if we already
+                // have it.
                 </span><span class="kw">let </span><span class="kw-2">mut </span>blocks = <span class="self">self
                     </span>.clone()
-                    .get_range_with_chunk_size::&lt;<span class="kw">_</span>, BlockQueryData&lt;Types&gt;&gt;(
+                    .get_range_with_chunk_size::&lt;<span class="kw">_</span>, PayloadMetadata&lt;Types&gt;&gt;(
                         chunk_size,
                         start..block_height,
                     );
@@ -3295,7 +3416,7 @@
                 // independently of the block payload.
                 </span><span class="kw">let </span><span class="kw-2">mut </span>vid = <span class="self">self
                     </span>.clone()
-                    .get_range_with_chunk_size::&lt;<span class="kw">_</span>, VidCommonQueryData&lt;Types&gt;&gt;(
+                    .get_range_with_chunk_size::&lt;<span class="kw">_</span>, VidCommonMetadata&lt;Types&gt;&gt;(
                         chunk_size,
                         start..block_height,
                     );
@@ -3342,7 +3463,7 @@
     P: AvailabilityProvider&lt;Types&gt;,
 {
     <span class="attr">#[tracing::instrument(skip_all)]
-    </span><span class="kw">async fn </span>aggregate(<span class="self">self</span>: Arc&lt;<span class="self">Self</span>&gt;, metrics: AggregatorMetrics) {
+    </span><span class="kw">async fn </span>aggregate(<span class="self">self</span>: Arc&lt;<span class="self">Self</span>&gt;, chunk_size: usize, metrics: AggregatorMetrics) {
         <span class="kw">loop </span>{
             <span class="kw">let </span>start = <span class="kw">loop </span>{
                 <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="kw">match </span><span class="self">self</span>.read().<span class="kw">await </span>{
@@ -3365,15 +3486,29 @@
             <span class="macro">tracing::info!</span>(start, <span class="string">"starting aggregator"</span>);
             metrics.height.set(start);
 
-            <span class="kw">let </span><span class="kw-2">mut </span>blocks = <span class="self">self</span>.clone().get_range::&lt;<span class="kw">_</span>, BlockQueryData&lt;Types&gt;&gt;(start..);
-            <span class="kw">while let </span><span class="prelude-val">Some</span>(block) = blocks.next().<span class="kw">await </span>{
-                <span class="kw">let </span>block = block.<span class="kw">await</span>;
-                <span class="kw">let </span>height = block.height();
-                <span class="macro">tracing::debug!</span>(height, <span class="string">"updating aggregate statistics for block"</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>blocks = <span class="self">self
+                </span>.clone()
+                .get_range_with_chunk_size::&lt;<span class="kw">_</span>, PayloadMetadata&lt;Types&gt;&gt;(chunk_size, start..)
+                .then(Fetch::resolve)
+                .ready_chunks(chunk_size)
+                .boxed();
+            <span class="kw">while let </span><span class="prelude-val">Some</span>(chunk) = blocks.next().<span class="kw">await </span>{
+                <span class="kw">let </span><span class="prelude-val">Some</span>(last) = chunk.last() <span class="kw">else </span>{
+                    <span class="comment">// This is not supposed to happen, but if the chunk is empty, just skip it.
+                    </span><span class="macro">tracing::warn!</span>(<span class="string">"ready_chunks returned an empty chunk"</span>);
+                    <span class="kw">continue</span>;
+                };
+                <span class="kw">let </span>height = last.height();
+                <span class="kw">let </span>num_blocks = chunk.len();
+                <span class="macro">tracing::debug!</span>(
+                    num_blocks,
+                    height,
+                    <span class="string">"updating aggregate statistics for chunk"
+                </span>);
                 <span class="kw">loop </span>{
                     <span class="kw">let </span>res = <span class="kw">async </span>{
                         <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.write().<span class="kw">await</span>.context(<span class="string">"opening transaction"</span>)<span class="question-mark">?</span>;
-                        tx.update_aggregates(<span class="kw-2">&amp;</span>block).<span class="kw">await</span><span class="question-mark">?</span>;
+                        tx.update_aggregates(<span class="kw-2">&amp;</span>chunk).<span class="kw">await</span><span class="question-mark">?</span>;
                         tx.commit().<span class="kw">await</span>.context(<span class="string">"committing transaction"</span>)
                     }
                     .<span class="kw">await</span>;
@@ -3381,8 +3516,9 @@
                         <span class="prelude-val">Ok</span>(()) =&gt; <span class="kw">break</span>,
                         <span class="prelude-val">Err</span>(err) =&gt; {
                             <span class="macro">tracing::warn!</span>(
+                                num_blocks,
                                 height,
-                                <span class="string">"failed to update aggregates for block: {err:#}"
+                                <span class="string">"failed to update aggregates for chunk: {err:#}"
                             </span>);
                             sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
                         }

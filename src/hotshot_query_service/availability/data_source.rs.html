@@ -252,6 +252,55 @@
 <a href="#252" id="252">252</a>
 <a href="#253" id="253">253</a>
 <a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -267,8 +316,9 @@
 </span><span class="kw">use super</span>::{
     fetch::Fetch,
     query_data::{
-        BlockHash, BlockQueryData, LeafHash, LeafQueryData, PayloadQueryData, QueryablePayload,
-        TransactionHash, TransactionQueryData, VidCommonQueryData,
+        BlockHash, BlockQueryData, LeafHash, LeafQueryData, PayloadMetadata, PayloadQueryData,
+        QueryablePayload, TransactionHash, TransactionQueryData, VidCommonMetadata,
+        VidCommonQueryData,
     },
 };
 <span class="kw">use crate</span>::{types::HeightIndexed, Payload, VidCommitment, VidShare};
@@ -384,7 +434,19 @@
     <span class="kw">type </span>PayloadRange&lt;R&gt;: Stream&lt;Item = Fetch&lt;PayloadQueryData&lt;Types&gt;&gt;&gt; + Unpin + Send + <span class="lifetime">'static
     </span><span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>PayloadMetadataRange&lt;R&gt;: Stream&lt;Item = Fetch&lt;PayloadMetadata&lt;Types&gt;&gt;&gt;
+        + Unpin
+        + Send
+        + <span class="lifetime">'static
+    </span><span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send;
     <span class="kw">type </span>VidCommonRange&lt;R&gt;: Stream&lt;Item = Fetch&lt;VidCommonQueryData&lt;Types&gt;&gt;&gt; + Unpin + Send + <span class="lifetime">'static
+    </span><span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>VidCommonMetadataRange&lt;R&gt;: Stream&lt;Item = Fetch&lt;VidCommonMetadata&lt;Types&gt;&gt;&gt;
+        + Unpin
+        + Send
+        + <span class="lifetime">'static
     </span><span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send;
 
@@ -400,7 +462,15 @@
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync;
 
+    <span class="kw">async fn </span>get_payload_metadata&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;PayloadMetadata&lt;Types&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync;
+
     <span class="kw">async fn </span>get_vid_common&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;VidCommonQueryData&lt;Types&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync;
+
+    <span class="kw">async fn </span>get_vid_common_metadata&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;VidCommonMetadata&lt;Types&gt;&gt;
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync;
 
@@ -416,7 +486,15 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 
+    <span class="kw">async fn </span>get_payload_metadata_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::PayloadMetadataRange&lt;R&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
+
     <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::VidCommonRange&lt;R&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
+
+    <span class="kw">async fn </span>get_vid_common_metadata_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::VidCommonMetadataRange&lt;R&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 
@@ -440,6 +518,16 @@
             .boxed()
     }
 
+    <span class="kw">async fn </span>subscribe_payload_metadata(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        from: usize,
+    ) -&gt; BoxStream&lt;<span class="lifetime">'static</span>, PayloadMetadata&lt;Types&gt;&gt; {
+        <span class="self">self</span>.get_payload_metadata_range(from..)
+            .<span class="kw">await
+            </span>.then(Fetch::resolve)
+            .boxed()
+    }
+
     <span class="kw">async fn </span>subscribe_leaves(<span class="kw-2">&amp;</span><span class="self">self</span>, from: usize) -&gt; BoxStream&lt;<span class="lifetime">'static</span>, LeafQueryData&lt;Types&gt;&gt; {
         <span class="self">self</span>.get_leaf_range(from..)
             .<span class="kw">await
@@ -452,6 +540,16 @@
         from: usize,
     ) -&gt; BoxStream&lt;<span class="lifetime">'static</span>, VidCommonQueryData&lt;Types&gt;&gt; {
         <span class="self">self</span>.get_vid_common_range(from..)
+            .<span class="kw">await
+            </span>.then(Fetch::resolve)
+            .boxed()
+    }
+
+    <span class="kw">async fn </span>subscribe_vid_common_metadata(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        from: usize,
+    ) -&gt; BoxStream&lt;<span class="lifetime">'static</span>, VidCommonMetadata&lt;Types&gt;&gt; {
+        <span class="self">self</span>.get_vid_common_metadata_range(from..)
             .<span class="kw">await
             </span>.then(Fetch::resolve)
             .boxed()

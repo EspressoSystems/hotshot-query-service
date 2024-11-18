@@ -419,6 +419,27 @@
 <a href="#419" id="419">419</a>
 <a href="#420" id="420">420</a>
 <a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -438,12 +459,14 @@
     parse_header, DecodeError, QueryBuilder, HEADER_COLUMNS,
 };
 <span class="kw">use crate</span>::{
-    availability::BlockQueryData,
-    data_source::storage::{AggregatesStorage, NodeStorage, UpdateAggregatesStorage},
+    data_source::storage::{
+        AggregatesStorage, NodeStorage, PayloadMetadata, UpdateAggregatesStorage,
+    },
     node::{BlockId, SyncStatus, TimeWindowQueryData, WindowStart},
     types::HeightIndexed,
     Header, MissingSnafu, NotFoundSnafu, QueryError, QueryResult, VidShare,
 };
+<span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>futures::stream::{StreamExt, TryStreamExt};
 <span class="kw">use </span>hotshot_types::traits::{block_contents::BlockHeader, node_implementation::NodeType};
@@ -696,8 +719,9 @@
 }
 
 <span class="kw">impl</span>&lt;Types: NodeType&gt; UpdateAggregatesStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;Write&gt; {
-    <span class="kw">async fn </span>update_aggregates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: <span class="kw-2">&amp;</span>BlockQueryData&lt;Types&gt;) -&gt; anyhow::Result&lt;()&gt; {
-        <span class="kw">let </span>height = block.height();
+    <span class="kw">async fn </span>update_aggregates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, blocks: <span class="kw-2">&amp;</span>[PayloadMetadata&lt;Types&gt;]) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="comment">// Get the cumulative statistics up to the block before this chunk.
+        </span><span class="kw">let </span>height = blocks[<span class="number">0</span>].height();
         <span class="kw">let </span>(prev_tx_count, prev_size) = <span class="kw">if </span>height == <span class="number">0 </span>{
             (<span class="number">0</span>, <span class="number">0</span>)
         } <span class="kw">else </span>{
@@ -714,15 +738,33 @@
             (tx_count <span class="kw">as </span>u64, size <span class="kw">as </span>u64)
         };
 
+        <span class="comment">// Cumulatively sum up new statistics for each block in this chunk.
+        </span><span class="kw">let </span>rows = blocks
+            .iter()
+            .scan(
+                (height, prev_tx_count, prev_size),
+                |(height, tx_count, size), block| {
+                    <span class="kw">if </span><span class="kw-2">*</span>height != block.height {
+                        <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(
+                            <span class="string">"blocks in update_aggregates are not sequential; expected {}, got {}"</span>,
+                            <span class="kw-2">*</span>height,
+                            block.height()
+                        )));
+                    }
+                    <span class="kw-2">*</span>height += <span class="number">1</span>;
+
+                    <span class="kw-2">*</span>tx_count += block.num_transactions;
+                    <span class="kw-2">*</span>size += block.size;
+                    <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>((block.height <span class="kw">as </span>i64, <span class="kw-2">*</span>tx_count <span class="kw">as </span>i64, <span class="kw-2">*</span>size <span class="kw">as </span>i64)))
+                },
+            )
+            .collect::&lt;anyhow::Result&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
+
         <span class="self">self</span>.upsert(
             <span class="string">"aggregate"</span>,
             [<span class="string">"height"</span>, <span class="string">"num_transactions"</span>, <span class="string">"payload_size"</span>],
             [<span class="string">"height"</span>],
-            [(
-                height <span class="kw">as </span>i64,
-                (prev_tx_count + block.num_transactions()) <span class="kw">as </span>i64,
-                (prev_size + block.size()) <span class="kw">as </span>i64,
-            )],
+            rows,
         )
         .<span class="kw">await
     </span>}

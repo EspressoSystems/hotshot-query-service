@@ -302,6 +302,27 @@
 <a href="#302" id="302">302</a>
 <a href="#303" id="303">303</a>
 <a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -363,8 +384,9 @@
 
 </span><span class="kw">use crate</span>::{
     availability::{
-        BlockId, BlockQueryData, LeafId, LeafQueryData, PayloadQueryData, QueryableHeader,
-        QueryablePayload, TransactionHash, TransactionQueryData, VidCommonQueryData,
+        BlockId, BlockQueryData, LeafId, LeafQueryData, PayloadMetadata, PayloadQueryData,
+        QueryableHeader, QueryablePayload, TransactionHash, TransactionQueryData,
+        VidCommonMetadata, VidCommonQueryData,
     },
     explorer::{
         query_data::{
@@ -427,10 +449,18 @@
     <span class="kw">async fn </span>get_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;BlockQueryData&lt;Types&gt;&gt;;
     <span class="kw">async fn </span>get_header(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;Header&lt;Types&gt;&gt;;
     <span class="kw">async fn </span>get_payload(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: BlockId&lt;Types&gt;) -&gt; QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt;;
+    <span class="kw">async fn </span>get_payload_metadata(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        id: BlockId&lt;Types&gt;,
+    ) -&gt; QueryResult&lt;PayloadMetadata&lt;Types&gt;&gt;;
     <span class="kw">async fn </span>get_vid_common(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         id: BlockId&lt;Types&gt;,
     ) -&gt; QueryResult&lt;VidCommonQueryData&lt;Types&gt;&gt;;
+    <span class="kw">async fn </span>get_vid_common_metadata(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        id: BlockId&lt;Types&gt;,
+    ) -&gt; QueryResult&lt;VidCommonMetadata&lt;Types&gt;&gt;;
 
     <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -450,10 +480,22 @@
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;PayloadQueryData&lt;Types&gt;&gt;&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
+    <span class="kw">async fn </span>get_payload_metadata_range&lt;R&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        range: R,
+    ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;PayloadMetadata&lt;Types&gt;&gt;&gt;&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
     <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         range: R,
     ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;VidCommonQueryData&lt;Types&gt;&gt;&gt;&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
+    <span class="kw">async fn </span>get_vid_common_metadata_range&lt;R&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        range: R,
+    ) -&gt; QueryResult&lt;Vec&lt;QueryResult&lt;VidCommonMetadata&lt;Types&gt;&gt;&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 
@@ -518,7 +560,7 @@
     <span class="doccomment">/// Update aggregate statistics based on a new block.
     </span><span class="kw">fn </span>update_aggregates(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        block: <span class="kw-2">&amp;</span>BlockQueryData&lt;Types&gt;,
+        blocks: <span class="kw-2">&amp;</span>[PayloadMetadata&lt;Types&gt;],
     ) -&gt; <span class="kw">impl </span>Future&lt;Output = anyhow::Result&lt;()&gt;&gt; + Send;
 }
 

@@ -455,6 +455,36 @@
 <a href="#455" id="455">455</a>
 <a href="#456" id="456">456</a>
 <a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
+<a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -471,8 +501,8 @@
 <span class="kw">use crate</span>::{
     availability::{
         AvailabilityDataSource, BlockId, BlockInfo, BlockQueryData, Fetch, LeafId, LeafQueryData,
-        PayloadQueryData, QueryableHeader, QueryablePayload, TransactionHash, TransactionQueryData,
-        UpdateAvailabilityData, VidCommonQueryData,
+        PayloadMetadata, PayloadQueryData, QueryableHeader, QueryablePayload, TransactionHash,
+        TransactionQueryData, UpdateAvailabilityData, VidCommonMetadata, VidCommonQueryData,
     },
     explorer::{<span class="self">self</span>, ExplorerDataSource, ExplorerHeader, ExplorerTransaction},
     merklized_state::{
@@ -610,7 +640,13 @@
     <span class="kw">type </span>PayloadRange&lt;R&gt; = D::PayloadRange&lt;R&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>PayloadMetadataRange&lt;R&gt; = D::PayloadMetadataRange&lt;R&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send;
     <span class="kw">type </span>VidCommonRange&lt;R&gt; = D::VidCommonRange&lt;R&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send;
+    <span class="kw">type </span>VidCommonMetadataRange&lt;R&gt; = D::VidCommonMetadataRange&lt;R&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send;
 
@@ -632,11 +668,23 @@
     {
         <span class="self">self</span>.data_source.get_payload(id).<span class="kw">await
     </span>}
+    <span class="kw">async fn </span>get_payload_metadata&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;PayloadMetadata&lt;Types&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
+    {
+        <span class="self">self</span>.data_source.get_payload_metadata(id).<span class="kw">await
+    </span>}
     <span class="kw">async fn </span>get_vid_common&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;VidCommonQueryData&lt;Types&gt;&gt;
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
     {
         <span class="self">self</span>.data_source.get_vid_common(id).<span class="kw">await
+    </span>}
+    <span class="kw">async fn </span>get_vid_common_metadata&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;VidCommonMetadata&lt;Types&gt;&gt;
+    <span class="kw">where
+        </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync,
+    {
+        <span class="self">self</span>.data_source.get_vid_common_metadata(id).<span class="kw">await
     </span>}
     <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::LeafRange&lt;R&gt;
     <span class="kw">where
@@ -656,11 +704,23 @@
     {
         <span class="self">self</span>.data_source.get_payload_range(range).<span class="kw">await
     </span>}
+    <span class="kw">async fn </span>get_payload_metadata_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::PayloadMetadataRange&lt;R&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
+    {
+        <span class="self">self</span>.data_source.get_payload_metadata_range(range).<span class="kw">await
+    </span>}
     <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::VidCommonRange&lt;R&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
     {
         <span class="self">self</span>.data_source.get_vid_common_range(range).<span class="kw">await
+    </span>}
+    <span class="kw">async fn </span>get_vid_common_metadata_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::VidCommonMetadataRange&lt;R&gt;
+    <span class="kw">where
+        </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
+    {
+        <span class="self">self</span>.data_source.get_vid_common_metadata_range(range).<span class="kw">await
     </span>}
     <span class="kw">async fn </span>get_transaction(
         <span class="kw-2">&amp;</span><span class="self">self</span>,

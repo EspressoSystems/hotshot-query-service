@@ -788,6 +788,11 @@
 <a href="#788" id="788">788</a>
 <a href="#789" id="789">789</a>
 <a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1311,9 +1316,14 @@
         </span><span class="kw">let </span>payload = block.payload.encode();
         <span class="self">self</span>.upsert(
             <span class="string">"payload"</span>,
-            [<span class="string">"height"</span>, <span class="string">"data"</span>, <span class="string">"size"</span>],
+            [<span class="string">"height"</span>, <span class="string">"data"</span>, <span class="string">"size"</span>, <span class="string">"num_transactions"</span>],
             [<span class="string">"height"</span>],
-            [(block.height() <span class="kw">as </span>i64, payload.as_ref(), block.size() <span class="kw">as </span>i32)],
+            [(
+                block.height() <span class="kw">as </span>i64,
+                payload.as_ref(),
+                block.size() <span class="kw">as </span>i32,
+                block.num_transactions() <span class="kw">as </span>i32,
+            )],
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
 

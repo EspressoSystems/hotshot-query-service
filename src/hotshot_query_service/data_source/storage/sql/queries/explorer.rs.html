@@ -570,6 +570,7 @@
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -986,7 +987,7 @@
                     h.timestamp AS timestamp,
                     h.timestamp - lead(timestamp) OVER (ORDER BY h.height DESC) AS time,
                     p.size AS size,
-                    (SELECT COUNT(*) AS transactions FROM transaction AS t WHERE t.block_height = h.height) as transactions
+                    p.num_transactions AS transactions
                 FROM header AS h
                 JOIN payload AS p ON
                     p.height = h.height
@@ -994,7 +995,8 @@
                     h.height IN (SELECT height FROM header ORDER BY height DESC LIMIT 50)
                 ORDER BY h.height ASC 
                 "</span>,
-            ).fetch(<span class="self">self</span>.as_mut());
+            )
+            .fetch(<span class="self">self</span>.as_mut());
 
             <span class="kw">let </span>histograms: <span class="prelude-ty">Result</span>&lt;ExplorerHistograms, sqlx::Error&gt; = historgram_query_result
                 .map(|row_stream| {
@@ -1003,7 +1005,7 @@
                         <span class="kw">let </span>timestamp: i64 = row.try_get(<span class="string">"timestamp"</span>)<span class="question-mark">?</span>;
                         <span class="kw">let </span>time: <span class="prelude-ty">Option</span>&lt;i64&gt; = row.try_get(<span class="string">"time"</span>)<span class="question-mark">?</span>;
                         <span class="kw">let </span>size: <span class="prelude-ty">Option</span>&lt;i32&gt; = row.try_get(<span class="string">"size"</span>)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>num_transactions: i64 = row.try_get(<span class="string">"transactions"</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let </span>num_transactions: i32 = row.try_get(<span class="string">"transactions"</span>)<span class="question-mark">?</span>;
 
                         <span class="prelude-val">Ok</span>((height, timestamp, time, size, num_transactions))
                     })
@@ -1016,7 +1018,7 @@
                         block_heights: Vec::with_capacity(<span class="number">50</span>),
                     },
                     |<span class="kw-2">mut </span>histograms: ExplorerHistograms,
-                     row: sqlx::Result&lt;(i64, i64, <span class="prelude-ty">Option</span>&lt;i64&gt;, <span class="prelude-ty">Option</span>&lt;i32&gt;, i64)&gt;| <span class="kw">async </span>{
+                     row: sqlx::Result&lt;(i64, i64, <span class="prelude-ty">Option</span>&lt;i64&gt;, <span class="prelude-ty">Option</span>&lt;i32&gt;, i32)&gt;| <span class="kw">async </span>{
                         <span class="kw">let </span>(height, _timestamp, time, size, num_transactions) = row<span class="question-mark">?</span>;
                         histograms.block_time.push(time.map(|i| i <span class="kw">as </span>u64));
                         histograms.block_size.push(size.map(|i| i <span class="kw">as </span>u64));
