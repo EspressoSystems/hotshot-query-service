@@ -156,6 +156,16 @@
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -172,7 +182,7 @@
 
 </span><span class="kw">use super</span>::{
     block::fetch_block_with_header, leaf::fetch_leaf_with_callbacks,
-    vid::fetch_vid_common_with_header, AvailabilityProvider, Fetcher, ResultExt,
+    vid::fetch_vid_common_with_header, AvailabilityProvider, Fetcher,
 };
 <span class="kw">use crate</span>::{
     availability::{BlockId, QueryablePayload},
@@ -180,9 +190,9 @@
         storage::{AvailabilityStorage, UpdateAvailabilityStorage},
         update::VersionedDataSource,
     },
-    Header, Payload,
+    Header, Payload, QueryError,
 };
-<span class="kw">use </span>anyhow::Context;
+<span class="kw">use </span>anyhow::bail;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>hotshot_types::traits::{block_contents::BlockHeader, node_implementation::NodeType};
 <span class="kw">use </span>std::cmp::Ordering;
@@ -270,7 +280,8 @@
     tx: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
     req: BlockId&lt;Types&gt;,
     callback: HeaderCallback&lt;Types, S, P&gt;,
-) <span class="kw">where
+) -&gt; anyhow::Result&lt;()&gt;
+<span class="kw">where
     </span>Types: NodeType,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     S: VersionedDataSource + <span class="lifetime">'static</span>,
@@ -285,14 +296,21 @@
     //    be able to provide certain data. For example, the HotShot DA committee members may be able
     //    to provide paylaods, but not full blocks. Or, in the case where VID recovery is needed,
     //    the VID common data may be available but the full block may not exist anywhere.
-    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(header) = tx
-        .get_header(req)
-        .<span class="kw">await
-        </span>.context(<span class="macro">format!</span>(<span class="string">"loading header for block {req}"</span>))
-        .ok_or_trace()
-    {
-        callback.run(header);
-        <span class="kw">return</span>;
+    </span><span class="kw">match </span>tx.get_header(req).<span class="kw">await </span>{
+        <span class="prelude-val">Ok</span>(header) =&gt; {
+            callback.run(header);
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
+        <span class="prelude-val">Err</span>(QueryError::Missing | QueryError::NotFound) =&gt; {
+            <span class="comment">// We successfully queried the database, but the header wasn't there. Fall through to
+            // fetching it.
+            </span><span class="macro">tracing::debug!</span>(<span class="question-mark">?</span>req, <span class="string">"header not available locally; trying fetch"</span>);
+        }
+        <span class="prelude-val">Err</span>(QueryError::Error { message }) =&gt; {
+            <span class="comment">// An error occurred while querying the database. We don't know if we need to fetch the
+            // header or not. Return an error so we can try again.
+            </span><span class="macro">bail!</span>(<span class="string">"failed to fetch header for block {req}: {message}"</span>);
+        }
     }
 
     <span class="comment">// If the header is _not_ present, we may still be able to fetch the request, but we need to
@@ -313,5 +331,7 @@
             </span><span class="macro">tracing::debug!</span>(<span class="string">"not fetching block with unknown payload {h}"</span>);
         }
     }
+
+    <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div></section></main></body></html>

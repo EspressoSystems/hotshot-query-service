@@ -84,6 +84,8 @@
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
 <a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -152,7 +154,8 @@
         _tx: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>AvailabilityStorage&lt;Types&gt;,
         _fetcher: Arc&lt;Fetcher&lt;Types, S, P&gt;&gt;,
         req: <span class="self">Self</span>::Request,
-    ) <span class="kw">where
+    ) -&gt; anyhow::Result&lt;()&gt;
+    <span class="kw">where
         </span>S: VersionedDataSource + <span class="lifetime">'static</span>,
         <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; S::Transaction&lt;<span class="lifetime">'a</span>&gt;: UpdateAvailabilityStorage&lt;Types&gt;,
         P: AvailabilityProvider&lt;Types&gt;,
@@ -161,6 +164,7 @@
         // no way of knowing whether a block with such a transaction actually exists, and we don't
         // want to bother peers with requests for non-existant transactions.
         </span><span class="macro">tracing::debug!</span>(<span class="string">"not fetching unknown transaction {req:?}"</span>);
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">async fn </span>load&lt;S&gt;(storage: <span class="kw-2">&amp;mut </span>S, req: <span class="self">Self</span>::Request) -&gt; QueryResult&lt;<span class="self">Self</span>&gt;

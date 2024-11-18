@@ -925,7 +925,7 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send,
     {
-        <span class="prelude-val">Err</span>(QueryError::Missing)
+        <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[])
     }
 
     <span class="kw">async fn </span>get_block_range&lt;R&gt;(
@@ -935,7 +935,7 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send,
     {
-        <span class="prelude-val">Err</span>(QueryError::Missing)
+        <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[])
     }
 
     <span class="kw">async fn </span>get_payload_range&lt;R&gt;(
@@ -945,7 +945,7 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send,
     {
-        <span class="prelude-val">Err</span>(QueryError::Missing)
+        <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[])
     }
 
     <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(
@@ -955,7 +955,7 @@
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send,
     {
-        <span class="prelude-val">Err</span>(QueryError::Missing)
+        <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[])
     }
 
     <span class="kw">async fn </span>get_transaction(
