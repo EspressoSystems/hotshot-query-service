@@ -1358,6 +1358,32 @@
 <a href="#1358" id="1358">1358</a>
 <a href="#1359" id="1359">1359</a>
 <a href="#1360" id="1360">1360</a>
+<a href="#1361" id="1361">1361</a>
+<a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
+<a href="#1365" id="1365">1365</a>
+<a href="#1366" id="1366">1366</a>
+<a href="#1367" id="1367">1367</a>
+<a href="#1368" id="1368">1368</a>
+<a href="#1369" id="1369">1369</a>
+<a href="#1370" id="1370">1370</a>
+<a href="#1371" id="1371">1371</a>
+<a href="#1372" id="1372">1372</a>
+<a href="#1373" id="1373">1373</a>
+<a href="#1374" id="1374">1374</a>
+<a href="#1375" id="1375">1375</a>
+<a href="#1376" id="1376">1376</a>
+<a href="#1377" id="1377">1377</a>
+<a href="#1378" id="1378">1378</a>
+<a href="#1379" id="1379">1379</a>
+<a href="#1380" id="1380">1380</a>
+<a href="#1381" id="1381">1381</a>
+<a href="#1382" id="1382">1382</a>
+<a href="#1383" id="1383">1383</a>
+<a href="#1384" id="1384">1384</a>
+<a href="#1385" id="1385">1385</a>
+<a href="#1386" id="1386">1386</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -2473,10 +2499,7 @@
     }
 
     <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
-    </span><span class="kw">pub async fn </span>test_timestamp_window&lt;D: TestableDataSource&gt;()
-    <span class="kw">where
-        for</span>&lt;<span class="lifetime">'a</span>&gt; D::ReadOnly&lt;<span class="lifetime">'a</span>&gt;: NodeStorage&lt;MockTypes&gt;,
-    {
+    </span><span class="kw">pub async fn </span>test_timestamp_window&lt;D: TestableDataSource&gt;() {
         setup_test();
 
         <span class="kw">let </span><span class="kw-2">mut </span>network = MockNetwork::&lt;D&gt;::init().<span class="kw">await</span>;
@@ -2539,7 +2562,7 @@
             <span class="kw">let </span>ds = ds.clone();
             <span class="kw">async move </span>{
                 <span class="kw">let </span>window = ds
-                    .get_header_window(WindowStart::Time(start), end)
+                    .get_header_window(WindowStart::Time(start), end, i64::MAX <span class="kw">as </span>usize)
                     .<span class="kw">await
                     </span>.unwrap();
                 <span class="macro">tracing::info!</span>(<span class="string">"window for timestamp range {start}-{end}: {window:#?}"</span>);
@@ -2577,14 +2600,10 @@
         // previously (ie fetch a slightly overlapping window) to ensure there is at least one block
         // in the new window.
         </span><span class="kw">let </span>from = test_blocks.iter().flatten().count() - <span class="number">1</span>;
-        <span class="kw">let </span>more = {
-            ds.read()
-                .<span class="kw">await
-                </span>.unwrap()
-                .get_header_window(WindowStart::Height(from <span class="kw">as </span>u64), end)
-                .<span class="kw">await
-                </span>.unwrap()
-        };
+        <span class="kw">let </span>more = ds
+            .get_header_window(WindowStart::Height(from <span class="kw">as </span>u64), end, i64::MAX <span class="kw">as </span>usize)
+            .<span class="kw">await
+            </span>.unwrap();
         check_invariants(<span class="kw-2">&amp;</span>more, start, end, <span class="bool-val">false</span>);
         <span class="macro">assert_eq!</span>(
             more.prev.as_ref().unwrap(),
@@ -2596,14 +2615,14 @@
         );
         <span class="macro">assert_eq!</span>(res.next, <span class="prelude-val">None</span>);
         <span class="comment">// We should get the same result whether we query by block height or hash.
-        </span><span class="kw">let </span>more2 = {
-            ds.read()
-                .<span class="kw">await
-                </span>.unwrap()
-                .get_header_window(test_blocks[<span class="number">2</span>].last().unwrap().commit(), end)
-                .<span class="kw">await
-                </span>.unwrap()
-        };
+        </span><span class="kw">let </span>more2 = ds
+            .get_header_window(
+                test_blocks[<span class="number">2</span>].last().unwrap().commit(),
+                end,
+                i64::MAX <span class="kw">as </span>usize,
+            )
+            .<span class="kw">await
+            </span>.unwrap();
         check_invariants(<span class="kw-2">&amp;</span>more2, start, end, <span class="bool-val">false</span>);
         <span class="macro">assert_eq!</span>(more2.from().unwrap(), more.from().unwrap());
         <span class="macro">assert_eq!</span>(more2.prev, more.prev);
@@ -2618,15 +2637,48 @@
         <span class="macro">assert_eq!</span>(res.next.unwrap(), test_blocks[<span class="number">1</span>][<span class="number">0</span>]);
         <span class="macro">assert_eq!</span>(res.window, <span class="macro">vec!</span>[]);
 
-        <span class="comment">// Case 5: no relevant blocks are available yet.
-        </span>{
-            ds.read()
-                .<span class="kw">await
-                </span>.unwrap()
-                .get_header_window(WindowStart::Time((i64::MAX - <span class="number">1</span>) <span class="kw">as </span>u64), i64::MAX <span class="kw">as </span>u64)
-                .<span class="kw">await
-                </span>.unwrap_err();
-        }
+        <span class="comment">// Case 4: no relevant blocks are available yet.
+        </span>ds.get_header_window(
+            WindowStart::Time((i64::MAX - <span class="number">1</span>) <span class="kw">as </span>u64),
+            i64::MAX <span class="kw">as </span>u64,
+            i64::MAX <span class="kw">as </span>usize,
+        )
+        .<span class="kw">await
+        </span>.unwrap_err();
+
+        <span class="comment">// Case 5: limits.
+        </span><span class="kw">let </span>blocks = [test_blocks[<span class="number">0</span>].clone(), test_blocks[<span class="number">1</span>].clone()]
+            .into_iter()
+            .flatten()
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        <span class="comment">// Make a query that would return everything, but gets limited.
+        </span><span class="kw">let </span>start = blocks[<span class="number">0</span>].timestamp();
+        <span class="kw">let </span>end = test_blocks[<span class="number">2</span>][<span class="number">0</span>].timestamp();
+        <span class="kw">let </span>res = ds
+            .get_header_window(WindowStart::Time(start), end, <span class="number">1</span>)
+            .<span class="kw">await
+            </span>.unwrap();
+        <span class="macro">assert_eq!</span>(res.prev, <span class="prelude-val">None</span>);
+        <span class="macro">assert_eq!</span>(res.window, [blocks[<span class="number">0</span>].clone()]);
+        <span class="macro">assert_eq!</span>(res.next, <span class="prelude-val">None</span>);
+        <span class="comment">// Query the next page of results, get limited again.
+        </span><span class="kw">let </span>res = ds
+            .get_header_window(WindowStart::Height(blocks[<span class="number">0</span>].height() + <span class="number">1</span>), end, <span class="number">1</span>)
+            .<span class="kw">await
+            </span>.unwrap();
+        <span class="macro">assert_eq!</span>(res.window, [blocks[<span class="number">1</span>].clone()]);
+        <span class="macro">assert_eq!</span>(res.next, <span class="prelude-val">None</span>);
+        <span class="comment">// Get the rest of the results.
+        </span><span class="kw">let </span>res = ds
+            .get_header_window(
+                WindowStart::Height(blocks[<span class="number">1</span>].height() + <span class="number">1</span>),
+                end,
+                blocks.len() - <span class="number">1</span>,
+            )
+            .<span class="kw">await
+            </span>.unwrap();
+        <span class="macro">assert_eq!</span>(res.window, blocks[<span class="number">2</span>..].to_vec());
+        <span class="macro">assert_eq!</span>(res.next, <span class="prelude-val">Some</span>(test_blocks[<span class="number">2</span>][<span class="number">0</span>].clone()));
     }
 }
 

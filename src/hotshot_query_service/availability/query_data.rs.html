@@ -717,6 +717,12 @@
 <a href="#717" id="717">717</a>
 <a href="#718" id="718">718</a>
 <a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1435,5 +1441,11 @@
             payload_hash: common.payload_hash(),
         }
     }
+}
+
+<span class="attr">#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>Limits {
+    <span class="kw">pub </span>small_object_range_limit: usize,
+    <span class="kw">pub </span>large_object_range_limit: usize,
 }
 </code></pre></div></section></main></body></html>

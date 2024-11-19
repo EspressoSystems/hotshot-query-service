@@ -807,6 +807,10 @@
 <a href="#807" id="807">807</a>
 <a href="#808" id="808">808</a>
 <a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1543,6 +1547,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
         end: u64,
+        limit: usize,
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
         <span class="kw">let </span>first_block = <span class="kw">match </span>start.into() {
             WindowStart::Height(h) =&gt; h,
@@ -1581,6 +1586,9 @@
                 <span class="kw">break</span>;
             }
             res.window.push(header);
+            <span class="kw">if </span>res.window.len() &gt;= limit {
+                <span class="kw">break</span>;
+            }
         }
 
         <span class="prelude-val">Ok</span>(res)

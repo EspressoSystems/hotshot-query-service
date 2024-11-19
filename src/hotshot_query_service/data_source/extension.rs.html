@@ -485,6 +485,7 @@
 <a href="#485" id="485">485</a>
 <a href="#486" id="486">486</a>
 <a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -776,8 +777,9 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
         end: u64,
+        limit: usize,
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
-        <span class="self">self</span>.data_source.get_header_window(start, end).<span class="kw">await
+        <span class="self">self</span>.data_source.get_header_window(start, end, limit).<span class="kw">await
     </span>}
 }
 

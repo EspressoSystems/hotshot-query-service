@@ -589,6 +589,38 @@
 <a href="#589" id="589">589</a>
 <a href="#590" id="590">590</a>
 <a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -626,7 +658,7 @@
 <span class="kw">pub use </span>data_source::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>query_data::<span class="kw-2">*</span>;
 
-<span class="attr">#[derive(Default)]
+<span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Options {
     <span class="kw">pub </span>api_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
 
@@ -635,6 +667,19 @@
     /// These optional files may contain route definitions for application-specific routes that have
     /// been added as extensions to the basic node API.
     </span><span class="kw">pub </span>extensions: Vec&lt;toml::Value&gt;,
+
+    <span class="doccomment">/// The maximum number of headers which can be loaded in a single `header/window` query.
+    </span><span class="kw">pub </span>window_limit: usize,
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>Options {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            api_path: <span class="prelude-val">None</span>,
+            extensions: <span class="macro">vec!</span>[],
+            window_limit: <span class="number">500</span>,
+        }
+    }
 }
 
 <span class="attr">#[derive(Clone, Debug, From, Snafu, Deserialize, Serialize)]
@@ -700,6 +745,7 @@
         <span class="macro">include_str!</span>(<span class="string">"../api/node.toml"</span>),
         options.extensions.clone(),
     )<span class="question-mark">?</span>;
+    <span class="kw">let </span>window_limit = options.window_limit;
     api.with_version(<span class="string">"0.0.1"</span>.parse().unwrap())
         .get(<span class="string">"block_height"</span>, |_req, state| {
             <span class="kw">async move </span>{ state.block_height().<span class="kw">await</span>.context(QuerySnafu) }.boxed()
@@ -750,7 +796,7 @@
         </span>.get(<span class="string">"sync_status"</span>, |_req, state| {
             <span class="kw">async move </span>{ state.sync_status().<span class="kw">await</span>.context(QuerySnafu) }.boxed()
         })<span class="question-mark">?
-        </span>.get(<span class="string">"get_header_window"</span>, |req, state| {
+        </span>.get(<span class="string">"get_header_window"</span>, <span class="kw">move </span>|req, state| {
             <span class="kw">async move </span>{
                 <span class="kw">let </span>start = <span class="kw">if let </span><span class="prelude-val">Some</span>(height) = req.opt_integer_param(<span class="string">"height"</span>)<span class="question-mark">? </span>{
                     WindowStart::Height(height)
@@ -761,7 +807,7 @@
                 };
                 <span class="kw">let </span>end = req.integer_param(<span class="string">"end"</span>)<span class="question-mark">?</span>;
                 state
-                    .get_header_window(start, end)
+                    .get_header_window(start, end, window_limit)
                     .<span class="kw">await
                     </span>.context(QueryWindowSnafu {
                         start: <span class="macro">format!</span>(<span class="string">"{start:?}"</span>),
@@ -769,6 +815,9 @@
                     })
             }
             .boxed()
+        })<span class="question-mark">?
+        </span>.get(<span class="string">"get_limits"</span>, <span class="kw">move </span>|_req, _state| {
+            <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(Limits { window_limit }) }.boxed()
         })<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(api)
 }
@@ -808,6 +857,8 @@
     </span><span class="kw">async fn </span>test_api() {
         setup_test();
 
+        <span class="kw">let </span>window_limit = <span class="number">78</span>;
+
         <span class="comment">// Create the consensus network.
         </span><span class="kw">let </span><span class="kw-2">mut </span>network = MockNetwork::&lt;MockDataSource&gt;::init().<span class="kw">await</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>events = network.handle().event_stream();
@@ -818,7 +869,14 @@
         <span class="kw">let </span><span class="kw-2">mut </span>app = App::&lt;<span class="kw">_</span>, Error&gt;::with_state(ApiState::from(network.data_source()));
         app.register_module(
             <span class="string">"node"</span>,
-            define_api(<span class="kw-2">&amp;</span>Default::default(), MockBase::instance()).unwrap(),
+            define_api(
+                <span class="kw-2">&amp;</span>Options {
+                    window_limit,
+                    ..Default::default()
+                },
+                MockBase::instance(),
+            )
+            .unwrap(),
         )
         .unwrap();
         network.spawn(
@@ -831,6 +889,12 @@
             <span class="macro">format!</span>(<span class="string">"http://localhost:{}/node"</span>, port).parse().unwrap(),
         );
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">60</span>))).<span class="kw">await</span>);
+
+        <span class="comment">// Check limits endpoint.
+        </span><span class="macro">assert_eq!</span>(
+            client.get::&lt;Limits&gt;(<span class="string">"limits"</span>).send().<span class="kw">await</span>.unwrap(),
+            Limits { window_limit }
+        );
 
         <span class="comment">// Wait until a few blocks have been sequenced.
         </span><span class="kw">let </span>block_height = <span class="kw">loop </span>{

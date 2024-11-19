@@ -2104,6 +2104,7 @@
 <a href="#2104" id="2104">2104</a>
 <a href="#2105" id="2105">2105</a>
 <a href="#2106" id="2106">2106</a>
+<a href="#2107" id="2107">2107</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -3772,11 +3773,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
         end: u64,
+        limit: usize,
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>tx = <span class="self">self</span>.read().<span class="kw">await</span>.map_err(|err| QueryError::Error {
             message: err.to_string(),
         })<span class="question-mark">?</span>;
-        tx.get_header_window(start, end).<span class="kw">await
+        tx.get_header_window(start, end, limit).<span class="kw">await
     </span>}
 }
 

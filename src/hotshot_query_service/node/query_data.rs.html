@@ -61,6 +61,11 @@
 <a href="#61" id="61">61</a>
 <a href="#62" id="62">62</a>
 <a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -123,5 +128,10 @@
             .or(<span class="self">self</span>.next.as_ref())
             .map(|t| t.height())
     }
+}
+
+<span class="attr">#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>Limits {
+    <span class="kw">pub </span>window_limit: usize,
 }
 </code></pre></div></section></main></body></html>

@@ -548,6 +548,7 @@
 <a href="#548" id="548">548</a>
 <a href="#549" id="549">549</a>
 <a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -1072,9 +1073,10 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         start: <span class="kw">impl </span>Into&lt;WindowStart&lt;Types&gt;&gt; + Send + Sync,
         end: u64,
+        limit: usize,
     ) -&gt; QueryResult&lt;TimeWindowQueryData&lt;Header&lt;Types&gt;&gt;&gt; {
         <span class="self">self</span>.maybe_fail_read(FailableAction::Any).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.inner.get_header_window(start, end).<span class="kw">await
+        <span class="self">self</span>.inner.get_header_window(start, end, limit).<span class="kw">await
     </span>}
 }
 
