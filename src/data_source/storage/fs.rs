@@ -696,6 +696,7 @@ where
         &mut self,
         start: impl Into<WindowStart<Types>> + Send + Sync,
         end: u64,
+        limit: usize,
     ) -> QueryResult<TimeWindowQueryData<Header<Types>>> {
         let first_block = match start.into() {
             WindowStart::Height(h) => h,
@@ -734,6 +735,9 @@ where
                 break;
             }
             res.window.push(header);
+            if res.window.len() >= limit {
+                break;
+            }
         }
 
         Ok(res)
