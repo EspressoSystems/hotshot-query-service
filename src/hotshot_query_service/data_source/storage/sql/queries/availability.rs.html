@@ -408,7 +408,7 @@
               FROM header AS h
               JOIN payload AS p ON h.height = p.height
               WHERE {where_clause}
-              ORDER BY h.height ASC
+              ORDER BY h.height
               LIMIT 1"
         </span>);
         <span class="kw">let </span>row = query.query(<span class="kw-2">&amp;</span>sql).fetch_one(<span class="self">self</span>.as_mut()).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -430,7 +430,7 @@
               FROM header AS h
               JOIN payload AS p ON h.height = p.height
               WHERE {where_clause}
-              ORDER BY h.height ASC
+              ORDER BY h.height
               LIMIT 1"
         </span>);
         <span class="kw">let </span>row = query.query(<span class="kw-2">&amp;</span>sql).fetch_one(<span class="self">self</span>.as_mut()).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -476,7 +476,7 @@
               FROM header AS h
               JOIN vid AS v ON h.height = v.height
               WHERE {where_clause}
-              ORDER BY h.height ASC
+              ORDER BY h.height
               LIMIT 1"
         </span>);
         <span class="kw">let </span>row = query.query(<span class="kw-2">&amp;</span>sql).fetch_one(<span class="self">self</span>.as_mut()).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -514,7 +514,7 @@
     {
         <span class="kw">let </span><span class="kw-2">mut </span>query = QueryBuilder::default();
         <span class="kw">let </span>where_clause = query.bounds_to_where_clause(range, <span class="string">"height"</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>sql = <span class="macro">format!</span>(<span class="string">"SELECT {LEAF_COLUMNS} FROM leaf {where_clause} ORDER BY height ASC"</span>);
+        <span class="kw">let </span>sql = <span class="macro">format!</span>(<span class="string">"SELECT {LEAF_COLUMNS} FROM leaf {where_clause} ORDER BY height"</span>);
         <span class="prelude-val">Ok</span>(query
             .query(<span class="kw-2">&amp;</span>sql)
             .fetch(<span class="self">self</span>.as_mut())
@@ -538,7 +538,7 @@
               FROM header AS h
               JOIN payload AS p ON h.height = p.height
               {where_clause}
-              ORDER BY h.height ASC"
+              ORDER BY h.height"
         </span>);
         <span class="prelude-val">Ok</span>(query
             .query(<span class="kw-2">&amp;</span>sql)
@@ -563,7 +563,7 @@
               FROM header AS h
               JOIN payload AS p ON h.height = p.height
               {where_clause}
-              ORDER BY h.height ASC"
+              ORDER BY h.height"
         </span>);
         <span class="prelude-val">Ok</span>(query
             .query(<span class="kw-2">&amp;</span>sql)
@@ -613,7 +613,7 @@
               FROM header AS h
               JOIN vid AS v ON h.height = v.height
               {where_clause}
-              ORDER BY h.height ASC"
+              ORDER BY h.height"
         </span>);
         <span class="prelude-val">Ok</span>(query
             .query(<span class="kw-2">&amp;</span>sql)
@@ -659,12 +659,12 @@
         <span class="comment">// ORDER BY ASC ensures that if there are duplicate transactions, we return the first
         // one.
         </span><span class="kw">let </span>sql = <span class="macro">format!</span>(
-            <span class="string">"SELECT {BLOCK_COLUMNS}, t.index AS tx_index
+            <span class="string">"SELECT {BLOCK_COLUMNS}, t.idx AS tx_index
                 FROM header AS h
                 JOIN payload AS p ON h.height = p.height
-                JOIN transaction AS t ON t.block_height = h.height
+                JOIN transactions AS t ON t.block_height = h.height
                 WHERE t.hash = {hash_param}
-                ORDER BY t.block_height, t.index
+                ORDER BY t.block_height, t.idx
                 LIMIT 1"
         </span>);
         <span class="kw">let </span>row = query.query(<span class="kw-2">&amp;</span>sql).fetch_one(<span class="self">self</span>.as_mut()).<span class="kw">await</span><span class="question-mark">?</span>;

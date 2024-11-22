@@ -571,6 +571,9 @@
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
 <a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -790,14 +793,14 @@
         // returned results based on.
         </span><span class="kw">let </span>transaction_target_query = <span class="kw">match </span>target {
             TransactionIdentifier::Latest =&gt; query(
-                <span class="string">"SELECT t.block_height AS height, t.index AS index FROM transaction AS t ORDER BY t.block_height DESC, t.index DESC LIMIT 1"</span>,
+                <span class="string">"SELECT t.block_height AS height, t.idx AS \"index\" FROM transactions AS t ORDER BY t.block_height DESC, t.idx DESC LIMIT 1"</span>,
             ),
             TransactionIdentifier::HeightAndOffset(height, <span class="kw">_</span>) =&gt; query(
-                <span class="string">"SELECT t.block_height AS height, t.index AS index FROM transaction AS t WHERE t.block_height = $1 ORDER BY t.block_height DESC, t.index DESC LIMIT 1"</span>,
+                <span class="string">"SELECT t.block_height AS height, t.idx AS \"index\" FROM transactions AS t WHERE t.block_height = $1 ORDER BY t.block_height DESC, t.idx DESC LIMIT 1"</span>,
             )
             .bind(<span class="kw-2">*</span>height <span class="kw">as </span>i64),
             TransactionIdentifier::Hash(hash) =&gt; query(
-                <span class="string">"SELECT t.block_height AS height, t.index AS index FROM transaction AS t WHERE t.hash = $1 ORDER BY t.block_height DESC, t.index DESC LIMIT 1"</span>,
+                <span class="string">"SELECT t.block_height AS height, t.idx AS \"index\" FROM transactions AS t WHERE t.hash = $1 ORDER BY t.block_height DESC, t.idx DESC LIMIT 1"</span>,
             )
             .bind(hash.to_string()),
         };
@@ -811,7 +814,8 @@
         };
 
         <span class="kw">let </span>block_height = transaction_target.get::&lt;i64, <span class="kw">_</span>&gt;(<span class="string">"height"</span>) <span class="kw">as </span>usize;
-        <span class="kw">let </span>transaction_index = transaction_target.get::&lt;Json&lt;TransactionIndex&lt;Types&gt;&gt;, <span class="kw">_</span>&gt;(<span class="string">"index"</span>);
+        <span class="kw">let </span>transaction_index =
+            transaction_target.get_unchecked::&lt;Json&lt;TransactionIndex&lt;Types&gt;&gt;, <span class="kw">_</span>&gt;(<span class="string">"index"</span>);
         <span class="kw">let </span>offset = <span class="kw">if let </span>TransactionIdentifier::HeightAndOffset(<span class="kw">_</span>, offset) = target {
             <span class="kw-2">*</span>offset
         } <span class="kw">else </span>{
@@ -835,9 +839,9 @@
                         JOIN payload AS p ON h.height = p.height
                         WHERE h.height IN (
                             SELECT t.block_height
-                                FROM transaction AS t
-                                WHERE (t.block_height, t.index) &lt;= ({}, {})
-                                ORDER BY t.block_height DESC, t.index DESC
+                                FROM transactions AS t
+                                WHERE (t.block_height, t.idx) &lt;= ({}, {})
+                                ORDER BY t.block_height DESC, t.idx DESC
                                 LIMIT {}
                         )
                         ORDER BY h.height DESC"</span>,
@@ -911,7 +915,7 @@
                     JOIN payload AS p ON h.height = p.height
                     WHERE h.height = (
                         SELECT MAX(t1.block_height)
-                            FROM transaction AS t1
+                            FROM transactions AS t1
                     )
                     ORDER BY h.height DESC"
             </span>),
@@ -921,9 +925,9 @@
                     JOIN payload AS p ON h.height = p.height
                     WHERE h.height = (
                         SELECT t1.block_height
-                            FROM transaction AS t1
+                            FROM transactions AS t1
                             WHERE t1.block_height = {}
-                            ORDER BY t1.block_height, t1.index
+                            ORDER BY t1.block_height, t1.idx
                             OFFSET {}
                             LIMIT 1
                     )
@@ -937,9 +941,9 @@
                     JOIN payload AS p ON h.height = p.height
                     WHERE h.height = (
                         SELECT t1.block_height
-                            FROM transaction AS t1
+                            FROM transactions AS t1
                             WHERE t1.hash = {}
-                            ORDER BY t1.block_height DESC, t1.index DESC
+                            ORDER BY t1.block_height DESC, t1.idx DESC
                             LIMIT 1
                     )
                     ORDER BY h.height DESC"</span>,
@@ -993,7 +997,7 @@
                     p.height = h.height
                 WHERE
                     h.height IN (SELECT height FROM header ORDER BY height DESC LIMIT 50)
-                ORDER BY h.height ASC 
+                ORDER BY h.height 
                 "</span>,
             )
             .fetch(<span class="self">self</span>.as_mut());
@@ -1045,12 +1049,14 @@
 
         <span class="kw">let </span>latest_block: BlockDetail&lt;Types&gt; =
             <span class="self">self</span>.get_block_detail(BlockIdentifier::Latest).<span class="kw">await</span><span class="question-mark">?</span>;
+
         <span class="kw">let </span>latest_blocks: Vec&lt;BlockSummary&lt;Types&gt;&gt; = <span class="self">self
             </span>.get_block_summaries(GetBlockSummariesRequest(BlockRange {
                 target: BlockIdentifier::Latest,
                 num_blocks: NonZeroUsize::new(<span class="number">10</span>).unwrap(),
             }))
             .<span class="kw">await</span><span class="question-mark">?</span>;
+
         <span class="kw">let </span>latest_transactions: Vec&lt;TransactionSummary&lt;Types&gt;&gt; = <span class="self">self
             </span>.get_transaction_summaries(GetTransactionSummariesRequest {
                 range: TransactionRange {
@@ -1108,7 +1114,7 @@
                 <span class="string">"SELECT {BLOCK_COLUMNS}
                     FROM header AS h
                     JOIN payload AS p ON h.height = p.height
-                    JOIN transaction AS t ON h.height = t.block_height
+                    JOIN transactions AS t ON h.height = t.block_height
                     WHERE t.hash = $1
                     ORDER BY h.height DESC
                     LIMIT 5"

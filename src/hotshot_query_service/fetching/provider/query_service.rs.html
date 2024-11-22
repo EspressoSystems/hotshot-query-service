@@ -1777,6 +1777,8 @@
 <a href="#1777" id="1777">1777</a>
 <a href="#1778" id="1778">1778</a>
 <a href="#1779" id="1779">1779</a>
+<a href="#1780" id="1780">1780</a>
+<a href="#1781" id="1781">1781</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -2914,6 +2916,8 @@
         </span><span class="macro">tracing::info!</span>(<span class="string">"retrieve from storage"</span>);
         <span class="kw">let </span>fetch = data_source.get_leaf(<span class="number">1</span>).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(leaves[<span class="number">0</span>], fetch.try_resolve().ok().unwrap());
+
+        drop(db);
     }
 
     <span class="attr">#[tokio::test(flavor = <span class="string">"multi_thread"</span>)]
