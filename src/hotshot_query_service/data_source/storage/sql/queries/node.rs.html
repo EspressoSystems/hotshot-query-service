@@ -463,6 +463,23 @@
 <a href="#463" id="463">463</a>
 <a href="#464" id="464">464</a>
 <a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -483,7 +500,7 @@
 };
 <span class="kw">use crate</span>::{
     data_source::storage::{
-        AggregatesStorage, NodeStorage, PayloadMetadata, UpdateAggregatesStorage,
+        Aggregate, AggregatesStorage, NodeStorage, PayloadMetadata, UpdateAggregatesStorage,
     },
     node::{BlockId, SyncStatus, TimeWindowQueryData, WindowStart},
     types::HeightIndexed,
@@ -751,28 +768,35 @@
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(height <span class="kw">as </span>usize)
     }
+
+    <span class="kw">async fn </span>load_prev_aggregate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;Aggregate&gt;&gt; {
+        <span class="kw">let </span>res  : <span class="prelude-ty">Option</span>&lt;(i64, i64,i64)&gt; = query_as(
+            <span class="string">"SELECT height, num_transactions, payload_size FROM aggregate ORDER BY height DESC limit 1"</span>,
+        )
+        .fetch_optional(<span class="self">self</span>.as_mut())
+        .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(
+            res.map(|(height, num_transactions, payload_size)| Aggregate {
+                height,
+                num_transactions,
+                payload_size,
+            }),
+        )
+    }
 }
 
 <span class="kw">impl</span>&lt;Types: NodeType&gt; UpdateAggregatesStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;Write&gt; {
-    <span class="kw">async fn </span>update_aggregates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, blocks: <span class="kw-2">&amp;</span>[PayloadMetadata&lt;Types&gt;]) -&gt; anyhow::Result&lt;()&gt; {
-        <span class="comment">// Get the cumulative statistics up to the block before this chunk.
-        </span><span class="kw">let </span>height = blocks[<span class="number">0</span>].height();
-        <span class="kw">let </span>(prev_tx_count, prev_size) = <span class="kw">if </span>height == <span class="number">0 </span>{
-            (<span class="number">0</span>, <span class="number">0</span>)
-        } <span class="kw">else </span>{
-            <span class="kw">let </span>(tx_count, size): (i64, i64) =
-                query_as(<span class="string">"SELECT num_transactions, payload_size FROM aggregate WHERE height = $1"</span>)
-                    .bind((height - <span class="number">1</span>) <span class="kw">as </span>i64)
-                    .fetch_one(<span class="self">self</span>.as_mut())
-                    .<span class="kw">await
-                    </span>.map_err(|err| {
-                        anyhow::Error::new(err).context(<span class="macro">format!</span>(
-                    <span class="string">"cannot update aggregates for block {height} because previous block is missing"
-                </span>))
-                    })<span class="question-mark">?</span>;
-            (tx_count <span class="kw">as </span>u64, size <span class="kw">as </span>u64)
-        };
-
+    <span class="kw">async fn </span>update_aggregates(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        prev: Aggregate,
+        blocks: <span class="kw-2">&amp;</span>[PayloadMetadata&lt;Types&gt;],
+    ) -&gt; anyhow::Result&lt;Aggregate&gt; {
+        <span class="kw">let </span>height = blocks[<span class="number">0</span>].height();
+        <span class="kw">let </span>(prev_tx_count, prev_size) = (
+            u64::try_from(prev.num_transactions)<span class="question-mark">?</span>,
+            u64::try_from(prev.payload_size)<span class="question-mark">?</span>,
+        );
         <span class="comment">// Cumulatively sum up new statistics for each block in this chunk.
         </span><span class="kw">let </span>rows = blocks
             .iter()
@@ -794,6 +818,7 @@
                 },
             )
             .collect::&lt;anyhow::Result&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="kw">let </span>last_aggregate = rows.last().cloned();
 
         <span class="self">self</span>.upsert(
             <span class="string">"aggregate"</span>,
@@ -801,8 +826,17 @@
             [<span class="string">"height"</span>],
             rows,
         )
-        .<span class="kw">await
-    </span>}
+        .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>(height, num_transactions, payload_size) =
+            last_aggregate.ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"no row"</span>))<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(Aggregate {
+            height,
+            num_transactions,
+            payload_size,
+        })
+    }
 }
 
 <span class="kw">impl</span>&lt;Mode: TransactionMode&gt; Transaction&lt;Mode&gt; {

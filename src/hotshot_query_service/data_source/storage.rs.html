@@ -324,6 +324,19 @@
 <a href="#324" id="324">324</a>
 <a href="#325" id="325">325</a>
 <a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -550,9 +563,21 @@
     </span><span class="kw">async fn </span>sync_status(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; QueryResult&lt;SyncStatus&gt;;
 }
 
+<span class="attr">#[derive(Clone, Debug, Default)]
+</span><span class="kw">pub struct </span>Aggregate {
+    <span class="kw">pub </span>height: i64,
+    <span class="kw">pub </span>num_transactions: i64,
+    <span class="kw">pub </span>payload_size: i64,
+}
+
 <span class="kw">pub trait </span>AggregatesStorage {
     <span class="doccomment">/// The block height for which aggregate statistics are currently available.
     </span><span class="kw">fn </span>aggregates_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Future&lt;Output = anyhow::Result&lt;usize&gt;&gt; + Send;
+
+    <span class="doccomment">/// the last aggregate
+    </span><span class="kw">fn </span>load_prev_aggregate(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+    ) -&gt; <span class="kw">impl </span>Future&lt;Output = anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;Aggregate&gt;&gt;&gt; + Send;
 }
 
 <span class="kw">pub trait </span>UpdateAggregatesStorage&lt;Types&gt;
@@ -562,8 +587,9 @@
     <span class="doccomment">/// Update aggregate statistics based on a new block.
     </span><span class="kw">fn </span>update_aggregates(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        aggregate: Aggregate,
         blocks: <span class="kw-2">&amp;</span>[PayloadMetadata&lt;Types&gt;],
-    ) -&gt; <span class="kw">impl </span>Future&lt;Output = anyhow::Result&lt;()&gt;&gt; + Send;
+    ) -&gt; <span class="kw">impl </span>Future&lt;Output = anyhow::Result&lt;Aggregate&gt;&gt; + Send;
 }
 
 <span class="doccomment">/// An interface for querying Data and Statistics from the HotShot Blockchain.

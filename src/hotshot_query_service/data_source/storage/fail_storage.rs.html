@@ -549,6 +549,15 @@
 <a href="#549" id="549">549</a>
 <a href="#550" id="550">550</a>
 <a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -565,7 +574,7 @@
 
 </span><span class="kw">use super</span>::{
     pruning::{PruneStorage, PrunedHeightStorage, PrunerCfg, PrunerConfig},
-    AggregatesStorage, AvailabilityStorage, NodeStorage, UpdateAggregatesStorage,
+    Aggregate, AggregatesStorage, AvailabilityStorage, NodeStorage, UpdateAggregatesStorage,
     UpdateAvailabilityStorage,
 };
 <span class="kw">use crate</span>::{
@@ -1088,6 +1097,11 @@
         <span class="self">self</span>.maybe_fail_read(FailableAction::Any).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="self">self</span>.inner.aggregates_height().<span class="kw">await
     </span>}
+
+    <span class="kw">async fn </span>load_prev_aggregate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;Aggregate&gt;&gt; {
+        <span class="self">self</span>.maybe_fail_read(FailableAction::Any).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.inner.load_prev_aggregate().<span class="kw">await
+    </span>}
 }
 
 <span class="kw">impl</span>&lt;T, Types&gt; UpdateAggregatesStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;T&gt;
@@ -1095,9 +1109,13 @@
     </span>Types: NodeType,
     T: UpdateAggregatesStorage&lt;Types&gt; + Send + Sync,
 {
-    <span class="kw">async fn </span>update_aggregates(<span class="kw-2">&amp;mut </span><span class="self">self</span>, blocks: <span class="kw-2">&amp;</span>[PayloadMetadata&lt;Types&gt;]) -&gt; anyhow::Result&lt;()&gt; {
+    <span class="kw">async fn </span>update_aggregates(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        prev: Aggregate,
+        blocks: <span class="kw-2">&amp;</span>[PayloadMetadata&lt;Types&gt;],
+    ) -&gt; anyhow::Result&lt;Aggregate&gt; {
         <span class="self">self</span>.maybe_fail_write(FailableAction::Any).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.inner.update_aggregates(blocks).<span class="kw">await
+        <span class="self">self</span>.inner.update_aggregates(prev, blocks).<span class="kw">await
     </span>}
 }
 </code></pre></div></section></main></body></html>

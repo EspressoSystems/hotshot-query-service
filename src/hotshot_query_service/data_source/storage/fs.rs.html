@@ -811,6 +811,11 @@
 <a href="#811" id="811">811</a>
 <a href="#812" id="812">812</a>
 <a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -828,8 +833,8 @@
 </span><span class="kw">use super</span>::{
     ledger_log::{Iter, LedgerLog},
     pruning::{PruneStorage, PrunedHeightStorage, PrunerConfig},
-    AggregatesStorage, AvailabilityStorage, NodeStorage, PayloadMetadata, UpdateAggregatesStorage,
-    UpdateAvailabilityStorage, VidCommonMetadata,
+    Aggregate, AggregatesStorage, AvailabilityStorage, NodeStorage, PayloadMetadata,
+    UpdateAggregatesStorage, UpdateAvailabilityStorage, VidCommonMetadata,
 };
 
 <span class="kw">use crate</span>::{
@@ -1599,6 +1604,10 @@
     <span class="kw">async fn </span>aggregates_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;usize&gt; {
         <span class="prelude-val">Ok</span>(<span class="number">0</span>)
     }
+
+    <span class="kw">async fn </span>load_prev_aggregate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; anyhow::Result&lt;<span class="prelude-ty">Option</span>&lt;Aggregate&gt;&gt; {
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
+    }
 }
 
 <span class="kw">impl</span>&lt;Types, T: Revert + Send&gt; UpdateAggregatesStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;T&gt;
@@ -1607,9 +1616,10 @@
 {
     <span class="kw">async fn </span>update_aggregates(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _prev: Aggregate,
         _blocks: <span class="kw-2">&amp;</span>[PayloadMetadata&lt;Types&gt;],
-    ) -&gt; anyhow::Result&lt;()&gt; {
-        <span class="prelude-val">Ok</span>(())
+    ) -&gt; anyhow::Result&lt;Aggregate&gt; {
+        <span class="prelude-val">Ok</span>(Aggregate::default())
     }
 }
 
