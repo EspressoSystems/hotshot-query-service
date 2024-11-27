@@ -16,7 +16,7 @@ use crate::{
         BlockInfo, BlockQueryData, LeafQueryData, QueryablePayload, UpdateAvailabilityData,
         VidCommonQueryData,
     },
-    Leaf, Payload, VidShare,
+    Leaf2, Payload, VidShare,
 };
 use anyhow::{ensure, Context};
 use async_trait::async_trait;
@@ -152,7 +152,7 @@ where
 }
 
 fn genesis_vid<Types: NodeType>(
-    leaf: &Leaf<Types>,
+    leaf: &Leaf2<Types>,
 ) -> anyhow::Result<(VidCommonQueryData<Types>, VidShare)> {
     let payload = Payload::<Types>::empty().0;
     let bytes = payload.encode();
