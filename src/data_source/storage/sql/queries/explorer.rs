@@ -343,22 +343,43 @@ where
                     )
                     ORDER BY h.height DESC"
             ),
-            TransactionIdentifier::HeightAndOffset(height, offset) => format!(
-                "SELECT {BLOCK_COLUMNS}
-                    FROM header AS h
-                    JOIN payload AS p ON h.height = p.height
-                    WHERE h.height = (
-                        SELECT t1.block_height
-                            FROM transactions AS t1
-                            WHERE t1.block_height = {}
-                            ORDER BY t1.block_height, t1.idx
-                            OFFSET {}
-                            LIMIT 1
+            TransactionIdentifier::HeightAndOffset(height, offset) => {
+                if cfg!(feature = "embedded-db") {
+                    format!(
+                        "SELECT {BLOCK_COLUMNS}
+                            FROM header AS h
+                            JOIN payload AS p ON h.height = p.height
+                            WHERE h.height = (
+                                SELECT t1.block_height
+                                    FROM transactions AS t1
+                                    WHERE t1.block_height = {}
+                                    ORDER BY t1.block_height, t1.idx
+                                    LIMIT 1
+                                    OFFSET {}
+                            )
+                            ORDER BY h.height DESC",
+                        query.bind(height as i64)?,
+                        query.bind(offset as i64)?,
                     )
-                    ORDER BY h.height DESC",
-                query.bind(height as i64)?,
-                query.bind(offset as i64)?,
-            ),
+                } else {
+                    format!(
+                        "SELECT {BLOCK_COLUMNS}
+                            FROM header AS h
+                            JOIN payload AS p ON h.height = p.height
+                            WHERE h.height = (
+                                SELECT t1.block_height
+                                    FROM transactions AS t1
+                                    WHERE t1.block_height = {}
+                                    ORDER BY t1.block_height, t1.idx
+                                    OFFSET {}
+                                    LIMIT 1
+                            )
+                            ORDER BY h.height DESC",
+                        query.bind(height as i64)?,
+                        query.bind(offset as i64)?,
+                    )
+                }
+            }
             TransactionIdentifier::Hash(hash) => format!(
                 "SELECT {BLOCK_COLUMNS}
                     FROM header AS h
@@ -572,5 +593,83 @@ where
                 transactions: transactions_query_result,
             })
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::availability::data_source::AvailabilityDataSource;
+    use crate::explorer::data_source::ExplorerDataSource;
+    use crate::explorer::TransactionIdentifier;
+    use crate::testing::consensus::{MockNetwork, MockSqlDataSource};
+    use crate::testing::mocks::mock_transaction;
+    use crate::testing::setup_test;
+    use futures::StreamExt;
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_transaction_detail_asc_ordering() {
+        setup_test();
+
+        // Create test network and generate blocks with transactions
+        let mut network = MockNetwork::<MockSqlDataSource>::init().await;
+        network.start().await;
+
+        // Generate 3 blocks with 2 transactions each for testing
+        let mut blocks = network.data_source().subscribe_blocks(0).await;
+        let mut last_block_height = 0;
+        for block in 0..3 {
+            for tx in 0..2 {
+                let nonce = block * 2 + tx;
+                let txn = mock_transaction(vec![nonce as u8]);
+                network.submit_transaction(txn).await;
+            }
+            // Wait for block finalization
+            while let Some(block) = blocks.next().await {
+                if !block.is_empty() {
+                    last_block_height = block.header().block_number;
+                    break;
+                }
+            }
+        }
+
+        let storage = network.data_source();
+
+        // Test case 1: Get transaction by height and offset
+        // This verifies that transactions are ordered ASC within a block
+        // so offset 0 should give us the oldest transaction in the block
+        let first_tx = storage
+            .get_transaction_detail(TransactionIdentifier::HeightAndOffset(1, 0))
+            .await
+            .unwrap();
+        let second_tx = storage
+            .get_transaction_detail(TransactionIdentifier::HeightAndOffset(1, 1))
+            .await
+            .unwrap();
+
+        // Verify that transactions are ordered by age (ASC)
+        // The first transaction should have a lower index than the second
+        assert!(first_tx.details.offset < second_tx.details.offset);
+
+        // Test case 2: Get latest transaction
+        // This verifies that we get the most recent transaction
+        let latest_tx = storage
+            .get_transaction_detail(TransactionIdentifier::Latest)
+            .await
+            .unwrap();
+        assert_eq!(latest_tx.details.height, last_block_height);
+        assert_eq!(latest_tx.details.offset, 1); // Last transaction in block
+
+        // Test case 3: Get transaction by hash
+        // This verifies we can retrieve a specific transaction by its hash
+        let hash = first_tx.details.hash.clone();
+        let hash_tx = storage
+            .get_transaction_detail(TransactionIdentifier::Hash(hash))
+            .await
+            .unwrap();
+        assert_eq!(hash_tx.details.height, first_tx.details.height);
+        assert_eq!(hash_tx.details.offset, first_tx.details.offset);
+
+        // Cleanup
+        network.shut_down().await;
     }
 }
