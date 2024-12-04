@@ -56,10 +56,12 @@ pub struct Transaction<'a> {
 }
 
 impl VersionedDataSource for NoStorage {
-    type Transaction<'a> = Transaction<'a>
+    type Transaction<'a>
+        = Transaction<'a>
     where
         Self: 'a;
-    type ReadOnly<'a> = Transaction<'a>
+    type ReadOnly<'a>
+        = Transaction<'a>
     where
         Self: 'a;
 
@@ -457,10 +459,12 @@ pub mod testing {
     // Now a lot of boilerplate to implement all teh traits for [`DataSource`], by dispatching each
     // method to either variant.
     impl VersionedDataSource for DataSource {
-        type Transaction<'a> = Transaction<'a, <SqlStorage as VersionedDataSource>::Transaction<'a>>
+        type Transaction<'a>
+            = Transaction<'a, <SqlStorage as VersionedDataSource>::Transaction<'a>>
         where
             Self: 'a;
-        type ReadOnly<'a> = Transaction<'a, <SqlStorage as VersionedDataSource>::ReadOnly<'a>>
+        type ReadOnly<'a>
+            = Transaction<'a, <SqlStorage as VersionedDataSource>::ReadOnly<'a>>
         where
             Self: 'a;
 
@@ -549,22 +553,28 @@ pub mod testing {
 
     #[async_trait]
     impl AvailabilityDataSource<MockTypes> for DataSource {
-        type LeafRange<R> = BoxStream<'static, Fetch<LeafQueryData<MockTypes>>>
+        type LeafRange<R>
+            = BoxStream<'static, Fetch<LeafQueryData<MockTypes>>>
         where
             R: RangeBounds<usize> + Send;
-        type BlockRange<R> = BoxStream<'static, Fetch<BlockQueryData<MockTypes>>>
+        type BlockRange<R>
+            = BoxStream<'static, Fetch<BlockQueryData<MockTypes>>>
         where
             R: RangeBounds<usize> + Send;
-        type PayloadRange<R> = BoxStream<'static, Fetch<PayloadQueryData<MockTypes>>>
+        type PayloadRange<R>
+            = BoxStream<'static, Fetch<PayloadQueryData<MockTypes>>>
         where
             R: RangeBounds<usize> + Send;
-        type PayloadMetadataRange<R> = BoxStream<'static, Fetch<PayloadMetadata<MockTypes>>>
+        type PayloadMetadataRange<R>
+            = BoxStream<'static, Fetch<PayloadMetadata<MockTypes>>>
         where
             R: RangeBounds<usize> + Send;
-        type VidCommonRange<R> = BoxStream<'static, Fetch<VidCommonQueryData<MockTypes>>>
+        type VidCommonRange<R>
+            = BoxStream<'static, Fetch<VidCommonQueryData<MockTypes>>>
         where
             R: RangeBounds<usize> + Send;
-        type VidCommonMetadataRange<R> = BoxStream<'static, Fetch<VidCommonMetadata<MockTypes>>>
+        type VidCommonMetadataRange<R>
+            = BoxStream<'static, Fetch<VidCommonMetadata<MockTypes>>>
         where
             R: RangeBounds<usize> + Send;
 

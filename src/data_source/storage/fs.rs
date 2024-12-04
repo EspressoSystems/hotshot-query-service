@@ -357,10 +357,12 @@ impl<Types: NodeType> VersionedDataSource for FileSystemStorage<Types>
 where
     Payload<Types>: QueryablePayload<Types>,
 {
-    type Transaction<'a> = Transaction<RwLockWriteGuard<'a, FileSystemStorageInner<Types>>>
+    type Transaction<'a>
+        = Transaction<RwLockWriteGuard<'a, FileSystemStorageInner<Types>>>
     where
         Self: 'a;
-    type ReadOnly<'a> = Transaction<RwLockReadGuard<'a, FileSystemStorageInner<Types>>>
+    type ReadOnly<'a>
+        = Transaction<RwLockReadGuard<'a, FileSystemStorageInner<Types>>>
     where
         Self: 'a;
 
