@@ -14,8 +14,8 @@
 
 use super::{
     pruning::{PruneStorage, PrunedHeightStorage, PrunerConfig},
-    Aggregate, AggregatesStorage, AvailabilityStorage, NodeStorage, PayloadMetadata,
-    UpdateAggregatesStorage, UpdateAvailabilityStorage, VidCommonMetadata,
+    AggregatesStorage, AvailabilityStorage, NodeStorage, PayloadMetadata, UpdateAggregatesStorage,
+    UpdateAvailabilityStorage, VidCommonMetadata,
 };
 use crate::{
     availability::{
@@ -56,12 +56,10 @@ pub struct Transaction<'a> {
 }
 
 impl VersionedDataSource for NoStorage {
-    type Transaction<'a>
-        = Transaction<'a>
+    type Transaction<'a> = Transaction<'a>
     where
         Self: 'a;
-    type ReadOnly<'a>
-        = Transaction<'a>
+    type ReadOnly<'a> = Transaction<'a>
     where
         Self: 'a;
 
@@ -99,7 +97,7 @@ impl PrunerConfig for NoStorage {}
 impl PruneStorage for NoStorage {
     type Pruner = ();
 }
-impl PrunedHeightStorage for Transaction<'_> {}
+impl<'a> PrunedHeightStorage for Transaction<'a> {}
 
 impl HasMetrics for NoStorage {
     fn metrics(&self) -> &PrometheusMetrics {
@@ -108,7 +106,7 @@ impl HasMetrics for NoStorage {
 }
 
 #[async_trait]
-impl<Types: NodeType> AvailabilityStorage<Types> for Transaction<'_>
+impl<'a, Types: NodeType> AvailabilityStorage<Types> for Transaction<'a>
 where
     Payload<Types>: QueryablePayload<Types>,
 {
@@ -242,7 +240,7 @@ where
 }
 
 #[async_trait]
-impl<Types: NodeType> NodeStorage<Types> for Transaction<'_>
+impl<'a, Types: NodeType> NodeStorage<Types> for Transaction<'a>
 where
     Payload<Types>: QueryablePayload<Types>,
 {
@@ -289,10 +287,6 @@ impl<'a> AggregatesStorage for Transaction<'a> {
     async fn aggregates_height(&mut self) -> anyhow::Result<usize> {
         bail!("no_storage mock read error")
     }
-
-    async fn load_prev_aggregate(&mut self) -> anyhow::Result<Option<Aggregate>> {
-        bail!("no_storage mock read error")
-    }
 }
 
 impl<'a, Types> UpdateAggregatesStorage<Types> for Transaction<'a>
@@ -301,10 +295,9 @@ where
 {
     async fn update_aggregates(
         &mut self,
-        _prev: Aggregate,
         _blocks: &[PayloadMetadata<Types>],
-    ) -> anyhow::Result<Aggregate> {
-        Ok(Aggregate::default())
+    ) -> anyhow::Result<()> {
+        Ok(())
     }
 }
 
@@ -464,12 +457,10 @@ pub mod testing {
     // Now a lot of boilerplate to implement all teh traits for [`DataSource`], by dispatching each
     // method to either variant.
     impl VersionedDataSource for DataSource {
-        type Transaction<'a>
-            = Transaction<'a, <SqlStorage as VersionedDataSource>::Transaction<'a>>
+        type Transaction<'a> = Transaction<'a, <SqlStorage as VersionedDataSource>::Transaction<'a>>
         where
             Self: 'a;
-        type ReadOnly<'a>
-            = Transaction<'a, <SqlStorage as VersionedDataSource>::ReadOnly<'a>>
+        type ReadOnly<'a> = Transaction<'a, <SqlStorage as VersionedDataSource>::ReadOnly<'a>>
         where
             Self: 'a;
 
@@ -558,28 +549,22 @@ pub mod testing {
 
     #[async_trait]
     impl AvailabilityDataSource<MockTypes> for DataSource {
-        type LeafRange<R>
-            = BoxStream<'static, Fetch<LeafQueryData<MockTypes>>>
+        type LeafRange<R> = BoxStream<'static, Fetch<LeafQueryData<MockTypes>>>
         where
             R: RangeBounds<usize> + Send;
-        type BlockRange<R>
-            = BoxStream<'static, Fetch<BlockQueryData<MockTypes>>>
+        type BlockRange<R> = BoxStream<'static, Fetch<BlockQueryData<MockTypes>>>
         where
             R: RangeBounds<usize> + Send;
-        type PayloadRange<R>
-            = BoxStream<'static, Fetch<PayloadQueryData<MockTypes>>>
+        type PayloadRange<R> = BoxStream<'static, Fetch<PayloadQueryData<MockTypes>>>
         where
             R: RangeBounds<usize> + Send;
-        type PayloadMetadataRange<R>
-            = BoxStream<'static, Fetch<PayloadMetadata<MockTypes>>>
+        type PayloadMetadataRange<R> = BoxStream<'static, Fetch<PayloadMetadata<MockTypes>>>
         where
             R: RangeBounds<usize> + Send;
-        type VidCommonRange<R>
-            = BoxStream<'static, Fetch<VidCommonQueryData<MockTypes>>>
+        type VidCommonRange<R> = BoxStream<'static, Fetch<VidCommonQueryData<MockTypes>>>
         where
             R: RangeBounds<usize> + Send;
-        type VidCommonMetadataRange<R>
-            = BoxStream<'static, Fetch<VidCommonMetadata<MockTypes>>>
+        type VidCommonMetadataRange<R> = BoxStream<'static, Fetch<VidCommonMetadata<MockTypes>>>
         where
             R: RangeBounds<usize> + Send;
 
@@ -730,7 +715,7 @@ pub mod testing {
     }
 
     #[async_trait]
-    impl<T> NodeStorage<MockTypes> for Transaction<'_, T>
+    impl<'a, T> NodeStorage<MockTypes> for Transaction<'a, T>
     where
         T: NodeStorage<MockTypes> + Send,
     {

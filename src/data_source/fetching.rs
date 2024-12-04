@@ -77,9 +77,8 @@ use super::{
     notifier::Notifier,
     storage::{
         pruning::{PruneStorage, PrunedHeightStorage},
-        Aggregate, AggregatesStorage, AvailabilityStorage, ExplorerStorage,
-        MerklizedStateHeightStorage, MerklizedStateStorage, NodeStorage, UpdateAggregatesStorage,
-        UpdateAvailabilityStorage,
+        AggregatesStorage, AvailabilityStorage, ExplorerStorage, MerklizedStateHeightStorage,
+        MerklizedStateStorage, NodeStorage, UpdateAggregatesStorage, UpdateAvailabilityStorage,
     },
     Transaction, VersionedDataSource,
 };
@@ -560,28 +559,22 @@ where
     for<'a> S::ReadOnly<'a>: AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage,
     P: AvailabilityProvider<Types>,
 {
-    type LeafRange<R>
-        = BoxStream<'static, Fetch<LeafQueryData<Types>>>
+    type LeafRange<R> = BoxStream<'static, Fetch<LeafQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send;
-    type BlockRange<R>
-        = BoxStream<'static, Fetch<BlockQueryData<Types>>>
+    type BlockRange<R> = BoxStream<'static, Fetch<BlockQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send;
-    type PayloadRange<R>
-        = BoxStream<'static, Fetch<PayloadQueryData<Types>>>
+    type PayloadRange<R> = BoxStream<'static, Fetch<PayloadQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send;
-    type PayloadMetadataRange<R>
-        = BoxStream<'static, Fetch<PayloadMetadata<Types>>>
+    type PayloadMetadataRange<R> = BoxStream<'static, Fetch<PayloadMetadata<Types>>>
     where
         R: RangeBounds<usize> + Send;
-    type VidCommonRange<R>
-        = BoxStream<'static, Fetch<VidCommonQueryData<Types>>>
+    type VidCommonRange<R> = BoxStream<'static, Fetch<VidCommonQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send;
-    type VidCommonMetadataRange<R>
-        = BoxStream<'static, Fetch<VidCommonMetadata<Types>>>
+    type VidCommonMetadataRange<R> = BoxStream<'static, Fetch<VidCommonMetadata<Types>>>
     where
         R: RangeBounds<usize> + Send;
 
@@ -721,12 +714,10 @@ where
     S: VersionedDataSource + Send + Sync,
     P: Send + Sync,
 {
-    type Transaction<'a>
-        = S::Transaction<'a>
+    type Transaction<'a> = S::Transaction<'a>
     where
         Self: 'a;
-    type ReadOnly<'a>
-        = S::ReadOnly<'a>
+    type ReadOnly<'a> = S::ReadOnly<'a>
     where
         Self: 'a;
 
@@ -769,12 +760,10 @@ where
     S: VersionedDataSource + Send + Sync,
     P: Send + Sync,
 {
-    type Transaction<'a>
-        = S::Transaction<'a>
+    type Transaction<'a> = S::Transaction<'a>
     where
         Self: 'a;
-    type ReadOnly<'a>
-        = S::ReadOnly<'a>
+    type ReadOnly<'a> = S::ReadOnly<'a>
     where
         Self: 'a;
 
@@ -1370,30 +1359,24 @@ where
     #[tracing::instrument(skip_all)]
     async fn aggregate(self: Arc<Self>, chunk_size: usize, metrics: AggregatorMetrics) {
         loop {
-            let prev_aggregate = loop {
+            let start = loop {
                 let mut tx = match self.read().await {
                     Ok(tx) => tx,
                     Err(err) => {
-                        tracing::error!("unable to open read tx: {err:#}");
+                        tracing::error!("unable to start aggregator: {err:#}");
                         sleep(Duration::from_secs(5)).await;
                         continue;
                     }
                 };
-                match tx.load_prev_aggregate().await {
-                    Ok(agg) => break agg,
+                match tx.aggregates_height().await {
+                    Ok(height) => break height,
                     Err(err) => {
-                        tracing::error!("unable to load previous aggregate: {err:#}");
+                        tracing::error!("unable to load aggregator height: {err:#}");
                         sleep(Duration::from_secs(5)).await;
                         continue;
                     }
-                }
+                };
             };
-
-            let (start, mut prev_aggregate) = match prev_aggregate {
-                Some(aggregate) => (aggregate.height as usize + 1, aggregate),
-                None => (0, Aggregate::default()),
-            };
-
             tracing::info!(start, "starting aggregator");
             metrics.height.set(start);
 
@@ -1419,17 +1402,12 @@ where
                 loop {
                     let res = async {
                         let mut tx = self.write().await.context("opening transaction")?;
-                        let aggregate =
-                            tx.update_aggregates(prev_aggregate.clone(), &chunk).await?;
-                        tx.commit().await.context("committing transaction")?;
-                        prev_aggregate = aggregate;
-                        anyhow::Result::<_>::Ok(())
+                        tx.update_aggregates(&chunk).await?;
+                        tx.commit().await.context("committing transaction")
                     }
                     .await;
                     match res {
-                        Ok(()) => {
-                            break;
-                        }
+                        Ok(()) => break,
                         Err(err) => {
                             tracing::warn!(
                                 num_blocks,

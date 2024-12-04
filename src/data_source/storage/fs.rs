@@ -15,8 +15,8 @@
 use super::{
     ledger_log::{Iter, LedgerLog},
     pruning::{PruneStorage, PrunedHeightStorage, PrunerConfig},
-    Aggregate, AggregatesStorage, AvailabilityStorage, NodeStorage, PayloadMetadata,
-    UpdateAggregatesStorage, UpdateAvailabilityStorage, VidCommonMetadata,
+    AggregatesStorage, AvailabilityStorage, NodeStorage, PayloadMetadata, UpdateAggregatesStorage,
+    UpdateAvailabilityStorage, VidCommonMetadata,
 };
 
 use crate::{
@@ -281,7 +281,7 @@ pub trait Revert {
     fn revert(&mut self);
 }
 
-impl<Types> Revert for RwLockWriteGuard<'_, FileSystemStorageInner<Types>>
+impl<'a, Types> Revert for RwLockWriteGuard<'a, FileSystemStorageInner<Types>>
 where
     Types: NodeType,
     Payload<Types>: QueryablePayload<Types>,
@@ -293,7 +293,7 @@ where
     }
 }
 
-impl<Types> Revert for RwLockReadGuard<'_, FileSystemStorageInner<Types>>
+impl<'a, Types> Revert for RwLockReadGuard<'a, FileSystemStorageInner<Types>>
 where
     Types: NodeType,
     Payload<Types>: QueryablePayload<Types>,
@@ -357,12 +357,10 @@ impl<Types: NodeType> VersionedDataSource for FileSystemStorage<Types>
 where
     Payload<Types>: QueryablePayload<Types>,
 {
-    type Transaction<'a>
-        = Transaction<RwLockWriteGuard<'a, FileSystemStorageInner<Types>>>
+    type Transaction<'a> = Transaction<RwLockWriteGuard<'a, FileSystemStorageInner<Types>>>
     where
         Self: 'a;
-    type ReadOnly<'a>
-        = Transaction<RwLockReadGuard<'a, FileSystemStorageInner<Types>>>
+    type ReadOnly<'a> = Transaction<RwLockReadGuard<'a, FileSystemStorageInner<Types>>>
     where
         Self: 'a;
 
@@ -788,10 +786,6 @@ impl<T: Revert + Send> AggregatesStorage for Transaction<T> {
     async fn aggregates_height(&mut self) -> anyhow::Result<usize> {
         Ok(0)
     }
-
-    async fn load_prev_aggregate(&mut self) -> anyhow::Result<Option<Aggregate>> {
-        Ok(None)
-    }
 }
 
 impl<Types, T: Revert + Send> UpdateAggregatesStorage<Types> for Transaction<T>
@@ -800,10 +794,9 @@ where
 {
     async fn update_aggregates(
         &mut self,
-        _prev: Aggregate,
         _blocks: &[PayloadMetadata<Types>],
-    ) -> anyhow::Result<Aggregate> {
-        Ok(Aggregate::default())
+    ) -> anyhow::Result<()> {
+        Ok(())
     }
 }
 
