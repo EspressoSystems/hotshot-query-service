@@ -15,7 +15,7 @@
 # Asynchronous Data Retrieval
 
 The query service is able to retrieve data from an external data provider when it is missing from
-local storage. This could happen, for example, when a particular query node was disconnected from
+local storage. This could happen, for example, when a particular query node is disconnected from
 the network for some time and missed some blocks being finalized, or even when a node was connected
 but was not elected by HotShot to be on the DA committee, and thus did not receive the full data for
 some blocks.
@@ -23,22 +23,22 @@ some blocks.
 To support this, the availability data source -- the backend that powers the data availability API
 module -- is split into two parts. The **storage** layer implements local storage: a simple database
 that supports queries over the two main data structures (blocks and leaves) with various indexes. It
-represents a _best effort_ attempt to store and retrieve the data. Any query at any time is allowed
+represents a _best-effort_ attempt to store and retrieve the data. Any query at any time is allowed
 to fail if data is missing. The **provider** layer implements retrieval of data from various
-external sources. Both of these layers are abstract, and can have various implementations. We
+external sources. Both of these layers are abstract and can have multiple implementations. We
 currently support two implementations of storage -- backed by the local file system, or a Postgres
 database -- and one implementation of a provider, which fetches data from a peer query service.
 
 This document will focus on `FetchingDataSource`, which ties these two layers together to provide an
 infallible abstraction of HotShot data. Queries made via `FetchingDataSource` will never fail. If
 data is not available locally, the data source will transparently retrieve the data from a provider,
-and the request will block until the data becomes available.
+and the request will be blocked until the data becomes available.
 
 ## Query Interface
 
 The query interface provided by `FetchingDataSource` is designed to support a variety of use cases:
 * Requests that should succeed or fail immediately based on whether the data is available locally
-* Requests that should block until data becomes available
+* Requests that should be blocked until data becomes available
 * Proactive retrieval of missing data to aid future requests
 
 The first two are enabled by the `Fetch` abstraction. `Fetch` is a special kind of future
@@ -59,7 +59,7 @@ fetching takes two forms:
    the same resource.
 2. A background task periodically scans the database to discover missing data, and manually triggers
    fetches for it. This ensures that even data which is rarely requested will be fetched in good
-   time, which in turn reduces the likelihood that a fetch is need if and when that data is finally
+   time, which in turn reduces the likelihood that a fetch is needed if and when that data is finally
    requested. This can reduce the latency of blocking requests and the failure rate of non-blocking
    requests.
 
@@ -69,7 +69,7 @@ Retrieving data consists of three phases:
 * Check for the data in local storage
 * If missing, start a passive fetch. We retain a read lock on the local database while starting this
   up, which ensures the data cannot be inserted by another task before we have started the passive
-  fetch. Thus, this ensures that the request will complete if any other task ever receives the data.
+  fetch. Thus, this ensures that the request will be completed if any other task ever receives the data.
 * Start an active fetch. [If possible](#when-to-fetch), we can take control of our own request and
   actively fetch the data from an external provider. This will then cause our passive fetch to
   resolve. Sometimes this is not possible, in which case we are reliant on the data being fetched
@@ -102,7 +102,7 @@ requests, while limiting malicious requests to a minimal amount of resources -- 
 resources required to keep open a connection to the client, which in turn can be metered by standard
 DDoS prevention techniques.
 
-Note that, due to proactive fetching, all missing resources which actually exist will eventually be
+Note that, due to proactive fetching, all missing resources that actually exist will eventually be
 retrieved, and so all non-malicious passive fetches will eventually resolve.
 
 ### Active Fetching: Leaves
@@ -110,7 +110,7 @@ retrieved, and so all non-malicious passive fetches will eventually resolve.
 Leaves can be requested by height or hash. We will only ever trigger an active fetch if requested by
 height, since without even a leaf, there is no way for us to tell locally whether a given hash
 exists. Note that internally, the query service only ever needs to look up leaves by height (this is
-to implement leaf subscriptions, where we start from a height an increment sequentially), so we will
+to implement leaf subscriptions, where we start from a height and increment sequentially), so we will
 only fail to trigger an active fetch in response to a direct request from the user.
 
 When a leaf is requested by height, and the leaf is not present in local storage, we compare the
@@ -122,7 +122,7 @@ via proactive fetching, so a passive fetch is fine here.
 
 ![Leaf fetching](fetch-leaf.png)
 
-While the active fetch for the leaf happens in a background task and does not effect request
+While the active fetch for the leaf happens in a background task and does not affect request
 latency, the decision of whether to start an active fetch is on the critical path of request
 handling, and so performance is of some concern, as is minimizing load on the local database. For
 efficiency, we store the largest known block height in memory, and update it every time a new block
@@ -166,7 +166,7 @@ incoming block for the desired transaction.
 Data retrieved from external data providers is considered untrustworthy until verified. When
 fetching leaves or headers, we need to actually verify HotShot consensus, to determine that the leaf
 is finalized at a given height (leaves are always fetched by height). This requires us to download a
-chain of leaves proving that a certain application state is finalized, as well as an
+chain of leaves proving that a certain application state is finalized, as well as 
 application-specific proof showing that the desired leaf is in the history of the finalized leaf. In
 a special case, the desired leaf may be identical to the finalized leaf, and the extra proof can be
 omitted.
