@@ -14,7 +14,7 @@
 
 use super::{
     pruning::{PruneStorage, PrunedHeightStorage, PrunerCfg, PrunerConfig},
-    Aggregate, AggregatesStorage, AvailabilityStorage, NodeStorage, UpdateAggregatesStorage,
+    AggregatesStorage, AvailabilityStorage, NodeStorage, UpdateAggregatesStorage,
     UpdateAvailabilityStorage,
 };
 use crate::{
@@ -539,11 +539,6 @@ where
         self.maybe_fail_read(FailableAction::Any).await?;
         self.inner.aggregates_height().await
     }
-
-    async fn load_prev_aggregate(&mut self) -> anyhow::Result<Option<Aggregate>> {
-        self.maybe_fail_read(FailableAction::Any).await?;
-        self.inner.load_prev_aggregate().await
-    }
 }
 
 impl<T, Types> UpdateAggregatesStorage<Types> for Transaction<T>
@@ -551,12 +546,8 @@ where
     Types: NodeType,
     T: UpdateAggregatesStorage<Types> + Send + Sync,
 {
-    async fn update_aggregates(
-        &mut self,
-        prev: Aggregate,
-        blocks: &[PayloadMetadata<Types>],
-    ) -> anyhow::Result<Aggregate> {
+    async fn update_aggregates(&mut self, blocks: &[PayloadMetadata<Types>]) -> anyhow::Result<()> {
         self.maybe_fail_write(FailableAction::Any).await?;
-        self.inner.update_aggregates(prev, blocks).await
+        self.inner.update_aggregates(blocks).await
     }
 }

@@ -14,8 +14,8 @@
 
 use super::{
     pruning::{PruneStorage, PrunedHeightStorage, PrunerConfig},
-    Aggregate, AggregatesStorage, AvailabilityStorage, NodeStorage, PayloadMetadata,
-    UpdateAggregatesStorage, UpdateAvailabilityStorage, VidCommonMetadata,
+    AggregatesStorage, AvailabilityStorage, NodeStorage, PayloadMetadata, UpdateAggregatesStorage,
+    UpdateAvailabilityStorage, VidCommonMetadata,
 };
 use crate::{
     availability::{
@@ -289,10 +289,6 @@ impl<'a> AggregatesStorage for Transaction<'a> {
     async fn aggregates_height(&mut self) -> anyhow::Result<usize> {
         bail!("no_storage mock read error")
     }
-
-    async fn load_prev_aggregate(&mut self) -> anyhow::Result<Option<Aggregate>> {
-        bail!("no_storage mock read error")
-    }
 }
 
 impl<'a, Types> UpdateAggregatesStorage<Types> for Transaction<'a>
@@ -301,10 +297,9 @@ where
 {
     async fn update_aggregates(
         &mut self,
-        _prev: Aggregate,
         _blocks: &[PayloadMetadata<Types>],
-    ) -> anyhow::Result<Aggregate> {
-        Ok(Aggregate::default())
+    ) -> anyhow::Result<()> {
+        Ok(())
     }
 }
 
