@@ -20,7 +20,6 @@
 
 use super::{
     queries::{
-        self,
         state::{build_hash_batch_insert, Node},
         DecodeError,
     },
@@ -36,9 +35,9 @@ use crate::{
     },
     merklized_state::{MerklizedState, UpdateStateData},
     types::HeightIndexed,
-    Header, Payload, QueryError, QueryResult, VidShare,
+    Header, Payload, QueryError, VidShare,
 };
-use anyhow::{bail, Context};
+use anyhow::{bail, ensure, Context};
 use ark_serialize::CanonicalSerialize;
 use async_trait::async_trait;
 use committable::Committable;
@@ -52,14 +51,15 @@ use hotshot_types::traits::{
 };
 use itertools::Itertools;
 use jf_merkle_tree::prelude::{MerkleNode, MerkleProof};
-use sqlx::types::BitVec;
-pub use sqlx::Executor;
-use sqlx::{pool::Pool, query_builder::Separated, Encode, FromRow, QueryBuilder, Type};
+use sqlx::{pool::Pool, types::BitVec, Encode, Execute, FromRow, Type};
 use std::{
     collections::{HashMap, HashSet},
     marker::PhantomData,
-    time::Instant,
+    time::{Duration, Instant},
 };
+use tokio::time::sleep;
+
+pub use sqlx::Executor;
 
 pub type Query<'q> = sqlx::query::Query<'q, Db, <Db as Database>::Arguments<'q>>;
 pub type QueryAs<'q, T> = sqlx::query::QueryAs<'q, Db, T, <Db as Database>::Arguments<'q>>;
@@ -93,12 +93,9 @@ pub trait TransactionMode: Send + Sync {
 }
 
 impl TransactionMode for Write {
-    #[allow(unused_variables)]
     async fn begin(conn: &mut <Db as Database>::Connection) -> anyhow::Result<()> {
-        #[cfg(not(feature = "embedded-db"))]
         conn.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
             .await?;
-
         Ok(())
     }
 
@@ -108,12 +105,9 @@ impl TransactionMode for Write {
 }
 
 impl TransactionMode for Read {
-    #[allow(unused_variables)]
     async fn begin(conn: &mut <Db as Database>::Connection) -> anyhow::Result<()> {
-        #[cfg(not(feature = "embedded-db"))]
         conn.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE, READ ONLY, DEFERRABLE")
             .await?;
-
         Ok(())
     }
 
@@ -233,12 +227,9 @@ impl<Mode: TransactionMode> update::Transaction for Transaction<Mode> {
 /// as long as the parameters outlive the duration of the query (the `'p: 'q`) bound on the
 /// [`bind`](Self::bind) function.
 pub trait Params<'p> {
-    fn bind<'q, 'r>(
-        self,
-        q: &'q mut Separated<'r, 'p, Db, &'static str>,
-    ) -> &'q mut Separated<'r, 'p, Db, &'static str>
+    fn bind<'q>(self, q: Query<'q>) -> Query<'q>
     where
-        'p: 'r;
+        'p: 'q;
 }
 
 /// A collection of parameters with a statically known length.
@@ -250,19 +241,19 @@ pub trait FixedLengthParams<'p, const N: usize>: Params<'p> {}
 
 macro_rules! impl_tuple_params {
     ($n:literal, ($($t:ident,)+)) => {
-        impl<'p,  $($t),+> Params<'p> for ($($t,)+)
+        impl<'p, $($t),+> Params<'p> for ($($t,)+)
         where $(
-            $t: 'p +  Encode<'p, Db> + Type<Db>
-        ),+{
-            fn bind<'q, 'r>(self, q: &'q mut Separated<'r, 'p, Db, &'static str>) ->   &'q mut Separated<'r, 'p, Db, &'static str>
-            where 'p: 'r,
+            $t: 'p + for<'q> Encode<'q, Db> + Type<Db>
+        ),+ {
+            fn bind<'q>(self, q: Query<'q>) -> Query<'q>
+            where
+                'p: 'q
             {
                 #[allow(non_snake_case)]
                 let ($($t,)+) = self;
                 q $(
-                    .push_bind($t)
+                    .bind($t)
                 )+
-
             }
         }
 
@@ -283,37 +274,117 @@ impl_tuple_params!(6, (T1, T2, T3, T4, T5, T6,));
 impl_tuple_params!(7, (T1, T2, T3, T4, T5, T6, T7,));
 impl_tuple_params!(8, (T1, T2, T3, T4, T5, T6, T7, T8,));
 
-pub fn build_where_in<'a, I>(
-    query: &'a str,
-    column: &'a str,
-    values: I,
-) -> QueryResult<(queries::QueryBuilder<'a>, String)>
+impl<'p, T> Params<'p> for Vec<T>
 where
-    I: IntoIterator,
-    I::Item: 'a + Encode<'a, Db> + Type<Db>,
+    T: Params<'p>,
 {
-    let mut builder = queries::QueryBuilder::default();
-    let params = values
-        .into_iter()
-        .map(|v| Ok(format!("{} ", builder.bind(v)?)))
-        .collect::<QueryResult<Vec<String>>>()?;
-
-    if params.is_empty() {
-        return Err(QueryError::Error {
-            message: "failed to build WHERE IN query. No parameter found ".to_string(),
-        });
+    fn bind<'q>(self, mut q: Query<'q>) -> Query<'q>
+    where
+        'p: 'q,
+    {
+        for params in self {
+            q = params.bind(q);
+        }
+        q
     }
-
-    let sql = format!(
-        "{query} where {column} IN ({}) ",
-        params.into_iter().join(",")
-    );
-
-    Ok((builder, sql))
 }
 
 /// Low-level, general database queries and mutation.
 impl Transaction<Write> {
+    /// Execute a statement that is expected to modify exactly one row.
+    ///
+    /// Returns an error if the database is not modified.
+    pub async fn execute_one<'q, E>(&mut self, statement: E) -> anyhow::Result<()>
+    where
+        E: 'q + Execute<'q, Db>,
+    {
+        let nrows = self.execute_many(statement).await?;
+        if nrows > 1 {
+            // If more than one row is affected, we don't return an error, because clearly
+            // _something_ happened and modified the database. So we don't necessarily want the
+            // caller to retry. But we do log an error, because it seems the query did something
+            // different than the caller intended.
+            tracing::error!("statement modified more rows ({nrows}) than expected (1)");
+        }
+        Ok(())
+    }
+
+    /// Execute a statement that is expected to modify exactly one row.
+    ///
+    /// Returns an error if the database is not modified. Retries several times before failing.
+    pub async fn execute_one_with_retries<'q>(
+        &mut self,
+        statement: &'q str,
+        params: impl Params<'q> + Clone,
+    ) -> anyhow::Result<()> {
+        let interval = Duration::from_secs(1);
+        let mut retries = 5;
+
+        while let Err(err) = self
+            .execute_one(params.clone().bind(query(statement)))
+            .await
+        {
+            tracing::error!(
+                %statement,
+                "error in statement execution ({retries} tries remaining): {err}"
+            );
+            if retries == 0 {
+                return Err(err);
+            }
+            retries -= 1;
+            sleep(interval).await;
+        }
+
+        Ok(())
+    }
+
+    /// Execute a statement that is expected to modify at least one row.
+    ///
+    /// Returns an error if the database is not modified.
+    pub async fn execute_many<'q, E>(&mut self, statement: E) -> anyhow::Result<u64>
+    where
+        E: 'q + Execute<'q, Db>,
+    {
+        let nrows = self.execute(statement).await?.rows_affected();
+        ensure!(nrows > 0, "statement failed: 0 rows affected");
+        Ok(nrows)
+    }
+
+    /// Execute a statement that is expected to modify at least one row.
+    ///
+    /// Returns an error if the database is not modified. Retries several times before failing.
+    pub async fn execute_many_with_retries<'q, 'p>(
+        &mut self,
+        statement: &'q str,
+        params: impl Params<'p> + Clone,
+    ) -> anyhow::Result<u64>
+    where
+        'p: 'q,
+    {
+        let interval = Duration::from_secs(1);
+        let mut retries = 5;
+
+        loop {
+            match self
+                .execute_many(params.clone().bind(query(statement)))
+                .await
+            {
+                Ok(nrows) => return Ok(nrows),
+                Err(err) => {
+                    tracing::error!(
+                        %statement,
+                        "error in statement execution ({retries} tries remaining): {err}"
+                    );
+                    if retries == 0 {
+                        return Err(err);
+                    }
+                    retries -= 1;
+                    sleep(interval).await;
+                }
+            }
+        }
+    }
+
     pub async fn upsert<'p, const N: usize, R>(
         &mut self,
         table: &str,
@@ -329,31 +400,35 @@ impl Transaction<Write> {
             .iter()
             .map(|col| format!("{col} = excluded.{col}"))
             .join(",");
-        let columns_str = columns
-            .into_iter()
-            .map(|col| format!("\"{col}\""))
-            .join(",");
+        let columns = columns.into_iter().join(",");
         let pk = pk.into_iter().join(",");
 
-        let mut query_builder =
-            QueryBuilder::new(format!("INSERT INTO \"{table}\" ({columns_str}) "));
+        let mut values = vec![];
+        let mut params = vec![];
         let mut num_rows = 0;
+        for (row, entries) in rows.into_iter().enumerate() {
+            let start = row * N;
+            let end = (row + 1) * N;
+            let row_params = (start..end).map(|i| format!("${}", i + 1)).join(",");
 
-        query_builder.push_values(rows, |mut b, row| {
+            values.push(format!("({row_params})"));
+            params.push(entries);
             num_rows += 1;
-            row.bind(&mut b);
-        });
+        }
 
         if num_rows == 0 {
             tracing::warn!("trying to upsert 0 rows, this has no effect");
             return Ok(());
         }
-        query_builder.push(format!(" ON CONFLICT ({pk}) DO UPDATE SET {set_columns}"));
+        tracing::debug!("upserting {num_rows} rows");
 
-        let res = self.execute(query_builder.build()).await?;
-        let stmt = query_builder.sql();
-        let rows_modified = res.rows_affected() as usize;
-
+        let values = values.into_iter().join(",");
+        let stmt = format!(
+            "INSERT INTO {table} ({columns})
+                  VALUES {values}
+             ON CONFLICT ({pk}) DO UPDATE SET {set_columns}"
+        );
+        let rows_modified = self.execute_many_with_retries(&stmt, params).await?;
         if rows_modified != num_rows {
             tracing::error!(
                 stmt,
@@ -444,14 +519,13 @@ where
         // The header and payload tables should already have been initialized when we inserted the
         // corresponding leaf. All we have to do is add the payload itself and its size.
         let payload = block.payload.encode();
-
         self.upsert(
             "payload",
             ["height", "data", "size", "num_transactions"],
             ["height"],
             [(
                 block.height() as i64,
-                payload.as_ref().to_vec(),
+                payload.as_ref(),
                 block.size() as i32,
                 block.num_transactions() as i32,
             )],
@@ -467,9 +541,9 @@ where
         }
         if !rows.is_empty() {
             self.upsert(
-                "transactions",
-                ["hash", "block_height", "idx"],
-                ["block_height", "idx"],
+                "transaction",
+                ["hash", "block_height", "index"],
+                ["block_height", "index"],
                 rows,
             )
             .await?;
@@ -556,7 +630,7 @@ impl<Types: NodeType, State: MerklizedState<Types, ARITY>, const ARITY: usize>
                     nodes.push((
                         Node {
                             path: node_path,
-                            idx: Some(index),
+                            index: Some(index),
                             ..Default::default()
                         },
                         None,
@@ -584,7 +658,7 @@ impl<Types: NodeType, State: MerklizedState<Types, ARITY>, const ARITY: usize>
                     nodes.push((
                         Node {
                             path,
-                            idx: Some(index),
+                            index: Some(index),
                             entry: Some(entry),
                             ..Default::default()
                         },
@@ -676,12 +750,10 @@ impl<Types: NodeType, State: MerklizedState<Types, ARITY>, const ARITY: usize>
                         message: "Missing child hash".to_string(),
                     })?;
 
-                node.children = Some(children_hashes.into());
+                node.children = Some(children_hashes);
             }
         }
-
         Node::upsert(name, nodes.into_iter().map(|(n, _, _)| n), self).await?;
-
         Ok(())
     }
 }

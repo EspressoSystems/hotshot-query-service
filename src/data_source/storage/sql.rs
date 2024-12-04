@@ -24,22 +24,17 @@ use crate::{
 };
 use async_trait::async_trait;
 use chrono::Utc;
-
+use futures::future::FutureExt;
 use hotshot_types::traits::metrics::Metrics;
 use itertools::Itertools;
 use log::LevelFilter;
-
-#[cfg(not(feature = "embedded-db"))]
-use futures::future::FutureExt;
-#[cfg(not(feature = "embedded-db"))]
-use sqlx::postgres::{PgConnectOptions, PgSslMode};
-#[cfg(feature = "embedded-db")]
-use sqlx::sqlite::SqliteConnectOptions;
 use sqlx::{
     pool::{Pool, PoolOptions},
+    postgres::{PgConnectOptions, PgSslMode},
     ConnectOptions, Row,
 };
 use std::{cmp::min, fmt::Debug, str::FromStr, time::Duration};
+
 pub extern crate sqlx;
 pub use sqlx::{Database, Sqlite};
 
@@ -53,7 +48,7 @@ pub use anyhow::Error;
 // in the expansion of `include_migrations`, even when `include_migrations` is invoked from another
 // crate which doesn't have `include_dir` as a dependency.
 pub use crate::include_migrations;
-pub use db::*;
+pub use db::Db;
 pub use include_dir::include_dir;
 pub use queries::QueryBuilder;
 pub use refinery::Migration;
@@ -61,7 +56,7 @@ pub use transaction::*;
 
 use self::{migrate::Migrator, transaction::PoolMetrics};
 
-/// Embed migrations from the given directory into the current binary for PostgreSQL or SQLite.
+/// Embed migrations from the given directory into the current binary.
 ///
 /// The macro invocation `include_migrations!(path)` evaluates to an expression of type `impl
 /// Iterator<Item = Migration>`. Each migration must be a text file which is an immediate child of
@@ -76,23 +71,15 @@ use self::{migrate::Migrator, transaction::PoolMetrics};
 ///
 /// As an example, this is the invocation used to load the default migrations from the
 /// `hotshot-query-service` crate. The migrations are located in a directory called `migrations` at
-/// - PostgreSQL migrations are in `/migrations/postgres`.
-/// - SQLite migrations are in `/migrations/sqlite`.
+/// the root of the crate.
 ///
 /// ```
 /// # use hotshot_query_service::data_source::sql::{include_migrations, Migration};
-/// // For PostgreSQL
-/// #[cfg(not(feature = "embedded-db"))]
-///  let mut migrations: Vec<Migration> =
-///     include_migrations!("$CARGO_MANIFEST_DIR/migrations/postgres").collect();
-/// // For SQLite
-/// #[cfg(feature = "embedded-db")]
 /// let mut migrations: Vec<Migration> =
-///     include_migrations!("$CARGO_MANIFEST_DIR/migrations/sqlite").collect();
-///    
-///     migrations.sort();
-///     assert_eq!(migrations[0].version(), 10);
-///     assert_eq!(migrations[0].name(), "init_schema");
+///     include_migrations!("$CARGO_MANIFEST_DIR/migrations").collect();
+/// migrations.sort();
+/// assert_eq!(migrations[0].version(), 10);
+/// assert_eq!(migrations[0].name(), "init_schema");
 /// ```
 ///
 /// Note that a similar macro is available from Refinery:
@@ -130,13 +117,7 @@ macro_rules! include_migrations {
 
 /// The migrations requied to build the default schema for this version of [`SqlStorage`].
 pub fn default_migrations() -> Vec<Migration> {
-    #[cfg(not(feature = "embedded-db"))]
-    let mut migrations =
-        include_migrations!("$CARGO_MANIFEST_DIR/migrations/postgres").collect::<Vec<_>>();
-
-    #[cfg(feature = "embedded-db")]
-    let mut migrations =
-        include_migrations!("$CARGO_MANIFEST_DIR/migrations/sqlite").collect::<Vec<_>>();
+    let mut migrations = include_migrations!("$CARGO_MANIFEST_DIR/migrations").collect::<Vec<_>>();
 
     // Check version uniqueness and sort by version.
     validate_migrations(&mut migrations).expect("default migrations are invalid");
@@ -203,64 +184,28 @@ fn add_custom_migrations(
         .map(|pair| pair.reduce(|_, custom| custom))
 }
 
-#[derive(Clone)]
+/// Postgres client config.
+#[derive(Clone, Debug)]
 pub struct Config {
-    #[cfg(feature = "embedded-db")]
-    db_opt: SqliteConnectOptions,
-    #[cfg(not(feature = "embedded-db"))]
     db_opt: PgConnectOptions,
     pool_opt: PoolOptions<Db>,
-    #[cfg(not(feature = "embedded-db"))]
     schema: String,
     reset: bool,
     migrations: Vec<Migration>,
     no_migrations: bool,
     pruner_cfg: Option<PrunerCfg>,
     archive: bool,
-    pool: Option<Pool<Db>>,
 }
 
-#[cfg(not(feature = "embedded-db"))]
 impl Default for Config {
     fn default() -> Self {
         PgConnectOptions::default()
-            .username("postgres")
-            .password("password")
             .host("localhost")
             .port(5432)
             .into()
     }
 }
 
-#[cfg(feature = "embedded-db")]
-impl Default for Config {
-    fn default() -> Self {
-        SqliteConnectOptions::default()
-            .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)
-            .busy_timeout(Duration::from_secs(30))
-            .auto_vacuum(sqlx::sqlite::SqliteAutoVacuum::Incremental)
-            .create_if_missing(true)
-            .into()
-    }
-}
-
-#[cfg(feature = "embedded-db")]
-impl From<SqliteConnectOptions> for Config {
-    fn from(db_opt: SqliteConnectOptions) -> Self {
-        Self {
-            db_opt,
-            pool_opt: PoolOptions::default(),
-            reset: false,
-            migrations: vec![],
-            no_migrations: false,
-            pruner_cfg: None,
-            archive: false,
-            pool: None,
-        }
-    }
-}
-
-#[cfg(not(feature = "embedded-db"))]
 impl From<PgConnectOptions> for Config {
     fn from(db_opt: PgConnectOptions) -> Self {
         Self {
@@ -272,12 +217,10 @@ impl From<PgConnectOptions> for Config {
             no_migrations: false,
             pruner_cfg: None,
             archive: false,
-            pool: None,
         }
     }
 }
 
-#[cfg(not(feature = "embedded-db"))]
 impl FromStr for Config {
     type Err = <PgConnectOptions as FromStr>::Err;
 
@@ -286,29 +229,6 @@ impl FromStr for Config {
     }
 }
 
-#[cfg(feature = "embedded-db")]
-impl FromStr for Config {
-    type Err = <SqliteConnectOptions as FromStr>::Err;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(SqliteConnectOptions::from_str(s)?.into())
-    }
-}
-
-#[cfg(feature = "embedded-db")]
-impl Config {
-    pub fn busy_timeout(mut self, timeout: Duration) -> Self {
-        self.db_opt = self.db_opt.busy_timeout(timeout);
-        self
-    }
-
-    pub fn db_path(mut self, path: std::path::PathBuf) -> Self {
-        self.db_opt = self.db_opt.filename(path);
-        self
-    }
-}
-
-#[cfg(not(feature = "embedded-db"))]
 impl Config {
     /// Set the hostname of the database server.
     ///
@@ -359,15 +279,6 @@ impl Config {
     /// The default schema is named `hotshot` and is created via the default migrations.
     pub fn schema(mut self, schema: impl Into<String>) -> Self {
         self.schema = schema.into();
-        self
-    }
-}
-
-impl Config {
-    /// Sets the database connection pool
-    /// This allows reusing an existing connection pool when building a new `SqlStorage` instance.
-    pub fn pool(mut self, pool: Pool<Db>) -> Self {
-        self.pool = Some(pool);
         self
     }
 
@@ -473,7 +384,7 @@ impl Config {
 }
 
 /// Storage for the APIs provided in this crate, backed by a remote PostgreSQL database.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct SqlStorage {
     pool: Pool<Db>,
     metrics: PrometheusMetrics,
@@ -489,59 +400,32 @@ pub struct Pruner {
 }
 
 impl SqlStorage {
-    pub fn pool(&self) -> Pool<Db> {
-        self.pool.clone()
-    }
     /// Connect to a remote database.
     pub async fn connect(mut config: Config) -> Result<Self, Error> {
-        let metrics = PrometheusMetrics::default();
-        let pool_metrics = PoolMetrics::new(&*metrics.subgroup("sql".into()));
-        let pool = config.pool_opt.clone();
-        let pruner_cfg = config.pruner_cfg;
-
-        // re-use the same pool if present and return early
-        if let Some(pool) = config.pool {
-            return Ok(Self {
-                metrics,
-                pool_metrics,
-                pool,
-                pruner_cfg,
-            });
-        }
-
-        #[cfg(not(feature = "embedded-db"))]
         let schema = config.schema.clone();
-        #[cfg(not(feature = "embedded-db"))]
-        let pool = pool.after_connect(move |conn, _| {
-            let schema = config.schema.clone();
-            async move {
-                query(&format!("SET search_path TO {schema}"))
-                    .execute(conn)
-                    .await?;
-                Ok(())
-            }
-            .boxed()
-        });
-
-        #[cfg(feature = "embedded-db")]
-        if config.reset {
-            std::fs::remove_file(config.db_opt.get_filename())?;
-        }
-
-        let pool = pool.connect_with(config.db_opt).await?;
+        let pool = config
+            .pool_opt
+            .after_connect(move |conn, _| {
+                let schema = schema.clone();
+                async move {
+                    query(&format!("SET search_path TO {schema}"))
+                        .execute(conn)
+                        .await?;
+                    Ok(())
+                }
+                .boxed()
+            })
+            .connect_with(config.db_opt)
+            .await?;
 
         // Create or connect to the schema for this query service.
         let mut conn = pool.acquire().await?;
-
-        #[cfg(not(feature = "embedded-db"))]
         if config.reset {
-            query(&format!("DROP SCHEMA IF EXISTS {} CASCADE", schema))
+            query(&format!("DROP SCHEMA IF EXISTS {} CASCADE", config.schema))
                 .execute(conn.as_mut())
                 .await?;
         }
-
-        #[cfg(not(feature = "embedded-db"))]
-        query(&format!("CREATE SCHEMA IF NOT EXISTS {}", schema))
+        query(&format!("CREATE SCHEMA IF NOT EXISTS {}", config.schema))
             .execute(conn.as_mut())
             .await?;
 
@@ -587,13 +471,12 @@ impl SqlStorage {
                 .await?;
         }
 
-        conn.close().await?;
-
+        let metrics = PrometheusMetrics::default();
         Ok(Self {
             pool,
-            pool_metrics,
+            pool_metrics: PoolMetrics::new(&*metrics.subgroup("sql".into())),
             metrics,
-            pruner_cfg,
+            pruner_cfg: config.pruner_cfg,
         })
     }
 }
@@ -662,17 +545,10 @@ impl PruneStorage for SqlStorage {
 
     async fn get_disk_usage(&self) -> anyhow::Result<u64> {
         let mut tx = self.read().await?;
-
-        #[cfg(not(feature = "embedded-db"))]
-        let query = "SELECT pg_database_size(current_database())";
-
-        #[cfg(feature = "embedded-db")]
-        let query = "
-            SELECT( (SELECT page_count FROM pragma_page_count) * (SELECT * FROM pragma_page_size)) AS total_bytes";
-
-        let row = tx.fetch_one(query).await?;
+        let row = tx
+            .fetch_one("SELECT pg_database_size(current_database())")
+            .await?;
         let size: i64 = row.get(0);
-
         Ok(size as u64)
     }
 
@@ -798,69 +674,38 @@ impl VersionedDataSource for SqlStorage {
 // These tests run the `postgres` Docker image, which doesn't work on Windows.
 #[cfg(all(any(test, feature = "testing"), not(target_os = "windows")))]
 pub mod testing {
-    #![allow(unused_imports)]
-    use refinery::Migration;
     use std::{
         env,
         process::{Command, Stdio},
-        str::{self, FromStr},
+        str,
         time::Duration,
     };
     use tokio::net::TcpStream;
     use tokio::time::timeout;
 
     use portpicker::pick_unused_port;
+    use refinery::Migration;
 
     use super::Config;
     use crate::testing::sleep;
 
     #[derive(Debug)]
     pub struct TmpDb {
-        #[cfg(not(feature = "embedded-db"))]
         host: String,
-        #[cfg(not(feature = "embedded-db"))]
         port: u16,
-        #[cfg(not(feature = "embedded-db"))]
         container_id: String,
-        #[cfg(feature = "embedded-db")]
-        db_path: std::path::PathBuf,
-        #[allow(dead_code)]
         persistent: bool,
     }
     impl TmpDb {
-        #[cfg(feature = "embedded-db")]
-        fn init_sqlite_db(persistent: bool) -> Self {
-            let file = tempfile::Builder::new()
-                .prefix("sqlite-")
-                .suffix(".db")
-                .tempfile()
-                .unwrap();
-
-            let (_, db_path) = file.keep().unwrap();
-
-            Self {
-                db_path,
-                persistent,
-            }
-        }
         pub async fn init() -> Self {
-            #[cfg(feature = "embedded-db")]
-            return Self::init_sqlite_db(false);
-
-            #[cfg(not(feature = "embedded-db"))]
-            Self::init_postgres(false).await
+            Self::init_inner(false).await
         }
 
         pub async fn persistent() -> Self {
-            #[cfg(feature = "embedded-db")]
-            return Self::init_sqlite_db(true);
-
-            #[cfg(not(feature = "embedded-db"))]
-            Self::init_postgres(true).await
+            Self::init_inner(true).await
         }
 
-        #[cfg(not(feature = "embedded-db"))]
-        async fn init_postgres(persistent: bool) -> Self {
+        async fn init_inner(persistent: bool) -> Self {
             let docker_hostname = env::var("DOCKER_HOSTNAME");
             // This picks an unused port on the current system.  If docker is
             // configured to run on a different host then this may not find a
@@ -875,11 +720,9 @@ pub mod testing {
                 .arg("-d")
                 .args(["-p", &format!("{port}:5432")])
                 .args(["-e", "POSTGRES_PASSWORD=password"]);
-
             if !persistent {
                 cmd.arg("--rm");
             }
-
             let output = cmd.arg("postgres").output().unwrap();
             let stdout = str::from_utf8(&output.stdout).unwrap();
             let stderr = str::from_utf8(&output.stderr).unwrap();
@@ -902,50 +745,28 @@ pub mod testing {
             db
         }
 
-        #[cfg(not(feature = "embedded-db"))]
         pub fn host(&self) -> String {
             self.host.clone()
         }
 
-        #[cfg(not(feature = "embedded-db"))]
         pub fn port(&self) -> u16 {
             self.port
         }
 
-        #[cfg(feature = "embedded-db")]
-        pub fn path(&self) -> std::path::PathBuf {
-            self.db_path.clone()
-        }
-
         pub fn config(&self) -> Config {
-            #[cfg(feature = "embedded-db")]
-            let mut cfg: Config = {
-                let db_path = self.db_path.to_string_lossy();
-                let path = format!("sqlite:{db_path}");
-                sqlx::sqlite::SqliteConnectOptions::from_str(&path)
-                    .expect("invalid db path")
-                    .create_if_missing(true)
-                    .into()
-            };
-
-            #[cfg(not(feature = "embedded-db"))]
-            let mut cfg = Config::default()
+            Config::default()
                 .user("postgres")
                 .password("password")
                 .host(self.host())
-                .port(self.port());
-
-            cfg = cfg.migrations(vec![Migration::unapplied(
-                "V101__create_test_merkle_tree_table.sql",
-                &TestMerkleTreeMigration::create("test_tree"),
-            )
-            .unwrap()]);
-
-            cfg
+                .port(self.port())
+                .migrations(vec![Migration::unapplied(
+                    "V11__create_test_merkle_tree_table.sql",
+                    &TestMerkleTreeMigration::create("test_tree"),
+                )
+                .unwrap()])
         }
 
-        #[cfg(not(feature = "embedded-db"))]
-        pub fn stop_postgres(&mut self) {
+        pub fn stop(&mut self) {
             tracing::info!(container = self.container_id, "stopping postgres");
             let output = Command::new("docker")
                 .args(["stop", self.container_id.as_str()])
@@ -959,8 +780,7 @@ pub mod testing {
             );
         }
 
-        #[cfg(not(feature = "embedded-db"))]
-        pub async fn start_postgres(&mut self) {
+        pub async fn start(&mut self) {
             tracing::info!(container = self.container_id, "resuming postgres");
             let output = Command::new("docker")
                 .args(["start", self.container_id.as_str()])
@@ -976,7 +796,6 @@ pub mod testing {
             self.wait_for_ready().await;
         }
 
-        #[cfg(not(feature = "embedded-db"))]
         async fn wait_for_ready(&self) {
             let timeout_duration = Duration::from_secs(
                 env::var("SQL_TMP_DB_CONNECT_TIMEOUT")
@@ -1041,18 +860,20 @@ pub mod testing {
         }
     }
 
-    #[cfg(not(feature = "embedded-db"))]
     impl Drop for TmpDb {
         fn drop(&mut self) {
-            self.stop_postgres();
-        }
-    }
-
-    #[cfg(feature = "embedded-db")]
-    impl Drop for TmpDb {
-        fn drop(&mut self) {
-            if !self.persistent {
-                std::fs::remove_file(self.db_path.clone()).unwrap();
+            self.stop();
+            if self.persistent {
+                let output = Command::new("docker")
+                    .args(["container", "rm", self.container_id.as_str()])
+                    .output()
+                    .unwrap();
+                assert!(
+                    output.status.success(),
+                    "error removing postgres docker {}: {}",
+                    self.container_id,
+                    str::from_utf8(&output.stderr).unwrap()
+                );
             }
         }
     }
@@ -1061,44 +882,29 @@ pub mod testing {
 
     impl TestMerkleTreeMigration {
         fn create(name: &str) -> String {
-            let (bit_vec, binary, hash_pk, root_stored_column) = if cfg!(feature = "embedded-db") {
-                (
-                    "TEXT",
-                    "BLOB",
-                    "INTEGER PRIMARY KEY AUTOINCREMENT",
-                    " (json_extract(data, '$.test_merkle_tree_root'))",
-                )
-            } else {
-                (
-                    "BIT(8)",
-                    "BYTEA",
-                    "SERIAL PRIMARY KEY",
-                    "(data->>'test_merkle_tree_root')",
-                )
-            };
-
             format!(
                 "CREATE TABLE IF NOT EXISTS hash
             (
-                id {hash_pk},
-                value {binary}  NOT NULL UNIQUE
+                id SERIAL PRIMARY KEY,
+                value BYTEA  NOT NULL UNIQUE
             );
-    
+        
+
             ALTER TABLE header
             ADD column test_merkle_tree_root text
-            GENERATED ALWAYS as {root_stored_column} STORED;
+            GENERATED ALWAYS as (data->>'test_merkle_tree_root') STORED;
 
             CREATE TABLE {name}
             (
-                path JSONB NOT NULL, 
+                path integer[] NOT NULL, 
                 created BIGINT NOT NULL,
-                hash_id INT NOT NULL,
-                children JSONB,
-                children_bitvec {bit_vec},
-                idx JSONB,
-                entry JSONB,
-                PRIMARY KEY (path, created)
+                hash_id INT NOT NULL REFERENCES hash (id),
+                children INT[],
+                children_bitvec BIT(8),
+                index JSONB,
+                entry JSONB 
             );
+            ALTER TABLE {name} ADD CONSTRAINT {name}_pk PRIMARY KEY (path, created);
             CREATE INDEX {name}_created ON {name} (created);"
             )
         }
@@ -1127,18 +933,21 @@ mod test {
         setup_test();
 
         let db = TmpDb::init().await;
-        let cfg = db.config();
+        let port = db.port();
+        let host = &db.host();
 
-        let connect = |migrations: bool, custom_migrations| {
-            let cfg = cfg.clone();
-            async move {
-                let mut cfg = cfg.migrations(custom_migrations);
-                if !migrations {
-                    cfg = cfg.no_migrations();
-                }
-                let client = SqlStorage::connect(cfg).await?;
-                Ok::<_, Error>(client)
+        let connect = |migrations: bool, custom_migrations| async move {
+            let mut cfg = Config::default()
+                .user("postgres")
+                .password("password")
+                .host(host)
+                .port(port)
+                .migrations(custom_migrations);
+            if !migrations {
+                cfg = cfg.no_migrations();
             }
+            let client = SqlStorage::connect(cfg).await?;
+            Ok::<_, Error>(client)
         };
 
         // Connecting with migrations disabled should fail if the database is not already up to date
@@ -1160,11 +969,7 @@ mod test {
                 "ALTER TABLE test ADD COLUMN data INTEGER;",
             )
             .unwrap(),
-            Migration::unapplied(
-                "V998__create_test_table.sql",
-                "CREATE TABLE test (x bigint);",
-            )
-            .unwrap(),
+            Migration::unapplied("V998__create_test_table.sql", "CREATE TABLE test ();").unwrap(),
         ];
         connect(true, migrations.clone()).await.unwrap();
 
@@ -1178,19 +983,11 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(feature = "embedded-db"))]
     fn test_config_from_str() {
         let cfg = Config::from_str("postgresql://user:password@host:8080").unwrap();
         assert_eq!(cfg.db_opt.get_username(), "user");
         assert_eq!(cfg.db_opt.get_host(), "host");
         assert_eq!(cfg.db_opt.get_port(), 8080);
-    }
-
-    #[test]
-    #[cfg(feature = "embedded-db")]
-    fn test_config_from_str() {
-        let cfg = Config::from_str("sqlite://data.db").unwrap();
-        assert_eq!(cfg.db_opt.get_filename().to_string_lossy(), "data.db");
     }
 
     async fn vacuum(storage: &SqlStorage) {
@@ -1209,7 +1006,14 @@ mod test {
         setup_test();
 
         let db = TmpDb::init().await;
-        let cfg = db.config();
+        let port = db.port();
+        let host = &db.host();
+
+        let cfg = Config::default()
+            .user("postgres")
+            .password("password")
+            .host(host)
+            .port(port);
 
         let mut storage = SqlStorage::connect(cfg).await.unwrap();
         let mut leaf = LeafQueryData::<MockTypes>::genesis::<TestVersions>(
@@ -1377,7 +1181,14 @@ mod test {
         setup_test();
 
         let db = TmpDb::init().await;
-        let cfg = db.config();
+        let port = db.port();
+        let host = &db.host();
+
+        let cfg = Config::default()
+            .user("postgres")
+            .password("password")
+            .host(host)
+            .port(port);
 
         let storage = SqlStorage::connect(cfg).await.unwrap();
         assert!(storage
