@@ -1,5 +1,5 @@
 (function() {
-    var implementors = Object.fromEntries([["hotshot_query_service",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.82.0/core/str/traits/trait.FromStr.html\" title=\"trait core::str::traits::FromStr\">FromStr</a> for <a class=\"struct\" href=\"hotshot_query_service/data_source/storage/sql/struct.Config.html\" title=\"struct hotshot_query_service::data_source::storage::sql::Config\">Config</a>"]]]]);
+    var implementors = Object.fromEntries([["hotshot_query_service",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.83.0/core/str/traits/trait.FromStr.html\" title=\"trait core::str::traits::FromStr\">FromStr</a> for <a class=\"struct\" href=\"hotshot_query_service/data_source/storage/sql/struct.Config.html\" title=\"struct hotshot_query_service::data_source::storage::sql::Config\">Config</a>"]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {
