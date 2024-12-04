@@ -99,7 +99,7 @@ impl PrunerConfig for NoStorage {}
 impl PruneStorage for NoStorage {
     type Pruner = ();
 }
-impl<'a> PrunedHeightStorage for Transaction<'a> {}
+impl PrunedHeightStorage for Transaction<'_> {}
 
 impl HasMetrics for NoStorage {
     fn metrics(&self) -> &PrometheusMetrics {
@@ -108,7 +108,7 @@ impl HasMetrics for NoStorage {
 }
 
 #[async_trait]
-impl<'a, Types: NodeType> AvailabilityStorage<Types> for Transaction<'a>
+impl<Types: NodeType> AvailabilityStorage<Types> for Transaction<'_>
 where
     Payload<Types>: QueryablePayload<Types>,
 {
@@ -242,7 +242,7 @@ where
 }
 
 #[async_trait]
-impl<'a, Types: NodeType> NodeStorage<Types> for Transaction<'a>
+impl<Types: NodeType> NodeStorage<Types> for Transaction<'_>
 where
     Payload<Types>: QueryablePayload<Types>,
 {
@@ -725,7 +725,7 @@ pub mod testing {
     }
 
     #[async_trait]
-    impl<'a, T> NodeStorage<MockTypes> for Transaction<'a, T>
+    impl<T> NodeStorage<MockTypes> for Transaction<'_, T>
     where
         T: NodeStorage<MockTypes> + Send,
     {
