@@ -457,7 +457,7 @@ impl<Types: NodeType> VidCommonQueryData<Types> {
         validated_state: &Types::ValidatedState,
         instance_state: &Types::InstanceState,
     ) -> Self {
-        let leaf: Leaf<Types> = Leaf::<Types>::genesis(validated_state, instance_state).await;
+        let leaf = Leaf::<Types>::genesis(validated_state, instance_state).await;
         let payload = leaf.block_payload().unwrap();
         let bytes = payload.encode();
         let disperse = vid_scheme(GENESIS_VID_NUM_STORAGE_NODES)
