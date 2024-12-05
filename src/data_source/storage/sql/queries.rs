@@ -20,12 +20,11 @@ use crate::{
         VidCommonQueryData,
     },
     data_source::storage::{PayloadMetadata, VidCommonMetadata},
-    Header, Payload, QueryError, QueryResult,
+    Header, Leaf, Payload, QueryError, QueryResult,
 };
 use anyhow::Context;
 use derivative::Derivative;
 use hotshot_types::{
-    data::Leaf,
     simple_certificate::QuorumCertificate,
     traits::{
         block_contents::{BlockHeader, BlockPayload},
