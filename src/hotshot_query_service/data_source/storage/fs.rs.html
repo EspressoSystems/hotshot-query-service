@@ -818,7 +818,14 @@
 <a href="#817" id="817">817</a>
 <a href="#818" id="818">818</a>
 <a href="#819" id="819">819</a>
-<a href="#820" id="820">820</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -1389,6 +1396,13 @@
             </span>),
         })
     }
+
+    <span class="kw">async fn </span>first_available_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, from: u64) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt; {
+        <span class="comment">// The file system backend doesn't index by whether a leaf is present, so we can't
+        // efficiently seek to the first leaf with height &gt;= `from`. Our best effort is to return
+        // `from` itself if we can, or fail.
+        </span><span class="self">self</span>.get_leaf((from <span class="kw">as </span>usize).into()).<span class="kw">await
+    </span>}
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Types: NodeType&gt; UpdateAvailabilityStorage&lt;Types&gt;

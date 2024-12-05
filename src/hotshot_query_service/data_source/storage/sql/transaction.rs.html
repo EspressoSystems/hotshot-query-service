@@ -721,7 +721,94 @@
 <a href="#720" id="720">720</a>
 <a href="#721" id="721">721</a>
 <a href="#722" id="722">722</a>
-<a href="#723" id="723">723</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -818,7 +905,41 @@
 <span class="kw">impl </span>TransactionMode <span class="kw">for </span>Write {
     <span class="attr">#[allow(unused_variables)]
     </span><span class="kw">async fn </span>begin(conn: <span class="kw-2">&amp;mut </span>&lt;Db <span class="kw">as </span>Database&gt;::Connection) -&gt; anyhow::Result&lt;()&gt; {
-        <span class="attr">#[cfg(not(feature = <span class="string">"embedded-db"</span>))]
+        <span class="comment">// SQLite automatically sets the read/write mode of a transactions based on the statements
+        // in it. However, there is still a good reason to explicitly enable write mode right from
+        // the start: if a transaction first executes a read statement and then a write statement,
+        // it will be upgraded from a read transaction to a write transaction. Because this involves
+        // obtaining a different kind of lock while already holding one, it can cause a deadlock,
+        // e.g.:
+        // * Transaction A executes a read statement, obtaining a read lock
+        // * Transaction B executes a write statement and begins waiting for a write lock
+        // * Transaction A executes a write statement and begins waiting for a write lock
+        //
+        // Transaction A can never obtain its write lock because it must first wait for transaction
+        // B to get a write lock, which cannot happen because B is in turn waiting for A to release
+        // its read lock.
+        //
+        // This type of deadlock cannot happen if transaction A immediately starts as a write, since
+        // it will then only ever try to acquire one type of lock (a write lock). By working with
+        // this restriction (transactions are either readers or writers, but never upgradable), we
+        // avoid deadlock, we more closely imitate the concurrency semantics of postgres, and we
+        // take advantage of the SQLite busy timeout, which may allow a transaction to acquire a
+        // lock and succeed (after a small delay), even when there was a conflicting transaction in
+        // progress. Whereas a deadlock is always an automatic rollback.
+        //
+        // The proper way to begin a write transaction in SQLite is with `BEGIN IMMEDIATE`. However,
+        // sqlx does not expose any way to customize the `BEGIN` statement that starts a
+        // transaction. A servicable workaround is to perform some write statement before performing
+        // any read statement, ensuring that the first lock we acquire is exclusive. A write
+        // statement that has no actual effect on the database is suitable for this purpose, hence
+        // the `WHERE false`.
+        </span><span class="attr">#[cfg(feature = <span class="string">"embedded-db"</span>)]
+        </span>conn.execute(<span class="string">"UPDATE header SET height = height WHERE false"</span>)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="comment">// With Postgres things are much more straightforward: just tell Postgres we want a write
+        // transaction immediately after opening it.
+        </span><span class="attr">#[cfg(not(feature = <span class="string">"embedded-db"</span>))]
         </span>conn.execute(<span class="string">"SET TRANSACTION ISOLATION LEVEL SERIALIZABLE"</span>)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -833,7 +954,15 @@
 <span class="kw">impl </span>TransactionMode <span class="kw">for </span>Read {
     <span class="attr">#[allow(unused_variables)]
     </span><span class="kw">async fn </span>begin(conn: <span class="kw-2">&amp;mut </span>&lt;Db <span class="kw">as </span>Database&gt;::Connection) -&gt; anyhow::Result&lt;()&gt; {
-        <span class="attr">#[cfg(not(feature = <span class="string">"embedded-db"</span>))]
+        <span class="comment">// With Postgres, we explicitly set the transaction mode to specify that we want the
+        // strongest possible consistency semantics in case of competing transactions
+        // (SERIALIZABLE), and we want to wait until this is possible rather than failing
+        // (DEFERRABLE).
+        //
+        // With SQLite, there is nothing to be done here, as SQLite automatically starts
+        // transactions in read-only mode, and always has serializable concurrency unless we
+        // explicity opt in to dirty reads with a pragma.
+        </span><span class="attr">#[cfg(not(feature = <span class="string">"embedded-db"</span>))]
         </span>conn.execute(<span class="string">"SET TRANSACTION ISOLATION LEVEL SERIALIZABLE, READ ONLY, DEFERRABLE"</span>)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -1046,7 +1175,7 @@
     ) -&gt; anyhow::Result&lt;()&gt;
     <span class="kw">where
         </span>R: IntoIterator,
-        R::Item: <span class="lifetime">'p </span>+ FixedLengthParams&lt;<span class="lifetime">'p</span>, N&gt; + Clone,
+        R::Item: <span class="lifetime">'p </span>+ FixedLengthParams&lt;<span class="lifetime">'p</span>, N&gt;,
     {
         <span class="kw">let </span>set_columns = columns
             .iter()
@@ -1118,6 +1247,21 @@
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt;,
 {
     <span class="kw">async fn </span>insert_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, leaf: LeafQueryData&lt;Types&gt;) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="kw">let </span>height = leaf.height();
+
+        <span class="comment">// Ignore the leaf if it is below the pruned height. This can happen if, for instance, the
+        // fetcher is racing with the pruner.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(pruned_height) = <span class="self">self</span>.load_pruned_height().<span class="kw">await</span><span class="question-mark">? </span>{
+            <span class="kw">if </span>height &lt;= pruned_height {
+                <span class="macro">tracing::info!</span>(
+                    height,
+                    pruned_height,
+                    <span class="string">"ignoring leaf which is already pruned"
+                </span>);
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+            }
+        }
+
         <span class="comment">// While we don't necessarily have the full block for this leaf yet, we can initialize the
         // header table with block metadata taken from the leaf.
         </span><span class="kw">let </span>header_json = serde_json::to_value(leaf.leaf().block_header())
@@ -1127,7 +1271,7 @@
             [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"payload_hash"</span>, <span class="string">"data"</span>, <span class="string">"timestamp"</span>],
             [<span class="string">"height"</span>],
             [(
-                leaf.height() <span class="kw">as </span>i64,
+                height <span class="kw">as </span>i64,
                 leaf.block_hash().to_string(),
                 leaf.leaf().block_header().payload_commitment().to_string(),
                 header_json,
@@ -1139,7 +1283,7 @@
         <span class="comment">// Similarly, we can initialize the payload table with a null payload, which can help us
         // distinguish between blocks that haven't been produced yet and blocks we haven't received
         // yet when answering queries.
-        </span><span class="self">self</span>.upsert(<span class="string">"payload"</span>, [<span class="string">"height"</span>], [<span class="string">"height"</span>], [(leaf.height() <span class="kw">as </span>i64,)])
+        </span><span class="self">self</span>.upsert(<span class="string">"payload"</span>, [<span class="string">"height"</span>], [<span class="string">"height"</span>], [(height <span class="kw">as </span>i64,)])
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// Finally, we insert the leaf itself, which references the header row we created.
@@ -1151,7 +1295,7 @@
             [<span class="string">"height"</span>, <span class="string">"hash"</span>, <span class="string">"block_hash"</span>, <span class="string">"leaf"</span>, <span class="string">"qc"</span>],
             [<span class="string">"height"</span>],
             [(
-                leaf.height() <span class="kw">as </span>i64,
+                height <span class="kw">as </span>i64,
                 leaf.hash().to_string(),
                 leaf.block_hash().to_string(),
                 leaf_json,
@@ -1164,6 +1308,21 @@
     }
 
     <span class="kw">async fn </span>insert_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: BlockQueryData&lt;Types&gt;) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="kw">let </span>height = block.height();
+
+        <span class="comment">// Ignore the block if it is below the pruned height. This can happen if, for instance, the
+        // fetcher is racing with the pruner.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(pruned_height) = <span class="self">self</span>.load_pruned_height().<span class="kw">await</span><span class="question-mark">? </span>{
+            <span class="kw">if </span>height &lt;= pruned_height {
+                <span class="macro">tracing::info!</span>(
+                    height,
+                    pruned_height,
+                    <span class="string">"ignoring block which is already pruned"
+                </span>);
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+            }
+        }
+
         <span class="comment">// The header and payload tables should already have been initialized when we inserted the
         // corresponding leaf. All we have to do is add the payload itself and its size.
         </span><span class="kw">let </span>payload = block.payload.encode();
@@ -1173,7 +1332,7 @@
             [<span class="string">"height"</span>, <span class="string">"data"</span>, <span class="string">"size"</span>, <span class="string">"num_transactions"</span>],
             [<span class="string">"height"</span>],
             [(
-                block.height() <span class="kw">as </span>i64,
+                height <span class="kw">as </span>i64,
                 payload.as_ref().to_vec(),
                 block.size() <span class="kw">as </span>i32,
                 block.num_transactions() <span class="kw">as </span>i32,
@@ -1186,7 +1345,7 @@
         <span class="kw">for </span>(txn_ix, txn) <span class="kw">in </span>block.enumerate() {
             <span class="kw">let </span>txn_ix =
                 serde_json::to_value(<span class="kw-2">&amp;</span>txn_ix).context(<span class="string">"failed to serialize transaction index"</span>)<span class="question-mark">?</span>;
-            rows.push((txn.commit().to_string(), block.height() <span class="kw">as </span>i64, txn_ix));
+            rows.push((txn.commit().to_string(), height <span class="kw">as </span>i64, txn_ix));
         }
         <span class="kw">if </span>!rows.is_empty() {
             <span class="self">self</span>.upsert(
@@ -1206,6 +1365,21 @@
         common: VidCommonQueryData&lt;Types&gt;,
         share: <span class="prelude-ty">Option</span>&lt;VidShare&gt;,
     ) -&gt; anyhow::Result&lt;()&gt; {
+        <span class="kw">let </span>height = common.height();
+
+        <span class="comment">// Ignore the object if it is below the pruned height. This can happen if, for instance, the
+        // fetcher is racing with the pruner.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(pruned_height) = <span class="self">self</span>.load_pruned_height().<span class="kw">await</span><span class="question-mark">? </span>{
+            <span class="kw">if </span>height &lt;= pruned_height {
+                <span class="macro">tracing::info!</span>(
+                    height,
+                    pruned_height,
+                    <span class="string">"ignoring VID common which is already pruned"
+                </span>);
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+            }
+        }
+
         <span class="kw">let </span>common_data =
             bincode::serialize(common.common()).context(<span class="string">"failed to serialize VID common data"</span>)<span class="question-mark">?</span>;
         <span class="kw">if let </span><span class="prelude-val">Some</span>(share) = share {
@@ -1214,7 +1388,7 @@
                 <span class="string">"vid"</span>,
                 [<span class="string">"height"</span>, <span class="string">"common"</span>, <span class="string">"share"</span>],
                 [<span class="string">"height"</span>],
-                [(common.height() <span class="kw">as </span>i64, common_data, share_data)],
+                [(height <span class="kw">as </span>i64, common_data, share_data)],
             )
             .<span class="kw">await
         </span>} <span class="kw">else </span>{
@@ -1225,7 +1399,7 @@
                 <span class="string">"vid"</span>,
                 [<span class="string">"height"</span>, <span class="string">"common"</span>],
                 [<span class="string">"height"</span>],
-                [(common.height() <span class="kw">as </span>i64, common_data)],
+                [(height <span class="kw">as </span>i64, common_data)],
             )
             .<span class="kw">await
         </span>}

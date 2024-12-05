@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["test_range","test_update"]};
+window.SIDEBAR_ITEMS = {"fn":["test_range","test_range_rev","test_update"]};

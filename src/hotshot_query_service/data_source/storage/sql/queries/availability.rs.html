@@ -339,7 +339,18 @@
 <a href="#338" id="338">338</a>
 <a href="#339" id="339">339</a>
 <a href="#340" id="340">340</a>
-<a href="#341" id="341">341</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -354,7 +365,7 @@
 </span><span class="doccomment">//! Availability storage implementation for a database query engine.
 
 </span><span class="kw">use super</span>::{
-    <span class="kw">super</span>::transaction::{Transaction, TransactionMode},
+    <span class="kw">super</span>::transaction::{query, Transaction, TransactionMode},
     QueryBuilder, BLOCK_COLUMNS, LEAF_COLUMNS, PAYLOAD_COLUMNS, PAYLOAD_METADATA_COLUMNS,
     VID_COMMON_COLUMNS, VID_COMMON_METADATA_COLUMNS,
 };
@@ -587,7 +598,7 @@
             <span class="string">"SELECT {PAYLOAD_METADATA_COLUMNS}
               FROM header AS h
               JOIN payload AS p ON h.height = p.height
-              {where_clause}
+              {where_clause} AND p.num_transactions IS NOT NULL
               ORDER BY h.height ASC"
         </span>);
         <span class="prelude-val">Ok</span>(query
@@ -678,6 +689,17 @@
                 block.height()
             ),
         })
+    }
+
+    <span class="kw">async fn </span>first_available_leaf(<span class="kw-2">&amp;mut </span><span class="self">self</span>, from: u64) -&gt; QueryResult&lt;LeafQueryData&lt;Types&gt;&gt; {
+        <span class="kw">let </span>row = query(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+            <span class="string">"SELECT {LEAF_COLUMNS} FROM leaf WHERE height &gt;= $1 ORDER BY height LIMIT 1"
+        </span>))
+        .bind(from <span class="kw">as </span>i64)
+        .fetch_one(<span class="self">self</span>.as_mut())
+        .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>leaf = LeafQueryData::from_row(<span class="kw-2">&amp;</span>row)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(leaf)
     }
 }
 </code></pre></div></section></main></body></html>

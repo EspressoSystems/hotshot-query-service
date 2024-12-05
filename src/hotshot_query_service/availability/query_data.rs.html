@@ -723,7 +723,9 @@
 <a href="#722" id="722">722</a>
 <a href="#723" id="723">723</a>
 <a href="#724" id="724">724</a>
-<a href="#725" id="725">725</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -754,6 +756,8 @@
 <span class="kw">use </span>std::fmt::Debug;
 
 <span class="kw">pub type </span>LeafHash&lt;Types&gt; = Commitment&lt;Leaf&lt;Types&gt;&gt;;
+<span class="kw">pub type </span>QcHash&lt;Types&gt; = Commitment&lt;QuorumCertificate&lt;Types&gt;&gt;;
+
 <span class="doccomment">/// A block hash is the hash of the block header.
 ///
 /// A block consists of a header and a payload. But the header itself contains a commitment to the

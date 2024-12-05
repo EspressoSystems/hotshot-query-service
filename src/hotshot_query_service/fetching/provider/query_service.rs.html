@@ -1785,7 +1785,27 @@
 <a href="#1784" id="1784">1784</a>
 <a href="#1785" id="1785">1785</a>
 <a href="#1786" id="1786">1786</a>
-<a href="#1787" id="1787">1787</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#1787" id="1787">1787</a>
+<a href="#1788" id="1788">1788</a>
+<a href="#1789" id="1789">1789</a>
+<a href="#1790" id="1790">1790</a>
+<a href="#1791" id="1791">1791</a>
+<a href="#1792" id="1792">1792</a>
+<a href="#1793" id="1793">1793</a>
+<a href="#1794" id="1794">1794</a>
+<a href="#1795" id="1795">1795</a>
+<a href="#1796" id="1796">1796</a>
+<a href="#1797" id="1797">1797</a>
+<a href="#1798" id="1798">1798</a>
+<a href="#1799" id="1799">1799</a>
+<a href="#1800" id="1800">1800</a>
+<a href="#1801" id="1801">1801</a>
+<a href="#1802" id="1802">1802</a>
+<a href="#1803" id="1803">1803</a>
+<a href="#1804" id="1804">1804</a>
+<a href="#1805" id="1805">1805</a>
+<a href="#1806" id="1806">1806</a>
+<a href="#1807" id="1807">1807</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -1802,9 +1822,11 @@
 <span class="kw">use crate</span>::{
     availability::{LeafQueryData, PayloadQueryData, VidCommonQueryData},
     fetching::request::{LeafRequest, PayloadRequest, VidCommonRequest},
+    types::HeightIndexed,
     Error, Payload, VidCommon,
 };
 <span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>committable::Committable;
 <span class="kw">use </span>futures::try_join;
 <span class="kw">use </span>hotshot_types::{
     traits::{node_implementation::NodeType, EncodeBytes},
@@ -1880,25 +1902,33 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types, Ver: StaticVersionType&gt; Provider&lt;Types, LeafRequest&gt; <span class="kw">for </span>QueryServiceProvider&lt;Ver&gt;
+</span><span class="kw">impl</span>&lt;Types, Ver: StaticVersionType&gt; Provider&lt;Types, LeafRequest&lt;Types&gt;&gt;
+    <span class="kw">for </span>QueryServiceProvider&lt;Ver&gt;
 <span class="kw">where
     </span>Types: NodeType,
 {
-    <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, req: LeafRequest) -&gt; <span class="prelude-ty">Option</span>&lt;LeafQueryData&lt;Types&gt;&gt; {
+    <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, req: LeafRequest&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;LeafQueryData&lt;Types&gt;&gt; {
         <span class="kw">match </span><span class="self">self
             </span>.client
-            .get::&lt;LeafQueryData&lt;Types&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"availability/leaf/{}"</span>, usize::from(req)))
+            .get::&lt;LeafQueryData&lt;Types&gt;&gt;(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"availability/leaf/{}"</span>, req.height))
             .send()
             .<span class="kw">await
         </span>{
             <span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>leaf) =&gt; {
-                <span class="comment">// TODO we should also download a chain of QCs justifying the inclusion of `leaf` in
-                // the chain at the requested height. However, HotShot currently lacks a good light
-                // client API to verify this chain, so for now we just trust the other server.
-                // https://github.com/EspressoSystems/HotShot/issues/2137
-                // https://github.com/EspressoSystems/hotshot-query-service/issues/354
+                <span class="kw">if </span>leaf.height() != req.height {
+                    <span class="macro">tracing::error!</span>(<span class="question-mark">?</span>req, <span class="question-mark">?</span>leaf, <span class="string">"received leaf with the wrong height"</span>);
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
+                }
+                <span class="kw">if </span>leaf.hash() != req.expected_leaf {
+                    <span class="macro">tracing::error!</span>(<span class="question-mark">?</span>req, <span class="question-mark">?</span>leaf, hash = <span class="question-mark">?</span>leaf.hash(), <span class="string">"received leaf with the wrong hash"</span>);
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
+                }
+                <span class="kw">if </span>leaf.qc().commit() != req.expected_qc {
+                    <span class="macro">tracing::error!</span>(<span class="question-mark">?</span>req, <span class="question-mark">?</span>leaf, hash = <span class="question-mark">?</span>leaf.qc().commit(), <span class="string">"received leaf with the wrong QC"</span>);
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
+                }
 
-                // There is a potential DOS attack where the peer sends us a leaf with the full
+                <span class="comment">// There is a potential DOS attack where the peer sends us a leaf with the full
                 // payload in it, which uses redundant resources in the database, since we fetch and
                 // store payloads separately. We can defend ourselves by simply dropping the payload
                 // if present.
@@ -2127,15 +2157,13 @@
 
         <span class="comment">// Now we will actually fetch the missing data. First, since our node is not really
         // connected to consensus, we need to give it a leaf after the range of interest so it
-        // learns about the correct block height.
-        </span>data_source
+        // learns about the correct block height. We will temporarily lock requests to the provider
+        // so that we can verify that without the provider, the node does _not_ get the data.
+        </span>provider.block().<span class="kw">await</span>;
+        data_source
             .append(leaves.last().cloned().unwrap().into())
             .<span class="kw">await
             </span>.unwrap();
-
-        <span class="comment">// Block requests to the provider so that we can verify that without the provider, the node
-        // does _not_ get the data.
-        </span>provider.block().<span class="kw">await</span>;
 
         <span class="macro">tracing::info!</span>(<span class="string">"requesting fetchable resources"</span>);
         <span class="kw">let </span>req_leaf = data_source.get_leaf(test_leaf.height() <span class="kw">as </span>usize).<span class="kw">await</span>;
@@ -2586,15 +2614,15 @@
         <span class="kw">let </span>leaves = leaves.take(<span class="number">2</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().<span class="kw">await</span>;
         <span class="kw">let </span>test_leaf = <span class="kw-2">&amp;</span>leaves[<span class="number">0</span>];
 
+        <span class="comment">// Cause requests to fail temporarily, so we can test retries.
+        </span>provider.fail();
+
         <span class="comment">// Give the node a leaf after the range of interest so it learns about the correct block
         // height.
         </span>data_source
             .append(leaves.last().cloned().unwrap().into())
             .<span class="kw">await
             </span>.unwrap();
-
-        <span class="comment">// Cause requests to fail temporarily, so we can test retries.
-        </span>provider.fail();
 
         <span class="macro">tracing::info!</span>(<span class="string">"requesting leaf from failing providers"</span>);
         <span class="kw">let </span>fut = data_source.get_leaf(test_leaf.height() <span class="kw">as </span>usize).<span class="kw">await</span>;
@@ -2723,10 +2751,21 @@
             .pruner_cfg(
                 PrunerCfg::new()
                     .with_target_retention(Duration::from_secs(<span class="number">0</span>))
-                    .with_interval(Duration::from_secs(<span class="number">1</span>)),
+                    .with_interval(Duration::from_secs(<span class="number">5</span>)),
             )
             .unwrap()
-            .connect(provider.clone())
+            .builder(provider.clone())
+            .<span class="kw">await
+            </span>.unwrap()
+            <span class="comment">// Set a fast retry for failed operations. Occasionally storage operations will fail due
+            // to conflicting write-mode transactions running concurrently. This is ok as they will
+            // be retried. Having a fast retry interval speeds up the test.
+            </span>.with_min_retry_interval(Duration::from_millis(<span class="number">100</span>))
+            <span class="comment">// Randomize retries a lot. This will temporarlly separate competing transactions write
+            // transactions with high probability, so that one of them quickly gets exclusive access
+            // to the database.
+            </span>.with_retry_randomization_factor(<span class="number">3.</span>)
+            .build()
             .<span class="kw">await
             </span>.unwrap();
 
@@ -2826,6 +2865,7 @@
                 <span class="kw">break</span>;
             }
             <span class="macro">tracing::info!</span>(<span class="question-mark">?</span>sync_status, <span class="string">"waiting for node to sync"</span>);
+            sleep(Duration::from_secs(<span class="number">1</span>)).<span class="kw">await</span>;
         }
 
         <span class="comment">// The node remains fully synced even after some time; no pruning.

@@ -378,7 +378,11 @@
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
 <a href="#379" id="379">379</a>
-<a href="#380" id="380">380</a></pre></div><pre class="rust"><code><span class="attr">#![allow(clippy::needless_lifetimes)]
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a></pre></div><pre class="rust"><code><span class="attr">#![allow(clippy::needless_lifetimes)]
 </span><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
@@ -628,8 +632,12 @@
                 .try_get::&lt;String, <span class="kw">_</span>&gt;(<span class="string">"payload_hash"</span>)<span class="question-mark">?
                 </span>.parse()
                 .decode_error(<span class="string">"malformed payload hash"</span>)<span class="question-mark">?</span>,
-            size: row.try_get::&lt;i32, <span class="kw">_</span>&gt;(<span class="string">"payload_size"</span>)<span class="question-mark">? </span><span class="kw">as </span>u64,
-            num_transactions: row.try_get::&lt;i32, <span class="kw">_</span>&gt;(<span class="string">"num_transactions"</span>)<span class="question-mark">? </span><span class="kw">as </span>u64,
+            size: row
+                .try_get::&lt;<span class="prelude-ty">Option</span>&lt;i32&gt;, <span class="kw">_</span>&gt;(<span class="string">"payload_size"</span>)<span class="question-mark">?
+                </span>.ok_or(sqlx::Error::RowNotFound)<span class="question-mark">? </span><span class="kw">as </span>u64,
+            num_transactions: row
+                .try_get::&lt;<span class="prelude-ty">Option</span>&lt;i32&gt;, <span class="kw">_</span>&gt;(<span class="string">"num_transactions"</span>)<span class="question-mark">?
+                </span>.ok_or(sqlx::Error::RowNotFound)<span class="question-mark">? </span><span class="kw">as </span>u64,
         })
     }
 }

@@ -301,7 +301,26 @@
 <a href="#300" id="300">300</a>
 <a href="#301" id="301">301</a>
 <a href="#302" id="302">302</a>
-<a href="#303" id="303">303</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -327,10 +346,13 @@
 <span class="kw">use </span>derive_more::{Display, From};
 <span class="kw">use </span>futures::{
     future::Future,
-    stream::{BoxStream, Stream, StreamExt},
+    stream::{BoxStream, StreamExt},
 };
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
-<span class="kw">use </span>std::{cmp::Ordering, ops::RangeBounds};
+<span class="kw">use </span>std::{
+    cmp::Ordering,
+    ops::{Bound, RangeBounds},
+};
 
 <span class="attr">#[derive(Derivative, From, Display)]
 #[derivative(Ord = <span class="string">"feature_allow_slow_enum"</span>)]
@@ -393,6 +415,8 @@
     }
 }
 
+<span class="kw">pub type </span>FetchStream&lt;T&gt; = BoxStream&lt;<span class="lifetime">'static</span>, Fetch&lt;T&gt;&gt;;
+
 <span class="doccomment">/// An interface for querying a HotShot blockchain.
 ///
 /// This interface provides expressive queries over all the data which is made available by HotShot
@@ -425,31 +449,6 @@
 <span class="kw">where
     </span>Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
 {
-    <span class="kw">type </span>LeafRange&lt;R&gt;: Stream&lt;Item = Fetch&lt;LeafQueryData&lt;Types&gt;&gt;&gt; + Unpin + Send + <span class="lifetime">'static
-    </span><span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send;
-    <span class="kw">type </span>BlockRange&lt;R&gt;: Stream&lt;Item = Fetch&lt;BlockQueryData&lt;Types&gt;&gt;&gt; + Unpin + Send + <span class="lifetime">'static
-    </span><span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send;
-    <span class="kw">type </span>PayloadRange&lt;R&gt;: Stream&lt;Item = Fetch&lt;PayloadQueryData&lt;Types&gt;&gt;&gt; + Unpin + Send + <span class="lifetime">'static
-    </span><span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send;
-    <span class="kw">type </span>PayloadMetadataRange&lt;R&gt;: Stream&lt;Item = Fetch&lt;PayloadMetadata&lt;Types&gt;&gt;&gt;
-        + Unpin
-        + Send
-        + <span class="lifetime">'static
-    </span><span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send;
-    <span class="kw">type </span>VidCommonRange&lt;R&gt;: Stream&lt;Item = Fetch&lt;VidCommonQueryData&lt;Types&gt;&gt;&gt; + Unpin + Send + <span class="lifetime">'static
-    </span><span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send;
-    <span class="kw">type </span>VidCommonMetadataRange&lt;R&gt;: Stream&lt;Item = Fetch&lt;VidCommonMetadata&lt;Types&gt;&gt;&gt;
-        + Unpin
-        + Send
-        + <span class="lifetime">'static
-    </span><span class="kw">where
-        </span>R: RangeBounds&lt;usize&gt; + Send;
-
     <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;LeafQueryData&lt;Types&gt;&gt;
     <span class="kw">where
         </span>ID: Into&lt;LeafId&lt;Types&gt;&gt; + Send + Sync;
@@ -474,29 +473,68 @@
     <span class="kw">where
         </span>ID: Into&lt;BlockId&lt;Types&gt;&gt; + Send + Sync;
 
-    <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::LeafRange&lt;R&gt;
+    <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; FetchStream&lt;LeafQueryData&lt;Types&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 
-    <span class="kw">async fn </span>get_block_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::BlockRange&lt;R&gt;
+    <span class="kw">async fn </span>get_block_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; FetchStream&lt;BlockQueryData&lt;Types&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 
-    <span class="kw">async fn </span>get_payload_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::PayloadRange&lt;R&gt;
+    <span class="kw">async fn </span>get_payload_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; FetchStream&lt;PayloadQueryData&lt;Types&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 
-    <span class="kw">async fn </span>get_payload_metadata_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::PayloadMetadataRange&lt;R&gt;
+    <span class="kw">async fn </span>get_payload_metadata_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; FetchStream&lt;PayloadMetadata&lt;Types&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 
-    <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::VidCommonRange&lt;R&gt;
+    <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; FetchStream&lt;VidCommonQueryData&lt;Types&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
 
-    <span class="kw">async fn </span>get_vid_common_metadata_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::VidCommonMetadataRange&lt;R&gt;
+    <span class="kw">async fn </span>get_vid_common_metadata_range&lt;R&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        range: R,
+    ) -&gt; FetchStream&lt;VidCommonMetadata&lt;Types&gt;&gt;
     <span class="kw">where
         </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>;
+
+    <span class="kw">async fn </span>get_leaf_range_rev(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        start: Bound&lt;usize&gt;,
+        end: usize,
+    ) -&gt; FetchStream&lt;LeafQueryData&lt;Types&gt;&gt;;
+
+    <span class="kw">async fn </span>get_block_range_rev(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        start: Bound&lt;usize&gt;,
+        end: usize,
+    ) -&gt; FetchStream&lt;BlockQueryData&lt;Types&gt;&gt;;
+
+    <span class="kw">async fn </span>get_payload_range_rev(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        start: Bound&lt;usize&gt;,
+        end: usize,
+    ) -&gt; FetchStream&lt;PayloadQueryData&lt;Types&gt;&gt;;
+
+    <span class="kw">async fn </span>get_payload_metadata_range_rev(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        start: Bound&lt;usize&gt;,
+        end: usize,
+    ) -&gt; FetchStream&lt;PayloadMetadata&lt;Types&gt;&gt;;
+
+    <span class="kw">async fn </span>get_vid_common_range_rev(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        start: Bound&lt;usize&gt;,
+        end: usize,
+    ) -&gt; FetchStream&lt;VidCommonQueryData&lt;Types&gt;&gt;;
+
+    <span class="kw">async fn </span>get_vid_common_metadata_range_rev(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        start: Bound&lt;usize&gt;,
+        end: usize,
+    ) -&gt; FetchStream&lt;VidCommonMetadata&lt;Types&gt;&gt;;
 
     <span class="doccomment">/// Returns the transaction with the given `hash`.
     </span><span class="kw">async fn </span>get_transaction(

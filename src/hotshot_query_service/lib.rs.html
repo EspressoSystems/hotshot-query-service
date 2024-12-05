@@ -913,7 +913,22 @@
 <a href="#912" id="912">912</a>
 <a href="#913" id="913">913</a>
 <a href="#914" id="914">914</a>
-<a href="#915" id="915">915</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -1174,7 +1189,7 @@
 //! # use async_trait::async_trait;
 //! # use hotshot_query_service::{Header, QueryResult, VidShare};
 //! # use hotshot_query_service::availability::{
-//! #   AvailabilityDataSource, BlockId, BlockQueryData, Fetch, LeafId, LeafQueryData,
+//! #   AvailabilityDataSource, BlockId, BlockQueryData, Fetch, FetchStream, LeafId, LeafQueryData,
 //! #   PayloadMetadata, PayloadQueryData, TransactionHash, TransactionQueryData,
 //! #   VidCommonMetadata, VidCommonQueryData,
 //! # };
@@ -1184,7 +1199,7 @@
 //! # };
 //! # use hotshot_query_service::status::{HasMetrics, StatusDataSource};
 //! # use hotshot_query_service::testing::mocks::MockTypes as AppTypes;
-//! # use std::ops::RangeBounds;
+//! # use std::ops::{Bound, RangeBounds};
 //! # type AppQueryData = ();
 //! // Our AppState takes an underlying data source `D` which already implements the relevant
 //! // traits, and adds some state for use with other modules.
@@ -1198,25 +1213,6 @@
 //! impl&lt;D: AvailabilityDataSource&lt;AppTypes&gt; + Send + Sync&gt;
 //!     AvailabilityDataSource&lt;AppTypes&gt; for AppState&lt;D&gt;
 //! {
-//!     type LeafRange&lt;R&gt; = D::LeafRange&lt;R&gt;
-//!     where
-//!         R: RangeBounds&lt;usize&gt; + Send;
-//!     type BlockRange&lt;R&gt; = D::BlockRange&lt;R&gt;
-//!     where
-//!         R: RangeBounds&lt;usize&gt; + Send;
-//!     type PayloadRange&lt;R&gt; = D::PayloadRange&lt;R&gt;
-//!     where
-//!         R: RangeBounds&lt;usize&gt; + Send;
-//!     type PayloadMetadataRange&lt;R&gt; = D::PayloadMetadataRange&lt;R&gt;
-//!     where
-//!         R: RangeBounds&lt;usize&gt; + Send;
-//!     type VidCommonRange&lt;R&gt; = D::VidCommonRange&lt;R&gt;
-//!     where
-//!         R: RangeBounds&lt;usize&gt; + Send;
-//!     type VidCommonMetadataRange&lt;R&gt; = D::VidCommonMetadataRange&lt;R&gt;
-//!     where
-//!         R: RangeBounds&lt;usize&gt; + Send;
-//!
 //!     async fn get_leaf&lt;ID&gt;(&amp;self, id: ID) -&gt; Fetch&lt;LeafQueryData&lt;AppTypes&gt;&gt;
 //!     where
 //!         ID: Into&lt;LeafId&lt;AppTypes&gt;&gt; + Send + Sync,
@@ -1241,24 +1237,30 @@
 //! #   where
 //! #       ID: Into&lt;BlockId&lt;AppTypes&gt;&gt; + Send + Sync { todo!() }
 //! #   async fn get_transaction(&amp;self, hash: TransactionHash&lt;AppTypes&gt;) -&gt; Fetch&lt;TransactionQueryData&lt;AppTypes&gt;&gt; { todo!() }
-//! #   async fn get_leaf_range&lt;R&gt;(&amp;self, range: R) -&gt; Self::LeafRange&lt;R&gt;
+//! #   async fn get_leaf_range&lt;R&gt;(&amp;self, range: R) -&gt; FetchStream&lt;LeafQueryData&lt;AppTypes&gt;&gt;
 //! #   where
 //! #       R: RangeBounds&lt;usize&gt; + Send { todo!() }
-//! #   async fn get_block_range&lt;R&gt;(&amp;self, range: R) -&gt; Self::BlockRange&lt;R&gt;
+//! #   async fn get_block_range&lt;R&gt;(&amp;self, range: R) -&gt; FetchStream&lt;BlockQueryData&lt;AppTypes&gt;&gt;
 //! #   where
 //! #       R: RangeBounds&lt;usize&gt; + Send { todo!() }
-//! #   async fn get_payload_range&lt;R&gt;(&amp;self, range: R) -&gt; Self::PayloadRange&lt;R&gt;
+//! #   async fn get_payload_range&lt;R&gt;(&amp;self, range: R) -&gt; FetchStream&lt;PayloadQueryData&lt;AppTypes&gt;&gt;
 //! #   where
 //! #       R: RangeBounds&lt;usize&gt; + Send { todo!() }
-//! #   async fn get_payload_metadata_range&lt;R&gt;(&amp;self, range: R) -&gt; Self::PayloadMetadataRange&lt;R&gt;
+//! #   async fn get_payload_metadata_range&lt;R&gt;(&amp;self, range: R) -&gt; FetchStream&lt;PayloadMetadata&lt;AppTypes&gt;&gt;
 //! #   where
 //! #       R: RangeBounds&lt;usize&gt; + Send { todo!() }
-//! #   async fn get_vid_common_range&lt;R&gt;(&amp;self, range: R) -&gt; Self::VidCommonRange&lt;R&gt;
+//! #   async fn get_vid_common_range&lt;R&gt;(&amp;self, range: R) -&gt; FetchStream&lt;VidCommonQueryData&lt;AppTypes&gt;&gt;
 //! #   where
 //! #       R: RangeBounds&lt;usize&gt; + Send { todo!() }
-//! #   async fn get_vid_common_metadata_range&lt;R&gt;(&amp;self, range: R) -&gt; Self::VidCommonMetadataRange&lt;R&gt;
+//! #   async fn get_vid_common_metadata_range&lt;R&gt;(&amp;self, range: R) -&gt; FetchStream&lt;VidCommonMetadata&lt;AppTypes&gt;&gt;
 //! #   where
 //! #       R: RangeBounds&lt;usize&gt; + Send { todo!() }
+//! #   async fn get_leaf_range_rev(&amp;self, start: Bound&lt;usize&gt;, end: usize) -&gt; FetchStream&lt;LeafQueryData&lt;AppTypes&gt;&gt; { todo!() }
+//! #   async fn get_block_range_rev(&amp;self, start: Bound&lt;usize&gt;, end: usize) -&gt; FetchStream&lt;BlockQueryData&lt;AppTypes&gt;&gt; { todo!() }
+//! #   async fn get_payload_range_rev(&amp;self, start: Bound&lt;usize&gt;, end: usize) -&gt; FetchStream&lt;PayloadQueryData&lt;AppTypes&gt;&gt; { todo!() }
+//! #   async fn get_payload_metadata_range_rev(&amp;self, start: Bound&lt;usize&gt;, end: usize) -&gt; FetchStream&lt;PayloadMetadata&lt;AppTypes&gt;&gt; { todo!() }
+//! #   async fn get_vid_common_range_rev(&amp;self, start: Bound&lt;usize&gt;, end: usize) -&gt; FetchStream&lt;VidCommonQueryData&lt;AppTypes&gt;&gt; { todo!() }
+//! #   async fn get_vid_common_metadata_range_rev(&amp;self, start: Bound&lt;usize&gt;, end: usize) -&gt; FetchStream&lt;VidCommonMetadata&lt;AppTypes&gt;&gt; { todo!() }
 //! }
 //!
 //! // Implement data source trait for node API by delegating to the underlying data source.
@@ -1376,6 +1378,7 @@
 
 <span class="kw">pub use </span>hotshot_types::{
     data::Leaf,
+    simple_certificate::QuorumCertificate,
     vid::{VidCommitment, VidCommon, VidShare},
 };
 
@@ -1508,7 +1511,7 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use crate</span>::{
         availability::{
-            AvailabilityDataSource, BlockId, BlockInfo, BlockQueryData, Fetch, LeafId,
+            AvailabilityDataSource, BlockId, BlockInfo, BlockQueryData, Fetch, FetchStream, LeafId,
             LeafQueryData, PayloadMetadata, PayloadQueryData, TransactionHash,
             TransactionQueryData, UpdateAvailabilityData, VidCommonMetadata, VidCommonQueryData,
         },
@@ -1526,7 +1529,7 @@
     <span class="kw">use </span>futures::future::FutureExt;
     <span class="kw">use </span>hotshot_types::simple_certificate::QuorumCertificate;
     <span class="kw">use </span>portpicker::pick_unused_port;
-    <span class="kw">use </span>std::ops::RangeBounds;
+    <span class="kw">use </span>std::ops::{Bound, RangeBounds};
     <span class="kw">use </span>std::time::Duration;
     <span class="kw">use </span>surf_disco::Client;
     <span class="kw">use </span>tempfile::TempDir;
@@ -1542,31 +1545,6 @@
 
     <span class="attr">#[async_trait]
     </span><span class="kw">impl </span>AvailabilityDataSource&lt;MockTypes&gt; <span class="kw">for </span>CompositeState {
-        <span class="kw">type </span>LeafRange&lt;R&gt;
-            = &lt;MockDataSource <span class="kw">as </span>AvailabilityDataSource&lt;MockTypes&gt;&gt;::LeafRange&lt;R&gt;
-        <span class="kw">where
-            </span>R: RangeBounds&lt;usize&gt; + Send;
-        <span class="kw">type </span>BlockRange&lt;R&gt;
-            = &lt;MockDataSource <span class="kw">as </span>AvailabilityDataSource&lt;MockTypes&gt;&gt;::BlockRange&lt;R&gt;
-        <span class="kw">where
-            </span>R: RangeBounds&lt;usize&gt; + Send;
-        <span class="kw">type </span>PayloadRange&lt;R&gt;
-            = &lt;MockDataSource <span class="kw">as </span>AvailabilityDataSource&lt;MockTypes&gt;&gt;::PayloadRange&lt;R&gt;
-        <span class="kw">where
-            </span>R: RangeBounds&lt;usize&gt; + Send;
-        <span class="kw">type </span>PayloadMetadataRange&lt;R&gt;
-            = &lt;MockDataSource <span class="kw">as </span>AvailabilityDataSource&lt;MockTypes&gt;&gt;::PayloadMetadataRange&lt;R&gt;
-        <span class="kw">where
-            </span>R: RangeBounds&lt;usize&gt; + Send;
-        <span class="kw">type </span>VidCommonRange&lt;R&gt;
-            = &lt;MockDataSource <span class="kw">as </span>AvailabilityDataSource&lt;MockTypes&gt;&gt;::VidCommonRange&lt;R&gt;
-        <span class="kw">where
-            </span>R: RangeBounds&lt;usize&gt; + Send;
-        <span class="kw">type </span>VidCommonMetadataRange&lt;R&gt;
-            = &lt;MockDataSource <span class="kw">as </span>AvailabilityDataSource&lt;MockTypes&gt;&gt;::VidCommonMetadataRange&lt;R&gt;
-        <span class="kw">where
-            </span>R: RangeBounds&lt;usize&gt; + Send;
-
         <span class="kw">async fn </span>get_leaf&lt;ID&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: ID) -&gt; Fetch&lt;LeafQueryData&lt;MockTypes&gt;&gt;
         <span class="kw">where
             </span>ID: Into&lt;LeafId&lt;MockTypes&gt;&gt; + Send + Sync,
@@ -1603,31 +1581,37 @@
         {
             <span class="self">self</span>.hotshot_qs.get_vid_common_metadata(id).<span class="kw">await
         </span>}
-        <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::LeafRange&lt;R&gt;
+        <span class="kw">async fn </span>get_leaf_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; FetchStream&lt;LeafQueryData&lt;MockTypes&gt;&gt;
         <span class="kw">where
             </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         {
             <span class="self">self</span>.hotshot_qs.get_leaf_range(range).<span class="kw">await
         </span>}
-        <span class="kw">async fn </span>get_block_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::BlockRange&lt;R&gt;
+        <span class="kw">async fn </span>get_block_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; FetchStream&lt;BlockQueryData&lt;MockTypes&gt;&gt;
         <span class="kw">where
             </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         {
             <span class="self">self</span>.hotshot_qs.get_block_range(range).<span class="kw">await
         </span>}
-        <span class="kw">async fn </span>get_payload_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::PayloadRange&lt;R&gt;
+        <span class="kw">async fn </span>get_payload_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; FetchStream&lt;PayloadQueryData&lt;MockTypes&gt;&gt;
         <span class="kw">where
             </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         {
             <span class="self">self</span>.hotshot_qs.get_payload_range(range).<span class="kw">await
         </span>}
-        <span class="kw">async fn </span>get_payload_metadata_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::PayloadMetadataRange&lt;R&gt;
+        <span class="kw">async fn </span>get_payload_metadata_range&lt;R&gt;(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            range: R,
+        ) -&gt; FetchStream&lt;PayloadMetadata&lt;MockTypes&gt;&gt;
         <span class="kw">where
             </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         {
             <span class="self">self</span>.hotshot_qs.get_payload_metadata_range(range).<span class="kw">await
         </span>}
-        <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, range: R) -&gt; <span class="self">Self</span>::VidCommonRange&lt;R&gt;
+        <span class="kw">async fn </span>get_vid_common_range&lt;R&gt;(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            range: R,
+        ) -&gt; FetchStream&lt;VidCommonQueryData&lt;MockTypes&gt;&gt;
         <span class="kw">where
             </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         {
@@ -1636,11 +1620,57 @@
         <span class="kw">async fn </span>get_vid_common_metadata_range&lt;R&gt;(
             <span class="kw-2">&amp;</span><span class="self">self</span>,
             range: R,
-        ) -&gt; <span class="self">Self</span>::VidCommonMetadataRange&lt;R&gt;
+        ) -&gt; FetchStream&lt;VidCommonMetadata&lt;MockTypes&gt;&gt;
         <span class="kw">where
             </span>R: RangeBounds&lt;usize&gt; + Send + <span class="lifetime">'static</span>,
         {
             <span class="self">self</span>.hotshot_qs.get_vid_common_metadata_range(range).<span class="kw">await
+        </span>}
+        <span class="kw">async fn </span>get_leaf_range_rev(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            start: Bound&lt;usize&gt;,
+            end: usize,
+        ) -&gt; FetchStream&lt;LeafQueryData&lt;MockTypes&gt;&gt; {
+            <span class="self">self</span>.hotshot_qs.get_leaf_range_rev(start, end).<span class="kw">await
+        </span>}
+        <span class="kw">async fn </span>get_block_range_rev(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            start: Bound&lt;usize&gt;,
+            end: usize,
+        ) -&gt; FetchStream&lt;BlockQueryData&lt;MockTypes&gt;&gt; {
+            <span class="self">self</span>.hotshot_qs.get_block_range_rev(start, end).<span class="kw">await
+        </span>}
+        <span class="kw">async fn </span>get_payload_range_rev(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            start: Bound&lt;usize&gt;,
+            end: usize,
+        ) -&gt; FetchStream&lt;PayloadQueryData&lt;MockTypes&gt;&gt; {
+            <span class="self">self</span>.hotshot_qs.get_payload_range_rev(start, end).<span class="kw">await
+        </span>}
+        <span class="kw">async fn </span>get_payload_metadata_range_rev(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            start: Bound&lt;usize&gt;,
+            end: usize,
+        ) -&gt; FetchStream&lt;PayloadMetadata&lt;MockTypes&gt;&gt; {
+            <span class="self">self</span>.hotshot_qs
+                .get_payload_metadata_range_rev(start, end)
+                .<span class="kw">await
+        </span>}
+        <span class="kw">async fn </span>get_vid_common_range_rev(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            start: Bound&lt;usize&gt;,
+            end: usize,
+        ) -&gt; FetchStream&lt;VidCommonQueryData&lt;MockTypes&gt;&gt; {
+            <span class="self">self</span>.hotshot_qs.get_vid_common_range_rev(start, end).<span class="kw">await
+        </span>}
+        <span class="kw">async fn </span>get_vid_common_metadata_range_rev(
+            <span class="kw-2">&amp;</span><span class="self">self</span>,
+            start: Bound&lt;usize&gt;,
+            end: usize,
+        ) -&gt; FetchStream&lt;VidCommonMetadata&lt;MockTypes&gt;&gt; {
+            <span class="self">self</span>.hotshot_qs
+                .get_vid_common_metadata_range_rev(start, end)
+                .<span class="kw">await
         </span>}
         <span class="kw">async fn </span>get_transaction(
             <span class="kw-2">&amp;</span><span class="self">self</span>,

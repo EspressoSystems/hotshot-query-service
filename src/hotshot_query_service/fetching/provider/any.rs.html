@@ -333,7 +333,7 @@
 }
 
 <span class="kw">type </span>PayloadProvider&lt;Types&gt; = Arc&lt;<span class="kw">dyn </span>DebugProvider&lt;Types, PayloadRequest&gt;&gt;;
-<span class="kw">type </span>LeafProvider&lt;Types&gt; = Arc&lt;<span class="kw">dyn </span>DebugProvider&lt;Types, LeafRequest&gt;&gt;;
+<span class="kw">type </span>LeafProvider&lt;Types&gt; = Arc&lt;<span class="kw">dyn </span>DebugProvider&lt;Types, LeafRequest&lt;Types&gt;&gt;&gt;;
 <span class="kw">type </span>VidCommonProvider&lt;Types&gt; = Arc&lt;<span class="kw">dyn </span>DebugProvider&lt;Types, VidCommonRequest&gt;&gt;;
 
 <span class="doccomment">/// Adaptor combining multiple data availability providers.
@@ -396,11 +396,11 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;Types&gt; Provider&lt;Types, LeafRequest&gt; <span class="kw">for </span>AnyProvider&lt;Types&gt;
+</span><span class="kw">impl</span>&lt;Types&gt; Provider&lt;Types, LeafRequest&lt;Types&gt;&gt; <span class="kw">for </span>AnyProvider&lt;Types&gt;
 <span class="kw">where
     </span>Types: NodeType,
 {
-    <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, req: LeafRequest) -&gt; <span class="prelude-ty">Option</span>&lt;LeafQueryData&lt;Types&gt;&gt; {
+    <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, req: LeafRequest&lt;Types&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;LeafQueryData&lt;Types&gt;&gt; {
         any_fetch(<span class="kw-2">&amp;</span><span class="self">self</span>.leaf_providers, req).<span class="kw">await
     </span>}
 }
@@ -443,7 +443,7 @@
     <span class="doccomment">/// Add a sub-provider which fetches leaves.
     </span><span class="kw">pub fn </span>with_leaf_provider&lt;P&gt;(<span class="kw-2">mut </span><span class="self">self</span>, provider: P) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>P: Provider&lt;Types, LeafRequest&gt; + Debug + <span class="lifetime">'static</span>,
+        </span>P: Provider&lt;Types, LeafRequest&lt;Types&gt;&gt; + Debug + <span class="lifetime">'static</span>,
     {
         <span class="self">self</span>.leaf_providers.push(Arc::new(provider));
         <span class="self">self
