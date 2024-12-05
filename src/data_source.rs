@@ -133,7 +133,7 @@ pub mod availability_tests {
     };
     use committable::Committable;
     use futures::stream::StreamExt;
-    use hotshot_types::data::Leaf2;
+    use hotshot_types::data::Leaf;
     use std::collections::HashMap;
     use std::fmt::Debug;
     use std::ops::{Bound, RangeBounds};
@@ -148,7 +148,7 @@ pub mod availability_tests {
             assert_eq!(leaf.height(), i as u64);
             assert_eq!(
                 leaf.hash(),
-                <Leaf2<MockTypes> as Committable>::commit(&leaf.leaf)
+                <Leaf<MockTypes> as Committable>::commit(&leaf.leaf)
             );
 
             // Check indices.
@@ -484,7 +484,6 @@ pub mod persistence_tests {
             setup_test,
         },
         types::HeightIndexed,
-        Leaf2,
     };
     use committable::Committable;
     use hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
@@ -509,18 +508,16 @@ pub mod persistence_tests {
             &TestValidatedState::default(),
             &TestInstanceState::default(),
         )
-        .await
-        .to_qc2();
-        let mut leaf: Leaf2<_> = Leaf::<MockTypes>::genesis(
+        .await;
+        let mut leaf = Leaf::<MockTypes>::genesis(
             &TestValidatedState::default(),
             &TestInstanceState::default(),
         )
-        .await
-        .into();
+        .await;
         // Increment the block number, to distinguish this block from the genesis block, which
         // already exists.
         leaf.block_header_mut().block_number += 1;
-        qc.data.leaf_commit = <Leaf2<MockTypes> as Committable>::commit(&leaf);
+        qc.data.leaf_commit = <Leaf<MockTypes> as Committable>::commit(&leaf);
 
         let block = BlockQueryData::new(leaf.block_header().clone(), MockPayload::genesis());
         let leaf = LeafQueryData::new(leaf, qc).unwrap();
@@ -563,18 +560,16 @@ pub mod persistence_tests {
             &TestValidatedState::default(),
             &TestInstanceState::default(),
         )
-        .await
-        .to_qc2();
-        let mut leaf: Leaf2<_> = Leaf::<MockTypes>::genesis(
+        .await;
+        let mut leaf = Leaf::<MockTypes>::genesis(
             &TestValidatedState::default(),
             &TestInstanceState::default(),
         )
-        .await
-        .into();
+        .await;
         // Increment the block number, to distinguish this block from the genesis block, which
         // already exists.
         leaf.block_header_mut().block_number += 1;
-        qc.data.leaf_commit = <Leaf2<MockTypes> as Committable>::commit(&leaf);
+        qc.data.leaf_commit = <Leaf<MockTypes> as Committable>::commit(&leaf);
 
         let block = BlockQueryData::new(leaf.block_header().clone(), MockPayload::genesis());
         let leaf = LeafQueryData::new(leaf, qc).unwrap();
@@ -628,18 +623,16 @@ pub mod persistence_tests {
             &TestValidatedState::default(),
             &TestInstanceState::default(),
         )
-        .await
-        .to_qc2();
-        let mut mock_leaf: Leaf2<_> = Leaf::<MockTypes>::genesis(
+        .await;
+        let mut mock_leaf = Leaf::<MockTypes>::genesis(
             &TestValidatedState::default(),
             &TestInstanceState::default(),
         )
-        .await
-        .into();
+        .await;
         // Increment the block number, to distinguish this block from the genesis block, which
         // already exists.
         mock_leaf.block_header_mut().block_number += 1;
-        mock_qc.data.leaf_commit = <Leaf2<MockTypes> as Committable>::commit(&mock_leaf);
+        mock_qc.data.leaf_commit = <Leaf<MockTypes> as Committable>::commit(&mock_leaf);
 
         let block = BlockQueryData::new(mock_leaf.block_header().clone(), MockPayload::genesis());
         let leaf = LeafQueryData::new(mock_leaf.clone(), mock_qc.clone()).unwrap();
@@ -665,7 +658,7 @@ pub mod persistence_tests {
 
         // Get a mutable transaction again, insert different data.
         mock_leaf.block_header_mut().block_number += 1;
-        mock_qc.data.leaf_commit = <Leaf2<MockTypes> as Committable>::commit(&mock_leaf);
+        mock_qc.data.leaf_commit = <Leaf<MockTypes> as Committable>::commit(&mock_leaf);
         let block = BlockQueryData::new(mock_leaf.block_header().clone(), MockPayload::genesis());
         let leaf = LeafQueryData::new(mock_leaf, mock_qc).unwrap();
 

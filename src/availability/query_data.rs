@@ -13,8 +13,8 @@
 use crate::{types::HeightIndexed, Header, Metadata, Payload, Transaction, VidCommon, VidShare};
 use committable::{Commitment, Committable};
 use hotshot_types::{
-    data::{Leaf, Leaf2},
-    simple_certificate::{QuorumCertificate, QuorumCertificate2},
+    data::Leaf,
+    simple_certificate::QuorumCertificate,
     traits::{
         self,
         block_contents::{BlockHeader, GENESIS_VID_NUM_STORAGE_NODES},
@@ -28,7 +28,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use snafu::{ensure, Snafu};
 use std::fmt::Debug;
 
-pub type LeafHash<Types> = Commitment<Leaf2<Types>>;
+pub type LeafHash<Types> = Commitment<Leaf<Types>>;
 /// A block hash is the hash of the block header.
 ///
 /// A block consists of a header and a payload. But the header itself contains a commitment to the
@@ -190,8 +190,8 @@ pub trait QueryablePayload<Types: NodeType>: traits::BlockPayload<Types> {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(bound = "")]
 pub struct LeafQueryData<Types: NodeType> {
-    pub(crate) leaf: Leaf2<Types>,
-    pub(crate) qc: QuorumCertificate2<Types>,
+    pub(crate) leaf: Leaf<Types>,
+    pub(crate) qc: QuorumCertificate<Types>,
 }
 
 #[derive(Clone, Debug, Snafu)]
@@ -210,13 +210,13 @@ impl<Types: NodeType> LeafQueryData<Types> {
     ///
     /// Fails with an [`InconsistentLeafError`] if `qc` does not reference `leaf`.
     pub fn new(
-        mut leaf: Leaf2<Types>,
-        qc: QuorumCertificate2<Types>,
+        mut leaf: Leaf<Types>,
+        qc: QuorumCertificate<Types>,
     ) -> Result<Self, InconsistentLeafError<Types>> {
         // TODO: Replace with the new `commit` function in HotShot. Add an `upgrade_lock` parameter
         // and a `HsVer: Versions` bound, then call `leaf.commit(upgrade_lock).await`. This will
         // require updates in callers and relevant types as well.
-        let leaf_commit = <Leaf2<Types> as Committable>::commit(&leaf);
+        let leaf_commit = <Leaf<Types> as Committable>::commit(&leaf);
         ensure!(
             qc.data.leaf_commit == leaf_commit,
             InconsistentLeafSnafu {
@@ -237,18 +237,16 @@ impl<Types: NodeType> LeafQueryData<Types> {
         instance_state: &Types::InstanceState,
     ) -> Self {
         Self {
-            leaf: Leaf::genesis(validated_state, instance_state).await.into(),
-            qc: QuorumCertificate::genesis::<HsVer>(validated_state, instance_state)
-                .await
-                .to_qc2(),
+            leaf: Leaf::genesis(validated_state, instance_state).await,
+            qc: QuorumCertificate::genesis::<HsVer>(validated_state, instance_state).await,
         }
     }
 
-    pub fn leaf(&self) -> &Leaf2<Types> {
+    pub fn leaf(&self) -> &Leaf<Types> {
         &self.leaf
     }
 
-    pub fn qc(&self) -> &QuorumCertificate2<Types> {
+    pub fn qc(&self) -> &QuorumCertificate<Types> {
         &self.qc
     }
 
@@ -260,7 +258,7 @@ impl<Types: NodeType> LeafQueryData<Types> {
         // TODO: Replace with the new `commit` function in HotShot. Add an `upgrade_lock` parameter
         // and a `HsVer: Versions` bound, then call `leaf.commit(upgrade_lock).await`. This will
         // require updates in callers and relevant types as well.
-        <Leaf2<Types> as Committable>::commit(&self.leaf)
+        <Leaf<Types> as Committable>::commit(&self.leaf)
     }
 
     pub fn block_hash(&self) -> BlockHash<Types> {
@@ -459,9 +457,7 @@ impl<Types: NodeType> VidCommonQueryData<Types> {
         validated_state: &Types::ValidatedState,
         instance_state: &Types::InstanceState,
     ) -> Self {
-        let leaf: Leaf2<Types> = Leaf::<Types>::genesis(validated_state, instance_state)
-            .await
-            .into();
+        let leaf: Leaf<Types> = Leaf::<Types>::genesis(validated_state, instance_state).await;
         let payload = leaf.block_payload().unwrap();
         let bytes = payload.encode();
         let disperse = vid_scheme(GENESIS_VID_NUM_STORAGE_NODES)

@@ -460,7 +460,7 @@ use tide_disco::{method::ReadState, App, StatusCode};
 use vbs::version::StaticVersionType;
 
 pub use hotshot_types::{
-    data::Leaf2,
+    data::Leaf,
     vid::{VidCommitment, VidCommon, VidShare},
 };
 
@@ -796,13 +796,11 @@ mod test {
             .unwrap();
 
         // Mock up some data and add a block to the store.
-        let leaf: Leaf2<_> = Leaf::<MockTypes>::genesis(&Default::default(), &Default::default())
-            .await
-            .into();
+        let leaf = Leaf::<MockTypes>::genesis(&Default::default(), &Default::default()).await;
+
         let qc =
             QuorumCertificate::genesis::<TestVersions>(&Default::default(), &Default::default())
-                .await
-                .to_qc2();
+                .await;
         let leaf = LeafQueryData::new(leaf, qc).unwrap();
         let block = BlockQueryData::new(leaf.header().clone(), MockPayload::genesis());
         hotshot_qs

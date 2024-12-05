@@ -914,13 +914,10 @@ mod test {
         );
 
         // mock up some consensus data.
-        let leaf = Leaf::<MockTypes>::genesis(&Default::default(), &Default::default())
-            .await
-            .into();
+        let leaf = Leaf::<MockTypes>::genesis(&Default::default(), &Default::default()).await;
         let qc =
             QuorumCertificate::genesis::<TestVersions>(&Default::default(), &Default::default())
-                .await
-                .to_qc2();
+                .await;
         let leaf = LeafQueryData::new(leaf, qc).unwrap();
         let block = BlockQueryData::new(leaf.header().clone(), MockPayload::genesis());
         data_source

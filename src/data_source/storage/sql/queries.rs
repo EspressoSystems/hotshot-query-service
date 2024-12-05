@@ -20,12 +20,13 @@ use crate::{
         VidCommonQueryData,
     },
     data_source::storage::{PayloadMetadata, VidCommonMetadata},
-    Header, Leaf2, Payload, QueryError, QueryResult,
+    Header, Payload, QueryError, QueryResult,
 };
 use anyhow::Context;
 use derivative::Derivative;
 use hotshot_types::{
-    simple_certificate::QuorumCertificate2,
+    data::Leaf,
+    simple_certificate::QuorumCertificate,
     traits::{
         block_contents::{BlockHeader, BlockPayload},
         node_implementation::NodeType,
@@ -171,10 +172,10 @@ where
 {
     fn from_row(row: &'r <Db as Database>::Row) -> sqlx::Result<Self> {
         let leaf = row.try_get("leaf")?;
-        let leaf: Leaf2<Types> = serde_json::from_value(leaf).decode_error("malformed leaf")?;
+        let leaf: Leaf<Types> = serde_json::from_value(leaf).decode_error("malformed leaf")?;
 
         let qc = row.try_get("qc")?;
-        let qc: QuorumCertificate2<Types> =
+        let qc: QuorumCertificate<Types> =
             serde_json::from_value(qc).decode_error("malformed QC")?;
 
         Ok(Self { leaf, qc })
