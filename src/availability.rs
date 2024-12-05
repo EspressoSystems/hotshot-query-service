@@ -499,7 +499,7 @@ fn enforce_range_limit(from: usize, until: usize, limit: usize) -> Result<(), Er
 mod test {
     use super::*;
     use crate::{
-        data_source::{storage::no_storage, ExtensibleDataSource},
+        data_source::ExtensibleDataSource,
         status::StatusDataSource,
         task::BackgroundTask,
         testing::{
@@ -781,9 +781,10 @@ mod test {
     }
 
     // This test runs the `postgres` Docker image, which doesn't work on Windows.
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(all(not(target_os = "windows"), feature = "no-storage"))]
     #[tokio::test(flavor = "multi_thread")]
     async fn test_api_no_storage() {
+        use crate::data_source::storage::no_storage;
         // With a long enough fetch timeout, we can run the API without any local storage and it
         // still works: missing data is fetched on demand or proactively from a peer.
         //
