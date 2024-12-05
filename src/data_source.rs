@@ -484,10 +484,11 @@ pub mod persistence_tests {
             setup_test,
         },
         types::HeightIndexed,
+        Leaf,
     };
     use committable::Committable;
     use hotshot_example_types::state_types::{TestInstanceState, TestValidatedState};
-    use hotshot_types::{data::Leaf, simple_certificate::QuorumCertificate};
+    use hotshot_types::simple_certificate::QuorumCertificate;
 
     #[tokio::test(flavor = "multi_thread")]
     pub async fn test_revert<D: TestableDataSource>()
