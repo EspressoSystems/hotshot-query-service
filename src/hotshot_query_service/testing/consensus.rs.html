@@ -338,17 +338,7 @@
 <a href="#337" id="337">337</a>
 <a href="#338" id="338">338</a>
 <a href="#339" id="339">339</a>
-<a href="#340" id="340">340</a>
-<a href="#341" id="341">341</a>
-<a href="#342" id="342">342</a>
-<a href="#343" id="343">343</a>
-<a href="#344" id="344">344</a>
-<a href="#345" id="345">345</a>
-<a href="#346" id="346">346</a>
-<a href="#347" id="347">347</a>
-<a href="#348" id="348">348</a>
-<a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#340" id="340">340</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -378,7 +368,7 @@
 <span class="kw">use </span>hotshot::{
     traits::implementations::{MasterMap, MemoryNetwork},
     types::{Event, SystemContextHandle},
-    HotShotInitializer, MarketplaceConfig, Memberships, SystemContext,
+    HotShotInitializer, MarketplaceConfig, SystemContext,
 };
 <span class="kw">use </span>hotshot_example_types::{
     auction_results_provider_types::TestAuctionResultsProvider, state_types::TestInstanceState,
@@ -446,20 +436,10 @@
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">let </span>da_membership = MockMembership::new(
+        <span class="kw">let </span>membership = MockMembership::new(
             known_nodes_with_stake.clone(),
             known_nodes_with_stake.clone(),
-            Topic::Da,
         );
-        <span class="kw">let </span>non_da_membership = MockMembership::new(
-            known_nodes_with_stake.clone(),
-            known_nodes_with_stake.clone(),
-            Topic::Global,
-        );
-        <span class="kw">let </span>memberships = Memberships {
-            quorum_membership: non_da_membership.clone(),
-            da_membership: da_membership.clone(),
-        };
 
         <span class="comment">// Pick a random, unused port for the builder server
         </span><span class="kw">let </span>builder_port = portpicker::pick_unused_port().expect(<span class="string">"No ports available"</span>);
@@ -511,7 +491,7 @@
                 .into_iter()
                 .enumerate()
                 .map(|(node_id, priv_key)| {
-                    <span class="kw">let </span>memberships = memberships.clone();
+                    <span class="kw">let </span>membership = membership.clone();
                     <span class="kw">let </span>config = config.clone();
 
                     <span class="kw">let </span>pub_keys = pub_keys.clone();
@@ -536,7 +516,7 @@
                             priv_key,
                             node_id <span class="kw">as </span>u64,
                             config,
-                            memberships,
+                            membership,
                             network,
                             HotShotInitializer::from_genesis::&lt;MockVersions&gt;(
                                 TestInstanceState::default(),

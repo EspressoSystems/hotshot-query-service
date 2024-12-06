@@ -220,7 +220,30 @@
 <a href="#219" id="219">219</a>
 <a href="#220" id="220">220</a>
 <a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -238,7 +261,7 @@
         BlockInfo, BlockQueryData, LeafQueryData, QueryablePayload, UpdateAvailabilityData,
         VidCommonQueryData,
     },
-    Leaf, Payload, VidShare,
+    Payload, VidShare,
 };
 <span class="kw">use </span>anyhow::{ensure, Context};
 <span class="kw">use </span>async_trait::async_trait;
@@ -246,6 +269,7 @@
 <span class="kw">use </span>hotshot::types::{Event, EventType};
 <span class="kw">use </span>hotshot_types::event::LeafInfo;
 <span class="kw">use </span>hotshot_types::{
+    data::{Leaf, Leaf2, QuorumProposal},
     traits::{
         block_contents::{BlockHeader, BlockPayload, EncodeBytes, GENESIS_VID_NUM_STORAGE_NODES},
         node_implementation::{ConsensusTime, NodeType},
@@ -254,6 +278,24 @@
 };
 <span class="kw">use </span>jf_vid::VidScheme;
 <span class="kw">use </span>std::iter::once;
+
+<span class="kw">fn </span>downgrade_leaf&lt;Types: NodeType&gt;(leaf2: Leaf2&lt;Types&gt;) -&gt; Leaf&lt;Types&gt; {
+    <span class="kw">if </span>leaf2.drb_seed != [<span class="number">0</span>; <span class="number">32</span>] &amp;&amp; leaf2.drb_result != [<span class="number">0</span>; <span class="number">32</span>] {
+        <span class="macro">panic!</span>(<span class="string">"Downgrade of Leaf2 to Leaf will lose DRB information!"</span>);
+    }
+    <span class="kw">let </span>quorum_proposal = QuorumProposal {
+        block_header: leaf2.block_header().clone(),
+        view_number: leaf2.view_number(),
+        justify_qc: leaf2.justify_qc().to_qc(),
+        upgrade_certificate: leaf2.upgrade_certificate(),
+        proposal_certificate: <span class="prelude-val">None</span>,
+    };
+    <span class="kw">let </span><span class="kw-2">mut </span>leaf = Leaf::from_quorum_proposal(<span class="kw-2">&amp;</span>quorum_proposal);
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(payload) = leaf2.block_payload() {
+        leaf.fill_block_payload_unchecked(payload);
+    }
+    leaf
+}
 
 <span class="doccomment">/// An extension trait for types which implement the update trait for each API module.
 ///
@@ -306,12 +348,16 @@
                 // leaf in the new chain, so we don't need it.
                 </span>.skip(<span class="number">1</span>);
             <span class="kw">for </span>(
-                qc,
+                qc2,
                 LeafInfo {
-                    leaf, vid_share, ..
+                    leaf: leaf2,
+                    vid_share,
+                    ..
                 },
             ) <span class="kw">in </span>qcs.zip(leaf_chain.iter().rev())
             {
+                <span class="kw">let </span>leaf = downgrade_leaf(leaf2.clone());
+                <span class="kw">let </span>qc = qc2.to_qc();
                 <span class="kw">let </span>height = leaf.block_header().block_number();
                 <span class="kw">let </span>leaf_data = <span class="kw">match </span>LeafQueryData::new(leaf.clone(), qc.clone()) {
                     <span class="prelude-val">Ok</span>(leaf) =&gt; leaf,
@@ -346,7 +392,7 @@
                     // the block payload is guaranteed to always be empty, so VID isn't really
                     // necessary. But for consistency, we will still store the VID dispersal data,
                     // computing it ourselves based on the well-known genesis VID commitment.
-                    </span><span class="kw">match </span>genesis_vid(leaf) {
+                    </span><span class="kw">match </span>genesis_vid(<span class="kw-2">&amp;</span>leaf) {
                         <span class="prelude-val">Ok</span>((common, share)) =&gt; (<span class="prelude-val">Some</span>(common), <span class="prelude-val">Some</span>(share)),
                         <span class="prelude-val">Err</span>(err) =&gt; {
                             <span class="macro">tracing::warn!</span>(<span class="string">"failed to compute genesis VID: {err:#}"</span>);
