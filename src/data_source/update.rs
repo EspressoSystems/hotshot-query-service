@@ -20,7 +20,6 @@ use crate::{
 };
 use anyhow::{ensure, Context};
 use async_trait::async_trait;
-use committable::Committable;
 use futures::future::Future;
 use hotshot::types::{Event, EventType};
 use hotshot_types::event::LeafInfo;
@@ -112,12 +111,6 @@ where
                 },
             ) in qcs.zip(leaf_chain.iter().rev())
             {
-                tracing::info!(
-                    "qc2 data leaf commit = {}, leaf2 commit = {}",
-                    qc2.data.leaf_commit,
-                    <Leaf2<Types> as Committable>::commit(leaf2)
-                );
-
                 let leaf = downgrade_leaf(leaf2.clone());
                 let qc = qc2.to_qc();
                 let height = leaf.block_header().block_number();
