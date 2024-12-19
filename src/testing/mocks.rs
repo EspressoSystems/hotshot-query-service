@@ -136,6 +136,8 @@ impl NodeType for MockTypes {
     type Membership = StaticCommittee<Self>;
     type BuilderSignatureKey = BLSPubKey;
     type AuctionResult = TestAuctionResult;
+    // TODO: to be removed: https://github.com/EspressoSystems/HotShot/issues/3982
+    const EPOCH_HEIGHT: u64 = 42;
 }
 
 #[derive(Clone, Debug, Copy)]
