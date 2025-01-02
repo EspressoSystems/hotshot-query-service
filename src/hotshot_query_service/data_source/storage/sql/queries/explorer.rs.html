@@ -574,7 +574,79 @@
 <a href="#573" id="573">573</a>
 <a href="#574" id="574">574</a>
 <a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -590,7 +662,7 @@
 
 </span><span class="kw">use super</span>::{
     <span class="kw">super</span>::transaction::{query, Transaction, TransactionMode},
-    Database, Db, DecodeError, QueryBuilder, BLOCK_COLUMNS,
+    Database, Db, DecodeError, BLOCK_COLUMNS,
 };
 <span class="kw">use crate</span>::{
     availability::{BlockQueryData, QueryableHeader, QueryablePayload, TransactionIndex},
@@ -615,7 +687,7 @@
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>sqlx::{types::Json, FromRow, Row};
-<span class="kw">use </span>std::num::NonZeroUsize;
+<span class="kw">use </span>std::{collections::VecDeque, num::NonZeroUsize};
 <span class="kw">use </span>tagged_base64::{Tagged, TaggedBase64};
 
 <span class="kw">impl </span>From&lt;sqlx::Error&gt; <span class="kw">for </span>GetExplorerSummaryError {
@@ -681,6 +753,164 @@
     }
 }
 
+<span class="macro">lazy_static::lazy_static!</span> {
+    <span class="kw">static </span><span class="kw-2">ref </span>GET_BLOCK_SUMMARIES_QUERY_FOR_LATEST: String = {
+        <span class="macro">format!</span>(
+            <span class="string">"SELECT {BLOCK_COLUMNS}
+                FROM header AS h
+                JOIN payload AS p ON h.height = p.height
+                ORDER BY h.height DESC
+                LIMIT $1"
+            </span>)
+    };
+
+    <span class="kw">static </span><span class="kw-2">ref </span>GET_BLOCK_SUMMARIES_QUERY_FOR_HEIGHT: String = {
+        <span class="macro">format!</span>(
+            <span class="string">"SELECT {BLOCK_COLUMNS}
+                FROM header AS h
+                JOIN payload AS p ON h.height = p.height
+                WHERE h.height &lt;= $1
+                ORDER BY h.height DESC
+                LIMIT $2"
+        </span>)
+    };
+
+    <span class="comment">// We want to match the blocks starting with the given hash, and working backwards
+    // until we have returned up to the number of requested blocks.  The hash for a
+    // block should be unique, so we should just need to start with identifying the
+    // block height with the given hash, and return all blocks with a height less than
+    // or equal to that height, up to the number of requested blocks.
+    </span><span class="kw">static </span><span class="kw-2">ref </span>GET_BLOCK_SUMMARIES_QUERY_FOR_HASH: String = {
+        <span class="macro">format!</span>(
+            <span class="string">"SELECT {BLOCK_COLUMNS}
+                FROM header AS h
+                JOIN payload AS p ON h.height = p.height
+                WHERE h.height &lt;= (SELECT h1.height FROM header AS h1 WHERE h1.hash = $1)
+                ORDER BY h.height DESC
+                LIMIT $2"</span>,
+        )
+    };
+
+    <span class="kw">static </span><span class="kw-2">ref </span>GET_BLOCK_DETAIL_QUERY_FOR_LATEST: String = {
+        <span class="macro">format!</span>(
+            <span class="string">"SELECT {BLOCK_COLUMNS}
+                FROM header AS h
+                JOIN payload AS p ON h.height = p.height
+                ORDER BY h.height DESC
+                LIMIT 1"
+        </span>)
+    };
+
+    <span class="kw">static </span><span class="kw-2">ref </span>GET_BLOCK_DETAIL_QUERY_FOR_HEIGHT: String = {
+        <span class="macro">format!</span>(
+            <span class="string">"SELECT {BLOCK_COLUMNS}
+                FROM header AS h
+                JOIN payload AS p ON h.height = p.height
+                WHERE h.height = $1
+                ORDER BY h.height DESC
+                LIMIT 1"
+        </span>)
+    };
+
+    <span class="kw">static </span><span class="kw-2">ref </span>GET_BLOCK_DETAIL_QUERY_FOR_HASH: String = {
+        <span class="macro">format!</span>(
+            <span class="string">"SELECT {BLOCK_COLUMNS}
+                FROM header AS h
+                JOIN payload AS p ON h.height = p.height
+                WHERE h.hash = $1
+                ORDER BY h.height DESC
+                LIMIT 1"
+        </span>)
+    };
+
+
+    <span class="kw">static </span><span class="kw-2">ref </span>GET_TRANSACTION_SUMMARIES_QUERY_FOR_NO_FILTER: String = {
+        <span class="macro">format!</span>(
+            <span class="string">"SELECT {BLOCK_COLUMNS}
+                FROM header AS h
+                JOIN payload AS p ON h.height = p.height
+                WHERE h.height IN (
+                    SELECT t.block_height
+                        FROM transactions AS t
+                        WHERE
+                            (t.block_height = $1 AND t.idx &lt;= $2)
+                            OR t.block_height &lt; $1
+                        ORDER BY t.block_height DESC, t.idx DESC
+                        LIMIT $3
+                )
+                ORDER BY h.height DESC"
+        </span>)
+    };
+
+    <span class="kw">static </span><span class="kw-2">ref </span>GET_TRANSACTION_SUMMARIES_QUERY_FOR_BLOCK: String = {
+        <span class="macro">format!</span>(
+            <span class="string">"SELECT {BLOCK_COLUMNS}
+                FROM header AS h
+                JOIN payload AS p ON h.height = p.height
+                WHERE  h.height = $1
+                ORDER BY h.height DESC"
+        </span>)
+    };
+
+    <span class="kw">static </span><span class="kw-2">ref </span>GET_TRANSACTION_DETAIL_QUERY_FOR_LATEST: String = {
+        <span class="macro">format!</span>(
+            <span class="string">"SELECT {BLOCK_COLUMNS}
+                FROM header AS h
+                JOIN payload AS p ON h.height = p.height
+                WHERE h.height = (
+                    SELECT MAX(t1.block_height)
+                        FROM transactions AS t1
+                )
+                ORDER BY h.height DESC"
+        </span>)
+    };
+
+    <span class="kw">static </span><span class="kw-2">ref </span>GET_TRANSACTION_DETAIL_QUERY_FOR_HEIGHT_AND_OFFSET: String = {
+        <span class="macro">format!</span>(
+            <span class="string">"SELECT {BLOCK_COLUMNS}
+                FROM header AS h
+                JOIN payload AS p ON h.height = p.height
+                WHERE h.height = (
+                    SELECT t1.block_height
+                        FROM transactions AS t1
+                        WHERE t1.block_height = $1
+                        ORDER BY t1.block_height, t1.idx
+                        OFFSET $2
+                        LIMIT 1
+                )
+                ORDER BY h.height DESC"</span>,
+        )
+    };
+
+    <span class="kw">static </span><span class="kw-2">ref </span>GET_TRANSACTION_DETAIL_QUERY_FOR_HASH: String = {
+        <span class="macro">format!</span>(
+            <span class="string">"SELECT {BLOCK_COLUMNS}
+                FROM header AS h
+                JOIN payload AS p ON h.height = p.height
+                WHERE h.height = (
+                    SELECT t1.block_height
+                        FROM transactions AS t1
+                        WHERE t1.hash = $1
+                        ORDER BY t1.block_height DESC, t1.idx DESC
+                        LIMIT 1
+                )
+                ORDER BY h.height DESC"
+        </span>)
+    };
+}
+
+<span class="doccomment">/// [EXPLORER_SUMMARY_HISTOGRAM_NUM_ENTRIES] is the number of entries we want
+/// to return in our histogram summary.
+</span><span class="kw">const </span>EXPLORER_SUMMARY_HISTOGRAM_NUM_ENTRIES: usize = <span class="number">50</span>;
+
+<span class="doccomment">/// [EXPLORER_SUMMARY_NUM_BLOCKS] is the number of blocks we want to return in
+/// our explorer summary.
+</span><span class="kw">const </span>EXPLORER_SUMMARY_NUM_BLOCKS: usize = <span class="number">10</span>;
+
+<span class="doccomment">/// [EXPLORER_SUMMARY_NUM_TRANSACTIONS] is the number of transactions we want
+/// to return in our explorer summary.
+</span><span class="kw">const </span>EXPLORER_SUMMARY_NUM_TRANSACTIONS: usize = <span class="number">10</span>;
+
 <span class="attr">#[async_trait]
 </span><span class="kw">impl</span>&lt;Mode, Types&gt; ExplorerStorage&lt;Types&gt; <span class="kw">for </span>Transaction&lt;Mode&gt;
 <span class="kw">where
@@ -697,46 +927,19 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;BlockSummary&lt;Types&gt;&gt;, GetBlockSummariesError&gt; {
         <span class="kw">let </span>request = <span class="kw-2">&amp;</span>request.<span class="number">0</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>query = QueryBuilder::default();
-        <span class="kw">let </span>sql = <span class="kw">match </span>request.target {
-            BlockIdentifier::Latest =&gt; <span class="macro">format!</span>(
-                <span class="string">"SELECT {BLOCK_COLUMNS}
-                    FROM header AS h
-                    JOIN payload AS p ON h.height = p.height
-                    ORDER BY h.height DESC 
-                    LIMIT {}"</span>,
-                query.bind(request.num_blocks.get() <span class="kw">as </span>i64)<span class="question-mark">?</span>,
-            ),
-            BlockIdentifier::Height(height) =&gt; <span class="macro">format!</span>(
-                <span class="string">"SELECT {BLOCK_COLUMNS}
-                    FROM header AS h
-                    JOIN payload AS p ON h.height = p.height
-                    WHERE h.height &lt;= {}
-                    ORDER BY h.height DESC 
-                    LIMIT {}"</span>,
-                query.bind(height <span class="kw">as </span>i64)<span class="question-mark">?</span>,
-                query.bind(request.num_blocks.get() <span class="kw">as </span>i64)<span class="question-mark">?</span>,
-            ),
-            BlockIdentifier::Hash(hash) =&gt; {
-                <span class="comment">// We want to match the blocks starting with the given hash, and working backwards
-                // until we have returned up to the number of requested blocks.  The hash for a
-                // block should be unique, so we should just need to start with identifying the
-                // block height with the given hash, and return all blocks with a height less than
-                // or equal to that height, up to the number of requested blocks.
-                </span><span class="macro">format!</span>(
-                    <span class="string">"SELECT {BLOCK_COLUMNS}
-                        FROM header AS h
-                        JOIN payload AS p ON h.height = p.height
-                        WHERE h.height &lt;= (SELECT h1.height FROM header AS h1 WHERE h1.hash = {})
-                        ORDER BY h.height DESC 
-                        LIMIT {}"</span>,
-                    query.bind(hash.to_string())<span class="question-mark">?</span>,
-                    query.bind(request.num_blocks.get() <span class="kw">as </span>i64)<span class="question-mark">?</span>,
-                )
+        <span class="kw">let </span>query_stmt = <span class="kw">match </span>request.target {
+            BlockIdentifier::Latest =&gt; {
+                query(<span class="kw-2">&amp;</span>GET_BLOCK_SUMMARIES_QUERY_FOR_LATEST).bind(request.num_blocks.get() <span class="kw">as </span>i64)
             }
+            BlockIdentifier::Height(height) =&gt; query(<span class="kw-2">&amp;</span>GET_BLOCK_SUMMARIES_QUERY_FOR_HEIGHT)
+                .bind(height <span class="kw">as </span>i64)
+                .bind(request.num_blocks.get() <span class="kw">as </span>i64),
+            BlockIdentifier::Hash(hash) =&gt; query(<span class="kw-2">&amp;</span>GET_BLOCK_SUMMARIES_QUERY_FOR_HASH)
+                .bind(hash.to_string())
+                .bind(request.num_blocks.get() <span class="kw">as </span>i64),
         };
 
-        <span class="kw">let </span>row_stream = query.query(<span class="kw-2">&amp;</span>sql).fetch(<span class="self">self</span>.as_mut());
+        <span class="kw">let </span>row_stream = query_stmt.fetch(<span class="self">self</span>.as_mut());
         <span class="kw">let </span>result = row_stream.map(|row| BlockSummary::from_row(<span class="kw-2">&amp;</span>row<span class="question-mark">?</span>));
 
         <span class="prelude-val">Ok</span>(result.try_collect().<span class="kw">await</span><span class="question-mark">?</span>)
@@ -746,36 +949,17 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         request: BlockIdentifier&lt;Types&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;BlockDetail&lt;Types&gt;, GetBlockDetailError&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>query = QueryBuilder::default();
-        <span class="kw">let </span>sql = <span class="kw">match </span>request {
-            BlockIdentifier::Latest =&gt; <span class="macro">format!</span>(
-                <span class="string">"SELECT {BLOCK_COLUMNS}
-                    FROM header AS h
-                    JOIN payload AS p ON h.height = p.height
-                    ORDER BY h.height DESC 
-                    LIMIT 1"
-            </span>),
-            BlockIdentifier::Height(height) =&gt; <span class="macro">format!</span>(
-                <span class="string">"SELECT {BLOCK_COLUMNS}
-                    FROM header AS h
-                    JOIN payload AS p ON h.height = p.height
-                    WHERE h.height = {}
-                    ORDER BY h.height DESC 
-                    LIMIT 1"</span>,
-                query.bind(height <span class="kw">as </span>i64)<span class="question-mark">?</span>,
-            ),
-            BlockIdentifier::Hash(hash) =&gt; <span class="macro">format!</span>(
-                <span class="string">"SELECT {BLOCK_COLUMNS}
-                    FROM header AS h
-                    JOIN payload AS p ON h.height = p.height
-                    WHERE h.hash = {}
-                    ORDER BY h.height DESC 
-                    LIMIT 1"</span>,
-                query.bind(hash.to_string())<span class="question-mark">?</span>,
-            ),
+        <span class="kw">let </span>query_stmt = <span class="kw">match </span>request {
+            BlockIdentifier::Latest =&gt; query(<span class="kw-2">&amp;</span>GET_BLOCK_DETAIL_QUERY_FOR_LATEST),
+            BlockIdentifier::Height(height) =&gt; {
+                query(<span class="kw-2">&amp;</span>GET_BLOCK_DETAIL_QUERY_FOR_HEIGHT).bind(height <span class="kw">as </span>i64)
+            }
+            BlockIdentifier::Hash(hash) =&gt; {
+                query(<span class="kw-2">&amp;</span>GET_BLOCK_DETAIL_QUERY_FOR_HASH).bind(hash.to_string())
+            }
         };
 
-        <span class="kw">let </span>query_result = query.query(<span class="kw-2">&amp;</span>sql).fetch_one(<span class="self">self</span>.as_mut()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>query_result = query_stmt.fetch_one(<span class="self">self</span>.as_mut()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>block = BlockDetail::from_row(<span class="kw-2">&amp;</span>query_result)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(block)
@@ -829,38 +1013,20 @@
         // transactions from that point.  We then grab only the blocks for those
         // identified transactions, as only those blocks are needed to pull all
         // of the relevant transactions.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>query = QueryBuilder::default();
-        <span class="kw">let </span>sql = <span class="kw">match </span>filter {
+        </span><span class="kw">let </span>query_stmt = <span class="kw">match </span>filter {
             TransactionSummaryFilter::RollUp(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[]),
 
-            TransactionSummaryFilter::None =&gt; <span class="macro">format!</span>(
-                <span class="string">"SELECT {BLOCK_COLUMNS}
-                        FROM header AS h
-                        JOIN payload AS p ON h.height = p.height
-                        WHERE h.height IN (
-                            SELECT t.block_height
-                                FROM transactions AS t
-                                WHERE (t.block_height, t.idx) &lt;= ({}, {})
-                                ORDER BY t.block_height DESC, t.idx DESC
-                                LIMIT {}
-                        )
-                        ORDER BY h.height DESC"</span>,
-                query.bind(block_height <span class="kw">as </span>i64)<span class="question-mark">?</span>,
-                query.bind(transaction_index)<span class="question-mark">?</span>,
-                query.bind((range.num_transactions.get() + offset) <span class="kw">as </span>i64)<span class="question-mark">?</span>,
-            ),
+            TransactionSummaryFilter::None =&gt; query(<span class="kw-2">&amp;</span>GET_TRANSACTION_SUMMARIES_QUERY_FOR_NO_FILTER)
+                .bind(block_height <span class="kw">as </span>i64)
+                .bind(transaction_index)
+                .bind((range.num_transactions.get() + offset) <span class="kw">as </span>i64),
 
-            TransactionSummaryFilter::Block(block) =&gt; <span class="macro">format!</span>(
-                <span class="string">"SELECT {BLOCK_COLUMNS}
-                    FROM header AS h
-                    JOIN payload AS p ON h.height = p.height
-                    WHERE  h.height = {}
-                    ORDER BY h.height DESC"</span>,
-                query.bind(<span class="kw-2">*</span>block <span class="kw">as </span>i64)<span class="question-mark">?</span>,
-            ),
+            TransactionSummaryFilter::Block(block) =&gt; {
+                query(<span class="kw-2">&amp;</span>GET_TRANSACTION_SUMMARIES_QUERY_FOR_BLOCK).bind(<span class="kw-2">*</span>block <span class="kw">as </span>i64)
+            }
         };
-        <span class="kw">let </span>block_stream = query
-            .query(<span class="kw-2">&amp;</span>sql)
+
+        <span class="kw">let </span>block_stream = query_stmt
             .fetch(<span class="self">self</span>.as_mut())
             .map(|row| BlockQueryData::from_row(<span class="kw-2">&amp;</span>row<span class="question-mark">?</span>));
 
@@ -898,6 +1064,7 @@
                     <span class="bool-val">false
                 </span>}
             })
+            .take(range.num_transactions.get())
             .collect::&lt;Vec&lt;TransactionSummary&lt;Types&gt;&gt;&gt;())
     }
 
@@ -907,51 +1074,19 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionDetailResponse&lt;Types&gt;, GetTransactionDetailError&gt; {
         <span class="kw">let </span>target = request;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>query = QueryBuilder::default();
-        <span class="kw">let </span>sql = <span class="kw">match </span>target {
-            TransactionIdentifier::Latest =&gt; <span class="macro">format!</span>(
-                <span class="string">"SELECT {BLOCK_COLUMNS}
-                    FROM header AS h
-                    JOIN payload AS p ON h.height = p.height
-                    WHERE h.height = (
-                        SELECT MAX(t1.block_height)
-                            FROM transactions AS t1
-                    )
-                    ORDER BY h.height DESC"
-            </span>),
-            TransactionIdentifier::HeightAndOffset(height, offset) =&gt; <span class="macro">format!</span>(
-                <span class="string">"SELECT {BLOCK_COLUMNS}
-                    FROM header AS h
-                    JOIN payload AS p ON h.height = p.height
-                    WHERE h.height = (
-                        SELECT t1.block_height
-                            FROM transactions AS t1
-                            WHERE t1.block_height = {}
-                            ORDER BY t1.block_height, t1.idx
-                            OFFSET {}
-                            LIMIT 1
-                    )
-                    ORDER BY h.height DESC"</span>,
-                query.bind(height <span class="kw">as </span>i64)<span class="question-mark">?</span>,
-                query.bind(offset <span class="kw">as </span>i64)<span class="question-mark">?</span>,
-            ),
-            TransactionIdentifier::Hash(hash) =&gt; <span class="macro">format!</span>(
-                <span class="string">"SELECT {BLOCK_COLUMNS}
-                    FROM header AS h
-                    JOIN payload AS p ON h.height = p.height
-                    WHERE h.height = (
-                        SELECT t1.block_height
-                            FROM transactions AS t1
-                            WHERE t1.hash = {}
-                            ORDER BY t1.block_height DESC, t1.idx DESC
-                            LIMIT 1
-                    )
-                    ORDER BY h.height DESC"</span>,
-                query.bind(hash.to_string())<span class="question-mark">?</span>,
-            ),
+        <span class="kw">let </span>query_stmt = <span class="kw">match </span>target {
+            TransactionIdentifier::Latest =&gt; query(<span class="kw-2">&amp;</span>GET_TRANSACTION_DETAIL_QUERY_FOR_LATEST),
+            TransactionIdentifier::HeightAndOffset(height, offset) =&gt; {
+                query(<span class="kw-2">&amp;</span>GET_TRANSACTION_DETAIL_QUERY_FOR_HEIGHT_AND_OFFSET)
+                    .bind(height <span class="kw">as </span>i64)
+                    .bind(offset <span class="kw">as </span>i64)
+            }
+            TransactionIdentifier::Hash(hash) =&gt; {
+                query(<span class="kw-2">&amp;</span>GET_TRANSACTION_DETAIL_QUERY_FOR_HASH).bind(hash.to_string())
+            }
         };
 
-        <span class="kw">let </span>query_row = query.query(<span class="kw-2">&amp;</span>sql).fetch_one(<span class="self">self</span>.as_mut()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>query_row = query_stmt.fetch_one(<span class="self">self</span>.as_mut()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span>block = BlockQueryData::&lt;Types&gt;::from_row(<span class="kw-2">&amp;</span>query_row)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>txns = block.enumerate().map(|(<span class="kw">_</span>, txn)| txn).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
@@ -985,7 +1120,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ExplorerSummary&lt;Types&gt;, GetExplorerSummaryError&gt; {
         <span class="kw">let </span>histograms = {
-            <span class="kw">let </span>historgram_query_result = query(
+            <span class="kw">let </span>histogram_query_result = query(
                 <span class="string">"SELECT
                     h.height AS height,
                     h.timestamp AS timestamp,
@@ -996,13 +1131,14 @@
                 JOIN payload AS p ON
                     p.height = h.height
                 WHERE
-                    h.height IN (SELECT height FROM header ORDER BY height DESC LIMIT 50)
-                ORDER BY h.height 
+                    h.height IN (SELECT height FROM header ORDER BY height DESC LIMIT $1)
+                ORDER BY h.height
                 "</span>,
             )
+            .bind((EXPLORER_SUMMARY_HISTOGRAM_NUM_ENTRIES + <span class="number">1</span>) <span class="kw">as </span>i64)
             .fetch(<span class="self">self</span>.as_mut());
 
-            <span class="kw">let </span>histograms: <span class="prelude-ty">Result</span>&lt;ExplorerHistograms, sqlx::Error&gt; = historgram_query_result
+            <span class="kw">let </span><span class="kw-2">mut </span>histograms: ExplorerHistograms = histogram_query_result
                 .map(|row_stream| {
                     row_stream.map(|row| {
                         <span class="kw">let </span>height: i64 = row.try_get(<span class="string">"height"</span>)<span class="question-mark">?</span>;
@@ -1016,25 +1152,33 @@
                 })
                 .try_fold(
                     ExplorerHistograms {
-                        block_time: Vec::with_capacity(<span class="number">50</span>),
-                        block_size: Vec::with_capacity(<span class="number">50</span>),
-                        block_transactions: Vec::with_capacity(<span class="number">50</span>),
-                        block_heights: Vec::with_capacity(<span class="number">50</span>),
+                        block_time: VecDeque::with_capacity(EXPLORER_SUMMARY_HISTOGRAM_NUM_ENTRIES),
+                        block_size: VecDeque::with_capacity(EXPLORER_SUMMARY_HISTOGRAM_NUM_ENTRIES),
+                        block_transactions: VecDeque::with_capacity(EXPLORER_SUMMARY_HISTOGRAM_NUM_ENTRIES),
+                        block_heights: VecDeque::with_capacity(EXPLORER_SUMMARY_HISTOGRAM_NUM_ENTRIES),
                     },
                     |<span class="kw-2">mut </span>histograms: ExplorerHistograms,
                      row: sqlx::Result&lt;(i64, i64, <span class="prelude-ty">Option</span>&lt;i64&gt;, <span class="prelude-ty">Option</span>&lt;i32&gt;, i32)&gt;| <span class="kw">async </span>{
                         <span class="kw">let </span>(height, _timestamp, time, size, num_transactions) = row<span class="question-mark">?</span>;
-                        histograms.block_time.push(time.map(|i| i <span class="kw">as </span>u64));
-                        histograms.block_size.push(size.map(|i| i <span class="kw">as </span>u64));
-                        histograms.block_transactions.push(num_transactions <span class="kw">as </span>u64);
-                        histograms.block_heights.push(height <span class="kw">as </span>u64);
+
+                        histograms.block_time.push_back(time.map(|i| i <span class="kw">as </span>u64));
+                        histograms.block_size.push_back(size.map(|i| i <span class="kw">as </span>u64));
+                        histograms.block_transactions.push_back(num_transactions <span class="kw">as </span>u64);
+                        histograms.block_heights.push_back(height <span class="kw">as </span>u64);
                         <span class="prelude-val">Ok</span>(histograms)
                     },
                 )
-                .<span class="kw">await</span>;
+                .<span class="kw">await</span><span class="question-mark">?</span>;
 
-            histograms<span class="question-mark">?
-        </span>};
+            <span class="kw">while </span>histograms.block_time.len() &gt; EXPLORER_SUMMARY_HISTOGRAM_NUM_ENTRIES {
+                histograms.block_time.pop_front();
+                histograms.block_size.pop_front();
+                histograms.block_transactions.pop_front();
+                histograms.block_heights.pop_front();
+            }
+
+            histograms
+        };
 
         <span class="kw">let </span>genesis_overview = {
             <span class="kw">let </span>blocks = NodeStorage::&lt;Types&gt;::block_height(<span class="self">self</span>).<span class="kw">await</span><span class="question-mark">? </span><span class="kw">as </span>u64;
@@ -1053,7 +1197,7 @@
         <span class="kw">let </span>latest_blocks: Vec&lt;BlockSummary&lt;Types&gt;&gt; = <span class="self">self
             </span>.get_block_summaries(GetBlockSummariesRequest(BlockRange {
                 target: BlockIdentifier::Latest,
-                num_blocks: NonZeroUsize::new(<span class="number">10</span>).unwrap(),
+                num_blocks: NonZeroUsize::new(EXPLORER_SUMMARY_NUM_BLOCKS).unwrap(),
             }))
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -1061,7 +1205,7 @@
             </span>.get_transaction_summaries(GetTransactionSummariesRequest {
                 range: TransactionRange {
                     target: TransactionIdentifier::Latest,
-                    num_transactions: NonZeroUsize::new(<span class="number">10</span>).unwrap(),
+                    num_transactions: NonZeroUsize::new(EXPLORER_SUMMARY_NUM_TRANSACTIONS).unwrap(),
                 },
                 filter: TransactionSummaryFilter::None,
             })

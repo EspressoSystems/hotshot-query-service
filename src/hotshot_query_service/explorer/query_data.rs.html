@@ -896,7 +896,9 @@
 <a href="#895" id="895">895</a>
 <a href="#896" id="896">896</a>
 <a href="#897" id="897">897</a>
-<a href="#898" id="898">898</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -921,6 +923,7 @@
 <span class="kw">use </span>hotshot_types::traits::node_implementation::NodeType;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>std::{
+    collections::VecDeque,
     fmt::{Debug, Display},
     num::{NonZeroUsize, TryFromIntError},
 };
@@ -1278,6 +1281,7 @@
     </span>BlockQueryData&lt;Types&gt;: HeightIndexed,
     Payload&lt;Types&gt;: QueryablePayload&lt;Types&gt;,
     Header&lt;Types&gt;: QueryableHeader&lt;Types&gt; + ExplorerHeader&lt;Types&gt;,
+    &lt;Types <span class="kw">as </span>NodeType&gt;::Transaction: ExplorerTransaction,
 {
     <span class="kw">type </span>Error = TimestampConversionError;
 
@@ -1297,7 +1301,7 @@
                 block_confirmed: <span class="bool-val">true</span>,
                 offset: offset <span class="kw">as </span>u64,
                 num_transactions: block.num_transactions,
-                size: block.size,
+                size: transaction.payload_size(),
                 time: Timestamp(time::OffsetDateTime::from_unix_timestamp(seconds)<span class="question-mark">?</span>),
                 sequencing_fees: <span class="macro">vec!</span>[],
                 fee_details: <span class="macro">vec!</span>[],
@@ -1366,10 +1370,10 @@
 /// `block_transactions` for those `block_heights`.
 </span><span class="attr">#[derive(Debug, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>ExplorerHistograms {
-    <span class="kw">pub </span>block_time: Vec&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt;,
-    <span class="kw">pub </span>block_size: Vec&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt;,
-    <span class="kw">pub </span>block_transactions: Vec&lt;u64&gt;,
-    <span class="kw">pub </span>block_heights: Vec&lt;u64&gt;,
+    <span class="kw">pub </span>block_time: VecDeque&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt;,
+    <span class="kw">pub </span>block_size: VecDeque&lt;<span class="prelude-ty">Option</span>&lt;u64&gt;&gt;,
+    <span class="kw">pub </span>block_transactions: VecDeque&lt;u64&gt;,
+    <span class="kw">pub </span>block_heights: VecDeque&lt;u64&gt;,
 }
 
 <span class="doccomment">/// [ExplorerSummary] is a struct that represents an at-a-glance snapshot of
