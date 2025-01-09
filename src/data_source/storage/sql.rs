@@ -22,15 +22,23 @@ use crate::{
     status::HasMetrics,
     QueryError, QueryResult,
 };
+use anyhow::Context;
 use async_trait::async_trait;
 use chrono::Utc;
 
-use hotshot_types::traits::metrics::Metrics;
+use committable::Committable;
+use hotshot_types::{
+    data::{Leaf, Leaf2},
+    simple_certificate::{QuorumCertificate, QuorumCertificate2},
+    traits::{metrics::Metrics, node_implementation::NodeType},
+};
+
 use itertools::Itertools;
 use log::LevelFilter;
 
 #[cfg(not(feature = "embedded-db"))]
 use futures::future::FutureExt;
+use serde_json::Value;
 #[cfg(not(feature = "embedded-db"))]
 use sqlx::postgres::{PgConnectOptions, PgSslMode};
 #[cfg(feature = "embedded-db")]
@@ -614,7 +622,109 @@ impl HasMetrics for SqlStorage {
     }
 }
 
+struct Leaf2Row {
+    height: i64,
+    hash: String,
+    block_hash: String,
+    leaf2: Value,
+    qc2: Value,
+}
+
 impl SqlStorage {
+    pub async fn migrate_leaf1_to_leaf2<Types: NodeType>(&self) -> anyhow::Result<()> {
+        let mut offset = 0;
+        let limit = 10000;
+
+        loop {
+            let mut tx = self.read().await.map_err(|err| QueryError::Error {
+                message: err.to_string(),
+            })?;
+
+            let (max_leaf_height,) = query_as::<(i64,)>("SELECT MAX(height) from leaf")
+                .fetch_one(tx.as_mut())
+                .await?;
+
+            let (is_migration_completed,) = query_as::<(bool,)>(
+                "SELECT EXISTS (
+                        SELECT 1
+                        FROM leaf
+                        WHERE height = $1)",
+            )
+            .bind(max_leaf_height)
+            .fetch_one(tx.as_mut())
+            .await?;
+
+            if is_migration_completed {
+                tracing::info!("leaf1 to leaf2 migration already completed");
+                return Ok(());
+            }
+
+            let rows = QueryBuilder::default()
+                .query(&format!(
+                    "SELECT leaf, qc FROM leaf ORDER BY height LIMIT {} OFFSET {}",
+                    limit, offset
+                ))
+                .fetch_all(tx.as_mut())
+                .await?;
+
+            drop(tx);
+
+            let mut leaf_rows = Vec::new();
+
+            for row in rows.iter() {
+                let leaf1 = row.try_get("leaf")?;
+                let qc = row.try_get("qc")?;
+                let leaf1: Leaf<Types> = serde_json::from_value(leaf1)?;
+                let qc: QuorumCertificate<Types> = serde_json::from_value(qc)?;
+
+                let leaf2: Leaf2<Types> = leaf1.into();
+                let qc2: QuorumCertificate2<Types> = qc.to_qc2();
+
+                let commit = leaf2.commit();
+
+                let leaf2_json =
+                    serde_json::to_value(leaf2.clone()).context("failed to serialize leaf2")?;
+                let qc2_json = serde_json::to_value(qc2).context("failed to serialize QC2")?;
+
+                leaf_rows.push(Leaf2Row {
+                    height: leaf2.height() as i64,
+                    hash: commit.to_string(),
+                    block_hash: leaf2.block_header().commit().to_string(),
+                    leaf2: leaf2_json,
+                    qc2: qc2_json,
+                })
+            }
+
+            let mut query_builder: sqlx::QueryBuilder<Db> = sqlx::QueryBuilder::new(
+                "INSERT INTO leaf2 (height, hash, block_hash, leaf2, qc2) ",
+            );
+
+            query_builder.push_values(leaf_rows.into_iter(), |mut b, row| {
+                b.push_bind(row.height)
+                    .push_bind(row.hash)
+                    .push_bind(row.block_hash)
+                    .push_bind(row.leaf2)
+                    .push_bind(row.qc2);
+            });
+
+            let query = query_builder.build();
+
+            let mut tx = self.write().await.map_err(|err| QueryError::Error {
+                message: err.to_string(),
+            })?;
+
+            query.execute(tx.as_mut()).await?;
+
+            if rows.len() < limit {
+                break;
+            }
+
+            offset += limit;
+        }
+
+        Ok(())
+    }
+
     async fn get_minimum_height(&self) -> QueryResult<Option<u64>> {
         let mut tx = self.read().await.map_err(|err| QueryError::Error {
             message: err.to_string(),

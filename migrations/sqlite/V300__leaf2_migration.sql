@@ -1,0 +1,8 @@
+CREATE TABLE leaf2
+(
+    height     BIGINT  PRIMARY KEY REFERENCES header (height) ON DELETE CASCADE,
+    hash       VARCHAR NOT NULL UNIQUE,
+    block_hash VARCHAR NOT NULL REFERENCES header (hash) ON DELETE CASCADE,
+    leaf2 JSONB NOT NULL,
+    qc2   JSONB NOT NULL
+);
