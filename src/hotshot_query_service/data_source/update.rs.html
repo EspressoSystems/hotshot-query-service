@@ -243,7 +243,9 @@
 <a href="#242" id="242">242</a>
 <a href="#243" id="243">243</a>
 <a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -280,10 +282,12 @@
 <span class="kw">use </span>std::iter::once;
 
 <span class="kw">fn </span>downgrade_leaf&lt;Types: NodeType&gt;(leaf2: Leaf2&lt;Types&gt;) -&gt; Leaf&lt;Types&gt; {
-    <span class="kw">if </span>leaf2.drb_seed != [<span class="number">0</span>; <span class="number">32</span>] &amp;&amp; leaf2.drb_result != [<span class="number">0</span>; <span class="number">32</span>] {
-        <span class="macro">panic!</span>(<span class="string">"Downgrade of Leaf2 to Leaf will lose DRB information!"</span>);
-    }
-    <span class="kw">let </span>quorum_proposal = QuorumProposal {
+    <span class="comment">// TODO do we still need some check here?
+    // `drb_seed` no longer exists on `Leaf2`
+    // if leaf2.drb_seed != [0; 32] &amp;&amp; leaf2.drb_result != [0; 32] {
+    //     panic!("Downgrade of Leaf2 to Leaf will lose DRB information!");
+    // }
+    </span><span class="kw">let </span>quorum_proposal = QuorumProposal {
         block_header: leaf2.block_header().clone(),
         view_number: leaf2.view_number(),
         justify_qc: leaf2.justify_qc().to_qc(),

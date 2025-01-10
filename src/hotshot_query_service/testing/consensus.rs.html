@@ -338,7 +338,8 @@
 <a href="#337" id="337">337</a>
 <a href="#338" id="338">338</a>
 <a href="#339" id="339">339</a>
-<a href="#340" id="340">340</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the HotShot Query Service library.
 //
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU
@@ -360,6 +361,7 @@
     task::BackgroundTask,
     SignatureKey,
 };
+<span class="kw">use </span>async_lock::RwLock;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>futures::{
     future::{join_all, Future},
@@ -436,10 +438,10 @@
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">let </span>membership = MockMembership::new(
+        <span class="kw">let </span>membership = Arc::new(RwLock::new(MockMembership::new(
             known_nodes_with_stake.clone(),
             known_nodes_with_stake.clone(),
-        );
+        )));
 
         <span class="comment">// Pick a random, unused port for the builder server
         </span><span class="kw">let </span>builder_port = portpicker::pick_unused_port().expect(<span class="string">"No ports available"</span>);
