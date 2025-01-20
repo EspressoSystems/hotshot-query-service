@@ -341,7 +341,7 @@ where
 
     async fn first_available_leaf(&mut self, from: u64) -> QueryResult<LeafQueryData<Types>> {
         let row = query(&format!(
-            "SELECT {LEAF_COLUMNS} FROM leaf WHERE height >= $1 ORDER BY height LIMIT 1"
+            "SELECT {LEAF_COLUMNS} FROM leaf2 WHERE height >= $1 ORDER BY height LIMIT 1"
         ))
         .bind(from as i64)
         .fetch_one(self.as_mut())
