@@ -18,7 +18,7 @@ use super::{
         VidCommonQueryData,
     },
 };
-use crate::{types::HeightIndexed, Payload, VidCommitment, VidShare};
+use crate::{types::HeightIndexed, Payload, QueryResult, VidCommitment, VidShare};
 use async_trait::async_trait;
 use derivative::Derivative;
 use derive_more::{Display, From};
@@ -127,54 +127,60 @@ pub trait AvailabilityDataSource<Types: NodeType>
 where
     Payload<Types>: QueryablePayload<Types>,
 {
-    async fn get_leaf<ID>(&self, id: ID) -> Fetch<LeafQueryData<Types>>
+    async fn get_leaf<ID>(&self, id: ID) -> QueryResult<LeafQueryData<Types>>
     where
         ID: Into<LeafId<Types>> + Send + Sync;
 
-    async fn get_block<ID>(&self, id: ID) -> Fetch<BlockQueryData<Types>>
+    async fn get_block<ID>(&self, id: ID) -> QueryResult<BlockQueryData<Types>>
     where
         ID: Into<BlockId<Types>> + Send + Sync;
 
-    async fn get_payload<ID>(&self, id: ID) -> Fetch<PayloadQueryData<Types>>
+    async fn get_payload<ID>(&self, id: ID) -> QueryResult<PayloadQueryData<Types>>
     where
         ID: Into<BlockId<Types>> + Send + Sync;
 
-    async fn get_payload_metadata<ID>(&self, id: ID) -> Fetch<PayloadMetadata<Types>>
+    async fn get_payload_metadata<ID>(&self, id: ID) -> QueryResult<PayloadMetadata<Types>>
     where
         ID: Into<BlockId<Types>> + Send + Sync;
 
-    async fn get_vid_common<ID>(&self, id: ID) -> Fetch<VidCommonQueryData<Types>>
+    async fn get_vid_common<ID>(&self, id: ID) -> QueryResult<VidCommonQueryData<Types>>
     where
         ID: Into<BlockId<Types>> + Send + Sync;
 
-    async fn get_vid_common_metadata<ID>(&self, id: ID) -> Fetch<VidCommonMetadata<Types>>
+    async fn get_vid_common_metadata<ID>(&self, id: ID) -> QueryResult<VidCommonMetadata<Types>>
     where
         ID: Into<BlockId<Types>> + Send + Sync;
 
-    async fn get_leaf_range<R>(&self, range: R) -> FetchStream<LeafQueryData<Types>>
+    async fn get_leaf_range<R>(&self, range: R) -> QueryResult<Vec<LeafQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static;
 
-    async fn get_block_range<R>(&self, range: R) -> FetchStream<BlockQueryData<Types>>
+    async fn get_block_range<R>(&self, range: R) -> QueryResult<Vec<BlockQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static;
 
-    async fn get_payload_range<R>(&self, range: R) -> FetchStream<PayloadQueryData<Types>>
+    async fn get_payload_range<R>(&self, range: R) -> QueryResult<Vec<PayloadQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static;
 
-    async fn get_payload_metadata_range<R>(&self, range: R) -> FetchStream<PayloadMetadata<Types>>
+    async fn get_payload_metadata_range<R>(
+        &self,
+        range: R,
+    ) -> QueryResult<Vec<PayloadMetadata<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static;
 
-    async fn get_vid_common_range<R>(&self, range: R) -> FetchStream<VidCommonQueryData<Types>>
+    async fn get_vid_common_range<R>(
+        &self,
+        range: R,
+    ) -> QueryResult<Vec<VidCommonQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static;
 
     async fn get_vid_common_metadata_range<R>(
         &self,
         range: R,
-    ) -> FetchStream<VidCommonMetadata<Types>>
+    ) -> QueryResult<Vec<VidCommonMetadata<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static;
 
@@ -182,94 +188,72 @@ where
         &self,
         start: Bound<usize>,
         end: usize,
-    ) -> FetchStream<LeafQueryData<Types>>;
+    ) -> QueryResult<Vec<LeafQueryData<Types>>>;
 
     async fn get_block_range_rev(
         &self,
         start: Bound<usize>,
         end: usize,
-    ) -> FetchStream<BlockQueryData<Types>>;
+    ) -> QueryResult<Vec<BlockQueryData<Types>>>;
 
     async fn get_payload_range_rev(
         &self,
         start: Bound<usize>,
         end: usize,
-    ) -> FetchStream<PayloadQueryData<Types>>;
+    ) -> QueryResult<Vec<PayloadQueryData<Types>>>;
 
     async fn get_payload_metadata_range_rev(
         &self,
         start: Bound<usize>,
         end: usize,
-    ) -> FetchStream<PayloadMetadata<Types>>;
+    ) -> QueryResult<Vec<PayloadMetadata<Types>>>;
 
     async fn get_vid_common_range_rev(
         &self,
         start: Bound<usize>,
         end: usize,
-    ) -> FetchStream<VidCommonQueryData<Types>>;
+    ) -> QueryResult<Vec<VidCommonQueryData<Types>>>;
 
     async fn get_vid_common_metadata_range_rev(
         &self,
         start: Bound<usize>,
         end: usize,
-    ) -> FetchStream<VidCommonMetadata<Types>>;
+    ) -> QueryResult<Vec<VidCommonMetadata<Types>>>;
 
     /// Returns the transaction with the given `hash`.
     async fn get_transaction(
         &self,
         hash: TransactionHash<Types>,
-    ) -> Fetch<TransactionQueryData<Types>>;
+    ) -> QueryResult<TransactionQueryData<Types>>;
 
-    async fn subscribe_blocks(&self, from: usize) -> BoxStream<'static, BlockQueryData<Types>> {
-        self.get_block_range(from..)
-            .await
-            .then(Fetch::resolve)
-            .boxed()
-    }
+    async fn subscribe_blocks(
+        &self,
+        from: usize,
+    ) -> QueryResult<BoxStream<'static, BlockQueryData<Types>>>;
 
-    async fn subscribe_payloads(&self, from: usize) -> BoxStream<'static, PayloadQueryData<Types>> {
-        self.get_payload_range(from..)
-            .await
-            .then(Fetch::resolve)
-            .boxed()
-    }
+    async fn subscribe_payloads(
+        &self,
+        from: usize,
+    ) -> QueryResult<BoxStream<'static, PayloadQueryData<Types>>>;
 
     async fn subscribe_payload_metadata(
         &self,
         from: usize,
-    ) -> BoxStream<'static, PayloadMetadata<Types>> {
-        self.get_payload_metadata_range(from..)
-            .await
-            .then(Fetch::resolve)
-            .boxed()
-    }
+    ) -> QueryResult<BoxStream<'static, PayloadMetadata<Types>>>;
 
-    async fn subscribe_leaves(&self, from: usize) -> BoxStream<'static, LeafQueryData<Types>> {
-        self.get_leaf_range(from..)
-            .await
-            .then(Fetch::resolve)
-            .boxed()
-    }
+    async fn subscribe_leaves(
+        &self,
+        from: usize,
+    ) -> QueryResult<BoxStream<'static, LeafQueryData<Types>>>;
 
     async fn subscribe_vid_common(
         &self,
         from: usize,
-    ) -> BoxStream<'static, VidCommonQueryData<Types>> {
-        self.get_vid_common_range(from..)
-            .await
-            .then(Fetch::resolve)
-            .boxed()
-    }
-
+    ) -> QueryResult<BoxStream<'static, VidCommonQueryData<Types>>>;
     async fn subscribe_vid_common_metadata(
         &self,
         from: usize,
-    ) -> BoxStream<'static, VidCommonMetadata<Types>> {
-        self.get_vid_common_metadata_range(from..)
-            .await
-            .then(Fetch::resolve)
-            .boxed()
-    }
+    ) -> QueryResult<BoxStream<'static, VidCommonMetadata<Types>>>;
 }
 
 /// Information about a block.

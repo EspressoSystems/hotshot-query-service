@@ -85,10 +85,9 @@ use super::{
 };
 use crate::{
     availability::{
-        AvailabilityDataSource, BlockId, BlockInfo, BlockQueryData, Fetch, FetchStream, LeafId,
-        LeafQueryData, PayloadMetadata, PayloadQueryData, QueryableHeader, QueryablePayload,
-        TransactionHash, TransactionQueryData, UpdateAvailabilityData, VidCommonMetadata,
-        VidCommonQueryData,
+        AvailabilityDataSource, BlockId, BlockInfo, BlockQueryData, Fetch, LeafId, LeafQueryData,
+        PayloadMetadata, PayloadQueryData, QueryableHeader, QueryablePayload, TransactionHash,
+        TransactionQueryData, UpdateAvailabilityData, VidCommonMetadata, VidCommonQueryData,
     },
     explorer::{self, ExplorerDataSource},
     fetching::{self, request, Provider},
@@ -110,13 +109,14 @@ use derivative::Derivative;
 use futures::{
     channel::oneshot,
     future::{self, join_all, BoxFuture, Either, Future, FutureExt},
-    stream::{self, BoxStream, StreamExt},
+    stream::{self, BoxStream, StreamExt, TryStreamExt},
 };
 use hotshot_types::traits::{
     metrics::{Gauge, Metrics},
     node_implementation::NodeType,
 };
 use jf_merkle_tree::{prelude::MerkleProof, MerkleTreeScheme};
+use std::ops::RangeInclusive;
 use std::sync::Arc;
 use std::{
     cmp::{max, min},
@@ -400,28 +400,37 @@ where
     scanner: Option<BackgroundTask>,
     // The aggregator task, which derives aggregate statistics from a block stream.
     aggregator: Option<BackgroundTask>,
-    pruner: Pruner<Types, S, P>,
+    pruner: Pruner<Types, S>,
 }
 
 #[derive(Derivative)]
-#[derivative(Clone(bound = ""), Debug(bound = "S: Debug, P: Debug"))]
-pub struct Pruner<Types, S, P>
+#[derivative(Clone(bound = "S: Clone"), Debug(bound = "S: Debug,"))]
+pub struct LeafOnlyDataSource<Types, S>
+where
+    Types: NodeType,
+{
+    storage: Arc<S>,
+    pruner: Pruner<Types, S>,
+}
+
+#[derive(Derivative)]
+#[derivative(Clone(bound = ""), Debug(bound = "S: Debug,  "))]
+pub struct Pruner<Types, S>
 where
     Types: NodeType,
 {
     handle: Option<BackgroundTask>,
-    _types: PhantomData<(Types, S, P)>,
+    _types: PhantomData<(Types, S)>,
 }
 
-impl<Types, S, P> Pruner<Types, S, P>
+impl<Types, S> Pruner<Types, S>
 where
     Types: NodeType,
     Payload<Types>: QueryablePayload<Types>,
     S: PruneStorage + Send + Sync + 'static,
-    P: AvailabilityProvider<Types>,
 {
-    async fn new(fetcher: Arc<Fetcher<Types, S, P>>) -> Self {
-        let cfg = fetcher.storage.get_pruning_config();
+    async fn new(storage: Arc<S>) -> Self {
+        let cfg = storage.get_pruning_config();
         let Some(cfg) = cfg else {
             return Self {
                 handle: None,
@@ -432,7 +441,25 @@ where
         let future = async move {
             for i in 1.. {
                 tracing::warn!("starting pruner run {i} ");
-                fetcher.prune().await;
+
+                // We loop until the whole run pruner run is complete
+                let mut pruner = S::Pruner::default();
+                loop {
+                    match storage.prune(&mut pruner).await {
+                        Ok(Some(height)) => {
+                            tracing::warn!("Pruned to height {height}");
+                        }
+                        Ok(None) => {
+                            tracing::warn!("pruner run complete.");
+                            break;
+                        }
+                        Err(e) => {
+                            tracing::error!("pruner run failed: {e:?}");
+                            break;
+                        }
+                    }
+                }
+
                 sleep(cfg.interval()).await;
             }
         };
@@ -443,6 +470,267 @@ where
             handle: Some(task),
             _types: Default::default(),
         }
+    }
+}
+
+// impl<Types, S> LeafOnlyDataSource<Types, S>
+// where
+//     Types: NodeType,
+//     Payload<Types>: QueryablePayload<Types>,
+//     Header<Types>: QueryableHeader<Types>,
+//     S: VersionedDataSource + PruneStorage + HasMetrics + 'static,
+//     for<'a> S::Transaction<'a>: UpdateAvailabilityStorage<Types> + UpdateAggregatesStorage<Types>,
+//     for<'a> S::ReadOnly<'a>:
+//         AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage + AggregatesStorage,
+// {
+//     /// Build a [`FetchingDataSource`] with the given `storage` and `provider`.
+//     pub fn builder(storage: S, provider: P) -> Builder<Types, S, P> {
+//         Builder::new(storage, provider)
+//     }
+
+//     async fn new(storage: S) -> anyhow::Result<Self> {
+//         let storage = Arc::new(storage);
+
+//         let pruner = Pruner::new(storage.clone()).await;
+//         let ds = Self { storage, pruner };
+
+//         Ok(ds)
+//     }
+// }
+
+#[async_trait]
+impl<Types, S> AvailabilityDataSource<Types> for LeafOnlyDataSource<Types, S>
+where
+    Types: NodeType,
+    Payload<Types>: QueryablePayload<Types>,
+    S: VersionedDataSource + 'static,
+    for<'a> S::Transaction<'a>: UpdateAvailabilityStorage<Types>,
+    for<'a> S::ReadOnly<'a>: AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage,
+{
+    async fn get_leaf<ID>(&self, id: ID) -> QueryResult<LeafQueryData<Types>>
+    where
+        ID: Into<LeafId<Types>> + Send + Sync,
+    {
+        let mut tx = self.read().await.unwrap();
+        tx.get_leaf(id.into()).await
+    }
+
+    async fn get_block<ID>(&self, id: ID) -> QueryResult<BlockQueryData<Types>>
+    where
+        ID: Into<BlockId<Types>> + Send + Sync,
+    {
+        let mut tx = self.read().await.unwrap();
+        tx.get_block(id.into()).await
+    }
+
+    async fn get_payload<ID>(&self, id: ID) -> QueryResult<PayloadQueryData<Types>>
+    where
+        ID: Into<BlockId<Types>> + Send + Sync,
+    {
+        let mut tx = self.read().await.unwrap();
+        tx.get_payload(id.into()).await
+    }
+
+    async fn get_payload_metadata<ID>(&self, id: ID) -> QueryResult<PayloadMetadata<Types>>
+    where
+        ID: Into<BlockId<Types>> + Send + Sync,
+    {
+        let mut tx = self.read().await.unwrap();
+        tx.get_payload_metadata(id.into()).await
+    }
+
+    async fn get_vid_common<ID>(&self, id: ID) -> QueryResult<VidCommonQueryData<Types>>
+    where
+        ID: Into<BlockId<Types>> + Send + Sync,
+    {
+        let mut tx = self.read().await.unwrap();
+        tx.get_vid_common(id.into()).await
+    }
+
+    async fn get_vid_common_metadata<ID>(&self, id: ID) -> QueryResult<VidCommonMetadata<Types>>
+    where
+        ID: Into<BlockId<Types>> + Send + Sync,
+    {
+        let mut tx = self.read().await.unwrap();
+        tx.get_vid_common_metadata(id.into()).await
+    }
+
+    async fn get_leaf_range<R>(&self, range: R) -> QueryResult<Vec<LeafQueryData<Types>>>
+    where
+        R: RangeBounds<usize> + Send + 'static,
+    {
+        let mut tx = self.read().await.unwrap();
+        tx.get_leaf_range(range)
+            .await
+            .and_then(|r| r.into_iter().collect())
+    }
+
+    async fn get_block_range<R>(&self, range: R) -> QueryResult<Vec<BlockQueryData<Types>>>
+    where
+        R: RangeBounds<usize> + Send + 'static,
+    {
+        let mut tx = self.read().await.unwrap();
+        tx.get_block_range(range)
+            .await
+            .and_then(|r| r.into_iter().collect())
+    }
+
+    async fn get_payload_range<R>(&self, range: R) -> QueryResult<Vec<PayloadQueryData<Types>>>
+    where
+        R: RangeBounds<usize> + Send + 'static,
+    {
+        let mut tx = self.read().await.unwrap();
+        tx.get_payload_range(range)
+            .await
+            .and_then(|r| r.into_iter().collect())
+    }
+
+    async fn get_payload_metadata_range<R>(
+        &self,
+        range: R,
+    ) -> QueryResult<Vec<PayloadMetadata<Types>>>
+    where
+        R: RangeBounds<usize> + Send + 'static,
+    {
+        let mut tx = self.read().await.unwrap();
+        tx.get_payload_metadata_range(range)
+            .await
+            .and_then(|r| r.into_iter().collect())
+    }
+
+    async fn get_vid_common_range<R>(&self, range: R) -> QueryResult<Vec<VidCommonQueryData<Types>>>
+    where
+        R: RangeBounds<usize> + Send + 'static,
+    {
+        let mut tx = self.read().await.unwrap();
+        tx.get_vid_common_range(range)
+            .await
+            .and_then(|r| r.into_iter().collect())
+    }
+
+    async fn get_vid_common_metadata_range<R>(
+        &self,
+        range: R,
+    ) -> QueryResult<Vec<VidCommonMetadata<Types>>>
+    where
+        R: RangeBounds<usize> + Send + 'static,
+    {
+        let mut tx = self.read().await.unwrap();
+        tx.get_vid_common_metadata_range(range)
+            .await
+            .and_then(|r| r.into_iter().collect())
+    }
+
+    async fn get_leaf_range_rev(
+        &self,
+        start: Bound<usize>,
+        end: usize,
+    ) -> QueryResult<Vec<LeafQueryData<Types>>> {
+        self.get_leaf_range(convert_bound_to_range(start, end))
+            .await
+    }
+
+    async fn get_block_range_rev(
+        &self,
+        start: Bound<usize>,
+        end: usize,
+    ) -> QueryResult<Vec<BlockQueryData<Types>>> {
+        self.get_block_range(convert_bound_to_range(start, end))
+            .await
+    }
+
+    async fn get_payload_range_rev(
+        &self,
+        start: Bound<usize>,
+        end: usize,
+    ) -> QueryResult<Vec<PayloadQueryData<Types>>> {
+        self.get_payload_range(convert_bound_to_range(start, end))
+            .await
+    }
+
+    async fn get_payload_metadata_range_rev(
+        &self,
+        start: Bound<usize>,
+        end: usize,
+    ) -> QueryResult<Vec<PayloadMetadata<Types>>> {
+        self.get_payload_metadata_range(convert_bound_to_range(start, end))
+            .await
+    }
+
+    async fn get_vid_common_range_rev(
+        &self,
+        start: Bound<usize>,
+        end: usize,
+    ) -> QueryResult<Vec<VidCommonQueryData<Types>>> {
+        self.get_vid_common_range(convert_bound_to_range(start, end))
+            .await
+    }
+
+    async fn get_vid_common_metadata_range_rev(
+        &self,
+        start: Bound<usize>,
+        end: usize,
+    ) -> QueryResult<Vec<VidCommonMetadata<Types>>> {
+        self.get_vid_common_metadata_range(convert_bound_to_range(start, end))
+            .await
+    }
+
+    async fn get_transaction(
+        &self,
+        hash: TransactionHash<Types>,
+    ) -> QueryResult<TransactionQueryData<Types>> {
+        let mut tx = self.read().await.unwrap();
+        tx.get_transaction(hash).await
+    }
+
+    async fn subscribe_blocks(
+        &self,
+        _from: usize,
+    ) -> QueryResult<BoxStream<'static, BlockQueryData<Types>>> {
+        Err(QueryError::NotFound)
+    }
+
+    async fn subscribe_payloads(
+        &self,
+        _from: usize,
+    ) -> QueryResult<BoxStream<'static, PayloadQueryData<Types>>> {
+        Err(QueryError::NotFound)
+    }
+
+    async fn subscribe_payload_metadata(
+        &self,
+        _from: usize,
+    ) -> QueryResult<BoxStream<'static, PayloadMetadata<Types>>> {
+        Err(QueryError::NotFound)
+    }
+
+    async fn subscribe_leaves(
+        &self,
+        _from: usize,
+    ) -> QueryResult<BoxStream<'static, LeafQueryData<Types>>> {
+        Err(QueryError::NotFound)
+    }
+
+    async fn subscribe_vid_common(
+        &self,
+        _from: usize,
+    ) -> QueryResult<BoxStream<'static, VidCommonQueryData<Types>>> {
+        Err(QueryError::NotFound)
+    }
+
+    async fn subscribe_vid_common_metadata(
+        &self,
+        _from: usize,
+    ) -> QueryResult<BoxStream<'static, VidCommonMetadata<Types>>> {
+        Err(QueryError::NotFound)
+    }
+}
+
+fn convert_bound_to_range(start: Bound<usize>, end: usize) -> RangeInclusive<usize> {
+    match start {
+        Bound::Included(s) => s..=end,
+        Bound::Excluded(s) => (s + 1)..=end,
+        Bound::Unbounded => 0..=end,
     }
 }
 
@@ -504,7 +792,9 @@ where
             None
         };
 
-        let pruner = Pruner::new(fetcher.clone()).await;
+        let storage = fetcher.storage.clone();
+
+        let pruner = Pruner::new(storage).await;
         let ds = Self {
             fetcher,
             scanner,
@@ -551,6 +841,50 @@ where
     }
 }
 
+impl<Types, S, P> FetchingDataSource<Types, S, P>
+where
+    Types: NodeType,
+    Payload<Types>: QueryablePayload<Types>,
+    S: VersionedDataSource + 'static,
+    for<'a> S::Transaction<'a>: UpdateAvailabilityStorage<Types>,
+    for<'a> S::ReadOnly<'a>: AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage,
+    P: AvailabilityProvider<Types>,
+{
+    async fn get_range<R, T>(&self, range: R) -> QueryResult<Vec<T>>
+    where
+        R: RangeBounds<usize> + Send + 'static,
+        T: RangedFetchable<Types>,
+    {
+        let range = self.fetcher.clone().get_range::<_, T>(range);
+        let timeout = self.fetcher.fetch_timeout;
+        range
+            .then(|f| async move {
+                f.with_timeout(timeout)
+                    .await
+                    .ok_or_else(|| QueryError::NotFound)
+            })
+            .boxed()
+            .try_collect()
+            .await
+    }
+
+    async fn get_range_rev<T>(&self, start: Bound<usize>, end: usize) -> QueryResult<Vec<T>>
+    where
+        T: RangedFetchable<Types>,
+    {
+        let range = self.fetcher.clone().get_range_rev::<T>(start, end);
+        let timeout = self.fetcher.fetch_timeout;
+        range
+            .then(|f| async move {
+                f.with_timeout(timeout)
+                    .await
+                    .ok_or_else(|| QueryError::NotFound)
+            })
+            .boxed()
+            .try_collect()
+            .await
+    }
+}
 #[async_trait]
 impl<Types, S, P> AvailabilityDataSource<Types> for FetchingDataSource<Types, S, P>
 where
@@ -561,146 +895,257 @@ where
     for<'a> S::ReadOnly<'a>: AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage,
     P: AvailabilityProvider<Types>,
 {
-    async fn get_leaf<ID>(&self, id: ID) -> Fetch<LeafQueryData<Types>>
+    async fn get_leaf<ID>(&self, id: ID) -> QueryResult<LeafQueryData<Types>>
     where
         ID: Into<LeafId<Types>> + Send + Sync,
     {
-        self.fetcher.get(id.into()).await
+        let timeout = self.fetcher.fetch_timeout;
+        self.fetcher
+            .get(id.into())
+            .await
+            .with_timeout(timeout)
+            .await
+            .ok_or_else(|| QueryError::NotFound)
     }
 
-    async fn get_block<ID>(&self, id: ID) -> Fetch<BlockQueryData<Types>>
+    async fn get_block<ID>(&self, id: ID) -> QueryResult<BlockQueryData<Types>>
     where
         ID: Into<BlockId<Types>> + Send + Sync,
     {
-        self.fetcher.get(id.into()).await
+        self.fetcher
+            .get(id.into())
+            .await
+            .with_timeout(self.fetcher.fetch_timeout)
+            .await
+            .ok_or_else(|| QueryError::NotFound)
     }
 
-    async fn get_payload<ID>(&self, id: ID) -> Fetch<PayloadQueryData<Types>>
+    async fn get_payload<ID>(&self, id: ID) -> QueryResult<PayloadQueryData<Types>>
     where
         ID: Into<BlockId<Types>> + Send + Sync,
     {
-        self.fetcher.get(id.into()).await
+        self.fetcher
+            .get(id.into())
+            .await
+            .with_timeout(self.fetcher.fetch_timeout)
+            .await
+            .ok_or_else(|| QueryError::NotFound)
     }
 
-    async fn get_payload_metadata<ID>(&self, id: ID) -> Fetch<PayloadMetadata<Types>>
+    async fn get_payload_metadata<ID>(&self, id: ID) -> QueryResult<PayloadMetadata<Types>>
     where
         ID: Into<BlockId<Types>> + Send + Sync,
     {
-        self.fetcher.get(id.into()).await
+        self.fetcher
+            .get(id.into())
+            .await
+            .with_timeout(self.fetcher.fetch_timeout)
+            .await
+            .ok_or_else(|| QueryError::NotFound)
     }
 
-    async fn get_vid_common<ID>(&self, id: ID) -> Fetch<VidCommonQueryData<Types>>
+    async fn get_vid_common<ID>(&self, id: ID) -> QueryResult<VidCommonQueryData<Types>>
     where
         ID: Into<BlockId<Types>> + Send + Sync,
     {
-        self.fetcher.get(VidCommonRequest::from(id.into())).await
+        self.fetcher
+            .get(VidCommonRequest::from(id.into()))
+            .await
+            .with_timeout(self.fetcher.fetch_timeout)
+            .await
+            .ok_or_else(|| QueryError::NotFound)
     }
 
-    async fn get_vid_common_metadata<ID>(&self, id: ID) -> Fetch<VidCommonMetadata<Types>>
+    async fn get_vid_common_metadata<ID>(&self, id: ID) -> QueryResult<VidCommonMetadata<Types>>
     where
         ID: Into<BlockId<Types>> + Send + Sync,
     {
-        self.fetcher.get(VidCommonRequest::from(id.into())).await
+        self.fetcher
+            .get(VidCommonRequest::from(id.into()))
+            .await
+            .with_timeout(self.fetcher.fetch_timeout)
+            .await
+            .ok_or_else(|| QueryError::NotFound)
     }
 
-    async fn get_leaf_range<R>(&self, range: R) -> FetchStream<LeafQueryData<Types>>
+    async fn get_leaf_range<R>(&self, range: R) -> QueryResult<Vec<LeafQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static,
     {
-        self.fetcher.clone().get_range(range)
+        self.get_range(range).await
     }
 
-    async fn get_block_range<R>(&self, range: R) -> FetchStream<BlockQueryData<Types>>
+    async fn get_block_range<R>(&self, range: R) -> QueryResult<Vec<BlockQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static,
     {
-        self.fetcher.clone().get_range(range)
+        self.get_range(range).await
     }
 
-    async fn get_payload_range<R>(&self, range: R) -> FetchStream<PayloadQueryData<Types>>
+    async fn get_payload_range<R>(&self, range: R) -> QueryResult<Vec<PayloadQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static,
     {
-        self.fetcher.clone().get_range(range)
+        self.get_range(range).await
     }
 
-    async fn get_payload_metadata_range<R>(&self, range: R) -> FetchStream<PayloadMetadata<Types>>
+    async fn get_payload_metadata_range<R>(
+        &self,
+        range: R,
+    ) -> QueryResult<Vec<PayloadMetadata<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static,
     {
-        self.fetcher.clone().get_range(range)
+        self.get_range(range).await
     }
 
-    async fn get_vid_common_range<R>(&self, range: R) -> FetchStream<VidCommonQueryData<Types>>
+    async fn get_vid_common_range<R>(&self, range: R) -> QueryResult<Vec<VidCommonQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static,
     {
-        self.fetcher.clone().get_range(range)
+        self.get_range(range).await
     }
 
     async fn get_vid_common_metadata_range<R>(
         &self,
         range: R,
-    ) -> FetchStream<VidCommonMetadata<Types>>
+    ) -> QueryResult<Vec<VidCommonMetadata<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static,
     {
-        self.fetcher.clone().get_range(range)
+        self.get_range(range).await
     }
 
     async fn get_leaf_range_rev(
         &self,
         start: Bound<usize>,
         end: usize,
-    ) -> FetchStream<LeafQueryData<Types>> {
-        self.fetcher.clone().get_range_rev(start, end)
+    ) -> QueryResult<Vec<LeafQueryData<Types>>> {
+        self.get_range_rev(start, end).await
     }
 
     async fn get_block_range_rev(
         &self,
         start: Bound<usize>,
         end: usize,
-    ) -> FetchStream<BlockQueryData<Types>> {
-        self.fetcher.clone().get_range_rev(start, end)
+    ) -> QueryResult<Vec<BlockQueryData<Types>>> {
+        self.get_range_rev(start, end).await
     }
 
     async fn get_payload_range_rev(
         &self,
         start: Bound<usize>,
         end: usize,
-    ) -> FetchStream<PayloadQueryData<Types>> {
-        self.fetcher.clone().get_range_rev(start, end)
+    ) -> QueryResult<Vec<PayloadQueryData<Types>>> {
+        self.get_range_rev(start, end).await
     }
 
     async fn get_payload_metadata_range_rev(
         &self,
         start: Bound<usize>,
         end: usize,
-    ) -> FetchStream<PayloadMetadata<Types>> {
-        self.fetcher.clone().get_range_rev(start, end)
+    ) -> QueryResult<Vec<PayloadMetadata<Types>>> {
+        self.get_range_rev(start, end).await
     }
 
     async fn get_vid_common_range_rev(
         &self,
         start: Bound<usize>,
         end: usize,
-    ) -> FetchStream<VidCommonQueryData<Types>> {
-        self.fetcher.clone().get_range_rev(start, end)
+    ) -> QueryResult<Vec<VidCommonQueryData<Types>>> {
+        self.get_range_rev(start, end).await
     }
 
     async fn get_vid_common_metadata_range_rev(
         &self,
         start: Bound<usize>,
         end: usize,
-    ) -> FetchStream<VidCommonMetadata<Types>> {
-        self.fetcher.clone().get_range_rev(start, end)
+    ) -> QueryResult<Vec<VidCommonMetadata<Types>>> {
+        self.get_range_rev(start, end).await
     }
 
     async fn get_transaction(
         &self,
         hash: TransactionHash<Types>,
-    ) -> Fetch<TransactionQueryData<Types>> {
-        self.fetcher.get(TransactionRequest::from(hash)).await
+    ) -> QueryResult<TransactionQueryData<Types>> {
+        self.fetcher
+            .get(TransactionRequest::from(hash))
+            .await
+            .with_timeout(Duration::from_secs(1))
+            .await
+            .ok_or_else(|| QueryError::NotFound)
+    }
+
+    async fn subscribe_blocks(
+        &self,
+        from: usize,
+    ) -> QueryResult<BoxStream<'static, BlockQueryData<Types>>> {
+        Ok(self
+            .fetcher
+            .clone()
+            .get_range(from..)
+            .then(|f| async move { f.await })
+            .boxed())
+    }
+
+    async fn subscribe_payloads(
+        &self,
+        from: usize,
+    ) -> QueryResult<BoxStream<'static, PayloadQueryData<Types>>> {
+        Ok(self
+            .fetcher
+            .clone()
+            .get_range(from..)
+            .then(|f| async move { f.await })
+            .boxed())
+    }
+
+    async fn subscribe_payload_metadata(
+        &self,
+        from: usize,
+    ) -> QueryResult<BoxStream<'static, PayloadMetadata<Types>>> {
+        Ok(self
+            .fetcher
+            .clone()
+            .get_range(from..)
+            .then(|f| async move { f.await })
+            .boxed())
+    }
+
+    async fn subscribe_leaves(
+        &self,
+        from: usize,
+    ) -> QueryResult<BoxStream<'static, LeafQueryData<Types>>> {
+        Ok(self
+            .fetcher
+            .clone()
+            .get_range(from..)
+            .then(|f| async move { f.await })
+            .boxed())
+    }
+
+    async fn subscribe_vid_common(
+        &self,
+        from: usize,
+    ) -> QueryResult<BoxStream<'static, VidCommonQueryData<Types>>> {
+        Ok(self
+            .fetcher
+            .clone()
+            .get_range(from..)
+            .then(|f| async move { f.await })
+            .boxed())
+    }
+
+    async fn subscribe_vid_common_metadata(
+        &self,
+        from: usize,
+    ) -> QueryResult<BoxStream<'static, VidCommonMetadata<Types>>> {
+        Ok(self
+            .fetcher
+            .clone()
+            .get_range(from..)
+            .then(|f| async move { f.await })
+            .boxed())
     }
 }
 
@@ -769,13 +1214,36 @@ where
     }
 }
 
+impl<Types, S> VersionedDataSource for LeafOnlyDataSource<Types, S>
+where
+    Types: NodeType,
+    S: VersionedDataSource + Send + Sync,
+{
+    type Transaction<'a>
+        = S::Transaction<'a>
+    where
+        Self: 'a;
+    type ReadOnly<'a>
+        = S::ReadOnly<'a>
+    where
+        Self: 'a;
+
+    async fn write(&self) -> anyhow::Result<Self::Transaction<'_>> {
+        self.storage.write().await
+    }
+
+    async fn read(&self) -> anyhow::Result<Self::ReadOnly<'_>> {
+        self.storage.read().await
+    }
+}
+
 /// Asynchronous retrieval and storage of [`Fetchable`] resources.
 #[derive(Debug)]
 struct Fetcher<Types, S, P>
 where
     Types: NodeType,
 {
-    storage: S,
+    storage: Arc<S>,
     notifiers: Notifiers<Types>,
     provider: Arc<P>,
     payload_fetcher: Arc<PayloadFetcher<Types, S, P>>,
@@ -791,6 +1259,7 @@ where
     // Semaphore limiting the number of simultaneous DB accesses we can have from tasks spawned to
     // retry failed loads.
     retry_semaphore: Arc<Semaphore>,
+    fetch_timeout: Duration,
 }
 
 impl<Types, S, P> VersionedDataSource for Fetcher<Types, S, P>
@@ -832,7 +1301,7 @@ where
         let vid_common_fetcher = fetching::Fetcher::new(retry_semaphore.clone(), backoff.clone());
 
         Ok(Self {
-            storage: builder.storage,
+            storage: Arc::new(builder.storage),
             notifiers: Default::default(),
             provider: Arc::new(builder.provider),
             payload_fetcher: Arc::new(payload_fetcher),
@@ -843,6 +1312,7 @@ where
             chunk_fetch_delay: builder.chunk_fetch_delay,
             backoff,
             retry_semaphore,
+            fetch_timeout: Duration::from_secs(5),
         })
     }
 }
@@ -1619,31 +2089,31 @@ where
     }
 }
 
-impl<Types, S, P> Fetcher<Types, S, P>
-where
-    Types: NodeType,
-    S: PruneStorage + Sync,
-{
-    async fn prune(&self) {
-        // We loop until the whole run pruner run is complete
-        let mut pruner = S::Pruner::default();
-        loop {
-            match self.storage.prune(&mut pruner).await {
-                Ok(Some(height)) => {
-                    tracing::warn!("Pruned to height {height}");
-                }
-                Ok(None) => {
-                    tracing::warn!("pruner run complete.");
-                    break;
-                }
-                Err(e) => {
-                    tracing::error!("pruner run failed: {e:?}");
-                    break;
-                }
-            }
-        }
-    }
-}
+// impl<Types, S, P> Fetcher<Types, S, P>
+// where
+//     Types: NodeType,
+//     S: PruneStorage + Sync,
+// {
+//     async fn prune(&self) {
+//         // We loop until the whole run pruner run is complete
+//         let mut pruner = S::Pruner::default();
+//         loop {
+//             match self.storage.prune(&mut pruner).await {
+//                 Ok(Some(height)) => {
+//                     tracing::warn!("Pruned to height {height}");
+//                 }
+//                 Ok(None) => {
+//                     tracing::warn!("pruner run complete.");
+//                     break;
+//                 }
+//                 Err(e) => {
+//                     tracing::error!("pruner run failed: {e:?}");
+//                     break;
+//                 }
+//             }
+//         }
+//     }
+// }
 
 #[derive(Debug)]
 struct Notifiers<Types>
@@ -1786,6 +2256,67 @@ where
             message: err.to_string(),
         })?;
         tx.sync_status().await
+    }
+
+    async fn get_header_window(
+        &self,
+        start: impl Into<WindowStart<Types>> + Send + Sync,
+        end: u64,
+        limit: usize,
+    ) -> QueryResult<TimeWindowQueryData<Header<Types>>> {
+        let mut tx = self.read().await.map_err(|err| QueryError::Error {
+            message: err.to_string(),
+        })?;
+        tx.get_header_window(start, end, limit).await
+    }
+}
+
+#[async_trait]
+impl<Types, S> NodeDataSource<Types> for LeafOnlyDataSource<Types, S>
+where
+    Types: NodeType,
+    S: VersionedDataSource + 'static,
+    for<'a> S::ReadOnly<'a>: NodeStorage<Types>,
+{
+    async fn block_height(&self) -> QueryResult<usize> {
+        let mut tx = self.read().await.map_err(|err| QueryError::Error {
+            message: err.to_string(),
+        })?;
+        tx.block_height().await
+    }
+
+    async fn count_transactions_in_range(
+        &self,
+        _range: impl RangeBounds<usize> + Send,
+    ) -> QueryResult<usize> {
+        Err(QueryError::Error {
+            message: "transaction count is not supported for leaf only data source".to_string(),
+        })
+    }
+
+    async fn payload_size_in_range(
+        &self,
+        _range: impl RangeBounds<usize> + Send,
+    ) -> QueryResult<usize> {
+        Err(QueryError::Error {
+            message: "payload size is not supported for leaf only data source".to_string(),
+        })
+    }
+
+    async fn vid_share<ID>(&self, id: ID) -> QueryResult<VidShare>
+    where
+        ID: Into<BlockId<Types>> + Send + Sync,
+    {
+        let mut tx = self.read().await.map_err(|err| QueryError::Error {
+            message: err.to_string(),
+        })?;
+        tx.vid_share(id).await
+    }
+
+    async fn sync_status(&self) -> QueryResult<SyncStatus> {
+        Err(QueryError::Error {
+            message: "sync status is not available in leafonly data source".to_string(),
+        })
     }
 
     async fn get_header_window(

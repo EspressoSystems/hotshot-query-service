@@ -596,7 +596,7 @@ mod test {
     use async_lock::RwLock;
     use async_trait::async_trait;
     use atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
-    use futures::future::FutureExt;
+    use futures::{future::FutureExt, stream::BoxStream};
     use hotshot_types::simple_certificate::QuorumCertificate;
     use portpicker::pick_unused_port;
     use std::ops::{Bound, RangeBounds};
@@ -615,55 +615,61 @@ mod test {
 
     #[async_trait]
     impl AvailabilityDataSource<MockTypes> for CompositeState {
-        async fn get_leaf<ID>(&self, id: ID) -> Fetch<LeafQueryData<MockTypes>>
+        async fn get_leaf<ID>(&self, id: ID) -> QueryResult<LeafQueryData<MockTypes>>
         where
             ID: Into<LeafId<MockTypes>> + Send + Sync,
         {
             self.hotshot_qs.get_leaf(id).await
         }
-        async fn get_block<ID>(&self, id: ID) -> Fetch<BlockQueryData<MockTypes>>
+        async fn get_block<ID>(&self, id: ID) -> QueryResult<BlockQueryData<MockTypes>>
         where
             ID: Into<BlockId<MockTypes>> + Send + Sync,
         {
             self.hotshot_qs.get_block(id).await
         }
-        async fn get_payload<ID>(&self, id: ID) -> Fetch<PayloadQueryData<MockTypes>>
+        async fn get_payload<ID>(&self, id: ID) -> QueryResult<PayloadQueryData<MockTypes>>
         where
             ID: Into<BlockId<MockTypes>> + Send + Sync,
         {
             self.hotshot_qs.get_payload(id).await
         }
-        async fn get_payload_metadata<ID>(&self, id: ID) -> Fetch<PayloadMetadata<MockTypes>>
+        async fn get_payload_metadata<ID>(&self, id: ID) -> QueryResult<PayloadMetadata<MockTypes>>
         where
             ID: Into<BlockId<MockTypes>> + Send + Sync,
         {
             self.hotshot_qs.get_payload_metadata(id).await
         }
-        async fn get_vid_common<ID>(&self, id: ID) -> Fetch<VidCommonQueryData<MockTypes>>
+        async fn get_vid_common<ID>(&self, id: ID) -> QueryResult<VidCommonQueryData<MockTypes>>
         where
             ID: Into<BlockId<MockTypes>> + Send + Sync,
         {
             self.hotshot_qs.get_vid_common(id).await
         }
-        async fn get_vid_common_metadata<ID>(&self, id: ID) -> Fetch<VidCommonMetadata<MockTypes>>
+        async fn get_vid_common_metadata<ID>(
+            &self,
+            id: ID,
+        ) -> QueryResult<VidCommonMetadata<MockTypes>>
         where
             ID: Into<BlockId<MockTypes>> + Send + Sync,
         {
             self.hotshot_qs.get_vid_common_metadata(id).await
         }
-        async fn get_leaf_range<R>(&self, range: R) -> FetchStream<LeafQueryData<MockTypes>>
+        async fn get_leaf_range<R>(&self, range: R) -> QueryResult<Vec<LeafQueryData<MockTypes>>>
         where
             R: RangeBounds<usize> + Send + 'static,
         {
             self.hotshot_qs.get_leaf_range(range).await
         }
-        async fn get_block_range<R>(&self, range: R) -> FetchStream<BlockQueryData<MockTypes>>
+        async fn get_block_range<R>(&self, range: R) -> QueryResult<Vec<BlockQueryData<MockTypes>>>
         where
             R: RangeBounds<usize> + Send + 'static,
         {
             self.hotshot_qs.get_block_range(range).await
         }
-        async fn get_payload_range<R>(&self, range: R) -> FetchStream<PayloadQueryData<MockTypes>>
+        async fn get_payload_range<R>(
+            &self,
+            range: R,
+        ) -> QueryResult<Vec<PayloadQueryData<MockTypes>>>
         where
             R: RangeBounds<usize> + Send + 'static,
         {
@@ -672,7 +678,7 @@ mod test {
         async fn get_payload_metadata_range<R>(
             &self,
             range: R,
-        ) -> FetchStream<PayloadMetadata<MockTypes>>
+        ) -> QueryResult<Vec<PayloadMetadata<MockTypes>>>
         where
             R: RangeBounds<usize> + Send + 'static,
         {
@@ -681,7 +687,7 @@ mod test {
         async fn get_vid_common_range<R>(
             &self,
             range: R,
-        ) -> FetchStream<VidCommonQueryData<MockTypes>>
+        ) -> QueryResult<Vec<VidCommonQueryData<MockTypes>>>
         where
             R: RangeBounds<usize> + Send + 'static,
         {
@@ -690,7 +696,7 @@ mod test {
         async fn get_vid_common_metadata_range<R>(
             &self,
             range: R,
-        ) -> FetchStream<VidCommonMetadata<MockTypes>>
+        ) -> QueryResult<Vec<VidCommonMetadata<MockTypes>>>
         where
             R: RangeBounds<usize> + Send + 'static,
         {
@@ -700,28 +706,28 @@ mod test {
             &self,
             start: Bound<usize>,
             end: usize,
-        ) -> FetchStream<LeafQueryData<MockTypes>> {
+        ) -> QueryResult<Vec<LeafQueryData<MockTypes>>> {
             self.hotshot_qs.get_leaf_range_rev(start, end).await
         }
         async fn get_block_range_rev(
             &self,
             start: Bound<usize>,
             end: usize,
-        ) -> FetchStream<BlockQueryData<MockTypes>> {
+        ) -> QueryResult<Vec<BlockQueryData<MockTypes>>> {
             self.hotshot_qs.get_block_range_rev(start, end).await
         }
         async fn get_payload_range_rev(
             &self,
             start: Bound<usize>,
             end: usize,
-        ) -> FetchStream<PayloadQueryData<MockTypes>> {
+        ) -> QueryResult<Vec<PayloadQueryData<MockTypes>>> {
             self.hotshot_qs.get_payload_range_rev(start, end).await
         }
         async fn get_payload_metadata_range_rev(
             &self,
             start: Bound<usize>,
             end: usize,
-        ) -> FetchStream<PayloadMetadata<MockTypes>> {
+        ) -> QueryResult<Vec<PayloadMetadata<MockTypes>>> {
             self.hotshot_qs
                 .get_payload_metadata_range_rev(start, end)
                 .await
@@ -730,14 +736,14 @@ mod test {
             &self,
             start: Bound<usize>,
             end: usize,
-        ) -> FetchStream<VidCommonQueryData<MockTypes>> {
+        ) -> QueryResult<Vec<VidCommonQueryData<MockTypes>>> {
             self.hotshot_qs.get_vid_common_range_rev(start, end).await
         }
         async fn get_vid_common_metadata_range_rev(
             &self,
             start: Bound<usize>,
             end: usize,
-        ) -> FetchStream<VidCommonMetadata<MockTypes>> {
+        ) -> QueryResult<Vec<VidCommonMetadata<MockTypes>>> {
             self.hotshot_qs
                 .get_vid_common_metadata_range_rev(start, end)
                 .await
@@ -745,8 +751,50 @@ mod test {
         async fn get_transaction(
             &self,
             hash: TransactionHash<MockTypes>,
-        ) -> Fetch<TransactionQueryData<MockTypes>> {
+        ) -> QueryResult<TransactionQueryData<MockTypes>> {
             self.hotshot_qs.get_transaction(hash).await
+        }
+
+        async fn subscribe_blocks(
+            &self,
+            from: usize,
+        ) -> QueryResult<BoxStream<'static, BlockQueryData<MockTypes>>> {
+            self.hotshot_qs.subscribe_blocks(from).await
+        }
+
+        async fn subscribe_payloads(
+            &self,
+            from: usize,
+        ) -> QueryResult<BoxStream<'static, PayloadQueryData<MockTypes>>> {
+            self.hotshot_qs.subscribe_payloads(from).await
+        }
+
+        async fn subscribe_payload_metadata(
+            &self,
+            from: usize,
+        ) -> QueryResult<BoxStream<'static, PayloadMetadata<MockTypes>>> {
+            self.hotshot_qs.subscribe_payload_metadata(from).await
+        }
+
+        async fn subscribe_leaves(
+            &self,
+            from: usize,
+        ) -> QueryResult<BoxStream<'static, LeafQueryData<MockTypes>>> {
+            self.hotshot_qs.subscribe_leaves(from).await
+        }
+
+        async fn subscribe_vid_common(
+            &self,
+            from: usize,
+        ) -> QueryResult<BoxStream<'static, VidCommonQueryData<MockTypes>>> {
+            self.hotshot_qs.subscribe_vid_common(from).await
+        }
+
+        async fn subscribe_vid_common_metadata(
+            &self,
+            from: usize,
+        ) -> QueryResult<BoxStream<'static, VidCommonMetadata<MockTypes>>> {
+            self.hotshot_qs.subscribe_vid_common_metadata(from).await
         }
     }
 
