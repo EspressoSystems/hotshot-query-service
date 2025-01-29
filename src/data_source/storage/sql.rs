@@ -22,15 +22,23 @@ use crate::{
     status::HasMetrics,
     QueryError, QueryResult,
 };
+use anyhow::Context;
 use async_trait::async_trait;
 use chrono::Utc;
 
-use hotshot_types::traits::metrics::Metrics;
+use committable::Committable;
+use hotshot_types::{
+    data::{Leaf, Leaf2},
+    simple_certificate::{QuorumCertificate, QuorumCertificate2},
+    traits::{metrics::Metrics, node_implementation::NodeType},
+};
+
 use itertools::Itertools;
 use log::LevelFilter;
 
 #[cfg(not(feature = "embedded-db"))]
 use futures::future::FutureExt;
+use serde_json::Value;
 #[cfg(not(feature = "embedded-db"))]
 use sqlx::postgres::{PgConnectOptions, PgSslMode};
 #[cfg(feature = "embedded-db")]
@@ -614,7 +622,114 @@ impl HasMetrics for SqlStorage {
     }
 }
 
+struct Leaf2Row {
+    height: i64,
+    hash: String,
+    block_hash: String,
+    leaf2: Value,
+    qc2: Value,
+}
+
 impl SqlStorage {
+    pub async fn migrate_leaf1_to_leaf2<Types: NodeType>(&self) -> anyhow::Result<()> {
+        let mut offset = 0;
+        let limit = 10000;
+
+        loop {
+            let mut tx = self.read().await.map_err(|err| QueryError::Error {
+                message: err.to_string(),
+            })?;
+
+            let (is_migration_completed,) =
+                query_as::<(bool,)>("SELECT completed from leaf_migration LIMIT 1 ")
+                    .fetch_one(tx.as_mut())
+                    .await?;
+
+            if is_migration_completed {
+                tracing::info!("leaf1 to leaf2 migration already completed");
+                return Ok(());
+            }
+
+            let rows = QueryBuilder::default()
+                .query(&format!(
+                    "SELECT leaf, qc FROM leaf ORDER BY height LIMIT {} OFFSET {}",
+                    limit, offset
+                ))
+                .fetch_all(tx.as_mut())
+                .await?;
+
+            drop(tx);
+
+            if rows.is_empty() {
+                tracing::info!("no leaf1 rows found");
+                return Ok(());
+            }
+
+            let mut leaf_rows = Vec::new();
+
+            for row in rows.iter() {
+                let leaf1 = row.try_get("leaf")?;
+                let qc = row.try_get("qc")?;
+                let leaf1: Leaf<Types> = serde_json::from_value(leaf1)?;
+                let qc: QuorumCertificate<Types> = serde_json::from_value(qc)?;
+
+                let leaf2: Leaf2<Types> = leaf1.into();
+                let qc2: QuorumCertificate2<Types> = qc.to_qc2();
+
+                let commit = leaf2.commit();
+
+                let leaf2_json =
+                    serde_json::to_value(leaf2.clone()).context("failed to serialize leaf2")?;
+                let qc2_json = serde_json::to_value(qc2).context("failed to serialize QC2")?;
+
+                leaf_rows.push(Leaf2Row {
+                    height: leaf2.height() as i64,
+                    hash: commit.to_string(),
+                    block_hash: leaf2.block_header().commit().to_string(),
+                    leaf2: leaf2_json,
+                    qc2: qc2_json,
+                })
+            }
+
+            let mut query_builder: sqlx::QueryBuilder<Db> =
+                sqlx::QueryBuilder::new("INSERT INTO leaf2 (height, hash, block_hash, leaf, qc) ");
+
+            query_builder.push_values(leaf_rows.into_iter(), |mut b, row| {
+                b.push_bind(row.height)
+                    .push_bind(row.hash)
+                    .push_bind(row.block_hash)
+                    .push_bind(row.leaf2)
+                    .push_bind(row.qc2);
+            });
+
+            let query = query_builder.build();
+
+            let mut tx = self.write().await.map_err(|err| QueryError::Error {
+                message: err.to_string(),
+            })?;
+
+            query.execute(tx.as_mut()).await?;
+
+            tx.commit().await?;
+
+            if rows.len() < limit {
+                break;
+            }
+
+            offset += limit;
+        }
+
+        let mut tx = self.write().await.map_err(|err| QueryError::Error {
+            message: err.to_string(),
+        })?;
+
+        tx.upsert("leaf_migration", ["completed"], ["id"], [(true,)])
+            .await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
+
     async fn get_minimum_height(&self) -> QueryResult<Option<u64>> {
         let mut tx = self.read().await.map_err(|err| QueryError::Error {
             message: err.to_string(),
@@ -1101,19 +1216,32 @@ pub mod testing {
 // These tests run the `postgres` Docker image, which doesn't work on Windows.
 #[cfg(all(test, not(target_os = "windows")))]
 mod test {
+    use committable::{Commitment, CommitmentBoundsArkless};
     use hotshot_example_types::{
         node_types::TestVersions,
         state_types::{TestInstanceState, TestValidatedState},
     };
-    use std::time::Duration;
+    use hotshot_types::{
+        data::{QuorumProposal, ViewNumber},
+        traits::{
+            block_contents::{vid_commitment, BlockHeader},
+            node_implementation::ConsensusTime,
+        },
+    };
+    use hotshot_types::{simple_vote::QuorumData, traits::BlockPayload};
+    use std::{marker::PhantomData, time::Duration};
     use tokio::time::sleep;
 
     use super::{testing::TmpDb, *};
     use crate::{
-        availability::LeafQueryData,
+        availability::{LeafQueryData, QueryableHeader},
         data_source::storage::{pruning::PrunedHeightStorage, UpdateAvailabilityStorage},
-        testing::{mocks::MockTypes, setup_test},
+        testing::{
+            mocks::{MockHeader, MockPayload, MockTypes},
+            setup_test,
+        },
     };
+    use hotshot_types::traits::EncodeBytes;
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_migrations() {
@@ -1396,5 +1524,124 @@ mod test {
                 Some(height)
             );
         }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_leaf_migration() {
+        setup_test();
+
+        let num_leaves = 200;
+        let db = TmpDb::init().await;
+
+        let storage = SqlStorage::connect(db.config()).await.unwrap();
+
+        for i in 0..num_leaves {
+            let view = ViewNumber::new(i);
+            let validated_state = TestValidatedState::default();
+            let instance_state = TestInstanceState::default();
+
+            let (payload, metadata) = <MockPayload as BlockPayload<MockTypes>>::from_transactions(
+                [],
+                &validated_state,
+                &instance_state,
+            )
+            .await
+            .unwrap();
+            let builder_commitment =
+                <MockPayload as BlockPayload<MockTypes>>::builder_commitment(&payload, &metadata);
+            let payload_bytes = payload.encode();
+
+            let payload_commitment = vid_commitment(&payload_bytes, 4);
+
+            let mut block_header = <MockHeader as BlockHeader<MockTypes>>::genesis(
+                &instance_state,
+                payload_commitment,
+                builder_commitment,
+                metadata,
+            );
+
+            block_header.block_number = i;
+
+            let null_quorum_data = QuorumData {
+                leaf_commit: Commitment::<Leaf<MockTypes>>::default_commitment_no_preimage(),
+            };
+
+            let mut qc = QuorumCertificate::new(
+                null_quorum_data.clone(),
+                null_quorum_data.commit(),
+                view,
+                None,
+                PhantomData,
+            );
+
+            let quorum_proposal = QuorumProposal {
+                block_header,
+                view_number: view,
+                justify_qc: qc.clone(),
+                upgrade_certificate: None,
+                proposal_certificate: None,
+            };
+
+            let mut leaf = Leaf::from_quorum_proposal(&quorum_proposal);
+            leaf.fill_block_payload(payload, 4).unwrap();
+            qc.data.leaf_commit = <Leaf<MockTypes> as Committable>::commit(&leaf);
+
+            let height = leaf.height() as i64;
+            let hash = <Leaf<_> as Committable>::commit(&leaf).to_string();
+            let header = leaf.block_header();
+
+            let header_json = serde_json::to_value(header)
+                .context("failed to serialize header")
+                .unwrap();
+
+            let payload_commitment =
+                <MockHeader as BlockHeader<MockTypes>>::payload_commitment(header);
+            let mut tx = storage.write().await.unwrap();
+
+            tx.upsert(
+                "header",
+                ["height", "hash", "payload_hash", "data", "timestamp"],
+                ["height"],
+                [(
+                    height,
+                    leaf.block_header().commit().to_string(),
+                    payload_commitment.to_string(),
+                    header_json,
+                    leaf.block_header().timestamp() as i64,
+                )],
+            )
+            .await
+            .unwrap();
+
+            let leaf_json = serde_json::to_value(leaf.clone()).expect("failed to serialize leaf");
+            let qc_json = serde_json::to_value(qc).expect("failed to serialize QC");
+            tx.upsert(
+                "leaf",
+                ["height", "hash", "block_hash", "leaf", "qc"],
+                ["height"],
+                [(
+                    height,
+                    hash,
+                    header.commit().to_string(),
+                    leaf_json,
+                    qc_json,
+                )],
+            )
+            .await
+            .unwrap();
+            tx.commit().await.unwrap();
+        }
+
+        storage
+            .migrate_leaf1_to_leaf2::<MockTypes>()
+            .await
+            .expect("failed to migrate");
+        let mut tx = storage.read().await.unwrap();
+        let (count,) = query_as::<(i64,)>("SELECT COUNT(*) from leaf2")
+            .fetch_one(tx.as_mut())
+            .await
+            .unwrap();
+
+        assert_eq!(count as u64, num_leaves, "not all leaves migrated");
     }
 }

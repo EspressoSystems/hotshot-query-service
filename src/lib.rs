@@ -597,7 +597,7 @@ mod test {
     use async_trait::async_trait;
     use atomic_store::{load_store::BincodeLoadStore, AtomicStore, AtomicStoreLoader, RollingLog};
     use futures::future::FutureExt;
-    use hotshot_types::simple_certificate::QuorumCertificate;
+    use hotshot_types::{data::Leaf2, simple_certificate::QuorumCertificate2};
     use portpicker::pick_unused_port;
     use std::ops::{Bound, RangeBounds};
     use std::time::Duration;
@@ -811,9 +811,9 @@ mod test {
             .unwrap();
 
         // Mock up some data and add a block to the store.
-        let leaf = Leaf::<MockTypes>::genesis(&Default::default(), &Default::default()).await;
+        let leaf = Leaf2::<MockTypes>::genesis(&Default::default(), &Default::default()).await;
         let qc =
-            QuorumCertificate::genesis::<TestVersions>(&Default::default(), &Default::default())
+            QuorumCertificate2::genesis::<TestVersions>(&Default::default(), &Default::default())
                 .await;
         let leaf = LeafQueryData::new(leaf, qc).unwrap();
         let block = BlockQueryData::new(leaf.header().clone(), MockPayload::genesis());

@@ -513,7 +513,7 @@ mod test {
     use async_lock::RwLock;
     use committable::Committable;
     use futures::future::FutureExt;
-    use hotshot_types::{data::Leaf, simple_certificate::QuorumCertificate};
+    use hotshot_types::{data::Leaf2, simple_certificate::QuorumCertificate2};
     use portpicker::pick_unused_port;
     use serde::de::DeserializeOwned;
     use std::{fmt::Debug, time::Duration};
@@ -883,9 +883,9 @@ mod test {
         );
 
         // mock up some consensus data.
-        let leaf = Leaf::<MockTypes>::genesis(&Default::default(), &Default::default()).await;
+        let leaf = Leaf2::<MockTypes>::genesis(&Default::default(), &Default::default()).await;
         let qc =
-            QuorumCertificate::genesis::<TestVersions>(&Default::default(), &Default::default())
+            QuorumCertificate2::genesis::<TestVersions>(&Default::default(), &Default::default())
                 .await;
         let leaf = LeafQueryData::new(leaf, qc).unwrap();
         let block = BlockQueryData::new(leaf.header().clone(), MockPayload::genesis());
