@@ -13,7 +13,7 @@
 #![cfg(feature = "sql-data-source")]
 
 use super::{
-    fetching,
+    fetching::{self, LeafOnlyDataSource},
     storage::sql::{self, SqlStorage},
     AvailabilityProvider, FetchingDataSource,
 };
@@ -315,6 +315,25 @@ where
     }
 }
 
+pub type LeafOnlySqlDataSource<Types> = LeafOnlyDataSource<Types, SqlStorage>;
+
+impl<Types> LeafOnlySqlDataSource<Types>
+where
+    Types: NodeType,
+    Header<Types>: QueryableHeader<Types>,
+    Payload<Types>: QueryablePayload<Types>,
+{
+    /// Connect to a remote database.
+    ///
+    /// This function returns a [`fetching::Builder`] which can be used to set options on the
+    /// underlying [`FetchingDataSource`], before constructing the [`SqlDataSource`] with
+    /// [`build`](fetching::Builder::build). For a convenient constructor that uses the default
+    /// fetching options, see [`Config::connect`].
+    pub async fn build(config: Config) -> Result<Self, Error> {
+        Self::new(SqlStorage::connect(config).await?).await
+    }
+}
+
 // These tests run the `postgres` Docker image, which doesn't work on Windows.
 #[cfg(all(any(test, feature = "testing"), not(target_os = "windows")))]
 pub mod testing {
@@ -416,7 +435,7 @@ mod test {
             .await
             .unwrap();
 
-        assert_eq!(ds.get_vid_common(0).await.await, common);
+        assert_eq!(ds.get_vid_common(0).await.unwrap().await, common);
         NodeStorage::<MockTypes>::vid_share(&mut ds.read().await.unwrap(), 0)
             .await
             .unwrap_err();
@@ -427,7 +446,7 @@ mod test {
             .await
             .unwrap();
         tx.commit().await.unwrap();
-        assert_eq!(ds.get_vid_common(0).await.await, common);
+        assert_eq!(ds.get_vid_common(0).await.unwrap().await, common);
         assert_eq!(
             NodeStorage::<MockTypes>::vid_share(&mut ds.read().await.unwrap(), 0)
                 .await

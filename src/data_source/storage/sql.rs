@@ -686,6 +686,7 @@ impl PruneStorage for SqlStorage {
         })?;
         let batch_size = cfg.batch_size();
         let max_usage = cfg.max_usage();
+        let state_tables = cfg.state_tables();
 
         // If a pruner run was already in progress, some variables may already be set,
         // depending on whether a batch was deleted and which batch it was (target or minimum retention).
@@ -720,7 +721,7 @@ impl PruneStorage for SqlStorage {
             if height < target_height {
                 height = min(height + batch_size, target_height);
                 let mut tx = self.write().await?;
-                tx.delete_batch(height).await?;
+                tx.delete_batch(state_tables, height).await?;
                 tx.commit().await.map_err(|e| QueryError::Error {
                     message: format!("failed to commit {e}"),
                 })?;
@@ -759,7 +760,7 @@ impl PruneStorage for SqlStorage {
                     {
                         height = min(height + batch_size, min_retention_height);
                         let mut tx = self.write().await?;
-                        tx.delete_batch(height).await?;
+                        tx.delete_batch(state_tables, height).await?;
                         tx.commit().await.map_err(|e| QueryError::Error {
                             message: format!("failed to commit {e}"),
                         })?;

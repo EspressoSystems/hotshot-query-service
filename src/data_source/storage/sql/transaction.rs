@@ -409,9 +409,35 @@ impl Transaction<Write> {
 /// Query service specific mutations.
 impl Transaction<Write> {
     /// Delete a batch of data for pruning.
-    pub(super) async fn delete_batch(&mut self, height: u64) -> anyhow::Result<()> {
+    pub(super) async fn delete_batch(
+        &mut self,
+        state_tables: Vec<String>,
+        height: u64,
+    ) -> anyhow::Result<()> {
         self.execute(query("DELETE FROM header WHERE height <= $1").bind(height as i64))
             .await?;
+
+        // delete merklized state data
+        // only delete nodes which have a newer version of the data
+        // i.e with higher created than the height h being pruned
+
+        for state_table in state_tables {
+            self.execute(
+                query(&format!(
+                    "DELETE FROM {state_table}
+                        WHERE created < $1
+                          AND NOT EXISTS (
+                            SELECT 1
+                            FROM {state_table} AS t
+                            WHERE t.path = {state_table}.path
+                              AND t.created > {state_table}.created
+                          );"
+                ))
+                .bind(height as i64),
+            )
+            .await?;
+        }
+
         self.save_pruned_height(height).await?;
         Ok(())
     }
