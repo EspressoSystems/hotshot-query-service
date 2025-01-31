@@ -22,14 +22,14 @@ use anyhow::{ensure, Context};
 use async_trait::async_trait;
 use futures::future::Future;
 use hotshot::types::{Event, EventType};
-use hotshot_types::event::LeafInfo;
+use hotshot_types::{data::VidDisperseShare, event::LeafInfo};
 use hotshot_types::{
     data::{Leaf, Leaf2, QuorumProposal},
     traits::{
         block_contents::{BlockHeader, BlockPayload, EncodeBytes, GENESIS_VID_NUM_STORAGE_NODES},
         node_implementation::{ConsensusTime, NodeType},
     },
-    vid::vid_scheme,
+    vid::advz_scheme,
 };
 use jf_vid::VidScheme;
 use std::iter::once;
@@ -137,13 +137,22 @@ where
                 }
 
                 let (vid_common, vid_share) = if let Some(vid_share) = vid_share {
-                    (
-                        Some(VidCommonQueryData::new(
-                            leaf.block_header().clone(),
-                            vid_share.common.clone(),
-                        )),
-                        Some(vid_share.share.clone()),
-                    )
+                    match vid_share {
+                        VidDisperseShare::V0(vid_share) => (
+                            Some(VidCommonQueryData::new(
+                                leaf.block_header().clone(),
+                                vid_share.common.clone(),
+                            )),
+                            Some(vid_share.share.clone()),
+                        ),
+                        VidDisperseShare::V1(vid_share) => (
+                            Some(VidCommonQueryData::new(
+                                leaf.block_header().clone(),
+                                vid_share.common.clone(),
+                            )),
+                            Some(vid_share.share.clone()),
+                        ),
+                    }
                 } else if leaf.view_number().u64() == 0 {
                     // HotShot does not run VID in consensus for the genesis block. In this case,
                     // the block payload is guaranteed to always be empty, so VID isn't really
@@ -181,7 +190,7 @@ fn genesis_vid<Types: NodeType>(
 ) -> anyhow::Result<(VidCommonQueryData<Types>, VidShare)> {
     let payload = Payload::<Types>::empty().0;
     let bytes = payload.encode();
-    let mut disperse = vid_scheme(GENESIS_VID_NUM_STORAGE_NODES)
+    let mut disperse = advz_scheme(GENESIS_VID_NUM_STORAGE_NODES)
         .disperse(bytes)
         .context("unable to compute VID dispersal for genesis block")?;
     ensure!(

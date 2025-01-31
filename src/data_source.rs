@@ -785,7 +785,7 @@ pub mod node_tests {
     };
     use hotshot_types::{
         traits::block_contents::{vid_commitment, EncodeBytes},
-        vid::{vid_scheme, VidSchemeType},
+        vid::{advz_scheme, VidSchemeType},
     };
     use jf_vid::VidScheme;
     use std::time::Duration;
@@ -803,7 +803,7 @@ pub mod node_tests {
         let ds = D::connect(&storage).await;
 
         // Set up a mock VID scheme to use for generating test data.
-        let mut vid = vid_scheme(2);
+        let mut vid = advz_scheme(2);
 
         // Generate some mock leaves and blocks to insert.
         let mut leaves = vec![
@@ -1069,7 +1069,7 @@ pub mod node_tests {
         let ds = D::connect(&storage).await;
 
         // Generate some test VID data.
-        let mut vid = vid_scheme(2);
+        let mut vid = advz_scheme(2);
         let disperse = vid.disperse([]).unwrap();
 
         // Insert test data with VID common and a share.
@@ -1137,7 +1137,7 @@ pub mod node_tests {
         let commit = block.payload_hash();
 
         // Set up a test VID scheme.
-        let vid = vid_scheme(network.num_nodes());
+        let vid = advz_scheme(network.num_nodes());
 
         // Get VID common data and verify it.
         tracing::info!("fetching common data");

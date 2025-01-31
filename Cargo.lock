@@ -2898,7 +2898,7 @@ dependencies = [
 [[package]]
 name = "hotshot"
 version = "0.5.84"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.84#310553bfe3333cb16592941043191e3b7e1b5dbf"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=release-labrador-debug-2#ee33cdba49f290272e3e06f2b9fbe20961535f8c"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -2942,7 +2942,7 @@ dependencies = [
 [[package]]
 name = "hotshot-builder-api"
 version = "0.1.7"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.84#310553bfe3333cb16592941043191e3b7e1b5dbf"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=release-labrador-debug-2#ee33cdba49f290272e3e06f2b9fbe20961535f8c"
 dependencies = [
  "async-trait",
  "clap",
@@ -2962,7 +2962,7 @@ dependencies = [
 [[package]]
 name = "hotshot-example-types"
 version = "0.5.84"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.84#310553bfe3333cb16592941043191e3b7e1b5dbf"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=release-labrador-debug-2#ee33cdba49f290272e3e06f2b9fbe20961535f8c"
 dependencies = [
  "anyhow",
  "async-lock 3.4.0",
@@ -2988,7 +2988,7 @@ dependencies = [
 [[package]]
 name = "hotshot-fakeapi"
 version = "0.5.84"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.84#310553bfe3333cb16592941043191e3b7e1b5dbf"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=release-labrador-debug-2#ee33cdba49f290272e3e06f2b9fbe20961535f8c"
 dependencies = [
  "anyhow",
  "async-lock 3.4.0",
@@ -3007,7 +3007,7 @@ dependencies = [
 [[package]]
 name = "hotshot-macros"
 version = "0.5.84"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.84#310553bfe3333cb16592941043191e3b7e1b5dbf"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=release-labrador-debug-2#ee33cdba49f290272e3e06f2b9fbe20961535f8c"
 dependencies = [
  "derive_builder",
  "proc-macro2",
@@ -3078,7 +3078,7 @@ dependencies = [
 [[package]]
 name = "hotshot-task"
 version = "0.5.84"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.84#310553bfe3333cb16592941043191e3b7e1b5dbf"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=release-labrador-debug-2#ee33cdba49f290272e3e06f2b9fbe20961535f8c"
 dependencies = [
  "async-broadcast",
  "async-trait",
@@ -3092,7 +3092,7 @@ dependencies = [
 [[package]]
 name = "hotshot-task-impls"
 version = "0.5.84"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.84#310553bfe3333cb16592941043191e3b7e1b5dbf"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=release-labrador-debug-2#ee33cdba49f290272e3e06f2b9fbe20961535f8c"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -3127,7 +3127,7 @@ dependencies = [
 [[package]]
 name = "hotshot-testing"
 version = "0.5.84"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.84#310553bfe3333cb16592941043191e3b7e1b5dbf"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=release-labrador-debug-2#ee33cdba49f290272e3e06f2b9fbe20961535f8c"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -3169,7 +3169,7 @@ dependencies = [
 [[package]]
 name = "hotshot-types"
 version = "0.1.11"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.84#310553bfe3333cb16592941043191e3b7e1b5dbf"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=release-labrador-debug-2#ee33cdba49f290272e3e06f2b9fbe20961535f8c"
 dependencies = [
  "anyhow",
  "ark-bn254",
@@ -4380,7 +4380,7 @@ dependencies = [
 [[package]]
 name = "libp2p-networking"
 version = "0.5.84"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.84#310553bfe3333cb16592941043191e3b7e1b5dbf"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=release-labrador-debug-2#ee33cdba49f290272e3e06f2b9fbe20961535f8c"
 dependencies = [
  "anyhow",
  "async-lock 3.4.0",
@@ -7821,6 +7821,8 @@ dependencies = [
  "bytes",
  "futures-core",
  "futures-sink",
+ "futures-util",
+ "hashbrown 0.14.5",
  "pin-project-lite 0.2.16",
  "tokio",
 ]
@@ -8241,7 +8243,7 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 [[package]]
 name = "utils"
 version = "0.5.84"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.84#310553bfe3333cb16592941043191e3b7e1b5dbf"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=release-labrador-debug-2#ee33cdba49f290272e3e06f2b9fbe20961535f8c"
 dependencies = [
  "tracing",
  "workspace-hack",
@@ -8807,7 +8809,7 @@ dependencies = [
 [[package]]
 name = "workspace-hack"
 version = "0.1.0"
-source = "git+https://github.com/EspressoSystems/HotShot.git?tag=0.5.84#310553bfe3333cb16592941043191e3b7e1b5dbf"
+source = "git+https://github.com/EspressoSystems/HotShot.git?branch=release-labrador-debug-2#ee33cdba49f290272e3e06f2b9fbe20961535f8c"
 dependencies = [
  "ark-bls12-377",
  "ark-bls12-381",
@@ -8865,6 +8867,7 @@ dependencies = [
  "num-bigint",
  "num-integer",
  "num-traits",
+ "parking_lot",
  "percent-encoding",
  "rand 0.8.5",
  "regex",
@@ -8879,6 +8882,7 @@ dependencies = [
  "syn 2.0.95",
  "time 0.3.37",
  "tokio",
+ "tokio-util",
  "toml_datetime",
  "toml_edit",
  "tracing",
