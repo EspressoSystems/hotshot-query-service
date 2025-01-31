@@ -576,7 +576,7 @@ pub mod persistence_tests {
             &TestInstanceState::default(),
         )
         .await;
-        let mut leaf = Leaf::<MockTypes>::genesis(
+        let mut leaf = Leaf::<MockTypes>::genesis::<TestVersions>(
             &TestValidatedState::default(),
             &TestInstanceState::default(),
         )
@@ -628,7 +628,7 @@ pub mod persistence_tests {
             &TestInstanceState::default(),
         )
         .await;
-        let mut leaf = Leaf::<MockTypes>::genesis(
+        let mut leaf = Leaf::<MockTypes>::genesis::<TestVersions>(
             &TestValidatedState::default(),
             &TestInstanceState::default(),
         )
@@ -691,7 +691,7 @@ pub mod persistence_tests {
             &TestInstanceState::default(),
         )
         .await;
-        let mut mock_leaf = Leaf::<MockTypes>::genesis(
+        let mut mock_leaf = Leaf::<MockTypes>::genesis::<TestVersions>(
             &TestValidatedState::default(),
             &TestInstanceState::default(),
         )
@@ -784,7 +784,10 @@ pub mod node_tests {
         state_types::TestInstanceState,
     };
     use hotshot_types::{
-        traits::block_contents::{vid_commitment, EncodeBytes},
+        traits::{
+            block_contents::{vid_commitment, EncodeBytes},
+            node_implementation::Versions,
+        },
         vid::{advz_scheme, VidSchemeType},
     };
     use jf_vid::VidScheme;
@@ -814,7 +817,7 @@ pub mod node_tests {
             .await,
         ];
         let mut blocks = vec![
-            BlockQueryData::<MockTypes>::genesis(
+            BlockQueryData::<MockTypes>::genesis::<TestVersions>(
                 &TestValidatedState::default(),
                 &TestInstanceState::default(),
             )
@@ -943,6 +946,7 @@ pub mod node_tests {
     #[tokio::test(flavor = "multi_thread")]
     pub async fn test_counters<D: TestableDataSource>() {
         use hotshot_example_types::node_types::TestVersions;
+        use vbs::version::StaticVersionType;
 
         setup_test();
 
@@ -969,7 +973,11 @@ pub mod node_tests {
                 .await
                 .unwrap();
             let encoded = payload.encode();
-            let payload_commitment = vid_commitment(&encoded, 1);
+            let payload_commitment = vid_commitment::<TestVersions>(
+                &encoded,
+                1,
+                <TestVersions as Versions>::Base::VERSION,
+            );
             let header = TestBlockHeader {
                 block_number: i,
                 payload_commitment,

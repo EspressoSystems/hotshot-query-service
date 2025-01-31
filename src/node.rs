@@ -216,11 +216,10 @@ mod test {
     use committable::Committable;
     use futures::{FutureExt, StreamExt};
     use hotshot_types::{
-        event::{EventType, LeafInfo},
-        traits::{
+        data::VidDisperseShare, event::{EventType, LeafInfo}, traits::{
             block_contents::{BlockHeader, BlockPayload},
             EncodeBytes,
-        },
+        }
     };
     use portpicker::pick_unused_port;
     use std::time::Duration;
@@ -325,7 +324,10 @@ mod test {
                     .await
                     .unwrap();
                 if let Some(vid_share) = vid_share.as_ref() {
-                    assert_eq!(share, vid_share.share);
+                    match vid_share {
+                        VidDisperseShare::V0(vid_share) => assert_eq!(share, vid_share.share),
+                        VidDisperseShare::V1(vid_share) => assert_eq!(share, vid_share.share),
+                    }
                 }
 
                 // Query various other ways.
