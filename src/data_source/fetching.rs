@@ -929,42 +929,57 @@ where
         &self,
         _from: usize,
     ) -> QueryResult<BoxStream<'static, BlockQueryData<Types>>> {
-        Err(QueryError::NotFound)
+        Err(QueryError::Error {
+            message: "block subscription is not supported for leaf only data source".to_string(),
+        })
     }
 
     async fn subscribe_payloads(
         &self,
         _from: usize,
     ) -> QueryResult<BoxStream<'static, PayloadQueryData<Types>>> {
-        Err(QueryError::NotFound)
+        Err(QueryError::Error {
+            message: "payload subscription is not supported for leaf only data source".to_string(),
+        })
     }
 
     async fn subscribe_payload_metadata(
         &self,
         _from: usize,
     ) -> QueryResult<BoxStream<'static, PayloadMetadata<Types>>> {
-        Err(QueryError::NotFound)
+        Err(QueryError::Error {
+            message: "payload metadata subscription is not supported for leaf only data source"
+                .to_string(),
+        })
     }
 
     async fn subscribe_leaves(
         &self,
         _from: usize,
     ) -> QueryResult<BoxStream<'static, LeafQueryData<Types>>> {
-        Err(QueryError::NotFound)
+        Err(QueryError::Error {
+            message: "leaf subscription is not supported for leaf only data source".to_string(),
+        })
     }
 
     async fn subscribe_vid_common(
         &self,
         _from: usize,
     ) -> QueryResult<BoxStream<'static, VidCommonQueryData<Types>>> {
-        Err(QueryError::NotFound)
+        Err(QueryError::Error {
+            message: "vid common subscription is not supported for leaf only data source"
+                .to_string(),
+        })
     }
 
     async fn subscribe_vid_common_metadata(
         &self,
         _from: usize,
     ) -> QueryResult<BoxStream<'static, VidCommonMetadata<Types>>> {
-        Err(QueryError::NotFound)
+        Err(QueryError::Error {
+            message: "vid common metadata subscription is not supported for leaf only data source"
+                .to_string(),
+        })
     }
 }
 

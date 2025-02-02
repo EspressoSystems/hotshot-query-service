@@ -347,26 +347,30 @@ pub mod availability_tests {
             let block_height = NodeDataSource::block_height(&ds).await.unwrap();
             assert_eq!(
                 ds.get_block_range(..block_height)
-                    .await.unwrap()
+                    .await
+                    .unwrap()
                     .map(|fetch| fetch.try_resolve().ok())
                     .collect::<Vec<_>>()
                     .await,
                 storage
                     .get_block_range(..block_height)
-                    .await.unwrap()
+                    .await
+                    .unwrap()
                     .map(|fetch| fetch.try_resolve().ok())
                     .collect::<Vec<_>>()
                     .await
             );
             assert_eq!(
                 ds.get_leaf_range(..block_height)
-                    .await.unwrap()
+                    .await
+                    .unwrap()
                     .map(|fetch| fetch.try_resolve().ok())
                     .collect::<Vec<_>>()
                     .await,
                 storage
                     .get_leaf_range(..block_height)
-                    .await.unwrap()
+                    .await
+                    .unwrap()
                     .map(|fetch| fetch.try_resolve().ok())
                     .collect::<Vec<_>>()
                     .await

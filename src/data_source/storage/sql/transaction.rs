@@ -423,18 +423,9 @@ impl Transaction<Write> {
 
         for state_table in state_tables {
             self.execute(
-                query(&format!(
-                    "DELETE FROM {state_table}
-                        WHERE created < $1
-                          AND NOT EXISTS (
-                            SELECT 1
-                            FROM {state_table} AS t
-                            WHERE t.path = {state_table}.path
-                              AND t.created > {state_table}.created
-                          );"
-                ))
-                .bind(height as i64),
-            )
+                query(&format!("DELETE FROM {state_table} WHERE (path, created) IN
+            (SELECT path, created FROM (SELECT path, created, ROW_NUMBER() OVER (PARTITION BY path ORDER BY created DESC) as rank FROM {state_table} WHERE created < $1) ranked_nodes WHERE rank != 1)")).bind(height as i64)
+                )
             .await?;
         }
 
