@@ -680,6 +680,17 @@ where
         tx.get_leaf(id.into()).await.map(Fetch::Ready)
     }
 
+    async fn get_header<ID>(&self, id: ID) -> QueryResult<Fetch<Header<Types>>>
+    where
+        ID: Into<BlockId<Types>> + Send + Sync,
+    {
+        let mut tx = self.read().await.map_err(|e| QueryError::Error {
+            message: e.to_string(),
+        })?;
+
+        tx.get_header(id.into()).await.map(Fetch::Ready)
+    }
+
     async fn get_block<ID>(&self, id: ID) -> QueryResult<Fetch<BlockQueryData<Types>>>
     where
         ID: Into<BlockId<Types>> + Send + Sync,
@@ -690,24 +701,22 @@ where
         tx.get_block(id.into()).await.map(Fetch::Ready)
     }
 
-    async fn get_payload<ID>(&self, id: ID) -> QueryResult<Fetch<PayloadQueryData<Types>>>
+    async fn get_payload<ID>(&self, _id: ID) -> QueryResult<Fetch<PayloadQueryData<Types>>>
     where
         ID: Into<BlockId<Types>> + Send + Sync,
     {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        tx.get_payload(id.into()).await.map(Fetch::Ready)
+        Err(QueryError::Error {
+            message: "payload is not supported for leaf only data source".to_string(),
+        })
     }
 
-    async fn get_payload_metadata<ID>(&self, id: ID) -> QueryResult<Fetch<PayloadMetadata<Types>>>
+    async fn get_payload_metadata<ID>(&self, _id: ID) -> QueryResult<Fetch<PayloadMetadata<Types>>>
     where
         ID: Into<BlockId<Types>> + Send + Sync,
     {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        tx.get_payload_metadata(id.into()).await.map(Fetch::Ready)
+        Err(QueryError::Error {
+            message: "payload metadata is not supported for leaf only data source".to_string(),
+        })
     }
 
     async fn get_vid_common<ID>(&self, id: ID) -> QueryResult<Fetch<VidCommonQueryData<Types>>>
@@ -754,6 +763,27 @@ where
         .boxed())
     }
 
+    async fn get_header_range<R>(&self, range: R) -> QueryResult<FetchStream<Header<Types>>>
+    where
+        R: RangeBounds<usize> + Send + 'static,
+    {
+        let mut tx = self.read().await.map_err(|e| QueryError::Error {
+            message: e.to_string(),
+        })?;
+
+        let leaves = tx
+            .get_leaf_range(range)
+            .await?
+            .into_iter()
+            .collect::<QueryResult<Vec<_>>>()?;
+
+        let headers = leaves
+            .into_iter()
+            .map(|l| Fetch::Ready(l.leaf.block_header().clone()));
+
+        Ok(stream::iter(headers).boxed())
+    }
+
     async fn get_block_range<R>(&self, range: R) -> QueryResult<FetchStream<BlockQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static,
@@ -775,46 +805,26 @@ where
 
     async fn get_payload_range<R>(
         &self,
-        range: R,
+        _range: R,
     ) -> QueryResult<FetchStream<PayloadQueryData<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static,
     {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        Ok(stream::iter(
-            tx.get_payload_range(range)
-                .await?
-                .into_iter()
-                .collect::<QueryResult<Vec<_>>>()?
-                .into_iter()
-                .map(Fetch::Ready)
-                .collect::<Vec<Fetch<_>>>(),
-        )
-        .boxed())
+        Err(QueryError::Error {
+            message: "payload is not supported for leaf only data source".to_string(),
+        })
     }
 
     async fn get_payload_metadata_range<R>(
         &self,
-        range: R,
+        _range: R,
     ) -> QueryResult<FetchStream<PayloadMetadata<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static,
     {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        Ok(stream::iter(
-            tx.get_payload_metadata_range(range)
-                .await?
-                .into_iter()
-                .collect::<QueryResult<Vec<_>>>()?
-                .into_iter()
-                .map(Fetch::Ready)
-                .collect::<Vec<Fetch<_>>>(),
-        )
-        .boxed())
+        Err(QueryError::Error {
+            message: "payload metadata is not supported for leaf only data source".to_string(),
+        })
     }
 
     async fn get_vid_common_range<R>(
@@ -881,20 +891,22 @@ where
 
     async fn get_payload_range_rev(
         &self,
-        start: Bound<usize>,
-        end: usize,
+        _start: Bound<usize>,
+        _end: usize,
     ) -> QueryResult<FetchStream<PayloadQueryData<Types>>> {
-        self.get_payload_range(convert_bound_to_range(start, end))
-            .await
+        Err(QueryError::Error {
+            message: "payload is not supported for leaf only data source".to_string(),
+        })
     }
 
     async fn get_payload_metadata_range_rev(
         &self,
-        start: Bound<usize>,
-        end: usize,
+        _start: Bound<usize>,
+        _end: usize,
     ) -> QueryResult<FetchStream<PayloadMetadata<Types>>> {
-        self.get_payload_metadata_range(convert_bound_to_range(start, end))
-            .await
+        Err(QueryError::Error {
+            message: "payload metadata is not supported for leaf only data source".to_string(),
+        })
     }
 
     async fn get_vid_common_range_rev(
@@ -1005,6 +1017,7 @@ where
         let try_store = || async {
             let mut tx = self.storage.write().await?;
             info.clone().store(&mut tx).await?;
+            tracing::info!(?info, "appended !!!");
             tx.commit().await
         };
 
@@ -1139,6 +1152,14 @@ where
         Ok(self.fetcher.get(id.into()).await)
     }
 
+    async fn get_header<ID>(&self, id: ID) -> QueryResult<Fetch<Header<Types>>>
+    where
+        ID: Into<BlockId<Types>> + Send + Sync,
+    {
+        let block: Fetch<BlockQueryData<Types>> = self.fetcher.get(id.into()).await;
+        Ok(block.map(|b| b.header().clone()))
+    }
+
     async fn get_block<ID>(&self, id: ID) -> QueryResult<Fetch<BlockQueryData<Types>>>
     where
         ID: Into<BlockId<Types>> + Send + Sync,
@@ -1189,6 +1210,17 @@ where
         R: RangeBounds<usize> + Send + 'static,
     {
         Ok(self.fetcher.clone().get_range(range))
+    }
+
+    async fn get_header_range<R>(&self, range: R) -> QueryResult<FetchStream<Header<Types>>>
+    where
+        R: RangeBounds<usize> + Send + 'static,
+    {
+        let blocks: FetchStream<BlockQueryData<Types>> = self.fetcher.clone().get_range(range);
+
+        Ok(blocks
+            .map(|fetch| fetch.map(|b| b.header().clone()))
+            .boxed())
     }
 
     async fn get_payload_range<R>(

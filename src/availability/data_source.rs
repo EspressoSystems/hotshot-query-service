@@ -18,7 +18,7 @@ use super::{
         VidCommonQueryData,
     },
 };
-use crate::{types::HeightIndexed, Payload, QueryResult, VidCommitment, VidShare};
+use crate::{types::HeightIndexed, Header, Payload, QueryResult, VidCommitment, VidShare};
 use async_trait::async_trait;
 use derivative::Derivative;
 use derive_more::{Display, From};
@@ -131,6 +131,10 @@ where
     where
         ID: Into<LeafId<Types>> + Send + Sync;
 
+    async fn get_header<ID>(&self, id: ID) -> QueryResult<Fetch<Header<Types>>>
+    where
+        ID: Into<BlockId<Types>> + Send + Sync;
+
     async fn get_block<ID>(&self, id: ID) -> QueryResult<Fetch<BlockQueryData<Types>>>
     where
         ID: Into<BlockId<Types>> + Send + Sync;
@@ -155,6 +159,10 @@ where
         ID: Into<BlockId<Types>> + Send + Sync;
 
     async fn get_leaf_range<R>(&self, range: R) -> QueryResult<FetchStream<LeafQueryData<Types>>>
+    where
+        R: RangeBounds<usize> + Send + 'static;
+
+    async fn get_header_range<R>(&self, range: R) -> QueryResult<FetchStream<Header<Types>>>
     where
         R: RangeBounds<usize> + Send + 'static;
 

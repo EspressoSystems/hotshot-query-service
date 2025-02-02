@@ -229,15 +229,10 @@ where
                 } else {
                     BlockId::PayloadHash(req.blob_param("payload-hash")?)
                 };
-                let fetch = state.read(|state| state.get_block(id).boxed()).await?;
-                Ok(fetch
-                    .with_timeout(timeout)
-                    .await
-                    .context(FetchBlockSnafu {
-                        resource: id.to_string(),
-                    })?
-                    .header()
-                    .clone())
+                let fetch = state.read(|state| state.get_header(id).boxed()).await?;
+                Ok(fetch.with_timeout(timeout).await.context(FetchBlockSnafu {
+                    resource: id.to_string(),
+                }))
             }
             .boxed()
         })?
@@ -248,7 +243,7 @@ where
                 enforce_range_limit(from, until, large_object_range_limit)?;
 
                 let headers = state
-                    .read(|state| state.get_block_range(from..until).boxed())
+                    .read(|state| state.get_header_range(from..until).boxed())
                     .await?;
                 headers
                     .enumerate()
@@ -257,7 +252,6 @@ where
                             resource: (index + from).to_string(),
                         })
                     })
-                    .map(|r| r.map(|block| block.header().clone()))
                     .try_collect::<Vec<_>>()
                     .await
             }

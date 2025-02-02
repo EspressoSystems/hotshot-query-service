@@ -164,6 +164,14 @@ where
     {
         self.data_source.get_leaf(id).await
     }
+
+    async fn get_header<ID>(&self, id: ID) -> QueryResult<Fetch<Header<Types>>>
+    where
+        ID: Into<BlockId<Types>> + Send + Sync,
+    {
+        self.data_source.get_header(id).await
+    }
+
     async fn get_block<ID>(&self, id: ID) -> QueryResult<Fetch<BlockQueryData<Types>>>
     where
         ID: Into<BlockId<Types>> + Send + Sync,
@@ -208,6 +216,13 @@ where
         R: RangeBounds<usize> + Send + 'static,
     {
         self.data_source.get_block_range(range).await
+    }
+
+    async fn get_header_range<R>(&self, range: R) -> QueryResult<FetchStream<Header<Types>>>
+    where
+        R: RangeBounds<usize> + Send + 'static,
+    {
+        self.data_source.get_header_range(range).await
     }
     async fn get_payload_range<R>(
         &self,
