@@ -13,10 +13,11 @@
 #![cfg(feature = "sql-data-source")]
 
 use super::{
-    fetching::{self, LeafOnlyDataSource},
+    fetching::{self},
     storage::sql::{self, SqlStorage},
     AvailabilityProvider, FetchingDataSource,
 };
+use crate::data_source::leaf_only::LeafOnlyDataSource;
 pub use crate::include_migrations;
 use crate::{
     availability::{QueryableHeader, QueryablePayload},
@@ -25,6 +26,7 @@ use crate::{
 pub use anyhow::Error;
 use hotshot_types::traits::node_implementation::NodeType;
 pub use refinery::Migration;
+use std::time::Duration;
 
 pub use sql::Transaction;
 
@@ -329,8 +331,12 @@ where
     /// underlying [`FetchingDataSource`], before constructing the [`SqlDataSource`] with
     /// [`build`](fetching::Builder::build). For a convenient constructor that uses the default
     /// fetching options, see [`Config::connect`].
-    pub async fn build(config: Config) -> Result<Self, Error> {
-        Self::new(SqlStorage::connect(config).await?).await
+    pub async fn build(
+        config: Config,
+        chunk_size: usize,
+        chunk_delay: Duration,
+    ) -> Result<Self, Error> {
+        Self::new(SqlStorage::connect(config).await?, chunk_size, chunk_delay).await
     }
 }
 

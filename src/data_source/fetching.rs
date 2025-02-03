@@ -426,7 +426,7 @@ where
     Payload<Types>: QueryablePayload<Types>,
     S: PruneStorage + Send + Sync + 'static,
 {
-    async fn new(storage: Arc<S>) -> Self {
+    pub(super) async fn new(storage: Arc<S>) -> Self {
         let cfg = storage.get_pruning_config();
         let Some(cfg) = cfg else {
             return Self {
@@ -544,545 +544,11 @@ where
     }
 }
 
-#[derive(Derivative)]
-#[derivative(Clone(bound = "S: Clone"), Debug(bound = "S: Debug,"))]
-pub struct LeafOnlyDataSource<Types, S>
-where
-    Types: NodeType,
-{
-    storage: Arc<S>,
-    pruner: Pruner<Types, S>,
-    backoff: ExponentialBackoff,
-}
-
-impl<Types, S> LeafOnlyDataSource<Types, S>
-where
-    Types: NodeType,
-    Payload<Types>: QueryablePayload<Types>,
-    Header<Types>: QueryableHeader<Types>,
-    S: VersionedDataSource + PruneStorage + HasMetrics + 'static,
-    for<'a> S::Transaction<'a>: UpdateAvailabilityStorage<Types> + UpdateAggregatesStorage<Types>,
-    for<'a> S::ReadOnly<'a>:
-        AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage + AggregatesStorage,
-{
-    pub async fn new(storage: S) -> anyhow::Result<Self> {
-        let storage = Arc::new(storage);
-        let pruner = Pruner::new(storage.clone()).await;
-        let backoff = ExponentialBackoffBuilder::default().build();
-        Ok(Self {
-            storage,
-            pruner,
-            backoff,
-        })
-    }
-}
-
-impl<Types, S> VersionedDataSource for LeafOnlyDataSource<Types, S>
-where
-    Types: NodeType,
-    S: VersionedDataSource + Send + Sync,
-{
-    type Transaction<'a>
-        = S::Transaction<'a>
-    where
-        Self: 'a;
-    type ReadOnly<'a>
-        = S::ReadOnly<'a>
-    where
-        Self: 'a;
-
-    async fn write(&self) -> anyhow::Result<Self::Transaction<'_>> {
-        self.storage.write().await
-    }
-
-    async fn read(&self) -> anyhow::Result<Self::ReadOnly<'_>> {
-        self.storage.read().await
-    }
-}
-
-#[async_trait]
-impl<Types, S> NodeDataSource<Types> for LeafOnlyDataSource<Types, S>
-where
-    Types: NodeType,
-    S: VersionedDataSource + 'static,
-    for<'a> S::ReadOnly<'a>: NodeStorage<Types>,
-{
-    async fn block_height(&self) -> QueryResult<usize> {
-        let mut tx = self.read().await.map_err(|err| QueryError::Error {
-            message: err.to_string(),
-        })?;
-        tx.block_height().await
-    }
-
-    async fn count_transactions_in_range(
-        &self,
-        _range: impl RangeBounds<usize> + Send,
-    ) -> QueryResult<usize> {
-        Err(QueryError::Error {
-            message: "transaction count is not supported for leaf only data source".to_string(),
-        })
-    }
-
-    async fn payload_size_in_range(
-        &self,
-        _range: impl RangeBounds<usize> + Send,
-    ) -> QueryResult<usize> {
-        Err(QueryError::Error {
-            message: "payload size is not supported for leaf only data source".to_string(),
-        })
-    }
-
-    async fn vid_share<ID>(&self, id: ID) -> QueryResult<VidShare>
-    where
-        ID: Into<BlockId<Types>> + Send + Sync,
-    {
-        let mut tx = self.read().await.map_err(|err| QueryError::Error {
-            message: err.to_string(),
-        })?;
-        tx.vid_share(id).await
-    }
-
-    async fn sync_status(&self) -> QueryResult<SyncStatus> {
-        Err(QueryError::Error {
-            message: "sync status is not available in leafonly data source".to_string(),
-        })
-    }
-
-    async fn get_header_window(
-        &self,
-        start: impl Into<WindowStart<Types>> + Send + Sync,
-        end: u64,
-        limit: usize,
-    ) -> QueryResult<TimeWindowQueryData<Header<Types>>> {
-        let mut tx = self.read().await.map_err(|err| QueryError::Error {
-            message: err.to_string(),
-        })?;
-        tx.get_header_window(start, end, limit).await
-    }
-}
-
-#[async_trait]
-impl<Types, S> AvailabilityDataSource<Types> for LeafOnlyDataSource<Types, S>
-where
-    Types: NodeType,
-    Payload<Types>: QueryablePayload<Types>,
-    S: VersionedDataSource + 'static,
-    for<'a> S::Transaction<'a>: UpdateAvailabilityStorage<Types>,
-    for<'a> S::ReadOnly<'a>: AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage,
-{
-    async fn get_leaf<ID>(&self, id: ID) -> QueryResult<Fetch<LeafQueryData<Types>>>
-    where
-        ID: Into<LeafId<Types>> + Send + Sync,
-    {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        tx.get_leaf(id.into()).await.map(Fetch::Ready)
-    }
-
-    async fn get_header<ID>(&self, id: ID) -> QueryResult<Fetch<Header<Types>>>
-    where
-        ID: Into<BlockId<Types>> + Send + Sync,
-    {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-
-        tx.get_header(id.into()).await.map(Fetch::Ready)
-    }
-
-    async fn get_block<ID>(&self, id: ID) -> QueryResult<Fetch<BlockQueryData<Types>>>
-    where
-        ID: Into<BlockId<Types>> + Send + Sync,
-    {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        tx.get_block(id.into()).await.map(Fetch::Ready)
-    }
-
-    async fn get_payload<ID>(&self, _id: ID) -> QueryResult<Fetch<PayloadQueryData<Types>>>
-    where
-        ID: Into<BlockId<Types>> + Send + Sync,
-    {
-        Err(QueryError::Error {
-            message: "payload is not supported for leaf only data source".to_string(),
-        })
-    }
-
-    async fn get_payload_metadata<ID>(&self, _id: ID) -> QueryResult<Fetch<PayloadMetadata<Types>>>
-    where
-        ID: Into<BlockId<Types>> + Send + Sync,
-    {
-        Err(QueryError::Error {
-            message: "payload metadata is not supported for leaf only data source".to_string(),
-        })
-    }
-
-    async fn get_vid_common<ID>(&self, id: ID) -> QueryResult<Fetch<VidCommonQueryData<Types>>>
-    where
-        ID: Into<BlockId<Types>> + Send + Sync,
-    {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        tx.get_vid_common(id.into()).await.map(Fetch::Ready)
-    }
-
-    async fn get_vid_common_metadata<ID>(
-        &self,
-        id: ID,
-    ) -> QueryResult<Fetch<VidCommonMetadata<Types>>>
-    where
-        ID: Into<BlockId<Types>> + Send + Sync,
-    {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        tx.get_vid_common_metadata(id.into())
-            .await
-            .map(Fetch::Ready)
-    }
-
-    async fn get_leaf_range<R>(&self, range: R) -> QueryResult<FetchStream<LeafQueryData<Types>>>
-    where
-        R: RangeBounds<usize> + Send + 'static,
-    {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        Ok(stream::iter(
-            tx.get_leaf_range(range)
-                .await?
-                .into_iter()
-                .collect::<QueryResult<Vec<_>>>()?
-                .into_iter()
-                .map(Fetch::Ready)
-                .collect::<Vec<Fetch<_>>>(),
-        )
-        .boxed())
-    }
-
-    async fn get_header_range<R>(&self, range: R) -> QueryResult<FetchStream<Header<Types>>>
-    where
-        R: RangeBounds<usize> + Send + 'static,
-    {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-
-        let leaves = tx
-            .get_leaf_range(range)
-            .await?
-            .into_iter()
-            .collect::<QueryResult<Vec<_>>>()?;
-
-        let headers = leaves
-            .into_iter()
-            .map(|l| Fetch::Ready(l.leaf.block_header().clone()));
-
-        Ok(stream::iter(headers).boxed())
-    }
-
-    async fn get_block_range<R>(&self, range: R) -> QueryResult<FetchStream<BlockQueryData<Types>>>
-    where
-        R: RangeBounds<usize> + Send + 'static,
-    {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        Ok(stream::iter(
-            tx.get_block_range(range)
-                .await?
-                .into_iter()
-                .collect::<QueryResult<Vec<_>>>()?
-                .into_iter()
-                .map(Fetch::Ready)
-                .collect::<Vec<Fetch<_>>>(),
-        )
-        .boxed())
-    }
-
-    async fn get_payload_range<R>(
-        &self,
-        _range: R,
-    ) -> QueryResult<FetchStream<PayloadQueryData<Types>>>
-    where
-        R: RangeBounds<usize> + Send + 'static,
-    {
-        Err(QueryError::Error {
-            message: "payload is not supported for leaf only data source".to_string(),
-        })
-    }
-
-    async fn get_payload_metadata_range<R>(
-        &self,
-        _range: R,
-    ) -> QueryResult<FetchStream<PayloadMetadata<Types>>>
-    where
-        R: RangeBounds<usize> + Send + 'static,
-    {
-        Err(QueryError::Error {
-            message: "payload metadata is not supported for leaf only data source".to_string(),
-        })
-    }
-
-    async fn get_vid_common_range<R>(
-        &self,
-        range: R,
-    ) -> QueryResult<FetchStream<VidCommonQueryData<Types>>>
-    where
-        R: RangeBounds<usize> + Send + 'static,
-    {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        Ok(stream::iter(
-            tx.get_vid_common_range(range)
-                .await?
-                .into_iter()
-                .collect::<QueryResult<Vec<_>>>()?
-                .into_iter()
-                .map(Fetch::Ready)
-                .collect::<Vec<Fetch<_>>>(),
-        )
-        .boxed())
-    }
-
-    async fn get_vid_common_metadata_range<R>(
-        &self,
-        range: R,
-    ) -> QueryResult<FetchStream<VidCommonMetadata<Types>>>
-    where
-        R: RangeBounds<usize> + Send + 'static,
-    {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        Ok(stream::iter(
-            tx.get_vid_common_metadata_range(range)
-                .await?
-                .into_iter()
-                .collect::<QueryResult<Vec<_>>>()?
-                .into_iter()
-                .map(Fetch::Ready)
-                .collect::<Vec<Fetch<_>>>(),
-        )
-        .boxed())
-    }
-
-    async fn get_leaf_range_rev(
-        &self,
-        start: Bound<usize>,
-        end: usize,
-    ) -> QueryResult<FetchStream<LeafQueryData<Types>>> {
-        self.get_leaf_range(convert_bound_to_range(start, end))
-            .await
-    }
-
-    async fn get_block_range_rev(
-        &self,
-        start: Bound<usize>,
-        end: usize,
-    ) -> QueryResult<FetchStream<BlockQueryData<Types>>> {
-        self.get_block_range(convert_bound_to_range(start, end))
-            .await
-    }
-
-    async fn get_payload_range_rev(
-        &self,
-        _start: Bound<usize>,
-        _end: usize,
-    ) -> QueryResult<FetchStream<PayloadQueryData<Types>>> {
-        Err(QueryError::Error {
-            message: "payload is not supported for leaf only data source".to_string(),
-        })
-    }
-
-    async fn get_payload_metadata_range_rev(
-        &self,
-        _start: Bound<usize>,
-        _end: usize,
-    ) -> QueryResult<FetchStream<PayloadMetadata<Types>>> {
-        Err(QueryError::Error {
-            message: "payload metadata is not supported for leaf only data source".to_string(),
-        })
-    }
-
-    async fn get_vid_common_range_rev(
-        &self,
-        start: Bound<usize>,
-        end: usize,
-    ) -> QueryResult<FetchStream<VidCommonQueryData<Types>>> {
-        self.get_vid_common_range(convert_bound_to_range(start, end))
-            .await
-    }
-
-    async fn get_vid_common_metadata_range_rev(
-        &self,
-        start: Bound<usize>,
-        end: usize,
-    ) -> QueryResult<FetchStream<VidCommonMetadata<Types>>> {
-        self.get_vid_common_metadata_range(convert_bound_to_range(start, end))
-            .await
-    }
-
-    async fn get_transaction(
-        &self,
-        hash: TransactionHash<Types>,
-    ) -> QueryResult<Fetch<TransactionQueryData<Types>>> {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        tx.get_transaction(hash).await.map(Fetch::Ready)
-    }
-
-    async fn subscribe_blocks(
-        &self,
-        _from: usize,
-    ) -> QueryResult<BoxStream<'static, BlockQueryData<Types>>> {
-        Err(QueryError::Error {
-            message: "block subscription is not supported for leaf only data source".to_string(),
-        })
-    }
-
-    async fn subscribe_payloads(
-        &self,
-        _from: usize,
-    ) -> QueryResult<BoxStream<'static, PayloadQueryData<Types>>> {
-        Err(QueryError::Error {
-            message: "payload subscription is not supported for leaf only data source".to_string(),
-        })
-    }
-
-    async fn subscribe_payload_metadata(
-        &self,
-        _from: usize,
-    ) -> QueryResult<BoxStream<'static, PayloadMetadata<Types>>> {
-        Err(QueryError::Error {
-            message: "payload metadata subscription is not supported for leaf only data source"
-                .to_string(),
-        })
-    }
-
-    async fn subscribe_leaves(
-        &self,
-        _from: usize,
-    ) -> QueryResult<BoxStream<'static, LeafQueryData<Types>>> {
-        Err(QueryError::Error {
-            message: "leaf subscription is not supported for leaf only data source".to_string(),
-        })
-    }
-
-    async fn subscribe_vid_common(
-        &self,
-        _from: usize,
-    ) -> QueryResult<BoxStream<'static, VidCommonQueryData<Types>>> {
-        Err(QueryError::Error {
-            message: "vid common subscription is not supported for leaf only data source"
-                .to_string(),
-        })
-    }
-
-    async fn subscribe_vid_common_metadata(
-        &self,
-        _from: usize,
-    ) -> QueryResult<BoxStream<'static, VidCommonMetadata<Types>>> {
-        Err(QueryError::Error {
-            message: "vid common metadata subscription is not supported for leaf only data source"
-                .to_string(),
-        })
-    }
-}
-
 fn convert_bound_to_range(start: Bound<usize>, end: usize) -> RangeInclusive<usize> {
     match start {
         Bound::Included(s) => s..=end,
         Bound::Excluded(s) => (s + 1)..=end,
         Bound::Unbounded => 0..=end,
-    }
-}
-
-impl<Types, S> UpdateAvailabilityData<Types> for LeafOnlyDataSource<Types, S>
-where
-    Types: NodeType,
-    Payload<Types>: QueryablePayload<Types>,
-    S: VersionedDataSource + 'static,
-    for<'a> S::Transaction<'a>: UpdateAvailabilityStorage<Types>,
-    for<'a> S::ReadOnly<'a>: AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage,
-{
-    async fn append(&self, mut info: BlockInfo<Types>) -> anyhow::Result<()> {
-        info.block = None;
-
-        let try_store = || async {
-            let mut tx = self.storage.write().await?;
-            info.clone().store(&mut tx).await?;
-            tracing::info!(?info, "appended !!!");
-            tx.commit().await
-        };
-
-        let mut backoff = self.backoff.clone();
-        backoff.reset();
-        loop {
-            let Err(_) = try_store().await else {
-                break;
-            };
-
-            let Some(delay) = backoff.next_backoff() else {
-                break;
-            };
-            tracing::info!(?delay, "retrying failed operation");
-            sleep(delay).await;
-        }
-
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl<Types, S> StatusDataSource for LeafOnlyDataSource<Types, S>
-where
-    Types: NodeType,
-    S: VersionedDataSource + HasMetrics + Send + Sync + 'static,
-    for<'a> S::ReadOnly<'a>: NodeStorage<Types>,
-{
-    async fn block_height(&self) -> QueryResult<usize> {
-        let mut tx = self.read().await.map_err(|err| QueryError::Error {
-            message: err.to_string(),
-        })?;
-        tx.block_height().await
-    }
-}
-
-#[async_trait]
-impl<Types, S> PrunedHeightDataSource for LeafOnlyDataSource<Types, S>
-where
-    Types: NodeType,
-    S: VersionedDataSource + HasMetrics + Send + Sync + 'static,
-    for<'a> S::ReadOnly<'a>: PrunedHeightStorage,
-{
-    async fn load_pruned_height(&self) -> anyhow::Result<Option<u64>> {
-        let mut tx = self.read().await?;
-        tx.load_pruned_height().await
-    }
-}
-
-impl<Types, S> AsRef<S> for LeafOnlyDataSource<Types, S>
-where
-    Types: NodeType,
-{
-    fn as_ref(&self) -> &S {
-        &self.storage
-    }
-}
-
-impl<Types, S> HasMetrics for LeafOnlyDataSource<Types, S>
-where
-    Types: NodeType,
-    S: HasMetrics,
-{
-    fn metrics(&self) -> &PrometheusMetrics {
-        self.as_ref().metrics()
     }
 }
 
@@ -1386,7 +852,7 @@ where
 
 /// Asynchronous retrieval and storage of [`Fetchable`] resources.
 #[derive(Debug)]
-struct Fetcher<Types, S, P>
+pub(crate) struct Fetcher<Types, S, P>
 where
     Types: NodeType,
 {
@@ -2235,7 +1701,7 @@ where
 }
 
 #[derive(Debug)]
-struct Notifiers<Types>
+pub(super) struct Notifiers<Types>
 where
     Types: NodeType,
 {
@@ -2258,7 +1724,7 @@ where
 }
 
 #[derive(Clone, Copy, Debug)]
-struct Heights {
+pub(super) struct Heights {
     height: u64,
     pruned_height: Option<u64>,
 }
@@ -2309,29 +1775,6 @@ where
 }
 
 #[async_trait]
-impl<Types, S, State, const ARITY: usize> MerklizedStateDataSource<Types, State, ARITY>
-    for LeafOnlyDataSource<Types, S>
-where
-    Types: NodeType,
-    S: VersionedDataSource + 'static,
-    for<'a> S::ReadOnly<'a>: MerklizedStateStorage<Types, State, ARITY>,
-
-    State: MerklizedState<Types, ARITY> + 'static,
-    <State as MerkleTreeScheme>::Commitment: Send,
-{
-    async fn get_path(
-        &self,
-        snapshot: Snapshot<Types, State, ARITY>,
-        key: State::Key,
-    ) -> QueryResult<MerkleProof<State::Entry, State::Key, State::T, ARITY>> {
-        let mut tx = self.read().await.map_err(|err| QueryError::Error {
-            message: err.to_string(),
-        })?;
-        tx.get_path(snapshot, key).await
-    }
-}
-
-#[async_trait]
 impl<Types, S, P> MerklizedStateHeightPersistence for FetchingDataSource<Types, S, P>
 where
     Types: NodeType,
@@ -2339,22 +1782,6 @@ where
     S: VersionedDataSource + 'static,
     for<'a> S::ReadOnly<'a>: MerklizedStateHeightStorage,
     P: Send + Sync,
-{
-    async fn get_last_state_height(&self) -> QueryResult<usize> {
-        let mut tx = self.read().await.map_err(|err| QueryError::Error {
-            message: err.to_string(),
-        })?;
-        tx.get_last_state_height().await
-    }
-}
-
-#[async_trait]
-impl<Types, S> MerklizedStateHeightPersistence for LeafOnlyDataSource<Types, S>
-where
-    Types: NodeType,
-    Payload<Types>: QueryablePayload<Types>,
-    S: VersionedDataSource + 'static,
-    for<'a> S::ReadOnly<'a>: MerklizedStateHeightStorage,
 {
     async fn get_last_state_height(&self) -> QueryResult<usize> {
         let mut tx = self.read().await.map_err(|err| QueryError::Error {
@@ -2534,7 +1961,7 @@ impl<Types: NodeType, P> AvailabilityProvider<Types> for P where
 {
 }
 
-trait FetchRequest: Copy + Debug + Send + Sync + 'static {
+pub(super) trait FetchRequest: Copy + Debug + Send + Sync + 'static {
     /// Indicate whether it is possible this object could exist.
     ///
     /// This can filter out requests quickly for objects that cannot possibly exist, such as
@@ -2556,7 +1983,7 @@ trait FetchRequest: Copy + Debug + Send + Sync + 'static {
 /// logistics of fetching are shared between all objects, and only the low-level particulars are
 /// type-specific.
 #[async_trait]
-trait Fetchable<Types>: Clone + Send + Sync + 'static
+pub(super) trait Fetchable<Types>: Clone + Send + Sync + 'static
 where
     Types: NodeType,
     Payload<Types>: QueryablePayload<Types>,
@@ -2612,7 +2039,8 @@ where
 type PassiveFetch<T> = BoxFuture<'static, Option<T>>;
 
 #[async_trait]
-trait RangedFetchable<Types>: Fetchable<Types, Request = Self::RangedRequest> + HeightIndexed
+pub(super) trait RangedFetchable<Types>:
+    Fetchable<Types, Request = Self::RangedRequest> + HeightIndexed
 where
     Types: NodeType,
     Payload<Types>: QueryablePayload<Types>,
@@ -2627,7 +2055,7 @@ where
 }
 
 /// An object which can be stored in the database.
-trait Storable<Types: NodeType>: HeightIndexed + Clone {
+pub(super) trait Storable<Types: NodeType>: HeightIndexed + Clone {
     /// The name of this type of object, for debugging purposes.
     fn name() -> &'static str;
 
@@ -2675,7 +2103,7 @@ impl<Types: NodeType> Storable<Types> for BlockInfo<Types> {
 }
 
 /// Break a range into fixed-size chunks.
-fn range_chunks<R>(range: R, chunk_size: usize) -> impl Iterator<Item = Range<usize>>
+pub(super) fn range_chunks<R>(range: R, chunk_size: usize) -> impl Iterator<Item = Range<usize>>
 where
     R: RangeBounds<usize>,
 {
@@ -2738,7 +2166,7 @@ fn range_chunks_rev(
     })
 }
 
-trait ResultExt<T, E> {
+pub(super) trait ResultExt<T, E> {
     fn ok_or_trace(self) -> Option<T>
     where
         E: Display;
@@ -2848,7 +2276,7 @@ impl AggregatorMetrics {
 /// Turn a fallible passive fetch future into an infallible "fetch".
 ///
 /// Basically, we ignore failures due to a channel sender being dropped, which should never happen.
-fn passive<T>(
+pub(super) fn passive<T>(
     req: impl Debug + Send + 'static,
     fut: impl Future<Output = Option<T>> + Send + 'static,
 ) -> Fetch<T>

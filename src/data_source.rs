@@ -31,6 +31,7 @@ pub mod fetching;
 pub mod fs;
 mod metrics;
 mod notifier;
+pub mod leaf_only;
 pub mod sql;
 pub mod storage;
 mod update;

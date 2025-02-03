@@ -284,6 +284,17 @@ where
             .boxed())
     }
 
+    async fn subscribe_headers(
+        &self,
+        from: usize,
+    ) -> QueryResult<BoxStream<'static, Header<Types>>> {
+        Ok(self
+            .get_header_range(from..)
+            .await?
+            .then(Fetch::resolve)
+            .boxed())
+    }
+
     async fn subscribe_vid_common(
         &self,
         from: usize,

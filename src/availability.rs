@@ -230,9 +230,9 @@ where
                     BlockId::PayloadHash(req.blob_param("payload-hash")?)
                 };
                 let fetch = state.read(|state| state.get_header(id).boxed()).await?;
-                Ok(fetch.with_timeout(timeout).await.context(FetchBlockSnafu {
+                fetch.with_timeout(timeout).await.context(FetchBlockSnafu {
                     resource: id.to_string(),
-                }))
+                })
             }
             .boxed()
         })?
@@ -262,13 +262,7 @@ where
                 let height = req.integer_param("height")?;
                 state
                     .read(|state| {
-                        async move {
-                            Ok(state
-                                .subscribe_blocks(height)
-                                .await?
-                                .map(|block| Ok(block.header)))
-                        }
-                        .boxed()
+                        async move { Ok(state.subscribe_headers(height).await?.map(Ok)) }.boxed()
                     })
                     .await
             }
