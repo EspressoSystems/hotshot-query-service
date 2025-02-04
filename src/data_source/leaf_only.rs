@@ -6,13 +6,11 @@ use super::{
     },
     Transaction, VersionedDataSource,
 };
-use crate::data_source::fetching::passive;
-use crate::data_source::fetching::range_chunks;
-use crate::data_source::fetching::Notifiers;
+use crate::data_source::fetching::Builder;
+use crate::data_source::fetching::Fetcher;
 use crate::data_source::fetching::Pruner;
-use crate::data_source::fetching::RangedFetchable;
-use crate::data_source::fetching::ResultExt;
 use crate::data_source::fetching::Storable;
+use crate::data_source::AvailabilityProvider;
 use crate::{
     availability::{
         AvailabilityDataSource, BlockId, BlockInfo, BlockQueryData, Fetch, FetchStream, LeafId,
@@ -28,49 +26,31 @@ use crate::{
     status::{HasMetrics, StatusDataSource},
     Header, Payload, QueryError, QueryResult, VidShare,
 };
-use anyhow::{bail, Context};
-use async_lock::Semaphore;
 use async_trait::async_trait;
-use backoff::{backoff::Backoff, ExponentialBackoff, ExponentialBackoffBuilder};
+use backoff::backoff::Backoff;
 use derivative::Derivative;
-use futures::{
-    channel::oneshot,
-    future::{self, join_all, BoxFuture, Either, Future, FutureExt},
-    stream::{self, BoxStream, StreamExt},
-};
-use hotshot_types::traits::{
-    metrics::{Gauge, Metrics},
-    node_implementation::NodeType,
-};
+use futures::stream::{BoxStream, StreamExt};
+use hotshot_types::traits::node_implementation::NodeType;
 use jf_merkle_tree::{prelude::MerkleProof, MerkleTreeScheme};
+use std::sync::Arc;
 use std::{
-    cmp::{max, min},
-    fmt::{Debug, Display},
-    iter::repeat_with,
-    marker::PhantomData,
-    ops::{Bound, Range, RangeBounds},
-    time::Duration,
+    fmt::Debug,
+    ops::{Bound, RangeBounds},
 };
-use std::{ops::RangeInclusive, sync::Arc};
-use tagged_base64::TaggedBase64;
-use tokio::{spawn, time::sleep};
-use tracing::Instrument;
+
+use tokio::time::sleep;
 
 #[derive(Derivative)]
-#[derivative(Clone(bound = ""), Debug(bound = "S: Debug,"))]
-pub struct LeafOnlyDataSource<Types, S>
+#[derivative(Clone(bound = ""), Debug(bound = "S: Debug, P: Debug"))]
+pub struct LeafOnlyDataSource<Types, S, P>
 where
     Types: NodeType,
 {
-    storage: Arc<S>,
+    fetcher: Arc<Fetcher<Types, S, P>>,
     pruner: Pruner<Types, S>,
-    notifiers: Arc<Notifiers<Types>>,
-    backoff: ExponentialBackoff,
-    chunk_size: usize,
-    chunk_delay: Duration,
 }
 
-impl<Types, S> LeafOnlyDataSource<Types, S>
+impl<Types, S, P> LeafOnlyDataSource<Types, S, P>
 where
     Types: NodeType,
     Payload<Types>: QueryablePayload<Types>,
@@ -78,153 +58,23 @@ where
     S: VersionedDataSource + PruneStorage + HasMetrics + 'static,
     for<'a> S::Transaction<'a>: UpdateAvailabilityStorage<Types>,
     for<'a> S::ReadOnly<'a>: AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage,
+    P: AvailabilityProvider<Types>,
 {
-    pub async fn new(storage: S, chunk_size: usize, chunk_delay: Duration) -> anyhow::Result<Self> {
-        let storage = Arc::new(storage);
-        let pruner = Pruner::new(storage.clone()).await;
-        let backoff = ExponentialBackoffBuilder::default().build();
-        let notifiers = Arc::new(Notifiers::default());
-        Ok(Self {
-            storage,
-            pruner,
-            notifiers,
-            backoff,
-            chunk_size,
-            chunk_delay,
-        })
-    }
+    pub async fn new(builder: Builder<Types, S, P>) -> anyhow::Result<Self> {
+        let fetcher = Arc::new(Fetcher::new(builder.with_lightweight()).await?);
+        let storage = fetcher.storage.clone();
 
-    fn get_range<R, T>(self, range: R) -> BoxStream<'static, Fetch<T>>
-    where
-        R: RangeBounds<usize> + Send + 'static,
-        T: RangedFetchable<Types>,
-    {
-        let chunk_size = self.chunk_size;
-        self.get_range_with_chunk_size(chunk_size, range)
-    }
+        let pruner = Pruner::new(storage).await;
 
-    /// Same as [`Self::get_range`], but uses the given chunk size instead of the default.
-    fn get_range_with_chunk_size<R, T>(
-        self,
-        chunk_size: usize,
-        range: R,
-    ) -> BoxStream<'static, Fetch<T>>
-    where
-        R: RangeBounds<usize> + Send + 'static,
-        T: RangedFetchable<Types>,
-    {
-        let chunk_delay = self.chunk_delay;
-
-        stream::iter(range_chunks(range, chunk_size))
-            .then(move |chunk| {
-                let self_clone = self.clone();
-                async move {
-                    {
-                        let chunk = self_clone.get_chunk(chunk).await;
-
-                        // Introduce a delay (`chunk_fetch_delay`) between fetching chunks. This
-                        // helps to limit constant high CPU usage when fetching long range of data
-                        // from the storage
-                        sleep(chunk_delay).await;
-                        stream::iter(chunk)
-                    }
-                }
-            })
-            .flatten()
-            .boxed()
-    }
-
-    async fn get_chunk<T>(&self, chunk: Range<usize>) -> Vec<Fetch<T>>
-    where
-        T: RangedFetchable<Types>,
-    {
-        // Subscribe to notifications first.
-        let passive_fetches = join_all(
-            chunk
-                .clone()
-                .map(|i| T::passive_fetch(&self.notifiers, i.into())),
-        )
-        .await;
-
-        match self.try_get_chunk(&chunk).await {
-            Ok(objs) => {
-                // Convert to fetches. Objects which are not immediately available (`None` in the
-                // chunk) become passive fetches awaiting a notification of availability.
-                return objs
-                    .into_iter()
-                    .zip(passive_fetches)
-                    .enumerate()
-                    .map(move |(i, (obj, passive_fetch))| match obj {
-                        Some(obj) => Fetch::Ready(obj),
-                        None => passive(T::Request::from(chunk.start + i), passive_fetch),
-                    })
-                    .collect();
-            }
-            Err(err) => {
-                tracing::warn!(?chunk, "unable to fetch chunk: {err:#}");
-            }
-        }
-
-        // return passive fetches for all items in the chunk if the chunk could not be fetched
-        // these fetches are resolved as soon as the data is available in storage
-        passive_fetches
-            .into_iter()
-            .enumerate()
-            .map(move |(i, passive_fetch)| {
-                passive(T::Request::from(chunk.start + i), passive_fetch)
-            })
-            .collect()
-    }
-
-    /// Try to get a range of objects from local storage
-    ///
-    /// If this function succeeded, then for each object in the requested range, either:
-    /// * the object was available locally, and corresponds to `Some(_)` object in the result
-    /// * the object was not available locally (and corresponds to `None` in the result)
-    /// This function will fail if it could not be determined which objects in the requested range
-    /// are available locally
-    async fn try_get_chunk<T>(&self, chunk: &Range<usize>) -> anyhow::Result<Vec<Option<T>>>
-    where
-        T: RangedFetchable<Types>,
-    {
-        let mut tx = self.read().await.context("opening read transaction")?;
-        let ts = T::load_range(&mut tx, chunk.clone())
-            .await
-            .context(format!("when fetching items in range {chunk:?}"))?;
-
-        // Log and discard error information; we want a list of Option where None indicates an
-        // object is not yet available.
-        // When objects are not expected to exist, `load_range` should just return a truncated list
-        // rather than returning `Err` objects, so if there are errors in here they are unexpected
-        // and we do want to log them.
-        let ts = ts.into_iter().filter_map(ResultExt::ok_or_trace);
-
-        let mut results = Vec::with_capacity(chunk.len());
-        for t in ts {
-            while chunk.start + results.len() < t.height() as usize {
-                tracing::debug!(
-                    "item {} in chunk not available, will be fetched",
-                    results.len()
-                );
-
-                results.push(None);
-            }
-
-            results.push(Some(t));
-        }
-
-        while results.len() < chunk.len() {
-            results.push(None);
-        }
-
-        Ok(results)
+        Ok(Self { fetcher, pruner })
     }
 }
 
-impl<Types, S> VersionedDataSource for LeafOnlyDataSource<Types, S>
+impl<Types, S, P> VersionedDataSource for LeafOnlyDataSource<Types, S, P>
 where
     Types: NodeType,
     S: VersionedDataSource + Send + Sync,
+    P: Send + Sync,
 {
     type Transaction<'a>
         = S::Transaction<'a>
@@ -236,20 +86,21 @@ where
         Self: 'a;
 
     async fn write(&self) -> anyhow::Result<Self::Transaction<'_>> {
-        self.storage.write().await
+        self.fetcher.storage.write().await
     }
 
     async fn read(&self) -> anyhow::Result<Self::ReadOnly<'_>> {
-        self.storage.read().await
+        self.fetcher.storage.read().await
     }
 }
 
 #[async_trait]
-impl<Types, S> NodeDataSource<Types> for LeafOnlyDataSource<Types, S>
+impl<Types, S, P> NodeDataSource<Types> for LeafOnlyDataSource<Types, S, P>
 where
     Types: NodeType,
     S: VersionedDataSource + 'static,
     for<'a> S::ReadOnly<'a>: NodeStorage<Types>,
+    P: Send + Sync,
 {
     async fn block_height(&self) -> QueryResult<usize> {
         let mut tx = self.read().await.map_err(|err| QueryError::Error {
@@ -306,7 +157,7 @@ where
 }
 
 #[async_trait]
-impl<Types, S> AvailabilityDataSource<Types> for LeafOnlyDataSource<Types, S>
+impl<Types, S, P> AvailabilityDataSource<Types> for LeafOnlyDataSource<Types, S, P>
 where
     Types: NodeType,
     Payload<Types>: QueryablePayload<Types>,
@@ -314,15 +165,13 @@ where
     S: VersionedDataSource + PruneStorage + HasMetrics + 'static,
     for<'a> S::Transaction<'a>: UpdateAvailabilityStorage<Types>,
     for<'a> S::ReadOnly<'a>: AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage,
+    P: AvailabilityProvider<Types>,
 {
     async fn get_leaf<ID>(&self, id: ID) -> QueryResult<Fetch<LeafQueryData<Types>>>
     where
         ID: Into<LeafId<Types>> + Send + Sync,
     {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        tx.get_leaf(id.into()).await.map(Fetch::Ready)
+        Ok(self.fetcher.clone().get(id.into()).await)
     }
 
     async fn get_header<ID>(&self, id: ID) -> QueryResult<Fetch<Header<Types>>>
@@ -336,14 +185,13 @@ where
         tx.get_header(id.into()).await.map(Fetch::Ready)
     }
 
-    async fn get_block<ID>(&self, id: ID) -> QueryResult<Fetch<BlockQueryData<Types>>>
+    async fn get_block<ID>(&self, _id: ID) -> QueryResult<Fetch<BlockQueryData<Types>>>
     where
         ID: Into<BlockId<Types>> + Send + Sync,
     {
-        let mut tx = self.read().await.map_err(|e| QueryError::Error {
-            message: e.to_string(),
-        })?;
-        tx.get_block(id.into()).await.map(Fetch::Ready)
+        Err(QueryError::Error {
+            message: "block is not supported for leaf only data source".to_string(),
+        })
     }
 
     async fn get_payload<ID>(&self, _id: ID) -> QueryResult<Fetch<PayloadQueryData<Types>>>
@@ -393,7 +241,7 @@ where
     where
         R: RangeBounds<usize> + Send + 'static,
     {
-        Ok(self.clone().get_range(range).boxed())
+        Ok(self.fetcher.clone().get_range(range).boxed())
     }
 
     async fn get_header_range<R>(&self, range: R) -> QueryResult<FetchStream<Header<Types>>>
@@ -446,7 +294,7 @@ where
     where
         R: RangeBounds<usize> + Send + 'static,
     {
-        Ok(self.clone().get_range(range).boxed())
+        Ok(self.fetcher.clone().get_range(range).boxed())
     }
 
     async fn get_vid_common_metadata_range<R>(
@@ -456,7 +304,7 @@ where
     where
         R: RangeBounds<usize> + Send + 'static,
     {
-        Ok(self.clone().get_range(range).boxed())
+        Ok(self.fetcher.clone().get_range(range).boxed())
     }
 
     async fn get_leaf_range_rev(
@@ -464,17 +312,17 @@ where
         start: Bound<usize>,
         end: usize,
     ) -> QueryResult<FetchStream<LeafQueryData<Types>>> {
-        self.get_leaf_range(convert_bound_to_range(start, end))
-            .await
+        Ok(self.fetcher.clone().get_range_rev(start, end))
     }
 
     async fn get_block_range_rev(
         &self,
-        start: Bound<usize>,
-        end: usize,
+        _start: Bound<usize>,
+        _end: usize,
     ) -> QueryResult<FetchStream<BlockQueryData<Types>>> {
-        self.get_block_range(convert_bound_to_range(start, end))
-            .await
+        Err(QueryError::Error {
+            message: "block range is not supported for leaf only data source".to_string(),
+        })
     }
 
     async fn get_payload_range_rev(
@@ -483,7 +331,7 @@ where
         _end: usize,
     ) -> QueryResult<FetchStream<PayloadQueryData<Types>>> {
         Err(QueryError::Error {
-            message: "payload is not supported for leaf only data source".to_string(),
+            message: "payload range is not supported for leaf only data source".to_string(),
         })
     }
 
@@ -493,7 +341,8 @@ where
         _end: usize,
     ) -> QueryResult<FetchStream<PayloadMetadata<Types>>> {
         Err(QueryError::Error {
-            message: "payload metadata is not supported for leaf only data source".to_string(),
+            message: "payload metadata range is not supported for leaf only data source"
+                .to_string(),
         })
     }
 
@@ -502,8 +351,7 @@ where
         start: Bound<usize>,
         end: usize,
     ) -> QueryResult<FetchStream<VidCommonQueryData<Types>>> {
-        self.get_vid_common_range(convert_bound_to_range(start, end))
-            .await
+        Ok(self.fetcher.clone().get_range_rev(start, end))
     }
 
     async fn get_vid_common_metadata_range_rev(
@@ -511,8 +359,7 @@ where
         start: Bound<usize>,
         end: usize,
     ) -> QueryResult<FetchStream<VidCommonMetadata<Types>>> {
-        self.get_vid_common_metadata_range(convert_bound_to_range(start, end))
-            .await
+        Ok(self.fetcher.clone().get_range_rev(start, end))
     }
 
     async fn get_transaction(
@@ -587,33 +434,26 @@ where
     }
 }
 
-fn convert_bound_to_range(start: Bound<usize>, end: usize) -> RangeInclusive<usize> {
-    match start {
-        Bound::Included(s) => s..=end,
-        Bound::Excluded(s) => (s + 1)..=end,
-        Bound::Unbounded => 0..=end,
-    }
-}
-
-impl<Types, S> UpdateAvailabilityData<Types> for LeafOnlyDataSource<Types, S>
+impl<Types, S, P> UpdateAvailabilityData<Types> for LeafOnlyDataSource<Types, S, P>
 where
     Types: NodeType,
     Payload<Types>: QueryablePayload<Types>,
     S: VersionedDataSource + 'static,
     for<'a> S::Transaction<'a>: UpdateAvailabilityStorage<Types>,
     for<'a> S::ReadOnly<'a>: AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage,
+    P: AvailabilityProvider<Types>,
 {
     async fn append(&self, mut info: BlockInfo<Types>) -> anyhow::Result<()> {
         info.block = None;
 
         let try_store = || async {
-            let mut tx = self.storage.write().await?;
+            let mut tx = self.fetcher.storage.write().await?;
             info.clone().store(&mut tx).await?;
             tracing::info!(?info, "appended !!!");
             tx.commit().await
         };
 
-        let mut backoff = self.backoff.clone();
+        let mut backoff = self.fetcher.backoff.clone();
         backoff.reset();
         loop {
             let Err(_) = try_store().await else {
@@ -626,17 +466,18 @@ where
             tracing::info!(?delay, "retrying failed operation");
             sleep(delay).await;
         }
-        info.notify(&self.notifiers).await;
+        info.notify(&self.fetcher.notifiers).await;
         Ok(())
     }
 }
 
 #[async_trait]
-impl<Types, S> StatusDataSource for LeafOnlyDataSource<Types, S>
+impl<Types, S, P> StatusDataSource for LeafOnlyDataSource<Types, S, P>
 where
     Types: NodeType,
     S: VersionedDataSource + HasMetrics + Send + Sync + 'static,
     for<'a> S::ReadOnly<'a>: NodeStorage<Types>,
+    P: AvailabilityProvider<Types>,
 {
     async fn block_height(&self) -> QueryResult<usize> {
         let mut tx = self.read().await.map_err(|err| QueryError::Error {
@@ -647,11 +488,12 @@ where
 }
 
 #[async_trait]
-impl<Types, S> PrunedHeightDataSource for LeafOnlyDataSource<Types, S>
+impl<Types, S, P> PrunedHeightDataSource for LeafOnlyDataSource<Types, S, P>
 where
     Types: NodeType,
     S: VersionedDataSource + HasMetrics + Send + Sync + 'static,
     for<'a> S::ReadOnly<'a>: PrunedHeightStorage,
+    P: Send + Sync,
 {
     async fn load_pruned_height(&self) -> anyhow::Result<Option<u64>> {
         let mut tx = self.read().await?;
@@ -659,19 +501,21 @@ where
     }
 }
 
-impl<Types, S> AsRef<S> for LeafOnlyDataSource<Types, S>
+impl<Types, S, P> AsRef<S> for LeafOnlyDataSource<Types, S, P>
 where
     Types: NodeType,
+    P: Send + Sync,
 {
     fn as_ref(&self) -> &S {
-        &self.storage
+        &self.fetcher.storage
     }
 }
 
-impl<Types, S> HasMetrics for LeafOnlyDataSource<Types, S>
+impl<Types, S, P> HasMetrics for LeafOnlyDataSource<Types, S, P>
 where
     Types: NodeType,
     S: HasMetrics,
+    P: Send + Sync,
 {
     fn metrics(&self) -> &PrometheusMetrics {
         self.as_ref().metrics()
@@ -679,15 +523,15 @@ where
 }
 
 #[async_trait]
-impl<Types, S, State, const ARITY: usize> MerklizedStateDataSource<Types, State, ARITY>
-    for LeafOnlyDataSource<Types, S>
+impl<Types, S, P, State, const ARITY: usize> MerklizedStateDataSource<Types, State, ARITY>
+    for LeafOnlyDataSource<Types, S, P>
 where
     Types: NodeType,
     S: VersionedDataSource + 'static,
     for<'a> S::ReadOnly<'a>: MerklizedStateStorage<Types, State, ARITY>,
-
     State: MerklizedState<Types, ARITY> + 'static,
     <State as MerkleTreeScheme>::Commitment: Send,
+    P: AvailabilityProvider<Types>,
 {
     async fn get_path(
         &self,
@@ -702,12 +546,13 @@ where
 }
 
 #[async_trait]
-impl<Types, S> MerklizedStateHeightPersistence for LeafOnlyDataSource<Types, S>
+impl<Types, S, P> MerklizedStateHeightPersistence for LeafOnlyDataSource<Types, S, P>
 where
     Types: NodeType,
     Payload<Types>: QueryablePayload<Types>,
     S: VersionedDataSource + 'static,
     for<'a> S::ReadOnly<'a>: MerklizedStateHeightStorage,
+    P: AvailabilityProvider<Types>,
 {
     async fn get_last_state_height(&self) -> QueryResult<usize> {
         let mut tx = self.read().await.map_err(|err| QueryError::Error {

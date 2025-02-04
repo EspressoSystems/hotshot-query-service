@@ -26,7 +26,6 @@ use crate::{
 pub use anyhow::Error;
 use hotshot_types::traits::node_implementation::NodeType;
 pub use refinery::Migration;
-use std::time::Duration;
 
 pub use sql::Transaction;
 
@@ -317,28 +316,7 @@ where
     }
 }
 
-pub type LeafOnlySqlDataSource<Types> = LeafOnlyDataSource<Types, SqlStorage>;
-
-impl<Types> LeafOnlySqlDataSource<Types>
-where
-    Types: NodeType,
-    Header<Types>: QueryableHeader<Types>,
-    Payload<Types>: QueryablePayload<Types>,
-{
-    /// Connect to a remote database.
-    ///
-    /// This function returns a [`fetching::Builder`] which can be used to set options on the
-    /// underlying [`FetchingDataSource`], before constructing the [`SqlDataSource`] with
-    /// [`build`](fetching::Builder::build). For a convenient constructor that uses the default
-    /// fetching options, see [`Config::connect`].
-    pub async fn build(
-        config: Config,
-        chunk_size: usize,
-        chunk_delay: Duration,
-    ) -> Result<Self, Error> {
-        Self::new(SqlStorage::connect(config).await?, chunk_size, chunk_delay).await
-    }
-}
+pub type LeafOnlySqlDataSource<Types, P> = LeafOnlyDataSource<Types, SqlStorage, P>;
 
 // These tests run the `postgres` Docker image, which doesn't work on Windows.
 #[cfg(all(any(test, feature = "testing"), not(target_os = "windows")))]

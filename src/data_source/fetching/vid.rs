@@ -99,6 +99,11 @@ where
             AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage,
         P: AvailabilityProvider<Types>,
     {
+        // do not fetch if we are in light weight mode
+        if fetcher.lightweight {
+            return Ok(());
+        }
+
         fetch_header_and_then(
             tx,
             req.0,
@@ -283,6 +288,11 @@ where
             AvailabilityStorage<Types> + NodeStorage<Types> + PrunedHeightStorage,
         P: AvailabilityProvider<Types>,
     {
+        // If we're in light-weight mode, we don't need to fetch the VID common data.
+
+        if fetcher.lightweight {
+            return Ok(());
+        }
         // Trigger the full VID object to be fetched. This will be enough to satisfy this request
         // for the summary.
         VidCommonQueryData::active_fetch(tx, fetcher, req).await
