@@ -13,10 +13,11 @@
 #![cfg(feature = "sql-data-source")]
 
 use super::{
-    fetching,
+    fetching::{self},
     storage::sql::{self, SqlStorage},
     AvailabilityProvider, FetchingDataSource,
 };
+use crate::data_source::leaf_only::LeafOnlyDataSource;
 pub use crate::include_migrations;
 use crate::{
     availability::{QueryableHeader, QueryablePayload},
@@ -315,6 +316,8 @@ where
     }
 }
 
+pub type LeafOnlySqlDataSource<Types, P> = LeafOnlyDataSource<Types, SqlStorage, P>;
+
 // These tests run the `postgres` Docker image, which doesn't work on Windows.
 #[cfg(all(any(test, feature = "testing"), not(target_os = "windows")))]
 pub mod testing {
@@ -416,7 +419,7 @@ mod test {
             .await
             .unwrap();
 
-        assert_eq!(ds.get_vid_common(0).await.await, common);
+        assert_eq!(ds.get_vid_common(0).await.unwrap().await, common);
         NodeStorage::<MockTypes>::vid_share(&mut ds.read().await.unwrap(), 0)
             .await
             .unwrap_err();
@@ -427,7 +430,7 @@ mod test {
             .await
             .unwrap();
         tx.commit().await.unwrap();
-        assert_eq!(ds.get_vid_common(0).await.await, common);
+        assert_eq!(ds.get_vid_common(0).await.unwrap().await, common);
         assert_eq!(
             NodeStorage::<MockTypes>::vid_share(&mut ds.read().await.unwrap(), 0)
                 .await
